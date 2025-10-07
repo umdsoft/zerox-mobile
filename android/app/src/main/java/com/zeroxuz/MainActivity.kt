@@ -1,4 +1,4 @@
-package com.zerox
+package com.zeroxuz
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

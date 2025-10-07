@@ -1,4 +1,4 @@
-package com.zerox
+package com.zeroxuz
 
 import android.app.Application
 import com.facebook.react.PackageList
