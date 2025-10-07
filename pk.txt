@@ -1,0 +1,4 @@
+lottie-ios
+react-native-text-input-mask
+org.reactjs.native.example.ZeroX
+org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)

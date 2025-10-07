@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<script>
+    const appUrl = `zeroxuz://UserMoneyResult`;
+
+    // Try to open the app
+    window.location.href = appUrl;
+
+    // Fallback to app store if app isn't installed
+    setTimeout(() => {
+        window.location.href = "https://play.google.com/store/apps/details?id=com.zeroxuz";
+    }, 500);
+</script>
+
+</html>
