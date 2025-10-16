@@ -33,7 +33,7 @@ const Inforamation = () => {
             <ResetPassword />
           </View>
           <View style={styles.main}>
-            <Text style={styles.phoneText}>
+            <Text style={styles.phoneText} allowFontScaling={false}>
               {t('835')}{' '}
               <TextBold>
                 {t('836')}{' '}
@@ -45,7 +45,7 @@ const Inforamation = () => {
 
           <View style={styles.enterButtonContainer}>
             <TouchableOpacity activeOpacity={0.8} onPress={onHandle} style={[styles.enterButton, { backgroundColor: style.blue, },]}>
-              <Text style={[styles.enterText, { color: '#fff' }]}>
+              <Text style={[styles.enterText, { color: '#fff' }]} allowFontScaling={false}>
                 {t('42')}
               </Text>
             </TouchableOpacity>

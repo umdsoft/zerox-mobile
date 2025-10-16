@@ -20,7 +20,7 @@ const SearchUserInput = ({onChangeText, value}) => {
   return (
     <View style={styles.TextInputLabelContainer}>
       <View style={styles.inputTitle}>
-        <Text style={styles.phoneText}>Mobil hisob raqamini kiriting</Text>
+        <Text allowFontScaling={false} style={styles.phoneText}>Mobil hisob raqamini kiriting</Text>
       </View>
       <View style={{flex: 1, width: '90%'}}>
         <TextInput
@@ -31,7 +31,7 @@ const SearchUserInput = ({onChangeText, value}) => {
           placeholder="ID kiriting"
           onChangeText={onChangeText}
           style={styles.TextInput}
-        />
+          allowFontScaling={false} />
       </View>
     </View>
   );

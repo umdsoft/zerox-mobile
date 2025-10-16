@@ -69,11 +69,11 @@
     "114": "Qo‘llab-quvvatlash xizmati",
     "117": "Tariflar",
     "120": "ID raqami",
-
+    "121": "Tizimdagi ID raqamini kiriting",
     "123": "Qarz shartnomasini tez va oson rasmiylashtirish uchun ushbu QR-kodni ZeroX ilovasi yordamida skanerlang va tegishli jarayonlarni amalga oshiring.",
     "126": "Yuklab olish",
     "129": "Ulashish",
-
+    "130": "Foydalanuvchini izlashda tizim tomonidan har bir foydalanuvchiga beriladigan ID raqami kiritiladi. ID raqamini shaxsiy kabinet orqali bilib olishingiz mumkin.",
     "132": "Tizim bilan bog‘liq murojaatlarni qabul qilish maqsadida tashkil etilgan.",
     "135": "Mobil hisob",
     "138": "Debitor qarzdorlik",
@@ -149,7 +149,7 @@
     "321": "Tugallangan sana",
     "324": "Qarz shartnomasi",
     "327": "Qarz miqdori",
-    "330": "Qaytarilgan qarz miqdori",
+    "330": "Qaytarilgan qarz\nmiqdori",
     "333": "Voz kechilgan qarz miqdori",
     "336": "Sana",
     "339": "Holat",
@@ -319,7 +319,7 @@
     "744": "Parolingizni tiklash uchun identifikatsiyadan o‘tishingiz kerak.",
     "747": "Identifikatsiyadan o‘tish",
     "750": "Yopish",
-    "753": "Ilovadan foydalanishingiz uchun shaxsingizni tasdiqlashingiz kerak.\nIdentifikatsiya jarayonidagi rasmingiz shaxsiy kabinetingizda saqlanishi sababli o‘zingizni tartibga keltirib oling va kameraga to‘g‘ri qarang.",
+    "753": "Ilovadan foydalanishingiz uchun shaxsingizni tasdiqlashingiz kerak.",
     "756": "Tizimda ro‘yxatdan o‘tilganligi to‘g‘risida",
 
     "759": "Tabriklaymiz! Siz tizimda muvaffaqiyatli ro‘yxatdan o‘tdingiz va tizim funksiyalaridan to‘liq foydalanish imkoniga ega bo‘ldingiz. Sizdan tizimga kirish parolini esda saqlashingizni va uni boshqa shaxslarga oshkor qilmasligingizni so‘raymiz. ",

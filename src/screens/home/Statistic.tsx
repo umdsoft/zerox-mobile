@@ -7,18 +7,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useMemo, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
-import {useFetch} from '../../hooks/useFetch';
-import {URL} from '../constants';
+import React, { useMemo, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
+import { useNavigation } from '@react-navigation/native';
+import { useFetch } from '../../hooks/useFetch';
+import { URL } from '../constants';
 import Loading from '../components/Loading';
-import {VictoryPie} from 'victory-native';
-import {useTranslation} from 'react-i18next';
+import { VictoryPie } from 'victory-native';
+import { useTranslation } from 'react-i18next';
 
 const Statistic = () => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const debitor = useFetch({
     url: `${URL}/home/my?type=debitor`,
     method: 'GET',
@@ -43,7 +43,8 @@ const Statistic = () => {
           position: 'absolute',
           height: normalize(185),
           width: '100%',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <ScrollView
@@ -55,7 +56,8 @@ const Statistic = () => {
               creditor.onRefresh({});
             }}
           />
-        }>
+        }
+      >
         <View style={styles.header}>
           <View style={styles.aboutUsContainer}>
             <View style={{}}>
@@ -65,7 +67,7 @@ const Statistic = () => {
                 title={t('180')}
                 type={1}
               />
-              <View style={{height: 10, backgroundColor: '#fff'}} />
+              <View style={{ height: 10, backgroundColor: '#fff' }} />
               <RenderInfo
                 datax={creditor.data}
                 navigation={navigation}
@@ -80,28 +82,31 @@ const Statistic = () => {
   );
 };
 
-const RenderInfo = ({datax, navigation, title, type}) => {
-  const {t} = useTranslation();
+const RenderInfo = ({ datax, navigation, title, type }) => {
+  const { t } = useTranslation();
 
   const renderPie = useMemo(() => {
     console.log(datax?.data, 'datax?.data?.chart');
     return (
       <>
-        <View style={{alignSelf: 'center'}}>
-          <Text style={styles.enterText}>{title}</Text>
+        <View style={{ alignSelf: 'center' }}>
+          <Text allowFontScaling={false} style={styles.enterText}>
+            {title}
+          </Text>
         </View>
         <View
           style={{
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'row',
-          }}>
+          }}
+        >
           {datax?.data?.chart?.rad === 0 &&
           datax?.data?.chart?.tugallangan === 0 ? (
             <View>
               <Image
                 source={require('../../images/home/circular-diagram.png')}
-                style={{width: normalize(120), height: normalize(150)}}
+                style={{ width: normalize(120), height: normalize(150) }}
                 resizeMode="contain"
               />
             </View>
@@ -122,16 +127,16 @@ const RenderInfo = ({datax, navigation, title, type}) => {
                 },
               }}
               data={[
-                {y: datax?.data?.chart?.tugallangan},
-                {y: datax?.data?.chart?.rad},
+                { y: datax?.data?.chart?.tugallangan },
+                { y: datax?.data?.chart?.rad },
               ]}
             />
           )}
           <View>
-            <Text style={styles.key('#47bb78')}>
+            <Text allowFontScaling={false} style={styles.key('#47bb78')}>
               {t('198')} : {datax?.data?.chart?.tugallangan}
             </Text>
-            <Text style={styles.key('#feb116')}>
+            <Text allowFontScaling={false} style={styles.key('#feb116')}>
               {t('201')} : {datax?.data?.chart?.rad}
             </Text>
           </View>
@@ -172,12 +177,15 @@ const RenderInfo = ({datax, navigation, title, type}) => {
               });
             }
           }}
-          style={styles.btn}>
+          style={styles.btn}
+        >
           <Text
+            allowFontScaling={false}
             style={[
               styles.count,
-              {color: '#fff', fontSize: style.fontSize.xs},
-            ]}>
+              { color: '#fff', fontSize: style.fontSize.xs },
+            ]}
+          >
             {t('471') as string}
           </Text>
         </TouchableOpacity>

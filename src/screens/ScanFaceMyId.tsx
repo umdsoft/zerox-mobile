@@ -294,7 +294,7 @@ const ScanFaceMyId = () => {
           }}
         />
 
-        <Text style={styles.text}>{t('753')}</Text>
+        <Text style={styles.text} allowFontScaling={false}>{t('753')}</Text>
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
@@ -313,7 +313,8 @@ const ScanFaceMyId = () => {
           style={[
             styles.enterText,
             {color: '#fff', fontFamily: style.fontFamilyMedium},
-          ]}>
+          ]}
+          allowFontScaling={false}>
           {t('45')}
         </Text>
       </TouchableOpacity>

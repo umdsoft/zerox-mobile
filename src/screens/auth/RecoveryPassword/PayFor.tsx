@@ -36,7 +36,9 @@ const PayFor = () => {
       <View style={styles.main}>
         <View style={styles.aboutUsContainer}>
           <View style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}>
-            <Text style={[styles.hisob, { fontSize: style.fontSize.xx, textAlign: 'center' },]}  >
+            <Text
+              style={[styles.hisob, { fontSize: style.fontSize.xx, textAlign: 'center' },]}
+              allowFontScaling={false}>
               {t('288')} {'\n'} {t('idNumber')} –
               <TextBold> {user?.uid}</TextBold>
             </Text>

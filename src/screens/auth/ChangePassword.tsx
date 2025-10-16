@@ -8,30 +8,34 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import BackButton from '../components/BackButton';
-import {style} from '../../theme/style';
+import { style } from '../../theme/style';
 import ChangePasswordIcon from '../../images/auth/illustrationchangepassword.svg';
-import {t} from 'i18next';
+import { t } from 'i18next';
 
 const ChangePassword = () => {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
-      <View style={[styles.BackButton, {marginTop: 40}]}>
+      <View style={[styles.BackButton, { marginTop: 40 }]}>
         <BackButton
           navigation={navigation}
           IconColor="#fff"
           backgroundColor={style.blue}
         />
       </View>
-      <View style={{width: style.width, height: style.height}}>
+      <View style={{ width: style.width, height: style.height }}>
         <View
-          style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
+          style={{ alignItems: 'center', flex: 0.5, justifyContent: 'center' }}
+        >
           <ChangePasswordIcon width="70%" height="70%" />
         </View>
-        <View style={{alignItems: 'center'}}>
-          <Text style={[styles.enterText, {fontFamily: style.fontFamilyBold}]}>
+        <View style={{ alignItems: 'center' }}>
+          <Text
+            style={[styles.enterText, { fontFamily: style.fontFamilyBold }]}
+            allowFontScaling={false}
+          >
             {t('669')}
           </Text>
         </View>
@@ -48,11 +52,15 @@ const ChangePassword = () => {
                   backgroundColor: '#fff',
                   paddingLeft: 5,
                   paddingRight: 5,
-                }}>
-                <Text style={styles.phoneText}>Parolni kiriting</Text>
+                }}
+              >
+                <Text style={styles.phoneText} allowFontScaling={false}>
+                  Parolni kiriting
+                </Text>
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <TextInput
+                  allowFontScaling={false}
                   secureTextEntry={true}
                   placeholder="*******"
                   placeholderTextColor={style.placeHolderColor}
@@ -69,8 +77,14 @@ const ChangePassword = () => {
             onPress={() => {
               navigation.navigate('ChangePasswordRetry');
             }}
-            style={styles.enterButton}>
-            <Text style={[styles.enterText, {color: '#fff'}]}>{t('42')}</Text>
+            style={styles.enterButton}
+          >
+            <Text
+              style={[styles.enterText, { color: '#fff' }]}
+              allowFontScaling={false}
+            >
+              {t('42')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

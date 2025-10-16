@@ -8,7 +8,6 @@ import No from '../../../images/auth/No';
 import Yes from '../../../images/auth/Yes';
 import { t } from 'i18next';
 
-
 const InfoForUser = () => {
   const navigation = useNavigation();
   const { user } = useRoute().params;
@@ -25,27 +24,56 @@ const InfoForUser = () => {
       style={{
         flex: 1,
         backgroundColor: '#fff',
-      }}>
-      <OtherHeader title={t('839')} backgroundColor={style.blue} iconColor="#fff" titleColor={style.backgroundColorDark} />
-
+      }}
+    >
+      <OtherHeader
+        title={t('839')}
+        backgroundColor={style.blue}
+        iconColor="#fff"
+        titleColor={style.backgroundColorDark}
+      />
       <View style={styles.main}>
-        <Text style={styles.text}>
-          {t('840')} <TextBold>+998977345030</TextBold>{' '} {t('841')}
+        <Text allowFontScaling={false} style={styles.text}>
+          {t('840')} <TextBold>+998977345030</TextBold> {t('841')}
         </Text>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => { onNavigate('UpdatePassword'); }} style={[styles.enterButton]}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onNavigate('UpdatePassword');
+          }}
+          style={[styles.enterButton]}
+        >
           <Yes color="#fff" width={30} height={30} />
-          <Text style={[styles.enterText, { color: '#fff', fontFamily: style.fontFamilyMedium },]}>
+          <Text
+            style={[
+              styles.enterText,
+              { color: '#fff', fontFamily: style.fontFamilyMedium },
+            ]}
+            allowFontScaling={false}
+          >
             {t('842')}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => { onNavigate('AskPhoneNumber'); }} style={[styles.enterButton]}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onNavigate('AskPhoneNumber');
+          }}
+          style={[styles.enterButton]}
+        >
           <No color="#fff" width={30} height={30} />
-          <Text style={[styles.enterText, { color: '#fff', fontFamily: style.fontFamilyMedium },]}>
+          <Text
+            style={[
+              styles.enterText,
+              { color: '#fff', fontFamily: style.fontFamilyMedium },
+            ]}
+            allowFontScaling={false}
+          >
             {t('843')}
           </Text>
         </TouchableOpacity>
       </View>
-    </View >
+    </View>
   );
 };
 

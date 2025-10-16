@@ -34,14 +34,16 @@ const PartDebtBack = () => {
             <View>
               <View style={styles.insideMoney}>
                 <Text
-                  style={[styles.hisob, {fontFamily: style.fontFamilyBold}]}>
+                  style={[styles.hisob, {fontFamily: style.fontFamilyBold}]}
+                  allowFontScaling={false}>
                   Qarzni qisman qaytarishni{'\n'}talab qilish
                 </Text>
               </View>
               <View style={[styles.card, {marginTop: 20}]}>
                 <View style={styles.insideMoney}>
                   <Text
-                    style={[styles.hisob, {fontSize: style.fontSize.small}]}>
+                    style={[styles.hisob, {fontSize: style.fontSize.small}]}
+                    allowFontScaling={false}>
                     01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz
                     fuqaro Abdullayev Abdulladan qarzni qisman qaytarishini
                     talab qilmoqdasiz.
@@ -52,14 +54,14 @@ const PartDebtBack = () => {
             <View>
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>Summani kiriting</Text>
+                  <Text style={styles.phoneText} allowFontScaling={false}>Summani kiriting</Text>
                 </View>
                 <View style={{flex: 1}}>
                   <TextInput
                     value="100 000 so'm"
                     keyboardType="numeric"
                     style={styles.TextInput}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
               <View
@@ -69,7 +71,7 @@ const PartDebtBack = () => {
                   marginTop: 20,
                 }}>
                 <Checkbox color={style.blue} status="checked" />
-                <Text style={styles.phoneText}>
+                <Text style={styles.phoneText} allowFontScaling={false}>
                   Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
                   tanishdim
                 </Text>
@@ -79,7 +81,7 @@ const PartDebtBack = () => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 style={[styles.registerButton, {marginTop: 20}]}>
-                <Text style={[styles.textButton]}>Tasdiqlash</Text>
+                <Text style={[styles.textButton]} allowFontScaling={false}>Tasdiqlash</Text>
               </TouchableOpacity>
             </View>
           </View>

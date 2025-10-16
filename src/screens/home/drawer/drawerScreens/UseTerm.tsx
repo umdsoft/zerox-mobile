@@ -6,25 +6,25 @@ import {
   Platform,
   PermissionsAndroid,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import Pdf from 'react-native-pdf';
-import {BackGroundIcon} from '../../../../helper/homeIcon';
-import {style} from '../../../../theme/style';
-import {fontSize} from '../../../../theme/font';
-import {colors} from '../../../../theme/colors';
+import { BackGroundIcon } from '../../../../helper/homeIcon';
+import { style } from '../../../../theme/style';
+import { fontSize } from '../../../../theme/font';
+import { colors } from '../../../../theme/colors';
 import DownloadIcon from '../../../../images/home/download.svg';
 
 import OtherHeader from '../../../components/OtherHeader';
 import MainText from '../../../components/MainText';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import FileViewer from 'react-native-file-viewer';
 
 import Toast from 'react-native-toast-message';
 
 import RNFS from 'react-native-fs';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import {checkMultiple, PERMISSIONS, request} from 'react-native-permissions';
-import {storage} from '../../../../store/api/token/getToken';
+import { checkMultiple, PERMISSIONS, request } from 'react-native-permissions';
+import { storage } from '../../../../store/api/token/getToken';
 
 const UseTerm = () => {
   // const source = require('../../../../theme/yoriqnoma.pdf')
@@ -65,7 +65,7 @@ const UseTerm = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'omad',
-        props: {title: 'Muvaffaqiyatli', desc: t('789') + '...'},
+        props: { title: 'Muvaffaqiyatli', desc: t('789') + '...' },
       });
 
       const filePath =
@@ -154,7 +154,8 @@ const UseTerm = () => {
           position: 'absolute',
           height: style.height / 2.6,
           width: '100%',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('foydalanishyoriqnomasi')} />
@@ -167,13 +168,15 @@ const UseTerm = () => {
               justifyContent: 'space-around',
               marginTop: 20,
               marginBottom: 20,
-            }}>
+            }}
+          >
             {/* ------------------------   Yuklab olish   ------------------------ */}
             <TouchableOpacity
               onPress={() => onDownload()}
               activeOpacity={0.8}
               disabled={downloadLoading}
-              style={styles.download}>
+              style={styles.download}
+            >
               {downloadLoading ? (
                 <ActivityIndicator size={'small'} color={'#fff'} />
               ) : (
@@ -187,7 +190,7 @@ const UseTerm = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={{flex: 1, backgroundColor: '#fff'}}>
+          <View style={{ flex: 1, backgroundColor: '#fff' }}>
             {loading && (
               <View style={styles.indicator}>
                 <ActivityIndicator size={'large'} color={style.blue} />
@@ -196,8 +199,8 @@ const UseTerm = () => {
             <Pdf
               trustAllCerts={false}
               enablePaging={true}
-              activityIndicator={() => (
-                <ActivityIndicator size={'large'} color={style.blue} />
+              renderActivityIndicator={() => (
+                <ActivityIndicator size={'small'} color={style.blue} />
               )}
               source={{
                 uri: `https://pdf.zerox.uz/yoriqnoma.pdf`,

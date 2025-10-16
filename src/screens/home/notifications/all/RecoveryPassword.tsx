@@ -1,21 +1,21 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import TextBold from '../../../components/TextBold';
-import {settingDate} from '../../../../helper';
-import {style} from '../../../../theme/style';
-import {t} from 'i18next';
-const RecoveryPassword = ({item, okay, navigation}) => {
+import { settingDate } from '../../../../helper';
+import { style } from '../../../../theme/style';
+import { t } from 'i18next';
+const RecoveryPassword = ({ item, okay, navigation }) => {
   const onOkay = async () => {
     okay(item.id);
   };
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 15, marginHorizontal: 15}}>
+      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
         <View>
           <TextBold>{t('831') as string}</TextBold>
         </View>
-        <View style={{marginTop: 10}}>
-          <Text style={styles.notification}>
+        <View style={{ marginTop: 10 }}>
+          <Text allowFontScaling={false} style={styles.notification}>
             Siz MyID orqali qayta identifikatsiyadan o’tgan holda parolingizni
             tikladingiz. Ushbu jarayonda “UZINFOCOM Davlat axborot tizimlarini
             yaratish va qo‘llab-quvvatlash bo‘yicha yagona integrator” MCHJ
@@ -33,12 +33,13 @@ const RecoveryPassword = ({item, okay, navigation}) => {
               justifyContent: 'space-between',
               alignItems: 'center',
               marginTop: 10,
-            }}>
-            <View style={{flexDirection: 'row'}}>
-              <Text style={styles.notificationTitle}>
-                <Text>{item?.created} </Text>
+            }}
+          >
+            <View style={{ flexDirection: 'row' }}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
+                <Text allowFontScaling={false}>{item?.created} </Text>
               </Text>
-              <Text style={styles.notificationTitle}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
                 {' '}
                 {item.time.slice(0, 5)}
               </Text>
@@ -46,12 +47,15 @@ const RecoveryPassword = ({item, okay, navigation}) => {
             <TouchableOpacity
               onPress={onOkay}
               activeOpacity={0.8}
-              style={styles.button}>
+              style={styles.button}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
                 Ok
               </Text>
             </TouchableOpacity>

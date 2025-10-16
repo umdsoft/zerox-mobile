@@ -31,7 +31,8 @@ const StatisticCreditor = ({type, item, status}) => {
                 type: 1,
               });
             }}
-            style={[styles.info, {color: style.blue}]}>
+            style={[styles.info, {color: style.blue}]}
+            allowFontScaling={false}>
             {item?.debitor_name}
           </Text>
         </View>
@@ -39,10 +40,10 @@ const StatisticCreditor = ({type, item, status}) => {
       <Border />
       <View style={styles.header}>
         <View style={[styles.item, {left: 25}]}>
-          <Text style={styles.info}>{t('327')}</Text>
+          <Text style={styles.info} allowFontScaling={false}>{t('327')}</Text>
         </View>
         <View style={[styles.item, {alignItems: 'center'}]}>
-          <Text style={styles.info}>
+          <Text style={styles.info} allowFontScaling={false}>
             {sortText(item?.amount)} {item?.currency}
           </Text>
         </View>
@@ -50,10 +51,10 @@ const StatisticCreditor = ({type, item, status}) => {
       <Border />
       <View style={styles.header}>
         <View style={[styles.item, {left: 25}]}>
-          <Text style={styles.info}>{t('330')}</Text>
+          <Text style={styles.info} allowFontScaling={false}>{t('330')}</Text>
         </View>
         <View style={[styles.item, {alignItems: 'center'}]}>
-          <Text style={styles.info}>
+          <Text style={styles.info} allowFontScaling={false}>
             {item?.inc == null
               ? '-'
               : sortText(item?.inc) + ' ' + item?.currency}
@@ -66,10 +67,10 @@ const StatisticCreditor = ({type, item, status}) => {
           <Border />
           <View style={styles.header}>
             <View style={[styles.item, {left: 25}]}>
-              <Text style={styles.info}>{t('333')}</Text>
+              <Text style={styles.info} allowFontScaling={false}>{t('333')}</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>
+              <Text style={styles.info} allowFontScaling={false}>
                 {item?.vos_summa !== null
                   ? sortText(item?.vos_summa) + ' ' + item?.currency
                   : ' - '}{' '}
@@ -81,49 +82,46 @@ const StatisticCreditor = ({type, item, status}) => {
       <Border />
       <View style={styles.header}>
         <View style={[styles.item, {left: 25}]}>
-          <Text style={styles.info}>
-            {item.status === 2 ? t('330') : t('336')}
+          <Text style={styles.info} allowFontScaling={false}>
+            {item.status === 2 ? t('390') : t('336')}
           </Text>
         </View>
         <View style={[styles.item, {alignItems: 'center'}]}>
-          <Text style={styles.info}>{settingDate(item?.created_at)}</Text>
+          <Text style={styles.info} allowFontScaling={false}>{settingDate(item?.created_at)}</Text>
         </View>
       </View>
-
       {item.status === 2 ? (
         <>
           <Border />
           <View style={styles.header}>
             <View style={[styles.item, {left: 25}]}>
-              <Text style={styles.info}>{t('321')}</Text>
+              <Text style={styles.info} allowFontScaling={false}>{t('321')}</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>{settingDate(item?.sana)}</Text>
+              <Text style={styles.info} allowFontScaling={false}>{settingDate(item?.sana)}</Text>
             </View>
           </View>
         </>
       ) : null}
       <Border />
-
       <View style={styles.header}>
         <View style={[styles.item, {left: 25}]}>
-          <Text style={styles.info}>{t('339')}</Text>
+          <Text style={styles.info} allowFontScaling={false}>{t('339')}</Text>
         </View>
         <View style={[styles.item, {alignItems: 'center'}]}>
-          <Text style={styles.info}>
+          <Text style={styles.info} allowFontScaling={false}>
             {item?.status === 2 ? (
-              <Text style={[styles.item, {color: 'green'}]}>{t('198')}</Text>
+              <Text style={[styles.item, {color: 'green'}]} allowFontScaling={false}>{t('198')}</Text>
             ) : (
-              <Text style={[styles.item, {color: 'red'}]}>{t('201')}</Text>
+              <Text style={[styles.item, {color: 'red'}]} allowFontScaling={false}>{t('201')}</Text>
             )}
           </Text>
         </View>
       </View>
-
       <Border />
       <View style={styles.header}>
         <View style={[styles.item, {left: 25}]}>
-          <Text style={styles.info}>{t('324')}</Text>
+          <Text style={styles.info} allowFontScaling={false}>{t('324')}</Text>
         </View>
         <View style={[styles.item, {alignItems: 'center'}]}>
           <Text
@@ -133,7 +131,8 @@ const StatisticCreditor = ({type, item, status}) => {
                 id: item.uid,
               });
             }}
-            style={[styles.info, {color: style.blue}]}>
+            style={[styles.info, {color: style.blue}]}
+            allowFontScaling={false}>
             {item?.number}
           </Text>
         </View>

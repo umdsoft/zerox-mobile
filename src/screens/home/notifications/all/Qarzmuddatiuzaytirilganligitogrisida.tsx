@@ -1,14 +1,14 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
-import {style} from '../../../../theme/style';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
+import { style } from '../../../../theme/style';
 
-import {settingDate} from '../../../../helper';
+import { settingDate } from '../../../../helper';
 import TextBold from '../../../components/TextBold';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 
-const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
+const Qarzmuddatiuzaytirilganligitogrisida = ({ item, okay, navigation }) => {
   const onPress = async () => {
     okay(item.id);
   };
@@ -16,11 +16,11 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
   if (item.creditor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>{t('528') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={531}
               values={{
@@ -44,7 +44,9 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                         id: item.contract,
                       });
                     }}
-                    style={(styles.notification, {color: style.blue})}>
+                    allowFontScaling={false}
+                    style={(styles.notification, { color: style.blue })}
+                  >
                     {item.number}
                   </Text>
                 ),
@@ -96,12 +98,13 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -112,16 +115,20 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <TouchableOpacity
                     onPress={onPress}
                     activeOpacity={0.8}
-                    style={styles.button}>
+                    style={styles.button}
+                  >
                     <Text
+                      allowFontScaling={false}
                       style={[
                         styles.notification,
-                        {color: '#fff', fontSize: style.fontSize.xx - 2},
-                      ]}>
+                        { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                      ]}
+                    >
                       Ok
                     </Text>
                   </TouchableOpacity>
@@ -136,11 +143,11 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
   if (item.debitor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>Qarz muddati uzaytirilganligi to‘g‘risida</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={531}
               values={{
@@ -164,7 +171,9 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                         id: item.contract,
                       });
                     }}
-                    style={(styles.notification, {color: style.blue})}>
+                    allowFontScaling={false}
+                    style={(styles.notification, { color: style.blue })}
+                  >
                     {item.number}
                   </Text>
                 ),
@@ -215,12 +224,13 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -231,16 +241,20 @@ const Qarzmuddatiuzaytirilganligitogrisida = ({item, okay, navigation}) => {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <TouchableOpacity
                     onPress={onPress}
                     activeOpacity={0.8}
-                    style={styles.button}>
+                    style={styles.button}
+                  >
                     <Text
+                      allowFontScaling={false}
                       style={[
                         styles.notification,
-                        {color: '#fff', fontSize: style.fontSize.xx - 2},
-                      ]}>
+                        { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                      ]}
+                    >
                       Ok
                     </Text>
                   </TouchableOpacity>

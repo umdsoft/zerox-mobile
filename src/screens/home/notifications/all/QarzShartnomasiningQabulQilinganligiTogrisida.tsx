@@ -1,11 +1,11 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
-import {sortText} from '../../../components/StatisticCard';
+import { style } from '../../../../theme/style';
+import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
-import {useSelector} from 'react-redux';
-import {t} from 'i18next';
+import { useSelector } from 'react-redux';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 
@@ -14,7 +14,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
   okay,
   navigation,
 }) => {
-  const {user, usd: usds} = useSelector(state => state.HomeReducer);
+  const { user, usd: usds } = useSelector(state => state.HomeReducer);
 
   const checkingSum = sum => {
     let usd = usds;
@@ -56,7 +56,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
   if (item.creditor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View
             style={{
               flexDirection: 'row',
@@ -67,7 +67,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
           <View>
             <TextBold>{t('516') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={item.token !== null ? 519 : 520}
               values={{
@@ -85,13 +85,14 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                 name: <TextBold />,
                 id: (
                   <Text
+                    allowFontScaling={false}
                     onPress={() => {
                       navigation.navigate('DownloadStatistic', {
                         item,
                         id: item.id,
                       });
                     }}
-                    style={[styles.notification, {color: style.blue}]}
+                    style={[styles.notification, { color: style.blue }]}
                   />
                 ),
                 sum: <TextBold />,
@@ -134,7 +135,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
               miqdorida qarz oldingiz.
               {'\n'}
               {user?.data?.cnt === 0 ? (
-                <Text>
+                <Text  allowFontScaling={false}>
                   Xizmat haqi sifatida hisobingizdan{' '}
                   <TextBold>{checkingSum(item?.amout)} UZS</TextBold> yechildi.
                 </Text>
@@ -146,12 +147,13 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -162,18 +164,22 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <TouchableOpacity
                     onPress={() => {
                       okay(item.id);
                     }}
                     activeOpacity={0.8}
-                    style={styles.button}>
+                    style={styles.button}
+                  >
                     <Text
+                      allowFontScaling={false}
                       style={[
                         styles.notification,
-                        {color: '#fff', fontSize: style.fontSize.xx - 2},
-                      ]}>
+                        { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                      ]}
+                    >
                       Ok
                     </Text>
                   </TouchableOpacity>
@@ -188,7 +194,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
   if (item.debitor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View
             style={{
               flexDirection: 'row',
@@ -199,7 +205,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
           <View>
             <TextBold>{t('516') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={523}
               values={{
@@ -223,13 +229,14 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                 name: <TextBold />,
                 id: (
                   <Text
+                    allowFontScaling={false}
                     onPress={() => {
                       navigation.navigate('DownloadStatistic', {
                         item,
                         id: item.id,
                       });
                     }}
-                    style={[styles.notification, {color: style.blue}]}
+                    style={[styles.notification, { color: style.blue }]}
                   />
                 ),
                 name2: <TextBold />,
@@ -279,12 +286,13 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -295,18 +303,22 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <TouchableOpacity
                     onPress={() => {
                       okay(item.id);
                     }}
                     activeOpacity={0.8}
-                    style={styles.button}>
+                    style={styles.button}
+                  >
                     <Text
+                      allowFontScaling={false}
                       style={[
                         styles.notification,
-                        {color: '#fff', fontSize: style.fontSize.xx - 2},
-                      ]}>
+                        { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                      ]}
+                    >
                       Ok
                     </Text>
                   </TouchableOpacity>

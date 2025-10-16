@@ -9,23 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {normalize, style} from '../../../theme/style';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { normalize, style } from '../../../theme/style';
 import BackButton from '../../components/BackButton';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import ClickIcon from '../../../images/pay/ClickIcon';
-import {useSelector} from 'react-redux';
-import {encode} from 'base-64';
+import { useSelector } from 'react-redux';
+import { encode } from 'base-64';
 import OtherHeader from '../../components/OtherHeader';
 import axios from 'axios';
-import {URL} from '../../constants';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { URL } from '../../constants';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Loading from '../../components/Loading';
-import {t} from 'i18next';
+import { t } from 'i18next';
 
 const PayScreenForRecovery = () => {
-  const {type, title, user} = useRoute().params;
+  const { type, title, user } = useRoute().params;
   const navigation = useNavigation();
 
   const [sum, setSum] = useState('');
@@ -56,7 +56,7 @@ const PayScreenForRecovery = () => {
 
   const getUser = useCallback(async () => {
     try {
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + '/user/askjshshir',
         {
           jshshir: user.pinfl,
@@ -106,13 +106,20 @@ const PayScreenForRecovery = () => {
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={title} />
       <View style={[styles.main]}>
         <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+          <View
+            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+          >
             <View>
               <View style={styles.card}>
                 <View style={styles.insideMoney}>
@@ -126,13 +133,16 @@ const PayScreenForRecovery = () => {
                 </View>
               </View>
             </View>
-            <View style={{marginTop: 20}}>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
+            <View style={{ marginTop: 20 }}>
+              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>So'm: </Text>
+                  <Text style={styles.phoneText} allowFontScaling={false}>
+                    So'm:{' '}
+                  </Text>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
+                    allowFontScaling={false}
                     value={sum}
                     placeholder={t('844')}
                     placeholderTextColor={style.placeHolderColor}
@@ -140,7 +150,7 @@ const PayScreenForRecovery = () => {
                     onChangeText={text => {
                       setSum(text);
                     }}
-                    style={[styles.TextInput, {paddingLeft: 15}]}
+                    style={[styles.TextInput, { paddingLeft: 15 }]}
                   />
                 </View>
               </View>
@@ -154,8 +164,11 @@ const PayScreenForRecovery = () => {
                     backgroundColor:
                       sum.length > 3 ? style.blue : style.disabledButtonColor,
                   },
-                ]}>
-                <Text style={styles.text}>To'ldirish</Text>
+                ]}
+              >
+                <Text style={styles.text} allowFontScaling={false}>
+                  To'ldirish
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

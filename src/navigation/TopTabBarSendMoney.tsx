@@ -47,7 +47,7 @@ const TopTabBarSendMoney = ({state, descriptors, navigation}) => {
             onPress={onPress}
             onLongPress={onLongPress}
             style={styles.container2(isFocused)}>
-            <Text style={styles.lebel(isFocused)}>{label}</Text>
+            <Text allowFontScaling={false} style={styles.lebel(isFocused)}>{label}</Text>
             {notification?.news?.length > 0 && (
               <View style={styles.countContainer}>
                 <MainText size={'x'} style={styles.icon}>

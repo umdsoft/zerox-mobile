@@ -5,26 +5,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo} from 'react';
-import {style} from '../../../../theme/style';
+import React, { memo } from 'react';
+import { style } from '../../../../theme/style';
 import TextBold from '../../../components/TextBold';
-import {settingDate} from '../../../../helper';
-import {sortText} from '../../../components/StatisticCard';
-import {useDispatch, useSelector} from 'react-redux';
+import { settingDate } from '../../../../helper';
+import { sortText } from '../../../components/StatisticCard';
+import { useDispatch, useSelector } from 'react-redux';
 import ReturnName from '../../../../helper/returnName';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import Toast from 'react-native-toast-message';
 import TransText from '../../../components/TransText';
 import MainText from '../../../components/MainText';
-import {expire_passport_check} from '../../../../helper/timeChecker';
-import {checkExpire} from '../../../../store/reducers/HomeReducer';
+import { expire_passport_check } from '../../../../helper/timeChecker';
+import { checkExpire } from '../../../../store/reducers/HomeReducer';
 
 const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
-  ({item, okay, navigation, onSuccess, onReject}) => {
+  ({ item, okay, navigation, onSuccess, onReject }) => {
     const [loading, setLoading] = React.useState(false);
     const [rejectLoading, setRejectLoading] = React.useState(false);
     const dispatch = useDispatch();
-    const {user, usd: usds} = useSelector(state => state.HomeReducer);
+    const { user, usd: usds } = useSelector(state => state.HomeReducer);
     const checkingSum = sum => {
       let usd = usds;
       let cur_amount;
@@ -72,11 +72,11 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
       // firebase ga api orqali creditorga notification getadi
       return (
         <View style={styles.container}>
-          <View style={{marginVertical: 15, marginHorizontal: 15}}>
+          <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
             <View>
               <TextBold>{t('504')}</TextBold>
             </View>
-            <View style={{marginTop: 10}}>
+            <View style={{ marginTop: 10 }}>
               <TransText
                 tKey={'contract2'}
                 values={{
@@ -95,13 +95,15 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                   sum: <TextBold />,
                   id: (
                     <Text
+                      allowFontScaling={false}
                       onPress={() => {
                         navigation.navigate('DownloadStatistic', {
                           item,
                           id: item.id,
                         });
                       }}
-                      style={[styles.notification, {color: style.blue}]}>
+                      style={[styles.notification, { color: style.blue }]}
+                    >
                       {item.number}
                     </Text>
                   ),
@@ -136,23 +138,24 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
               -sonli qarz shartnomasi rasmiylashtiriladi.
               {'\n'}
             </Text> */}
-              <View style={{marginTop: 10, flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              <View style={{ marginTop: 10, flexDirection: 'row' }}>
+                <Text style={styles.notificationTitle} allowFontScaling={false}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text style={styles.notificationTitle} allowFontScaling={false}>
                   {item?.time.slice(0, 5)}
                 </Text>
               </View>
             </View>
-            <View style={{marginTop: 10}}>
+            <View style={{ marginTop: 10 }}>
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginTop: 5,
-                }}>
+                }}
+              >
                 {/* <TouchableOpacity
                 onPress={() => {
                   navigation.navigate('DownloadStatistic', {item, id: item.id});
@@ -173,7 +176,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                 <TouchableOpacity
                   onPress={() => {
                     if (expire_passport_check(user.data.expiry_date)) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     setLoading(true);
@@ -194,13 +197,16 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                         ? style.disabledButtonColor
                         : style.blue,
                     },
-                  ]}>
+                  ]}
+                >
                   {!loading ? (
                     <Text
                       style={[
                         styles.notification,
-                        {color: '#fff', fontSize: style.fontSize.xx - 2},
-                      ]}>
+                        { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                      ]}
+                      allowFontScaling={false}
+                    >
                       {t('93')}
                     </Text>
                   ) : (
@@ -210,18 +216,21 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                 <TouchableOpacity
                   onPress={() => {
                     if (expire_passport_check(user.data.expiry_date)) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     onReject(item, 2, 1);
                   }}
                   activeOpacity={0.8}
-                  style={[styles.button, {backgroundColor: 'red'}]}>
+                  style={[styles.button, { backgroundColor: 'red' }]}
+                >
                   <Text
                     style={[
                       styles.notification,
-                      {color: '#fff', fontSize: style.fontSize.xx - 2},
-                    ]}>
+                      { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                    ]}
+                    allowFontScaling={false}
+                  >
                     {t('96')}
                   </Text>
                 </TouchableOpacity>
@@ -240,11 +249,11 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
 
       return (
         <View style={styles.container}>
-          <View style={{marginVertical: 15, marginHorizontal: 15}}>
+          <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
             <View>
               <TextBold>{t('504')}</TextBold>
             </View>
-            <View style={{marginTop: 10}}>
+            <View style={{ marginTop: 10 }}>
               <TransText
                 tKey={user.data.cnt === 0 ? 'contract10' : 'contract1'}
                 values={{
@@ -270,7 +279,9 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                           id: item.id,
                         });
                       }}
-                      style={[styles.notification, {color: style.blue}]}>
+                      style={[styles.notification, { color: style.blue }]}
+                      allowFontScaling={false}
+                    >
                       {item.number}
                     </Text>
                   ),
@@ -290,11 +301,11 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
               />
             )} */}
 
-              <View style={{marginTop: 10, flexDirection: 'row'}}>
-                <Text style={styles.notification}>
-                  <Text>{item?.created} </Text>
+              <View style={{ marginTop: 10, flexDirection: 'row' }}>
+                <Text style={styles.notification} allowFontScaling={false}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notification}>
+                <Text style={styles.notification} allowFontScaling={false}>
                   {item?.time.slice(0, 5)}
                 </Text>
               </View>
@@ -306,7 +317,8 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginTop: 10,
-                }}>
+                }}
+              >
                 {/* <TouchableOpacity
                 onPress={() => {
                   navigation.navigate('DownloadStatistic', {item, id: item.id});
@@ -325,7 +337,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                   disabled={loading}
                   onPress={() => {
                     if (expire_passport_check(user.data.expiry_date)) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     setLoading(true);
@@ -338,12 +350,15 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                       });
                   }}
                   activeOpacity={0.8}
-                  style={styles.button}>
+                  style={styles.button}
+                >
                   <Text
                     style={[
                       styles.notification,
-                      {color: '#fff', fontSize: style.fontSize.xx - 3},
-                    ]}>
+                      { color: '#fff', fontSize: style.fontSize.xx - 3 },
+                    ]}
+                    allowFontScaling={false}
+                  >
                     {t('93')}
                   </Text>
                 </TouchableOpacity>
@@ -351,7 +366,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                   disabled={rejectLoading}
                   onPress={() => {
                     if (expire_passport_check(user.data.expiry_date)) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     setRejectLoading(true);
@@ -364,12 +379,15 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                       });
                   }}
                   activeOpacity={0.8}
-                  style={[styles.button, {backgroundColor: 'red'}]}>
+                  style={[styles.button, { backgroundColor: 'red' }]}
+                >
                   <Text
                     style={[
                       styles.notification,
-                      {color: '#fff', fontSize: style.fontSize.xx - 3},
-                    ]}>
+                      { color: '#fff', fontSize: style.fontSize.xx - 3 },
+                    ]}
+                    allowFontScaling={false}
+                  >
                     {t('96')}
                   </Text>
                 </TouchableOpacity>

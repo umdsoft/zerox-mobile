@@ -1,16 +1,16 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
+import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
-import {t} from 'i18next';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
-const PulMablagOtkazilganligi = ({item, okay, navigation}) => {
-  const {user} = useSelector(state => state.HomeReducer);
+const PulMablagOtkazilganligi = ({ item, okay, navigation }) => {
+  const { user } = useSelector(state => state.HomeReducer);
 
   const onOkay = async () => {
     okay(item.id);
@@ -19,11 +19,11 @@ const PulMablagOtkazilganligi = ({item, okay, navigation}) => {
   if (user?.data?.id === item.creditor) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>{t('633') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={636}
               values={{
@@ -69,12 +69,13 @@ const PulMablagOtkazilganligi = ({item, okay, navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -82,12 +83,15 @@ const PulMablagOtkazilganligi = ({item, okay, navigation}) => {
               <TouchableOpacity
                 onPress={onOkay}
                 activeOpacity={0.8}
-                style={styles.button}>
+                style={styles.button}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   Ok
                 </Text>
               </TouchableOpacity>

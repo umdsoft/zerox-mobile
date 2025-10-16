@@ -1,29 +1,29 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
+import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
 
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {toastConfig} from '../../../components/ToastConfig';
-import {t} from 'i18next';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { toastConfig } from '../../../components/ToastConfig';
+import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
 
-const MalumotniKorishgaRadEtildi = ({item, navigation, okay}) => {
+const MalumotniKorishgaRadEtildi = ({ item, navigation, okay }) => {
   const onPress = async () => {
     okay(item.id);
   };
 
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 15, marginHorizontal: 15}}>
+      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
         <View>
           <TextBold>{t('870') as string}</TextBold>
         </View>
 
-        <View style={{marginTop: 10}}>
-          <Text style={styles.notification}>
+        <View style={{ marginTop: 10 }}>
+          <Text allowFontScaling={false} style={styles.notification}>
             <TextBold>
               {item.dtypes === 2 ? ReturnName.returnDebitorName(item) : null}
               {item.dtypes === 1 ? item.dcompany : null}
@@ -38,12 +38,13 @@ const MalumotniKorishgaRadEtildi = ({item, navigation, okay}) => {
             justifyContent: 'space-between',
             alignItems: 'center',
             marginTop: 10,
-          }}>
-          <View style={{flexDirection: 'row'}}>
-            <Text style={styles.notificationTitle}>
-              <Text>{item?.created} </Text>
+          }}
+        >
+          <View style={{ flexDirection: 'row' }}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
+              <Text allowFontScaling={false}>{item?.created} </Text>
             </Text>
-            <Text style={styles.notificationTitle}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
               {' '}
               {item.time?.slice(0, 5)}
             </Text>
@@ -51,12 +52,15 @@ const MalumotniKorishgaRadEtildi = ({item, navigation, okay}) => {
           <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.8}
-            style={[styles.button, {backgroundColor: '#4e91d2'}]}>
+            style={[styles.button, { backgroundColor: '#4e91d2' }]}
+          >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.notification,
-                {color: '#fff', fontSize: style.fontSize.xx - 2},
-              ]}>
+                { color: '#fff', fontSize: style.fontSize.xx - 2 },
+              ]}
+            >
               Ok
             </Text>
           </TouchableOpacity>

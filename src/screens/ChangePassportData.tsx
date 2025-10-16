@@ -275,7 +275,7 @@ const ChangePassportData = () => {
           }}
         />
 
-        <Text style={styles.text}>{t('753')}</Text>
+        <Text allowFontScaling={false} style={styles.text}>{t('753')}</Text>
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
@@ -291,6 +291,7 @@ const ChangePassportData = () => {
         }}
         style={[styles.enterButton]}>
         <Text
+          allowFontScaling={false}
           style={[
             styles.enterText,
             {color: '#fff', fontFamily: style.fontFamilyMedium},

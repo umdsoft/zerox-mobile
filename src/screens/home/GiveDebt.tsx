@@ -1,39 +1,39 @@
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
+import { useNavigation } from '@react-navigation/native';
 import Person from '../../images/home/person';
-import Juridic from '../../images/home/juridic';
+
 import CheckIcon from '../../images/home/check';
 import QrCode from '../../images/home/Qr';
-import {useDispatch, useSelector} from 'react-redux';
-import {showModal} from '../../store/reducers/HomeReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { showModal } from '../../store/reducers/HomeReducer';
 import LottieView from 'lottie-react-native';
 
-import {useTranslation} from 'react-i18next';
-import {scale} from '../../helper/scale';
-import {heightPercentageToDP} from 'react-native-responsive-screen';
+import { useTranslation } from 'react-i18next';
+
+import { heightPercentageToDP } from 'react-native-responsive-screen';
+import { Button } from 'react-native-paper';
 const GiveDebt = () => {
   const navigation = useNavigation();
-  const {user} = useSelector(state => state.HomeReducer);
-  const {t} = useTranslation();
+  const { user } = useSelector(state => state.HomeReducer);
+  const { t } = useTranslation();
   const dispatch = useDispatch();
 
   const onNavigate = useCallback(
     name => {
       if (user.data.is_active === 1) {
         // yuridikni ichinga kirganda type kerakmaydi
-        navigation.navigate(name, {type: 0});
+        navigation.navigate(name, { type: 0 });
       } else {
-        dispatch(showModal({show: true}));
+        dispatch(showModal({ show: true }));
       }
     },
     [dispatch, navigation, user?.data?.is_active],
@@ -46,17 +46,18 @@ const GiveDebt = () => {
           position: 'absolute',
           height: normalize(185),
           width: '100%',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height={heightPercentageToDP(28)} />
       </View>
       <ScrollView>
         <View style={styles.header}>
           <View style={styles.aboutUsContainer}>
-            <View style={{alignSelf: 'center'}}>
+            <View style={{ alignSelf: 'center' }}>
               <LottieView
                 autoPlay
                 source={require('../../images/lottie/qarzberish/dXMUc2yhYi.json')}
-                style={{width: 200, height: heightPercentageToDP(23)}}
+                style={{ width: 200, height: heightPercentageToDP(23) }}
               />
             </View>
           </View>
@@ -67,20 +68,23 @@ const GiveDebt = () => {
                 marginBottom: 20,
                 alignSelf: 'center',
                 flexDirection: 'row',
-              }}>
+              }}
+            >
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => {
                   onNavigate('SearchUserScreen');
                 }}
-                style={styles.enterButton}>
+                style={styles.enterButton}
+              >
                 <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     padding: heightPercentageToDP(1),
                     // justifyContent: 'space-between',
-                  }}>
+                  }}
+                >
                   <Person width={35} height={35} color={'#fff'} />
                   <View
                     style={{
@@ -88,8 +92,12 @@ const GiveDebt = () => {
                       justifyContent: 'center',
 
                       flex: 1,
-                    }}>
-                    <Text style={[styles.enterText, {color: '#fff'}]}>
+                    }}
+                  >
+                    <Text
+                      style={[styles.enterText, { color: '#fff' }]}
+                      allowFontScaling={false}
+                    >
                       {t('621')}
                     </Text>
                   </View>
@@ -113,13 +121,18 @@ const GiveDebt = () => {
               onPress={() => {
                 onNavigate('HistoryDebt');
               }}
-              style={[styles.button, {width: '80%', alignItems: 'flex-start'}]}>
+              style={[
+                styles.button,
+                { width: '80%', alignItems: 'flex-start' },
+              ]}
+            >
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   padding: heightPercentageToDP(1),
-                }}>
+                }}
+              >
                 <CheckIcon width={35} height={35} color={'#fff'} />
                 <View
                   style={{
@@ -127,7 +140,8 @@ const GiveDebt = () => {
                     justifyContent: 'center',
 
                     flex: 1,
-                  }}>
+                  }}
+                >
                   <Text
                     style={[
                       styles.enterText,
@@ -136,7 +150,9 @@ const GiveDebt = () => {
                         textAlign: 'center',
                         alignItems: 'flex-start',
                       },
-                    ]}>
+                    ]}
+                    allowFontScaling={false}
+                  >
                     {t('207')}
                   </Text>
                 </View>
@@ -149,13 +165,17 @@ const GiveDebt = () => {
               style={styles.buttonqr}
               onPress={() => {
                 onNavigate('QrScan');
-              }}>
+              }}
+            >
               <QrCode
                 width={normalize(70)}
                 height={normalize(70)}
                 color={style.blue}
               />
-              <Text style={[styles.enterText, {color: style.blue}]}>
+              <Text
+                style={[styles.enterText, { color: style.blue }]}
+                allowFontScaling={false}
+              >
                 {t('795')}
               </Text>
             </TouchableOpacity>

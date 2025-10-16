@@ -17,12 +17,12 @@ const NoInternet = ({onChangeIntenet}) => {
           resizeMode="cover"
           style={{width: style.width / 1.5, height: style.height / 2.8}}
         />
-        <Text style={styles.text}>{t('780')}</Text>
+        <Text allowFontScaling={false} style={styles.text}>{t('780')}</Text>
         <TouchableOpacity
           onPress={onChangeIntenet}
           activeOpacity={0.8}
           style={styles.update}>
-          <Text style={styles.textbtn}>{t('783')}</Text>
+          <Text allowFontScaling={false} style={styles.textbtn}>{t('783')}</Text>
         </TouchableOpacity>
       </View>
     </Modal>

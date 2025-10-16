@@ -7,26 +7,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon/index';
-import {style} from '../../theme/style';
+import React, { useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon/index';
+import { style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DownloadIcon from '../../images/home/download.svg';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../components/ToastConfig';
+import { toastConfig } from '../components/ToastConfig';
 import Pdf from 'react-native-pdf';
 
 import OtherHeader from '../components/OtherHeader';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
 import RNFS from 'react-native-fs';
-import {t} from 'i18next';
-import {useSelector} from 'react-redux';
+import { t } from 'i18next';
+import { useSelector } from 'react-redux';
 
 const Contract = () => {
   const [loading, setLoading] = useState(true);
-  const {url, title} = useRoute().params;
+  const { url, title } = useRoute().params;
   const user = useSelector(state => state.HomeReducer.user);
 
   const downloadProgress = res => {
@@ -40,7 +40,7 @@ const Contract = () => {
       visibilityTime: 2000,
       position: 'bottom',
       type: 'omad',
-      props: {title: 'Muvaffaqiyatli', desc: t('789') + '...'},
+      props: { title: 'Muvaffaqiyatli', desc: t('789') + '...' },
     });
 
     try {
@@ -76,11 +76,11 @@ const Contract = () => {
               'Download',
               resp.path(),
             );
-            await FileViewer.open(resp.path(), {showOpenWithDialog: true});
+            await FileViewer.open(resp.path(), { showOpenWithDialog: true });
           }
 
           Platform.OS === 'ios'
-            ? await FileViewer.open(resp.path(), {showOpenWithDialog: true})
+            ? await FileViewer.open(resp.path(), { showOpenWithDialog: true })
             : await forAndroid();
         });
     } catch (error) {
@@ -91,7 +91,7 @@ const Contract = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {title: 'Xatolik', desc: t('Yuklab olish amalga oshmadi')},
+        props: { title: 'Xatolik', desc: t('Yuklab olish amalga oshmadi') },
       });
     }
   };
@@ -99,7 +99,12 @@ const Contract = () => {
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={title} />
@@ -112,16 +117,21 @@ const Contract = () => {
               justifyContent: 'space-around',
               marginTop: 10,
               marginBottom: 10,
-            }}>
+            }}
+          >
             <TouchableOpacity
               onPress={onDownload}
               activeOpacity={0.8}
-              style={styles.download}>
+              style={styles.download}
+            >
               <DownloadIcon width="20" height="20" />
-              <Text style={styles.downloadText}> {t('126')}</Text>
+              <Text style={styles.downloadText} allowFontScaling={false}>
+                {' '}
+                {t('126')}
+              </Text>
             </TouchableOpacity>
           </View>
-          <View style={{flex: 1, backgroundColor: '#fff'}}>
+          <View style={{ flex: 1, backgroundColor: '#fff' }}>
             {loading && (
               <View
                 style={{
@@ -132,14 +142,15 @@ const Contract = () => {
                   bottom: 0,
                   justifyContent: 'center',
                   alignItems: 'center',
-                }}>
+                }}
+              >
                 <ActivityIndicator size={'large'} color={style.blue} />
               </View>
             )}
             <Pdf
               trustAllCerts={false}
               enablePaging={true}
-              activityIndicator={() => (
+              renderActivityIndicator={() => (
                 <ActivityIndicator size={'large'} color={style.blue} />
               )}
               source={{

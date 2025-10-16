@@ -5,18 +5,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo} from 'react';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
-import {settingDate} from '../../../../helper';
-import {sortText} from '../../../components/StatisticCard';
+import { style } from '../../../../theme/style';
+import { settingDate } from '../../../../helper';
+import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
-import {font} from '../../../../theme/font';
-import {set} from 'react-hook-form';
+import { font } from '../../../../theme/font';
+
 const Qarzqaytarilganligitogrisida = ({
   item,
   onQismanQaytarilgan,
@@ -28,11 +28,11 @@ const Qarzqaytarilganligitogrisida = ({
   if (item.creditor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>{t('543') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={546}
               values={{
@@ -46,13 +46,14 @@ const Qarzqaytarilganligitogrisida = ({
                 name: <TextBold />,
                 id: (
                   <Text
+                    allowFontScaling={false}
                     onPress={() => {
                       navigation.navigate('DownloadStatistic', {
                         item,
                         id: item.contract,
                       });
                     }}
-                    style={[styles.notification, {color: style.blue}]}
+                    style={[styles.notification, { color: style.blue }]}
                   />
                 ),
                 start: (
@@ -104,23 +105,26 @@ const Qarzqaytarilganligitogrisida = ({
               </Text>
               {'\n'}
             </Text> */}
-            <View style={{marginTop: 10, flexDirection: 'row'}}>
-              <Text style={styles.notificationTitle}>
-                <Text>{settingDate(item.created)} </Text>
+            <View style={{ marginTop: 10, flexDirection: 'row' }}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
+                <Text allowFontScaling={false}>
+                  {settingDate(item.created)}{' '}
+                </Text>
               </Text>
-              <Text style={styles.notificationTitle}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
                 {' '}
                 {item.time.slice(0, 5)}
               </Text>
             </View>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-              }}>
+              }}
+            >
               <TouchableOpacity
                 disabled={qismanLoadingState || toliqLoadingState}
                 onPress={() => {
@@ -137,12 +141,15 @@ const Qarzqaytarilganligitogrisida = ({
                   }
                 }}
                 activeOpacity={0.8}
-                style={styles.button}>
+                style={styles.button}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx },
+                  ]}
+                >
                   {t('93') as string}
                 </Text>
               </TouchableOpacity>
@@ -155,12 +162,15 @@ const Qarzqaytarilganligitogrisida = ({
                     setQismanLoadingState(false);
                   });
                 }}
-                style={[styles.button, {backgroundColor: 'red'}]}>
+                style={[styles.button, { backgroundColor: 'red' }]}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx },
+                  ]}
+                >
                   {t('96') as string}
                 </Text>
               </TouchableOpacity>
@@ -173,11 +183,11 @@ const Qarzqaytarilganligitogrisida = ({
   if (item.debitor === item.reciver) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>{t('543') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={546}
               values={{
@@ -191,13 +201,14 @@ const Qarzqaytarilganligitogrisida = ({
                 name: <TextBold />,
                 id: (
                   <Text
+                    allowFontScaling={false}
                     onPress={() => {
                       navigation.navigate('DownloadStatistic', {
                         item,
                         id: item.contract,
                       });
                     }}
-                    style={[styles.notification, {color: style.blue}]}
+                    style={[styles.notification, { color: style.blue }]}
                   />
                 ),
                 start: (
@@ -251,11 +262,11 @@ const Qarzqaytarilganligitogrisida = ({
             </Text>
              */}
 
-            <View style={{flexDirection: 'row', marginTop: 10}}>
-              <Text style={styles.notificationTitle}>
-                <Text>{item?.created} </Text>
+            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
+                <Text allowFontScaling={false}>{item?.created} </Text>
               </Text>
-              <Text style={styles.notificationTitle}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
                 {item.time.slice(0, 5)}
               </Text>
             </View>
@@ -267,7 +278,8 @@ const Qarzqaytarilganligitogrisida = ({
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 5,
-              }}>
+              }}
+            >
               <TouchableOpacity
                 disabled={toliqLoadingState || qismanLoadingState}
                 onPress={() => {
@@ -284,12 +296,15 @@ const Qarzqaytarilganligitogrisida = ({
                   }
                 }}
                 activeOpacity={0.8}
-                style={styles.button}>
+                style={styles.button}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   {t('93') as string}
                 </Text>
               </TouchableOpacity>
@@ -302,12 +317,15 @@ const Qarzqaytarilganligitogrisida = ({
                     setQismanLoadingState(false);
                   });
                 }}
-                style={[styles.button, {backgroundColor: 'red'}]}>
+                style={[styles.button, { backgroundColor: 'red' }]}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   {t('96') as string}
                 </Text>
               </TouchableOpacity>

@@ -55,7 +55,7 @@ const PasswordInput = ({
             keyboardType="default"
             style={styles.TextInput}
             secureTextEntry
-          />
+            allowFontScaling={false} />
         </View>
       </View>
     </View>

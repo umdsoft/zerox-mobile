@@ -1,7 +1,7 @@
 /**
  * @format
  */
-import { AppRegistry, Text, LogBox, TextInput } from 'react-native';
+
 import App from './App';
 import { name as appName } from './app.json';
 import { Provider } from 'react-redux';
@@ -14,15 +14,11 @@ import { navigate, navigationRef } from './src/navigation/NavigationRef';
 import { getNotificationWithPage } from './src/store/api/home';
 import { setFbNotificationId } from './src/store/reducers/HomeReducer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-Text.defaultProps = Text.defaultProps || {};
-Text.defaultProps.allowFontScaling = false;
-TextInput.defaultProps = TextInput.defaultProps || {};
-TextInput.defaultProps.allowFontScaling = false;
+import { Appearance, AppRegistry, LogBox } from 'react-native';
 
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 LogBox.ignoreAllLogs();
-
+Appearance.setColorScheme('light');
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Message handled in the background!', remoteMessage);
   Store.dispatch(

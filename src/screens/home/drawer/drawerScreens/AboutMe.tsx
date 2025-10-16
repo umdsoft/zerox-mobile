@@ -54,7 +54,8 @@ const AboutMe = () => {
                 paddingRight: 10,
                 paddingLeft: 10,
                 fontSize: style.fontSize.xx,
-              }}>
+              }}
+              allowFontScaling={false}>
               <TransText
                 fontSize={style.fontSize.xx}
                 tKey={'haqida'}

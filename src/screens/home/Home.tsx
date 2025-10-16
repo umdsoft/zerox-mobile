@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {normalize, style} from '../../theme/style';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { normalize, style } from '../../theme/style';
 import BackGroundIcon from '../../images/Background';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Card from '../components/Card';
 import BerilganQarzIcon from '../../images/home/QarzOlganIcon.svg';
 import MuddatUtganPlus from '../../images/home/MuddatUtgan+.svg';
@@ -20,7 +20,7 @@ import MuddatUtganMinus from '../../images/home/MuddatUtgan-.svg';
 import OlinganQarz from '../../images/home/OlingaQarz.svg';
 import HourGlass from '../../images/HourGlass';
 
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   HomeApi,
   getNotificationWithPage,
@@ -28,8 +28,8 @@ import {
   getVersionAction,
 } from '../../store/api/home';
 import Loading from '../components/Loading';
-import {useTranslation} from 'react-i18next';
-import {getVersion} from 'react-native-device-info';
+import { useTranslation } from 'react-i18next';
+import { getVersion } from 'react-native-device-info';
 import Chart from '../components/Chart';
 import {
   checkExpire,
@@ -39,29 +39,31 @@ import {
   showModal,
 } from '../../store/reducers/HomeReducer';
 import MainText from '../components/MainText';
-import {font, fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
-import {storage} from '../../store/api/token/getToken';
+import { font, fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
+import { storage } from '../../store/api/token/getToken';
 import socketService from '../../helper/socketService';
 import notifee from '@notifee/react-native';
-import {NotificationBadgeModule} from '../../nativemodule/notificationBadge';
+import { NotificationBadgeModule } from '../../nativemodule/notificationBadge';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const Home = () => {
   const scrollRef = useRef(null);
   const scrollRef1 = useRef(null);
   const scrollX = new Animated.Value(0);
   let position = Animated.divide(scrollX, normalize(width));
   const navigation = useNavigation();
-  const {loading, error, home, user} = useSelector(state => state.HomeReducer);
+  const { loading, error, home, user } = useSelector(
+    state => state.HomeReducer,
+  );
   const [refreshing, setRefreshing] = useState(false);
 
   const dispatch = useDispatch();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const getHome = useCallback(async () => {
     try {
-      dispatch(HomeApi({page: 1}))
+      dispatch(HomeApi({ page: 1 }))
         .then(res => {
           const us = res?.payload?.user;
           storage.set('uid', us.data.uid);
@@ -73,11 +75,14 @@ const Home = () => {
             } else {
               NotificationBadgeModule.setBadgeOnlyNumber(0);
             }
-            navigation.reset({routes: [{name: 'LoginWithPhone'}], index: 0});
+            navigation.reset({
+              routes: [{ name: 'LoginWithPhone' }],
+              index: 0,
+            });
             return;
           }
           if (us?.data?.is_active === 2) {
-            dispatch(showModal({show: true}));
+            dispatch(showModal({ show: true }));
           } else {
             dispatch(
               getVersionAction({
@@ -89,11 +94,11 @@ const Home = () => {
               storage.set('version', data?.version);
 
               if (data?.version != getVersion()) {
-                dispatch(checkUpdate({update: true}));
+                dispatch(checkUpdate({ update: true }));
                 return;
               }
               if (us?.data?.is_contract === 0 && us?.data?.is_active === 1) {
-                dispatch(contractModalShow({show: true}));
+                dispatch(contractModalShow({ show: true }));
               }
 
               if (us?.data?.expiry_date) {
@@ -103,12 +108,12 @@ const Home = () => {
                 const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
                 console.log(dayDiff, 'daydiff');
                 if (dayDiff <= 1) {
-                  dispatch(checkExpire({expire: true}));
+                  dispatch(checkExpire({ expire: true }));
                 }
               }
 
               // socketService.initSubscribeWithId(us.data.id);
-              dispatch(getNotificationWithPage({page: 1}));
+              dispatch(getNotificationWithPage({ page: 1 }));
               // socketService.emit('notification', us.data.id);
 
               // socketService.on('notification', data => {
@@ -129,7 +134,7 @@ const Home = () => {
             NotificationBadgeModule.setBadgeOnlyNumber(0);
           }
           storage.clearAll();
-          navigation.reset({routes: [{name: 'LoginWithPhone'}], index: 0});
+          navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
         });
     } catch (errorr) {
       if (Platform.OS === 'ios') {
@@ -138,7 +143,7 @@ const Home = () => {
         NotificationBadgeModule.setBadgeOnlyNumber(0);
       }
       storage.clearAll();
-      navigation.reset({routes: [{name: 'LoginWithPhone'}], index: 0});
+      navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
       throw errorr;
     }
   }, [navigation]);
@@ -214,8 +219,9 @@ const Home = () => {
   }, [getHome]);
 
   useEffect(() => {
-    if (scrollRef1.current) {
-      scrollRef1.current.scrollTo({x: 0, y: 0, animated: true});
+    if (scrollRef.current) {
+      // last item
+      scrollRef.current.scrollToEnd({ animated: true });
     }
   }, []);
 
@@ -234,8 +240,11 @@ const Home = () => {
           justifyContent: 'center',
           flex: 1,
           backgroundColor: '#fff',
-        }}>
-        <Text style={{color: 'red'}}>{JSON.stringify(error)}</Text>
+        }}
+      >
+        <Text style={{ color: 'red' }} allowFontScaling={false}>
+          {JSON.stringify(error)}
+        </Text>
       </View>
     );
   }
@@ -254,7 +263,7 @@ const Home = () => {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                dispatch(HomeApi({page: 1}));
+                dispatch(HomeApi({ page: 1 }));
                 setTimeout(() => {
                   setRefreshing(false);
                 }, 2000);
@@ -262,8 +271,9 @@ const Home = () => {
             />
           }
           nestedScrollEnabled
-          contentContainerStyle={{paddingBottom: 20}}
-          showsVerticalScrollIndicator={false}>
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+        >
           <View>
             <View>
               <ScrollView
@@ -272,20 +282,22 @@ const Home = () => {
                 pagingEnabled={true}
                 horizontal
                 scrollEventThrottle={16}
-                contentOffset={{x: width + 20}}
-                contentContainerStyle={{paddingRight: 10}}
+                contentOffset={{ x: width }}
+                contentContainerStyle={{ paddingRight: 10 }}
                 onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {x: scrollX}}}],
-                  {useNativeDriver: false},
-                )}>
-                <View style={[styles.appInfoMainContainer, {marginLeft: 10}]}>
-                  <View style={{flex: 1}}>
+                  [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                  { useNativeDriver: false },
+                )}
+              >
+                <View style={[styles.appInfoMainContainer, { marginLeft: 10 }]}>
+                  <View style={{ flex: 1 }}>
                     <MainText
                       textAlign={'center'}
                       mTop={8}
                       color={colors.blue}
                       size={fontSize[14]}
-                      ft={font.bold}>
+                      ft={font.bold}
+                    >
                       {t('138')}
                     </MainText>
                     <Chart
@@ -296,14 +308,15 @@ const Home = () => {
 
                   {/* <Slider /> */}
                 </View>
-                <View style={[styles.appInfoMainContainer, {marginLeft: 5}]}>
-                  <View style={{flex: 1}}>
+                <View style={[styles.appInfoMainContainer, { marginLeft: 5 }]}>
+                  <View style={{ flex: 1 }}>
                     <MainText
                       textAlign={'center'}
                       mTop={8}
                       color={colors.blue}
                       size={fontSize[14]}
-                      ft={font.bold}>
+                      ft={font.bold}
+                    >
                       {t('141')}
                     </MainText>
                     <Chart
@@ -320,7 +333,8 @@ const Home = () => {
                   bottom: 0,
                   justifyContent: 'center',
                   flexDirection: 'row',
-                }}>
+                }}
+              >
                 {[1, 2].map((_, i) => {
                   let opacity = position.interpolate({
                     inputRange: [i - 1, i, i + 1],
@@ -344,8 +358,8 @@ const Home = () => {
                 })}
               </View>
             </View>
-            <View style={{flex: 1, marginTop: 20, paddingHorizontal: 10}}>
-              <View style={[styles.cardViewContainer, {marginTop: 0}]}>
+            <View style={{ flex: 1, marginTop: 20, paddingHorizontal: 10 }}>
+              <View style={[styles.cardViewContainer, { marginTop: 0 }]}>
                 <View>
                   <Card
                     data={home?.debitor?.data?.data}
@@ -386,7 +400,7 @@ const Home = () => {
                 </View>
               </View>
 
-              <View style={[styles.cardViewContainer, {marginTop: 30}]}>
+              <View style={[styles.cardViewContainer, { marginTop: 30 }]}>
                 <View>
                   <Card
                     data={home?.debitor?.data?.expired}
@@ -428,7 +442,7 @@ const Home = () => {
                   />
                 </View>
               </View>
-              <View style={[styles.cardViewContainer, {marginTop: 30}]}>
+              <View style={[styles.cardViewContainer, { marginTop: 30 }]}>
                 <TouchableOpacity
                   onPress={() => {
                     navigation.navigate('MuddatOzQolgan', {
@@ -438,12 +452,15 @@ const Home = () => {
                     });
                   }}
                   activeOpacity={0.8}
-                  style={styles.btn}>
+                  style={styles.btn}
+                >
                   <View style={styles.button}>
-                    <View style={{maxWidth: '85%'}}>
-                      <Text style={styles.btnText}>{t('168')}</Text>
+                    <View style={{ maxWidth: '85%' }}>
+                      <Text style={styles.btnText} allowFontScaling={false}>
+                        {t('168')}
+                      </Text>
                     </View>
-                    <View style={{marginRight: 15}}>
+                    <View style={{ marginRight: 15 }}>
                       <HourGlass />
                     </View>
                   </View>
@@ -457,12 +474,15 @@ const Home = () => {
                     });
                   }}
                   activeOpacity={0.8}
-                  style={styles.btn}>
+                  style={styles.btn}
+                >
                   <View style={styles.button}>
-                    <View style={{maxWidth: '85%'}}>
-                      <Text style={styles.btnText}>{t('171')}</Text>
+                    <View style={{ maxWidth: '85%' }}>
+                      <Text style={styles.btnText} allowFontScaling={false}>
+                        {t('171')}
+                      </Text>
                     </View>
-                    <View style={{marginRight: 15}}>
+                    <View style={{ marginRight: 15 }}>
                       <HourGlass />
                     </View>
                   </View>

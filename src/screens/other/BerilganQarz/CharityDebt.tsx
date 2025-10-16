@@ -142,7 +142,7 @@ const CharityDebt = () => {
               <View>
                 {/* 375 */}
                 {/*   {sortText(info?.residual_amount)} {info?.currency} */}
-                <Text style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+                <Text allowFontScaling={false} style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
                   <Trans
                     t={t}
                     i18nKey="381"
@@ -164,6 +164,7 @@ const CharityDebt = () => {
                       sum: <TextBold styles={{fontSize: style.fontSize.xx}} />,
                       id: (
                         <Text
+                          allowFontScaling={false}
                           onPress={() => {
                             navigation.navigate('DownloadStatistic', {
                               item: info,
@@ -198,6 +199,7 @@ const CharityDebt = () => {
                   onValueChange={() => setCheck(!check)}
                 />
                 <Text
+                  allowFontScaling={false}
                   onPress={() => {
                     navigation.navigate('Dalol', {type: 2, data: info});
                   }}
@@ -222,7 +224,7 @@ const CharityDebt = () => {
                         : style.blue,
                     },
                   ]}>
-                  <Text style={[styles.textButton]}>{t('93')}</Text>
+                  <Text allowFontScaling={false} style={[styles.textButton]}>{t('93')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

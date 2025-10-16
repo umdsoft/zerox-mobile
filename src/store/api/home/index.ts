@@ -1,10 +1,10 @@
-import {createAsyncThunk} from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import {successStatus, URL} from '../../../screens/constants';
-import {storage} from '../token/getToken';
+import { successStatus, URL } from '../../../screens/constants';
+import { storage } from '../token/getToken';
 const HomeApi = createAsyncThunk(
   'get/home/user',
-  async (state, {rejectWithValue}) => {
+  async (state, { rejectWithValue }) => {
     const token = storage.getString('token');
 
     try {
@@ -53,7 +53,7 @@ const HomeApi = createAsyncThunk(
         };
       }
     } catch (error) {
-      console.log({'Notification-Error-1': error.message});
+      console.log({ 'Notification-Error-1': error.message });
       rejectWithValue(error.response.data);
     }
   },
@@ -92,7 +92,7 @@ const getCreditorAndDebitorData = createAsyncThunk(
         },
       };
     } catch (error) {
-      console.log({'Notification-Error-11': error.message});
+      console.log({ 'Notification-Error-11': error.message });
     }
   },
 );
@@ -100,7 +100,7 @@ const getCreditorAndDebitorData = createAsyncThunk(
 const getMe = createAsyncThunk('getme', async state => {
   const token = storage.getString('token');
   try {
-    const {data} = await axios.get(URL + '/user/me', {
+    const { data } = await axios.get(URL + '/user/me', {
       headers: {
         Authorization: `Bearer ${token}`,
         Connection: 'close',
@@ -110,14 +110,14 @@ const getMe = createAsyncThunk('getme', async state => {
       user: data,
     };
   } catch (error) {
-    console.log({'Notification-Error-2': error.message});
+    console.log({ 'Notification-Error-2': error.message });
   }
 });
 
 const getNotifications = createAsyncThunk('notification', async state => {
   const token = storage.getString('token');
   try {
-    const {data} = await axios.get(
+    const { data } = await axios.get(
       URL + `/notification/me?page=${state.page || 1}`,
       {
         headers: {
@@ -131,7 +131,7 @@ const getNotifications = createAsyncThunk('notification', async state => {
       pagination: data.pagination,
     };
   } catch (error) {
-    console.log({'Notification-Error-3': error.message});
+    console.log({ 'Notification-Error-3': error.message });
   }
 });
 
@@ -139,7 +139,7 @@ const getVersionAction = createAsyncThunk('getVersion', async state => {
   const token = storage.getString('token');
 
   try {
-    const {data} = await axios.get(URL + `/version/get?type=${state.type}`, {
+    const { data } = await axios.get(URL + `/version/get?type=${state.type}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Connection: 'close',
@@ -151,7 +151,7 @@ const getVersionAction = createAsyncThunk('getVersion', async state => {
       error: null,
     };
   } catch (error) {
-    console.log({'Notification-Error-4': error.message});
+    console.log({ 'Notification-Error-4': error.message });
     throw error;
   }
 });
@@ -160,7 +160,7 @@ const postDeviceIdAction = createAsyncThunk('postDeviceId', async state => {
   const token = storage.getString('token');
 
   try {
-    const {data} = await axios.post(URL + '/user/active-device', state, {
+    const { data } = await axios.post(URL + '/user/active-device', state, {
       headers: {
         Authorization: `Bearer ${token}`,
         Connection: 'close',
@@ -174,7 +174,7 @@ const postDeviceIdAction = createAsyncThunk('postDeviceId', async state => {
       };
     }
   } catch (error) {
-    console.log({'Notification-Error-5': error.message});
+    console.log({ 'Notification-Error-5': error.message });
     throw error;
   }
 });
@@ -198,7 +198,7 @@ const updateDeviceStatusAction = createAsyncThunk(
         },
       );
     } catch (error) {
-      console.log({'Notification-Error-6': error.message});
+      console.log({ 'Notification-Error-6': error.message });
       throw error;
     }
   },
@@ -209,7 +209,7 @@ const closeActiveDeviceAction = createAsyncThunk(
   async state => {
     const token = storage.getString('token');
     try {
-      const {data} = await axios.delete(URL + '/user/close-device', {
+      const { data } = await axios.delete(URL + '/user/close-device', {
         data: {
           device_id: state.device_id,
           Connection: 'close',
@@ -226,7 +226,7 @@ const closeActiveDeviceAction = createAsyncThunk(
         };
       }
     } catch (error) {
-      console.log({'Notification-Error-7': error.message});
+      console.log({ 'Notification-Error-7': error.message });
       throw error;
     }
   },
@@ -236,7 +236,7 @@ const getDevicesAction = createAsyncThunk('getDevicesAction', async () => {
   const token = storage.getString('token');
 
   try {
-    const {data} = await axios.get(URL + '/user/devices', {
+    const { data } = await axios.get(URL + '/user/devices', {
       headers: {
         Authorization: `Bearer ${token}`,
         Connection: 'close',
@@ -250,14 +250,14 @@ const getDevicesAction = createAsyncThunk('getDevicesAction', async () => {
       };
     }
   } catch (error) {
-    console.log({'Notification-Error-8': error.message});
+    console.log({ 'Notification-Error-8': error.message });
     throw error;
   }
 });
 
 const onListTimePostAction = createAsyncThunk(
   'onListTimePostAction',
-  async ({device_id}) => {
+  async ({ device_id }) => {
     try {
       await axios.put(
         URL + '/user/last-time',
@@ -275,7 +275,7 @@ const onListTimePostAction = createAsyncThunk(
         success: true,
       };
     } catch (error) {
-      console.log({'Notification-Error-9': error.message});
+      console.log({ 'Notification-Error-9': error.message });
       throw error;
     }
   },
@@ -284,7 +284,7 @@ const onListTimePostAction = createAsyncThunk(
 const onDeleteDevices = createAsyncThunk('onDeleteDevices', async state => {
   const token = storage.getString('token');
   try {
-    const {data} = await axios.delete(URL + '/user/close-device', {
+    const { data } = await axios.delete(URL + '/user/close-device', {
       data: {
         device_ids: state.data,
       },
@@ -304,7 +304,7 @@ const onDeleteDevices = createAsyncThunk('onDeleteDevices', async state => {
       };
     }
   } catch (error) {
-    console.log({'Notification-Error-10': error.message});
+    console.log({ 'Notification-Error-10': error.message });
     throw error;
   }
 });
@@ -334,7 +334,7 @@ const getCreditorDataAndDebitorData = createAsyncThunk(
         },
       };
     } catch (error) {
-      console.log({'Notification-Error-11': error.message});
+      console.log({ 'Notification-Error-11': error.message });
       throw error;
     }
   },
@@ -345,7 +345,7 @@ const getNotificationWithPage = createAsyncThunk(
   async state => {
     const token = storage.getString('token');
     try {
-      const {data} = await axios.get(
+      const { data } = await axios.get(
         URL + `/notification/me?page=${state.page || 1}&limit=500`,
         {
           headers: {
@@ -359,19 +359,19 @@ const getNotificationWithPage = createAsyncThunk(
         notification: data,
       };
     } catch (error) {
-      console.log({'Notification-Error-3': error.message});
+      console.log({ 'Notification-Error-3': error.message });
     }
   },
 );
 
 const onPostDefaultLang = createAsyncThunk(
   'onPostDefaultLang',
-  async ({lang, id}) => {
+  async ({ lang, id }) => {
     const token = storage.getString('token');
     try {
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + `/user/edit-lang/${id}`,
-        {lang},
+        { lang },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -384,7 +384,7 @@ const onPostDefaultLang = createAsyncThunk(
         data: data,
       };
     } catch (error) {
-      console.log({'Notification-Error-12': error.message});
+      console.log({ 'Notification-Error-12': error.message });
       throw error;
     }
   },
@@ -394,7 +394,7 @@ const onGetNews = createAsyncThunk('onGetNews', async () => {
   const token = storage.getString('token');
   const lang = storage.getString('lang') || 'uz';
   try {
-    const {data} = await axios.get(URL + `/news/get?lang=${lang}`, {
+    const { data } = await axios.get(URL + `/news/get?lang=${lang}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Connection: 'close',
@@ -406,7 +406,26 @@ const onGetNews = createAsyncThunk('onGetNews', async () => {
       news: data.data,
     };
   } catch (error) {
-    console.log({'Notification-Error-13': error.message});
+    console.log({ 'Notification-Error-13': error.message });
+    throw error;
+  }
+});
+
+const onGetContract = createAsyncThunk('onGetContract', async ({ id }) => {
+  const token = storage.getString('token');
+  try {
+    console.log(id, 'id in on get contract');
+    const { data } = await axios.get(URL + `/contract/by/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Connection: 'close',
+      },
+    });
+    return {
+      contract: data,
+    };
+  } catch (error) {
+    console.log({ 'Notification-Error-14': error.message });
     throw error;
   }
 });
@@ -427,4 +446,5 @@ export {
   getCreditorDataAndDebitorData,
   getCreditorAndDebitorData,
   onPostDefaultLang,
+  onGetContract,
 };

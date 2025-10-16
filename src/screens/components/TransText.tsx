@@ -1,9 +1,9 @@
-import React, {PropsWithChildren} from 'react';
-import {Trans} from 'react-i18next';
-import {t} from 'i18next';
+import React, { PropsWithChildren } from 'react';
+import { Trans } from 'react-i18next';
+import { t } from 'i18next';
 import MainText from './MainText';
-import {style} from '../../theme/style';
-import {TextStyle} from 'react-native';
+import { style } from '../../theme/style';
+import { TextStyle } from 'react-native';
 
 interface TransTextProps extends PropsWithChildren {
   tKey: number | string;
@@ -25,6 +25,7 @@ const TransText: React.FunctionComponent<TransTextProps> = ({
   return (
     <MainText size={fontSize} style={styles} textAlign={textAlign}>
       <Trans
+        allowFontScaling={false}
         t={t}
         i18nKey={`${tKey}`}
         values={values}

@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 // import TouchID from 'react-native-touch-id';
 const FingerScanner = () => {
@@ -19,7 +19,7 @@ const FingerScanner = () => {
   // }, []);
   return (
     <View style={styles.container}>
-      <Text>FINGER</Text>
+      <Text allowFontScaling={false}>FINGER</Text>
     </View>
   );
 };

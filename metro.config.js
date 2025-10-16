@@ -11,6 +11,7 @@ const {
 } = getDefaultConfig(__dirname);
 const config = {
   transformer: {
+    minifierPath: 'metro-minify-terser',
     getTransformOptions: async () => ({
       transform: {
         experimentalImportSupport: false,

@@ -7,31 +7,31 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
-import {Modal} from 'react-native-paper';
-import {style} from '../../../theme/style';
-import {useDispatch, useSelector} from 'react-redux';
-import {contractModalShow} from '../../../store/reducers/HomeReducer';
+import React, { useCallback, useState } from 'react';
+import { Modal } from 'react-native-paper';
+import { style } from '../../../theme/style';
+import { useDispatch, useSelector } from 'react-redux';
+import { contractModalShow } from '../../../store/reducers/HomeReducer';
 
 import Pdf from 'react-native-pdf';
 import axios from 'axios';
-import {URL} from '../../constants';
-import {storage} from '../../../store/api/token/getToken';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { URL } from '../../constants';
+import { storage } from '../../../store/api/token/getToken';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Loading from '../../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
-import {fontSize} from '../../../theme/font';
-import {useTranslation} from 'react-i18next';
-const {width, height} = Dimensions.get('screen');
+import { fontSize } from '../../../theme/font';
+import { useTranslation } from 'react-i18next';
+const { width, height } = Dimensions.get('screen');
 
 const ContractModal = () => {
   const dispatch = useDispatch();
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [check, setCheck] = useState(false);
   const [page, setPage] = useState(1);
-  const {contract, user} = useSelector(state => state.HomeReducer);
+  const { contract, user } = useSelector(state => state.HomeReducer);
   const [allPage, setAllPage] = useState(0);
 
   const onClose = useCallback(async () => {
@@ -39,16 +39,16 @@ const ContractModal = () => {
       const token = storage.getString('token');
       try {
         setLoading(true);
-        const {data} = await axios.put(
+        const { data } = await axios.put(
           URL + '/user/edit_contract',
           {},
           {
-            headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
           },
         );
 
         if (data.success) {
-          dispatch(contractModalShow({show: false}));
+          dispatch(contractModalShow({ show: false }));
         }
 
         if (data.success === false && data.msg === 'is_contract_true') {
@@ -61,7 +61,7 @@ const ContractModal = () => {
               desc: t('Siz ommaviy ofertani boshqa qurilmada tasdiqlagansiz'),
             },
           });
-          dispatch(contractModalShow({show: false}));
+          dispatch(contractModalShow({ show: false }));
         }
 
         setLoading(false);
@@ -72,13 +72,13 @@ const ContractModal = () => {
           visibilityTime: 3000,
           position: 'bottom',
           type: 'error2',
-          props: {desc: "Amalga oxshirib bo'lmadi "},
+          props: { desc: "Amalga oxshirib bo'lmadi " },
         });
       }
     } else {
       console.log('red');
     }
-  }, [allPage, dispatch, page]);
+  }, [allPage, page, t]);
 
   return (
     <Modal visible={contract} dismissable={false}>
@@ -90,10 +90,18 @@ const ContractModal = () => {
             <Pdf
               trustAllCerts={false}
               enablePaging={true}
-              activityIndicator={() => (
-                <ActivityIndicator size={'large'} color={style.blue} />
+              onError={error => {
+                console.warn(error);
+              }}
+              renderActivityIndicator={() => (
+                <ActivityIndicator
+                  size="small"
+                  color={style.blue}
+                  style={{ flex: 1, justifyContent: 'center' }}
+                />
               )}
               source={{
+                cache: false,
                 uri: `https://pdf.zerox.uz/oferta.php?id=${
                   user?.data?.uid
                 }&lang=${storage.getString('lang')}&download=0`,
@@ -103,15 +111,13 @@ const ContractModal = () => {
                 setLoading(false);
               }}
               onPageChanged={(page, allpage) => {
-                console.log(page, allpage);
                 setPage(page);
                 setAllPage(allpage);
                 setCheck(false);
-                console.log(page);
               }}
               style={styles.pdf}
             />
-            <View style={{backgroundColor: '#fff'}}>
+            <View style={{ backgroundColor: '#fff' }}>
               <TouchableWithoutFeedback
                 onPress={() => {
                   if (page !== allPage) {
@@ -125,13 +131,15 @@ const ContractModal = () => {
                       visibilityTime: 3000,
                     });
                   }
-                }}>
+                }}
+              >
                 <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingVertical: 10,
-                  }}>
+                  }}
+                >
                   <CheckBox
                     value={check}
                     tintColor={'#DBDBDB'}
@@ -141,7 +149,7 @@ const ContractModal = () => {
                       false: style.disabledButtonColor,
                     }}
                     boxType="square"
-                    style={{height: 20, width: 20}}
+                    style={{ height: 20, width: 20 }}
                     disabled={page !== allPage ? true : false}
                     onValueChange={() => {
                       if (page === allPage) {
@@ -149,7 +157,9 @@ const ContractModal = () => {
                       }
                     }}
                   />
-                  <Text style={styles.teext}>{t('ofertaaa')}</Text>
+                  <Text style={styles.teext} allowFontScaling={false}>
+                    {t('ofertaaa')}
+                  </Text>
                 </View>
               </TouchableWithoutFeedback>
               <TouchableOpacity
@@ -162,12 +172,15 @@ const ContractModal = () => {
                       ? style.blue
                       : style.disabledButtonColor,
                   },
-                ]}>
+                ]}
+              >
                 <Text
                   style={[
                     styles.teext,
-                    {color: 'white', paddingHorizontal: 10, marginLeft: 0},
-                  ]}>
+                    { color: 'white', paddingHorizontal: 10, marginLeft: 0 },
+                  ]}
+                  allowFontScaling={false}
+                >
                   {t('93')}
                 </Text>
               </TouchableOpacity>

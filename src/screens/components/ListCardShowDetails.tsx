@@ -5,15 +5,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo, useCallback, useState} from 'react';
-import {style} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
-import {useTranslation} from 'react-i18next';
-import {fontSize} from '../../theme/font';
-import {t as tt} from 'i18next';
+import React, { memo, useCallback, useState } from 'react';
+import { style } from '../../theme/style';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { fontSize } from '../../theme/font';
+import { t as tt } from 'i18next';
 
-const ListCardShowDetails = ({title, width, disabled, data = []}) => {
-  const {t} = useTranslation();
+const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [uz] = useState(() => {
     let a = [];
@@ -46,29 +46,38 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
   console.log('data', data);
 
   return (
-    <View style={[styles.containerrr, {width: width}]}>
+    <View style={[styles.containerrr, { width: width }]}>
       <View>
-        <View style={{paddingVertical: 10, paddingHorizontal: 10}}>
-          <Text style={[styles.title, {color: style.blue}]}>{title}</Text>
+        <View style={{ paddingVertical: 10, paddingHorizontal: 10 }}>
+          <Text
+            allowFontScaling={false}
+            style={[styles.title, { color: style.blue }]}
+          >
+            {title}
+          </Text>
         </View>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-          }}>
+          }}
+        >
           <TouchableOpacity
             onPress={() => {
               onChangeColor(true);
             }}
             style={[
               styles.valyut,
-              {backgroundColor: blue ? style.blue : '#fff'},
-            ]}>
+              { backgroundColor: blue ? style.blue : '#fff' },
+            ]}
+          >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.valyutText,
-                {color: blue ? '#fff' : style.textColor},
-              ]}>
+                { color: blue ? '#fff' : style.textColor },
+              ]}
+            >
               UZS
             </Text>
           </TouchableOpacity>
@@ -78,13 +87,16 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
             }}
             style={[
               styles.valyut,
-              {backgroundColor: blue ? '#fff' : style.blue},
-            ]}>
+              { backgroundColor: blue ? '#fff' : style.blue },
+            ]}
+          >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.valyutText,
-                {color: blue ? style.textColor : '#fff'},
-              ]}>
+                { color: blue ? style.textColor : '#fff' },
+              ]}
+            >
               USD
             </Text>
           </TouchableOpacity>
@@ -96,7 +108,8 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
             // height: 40,
             width: width,
             paddingVertical: 5,
-          }}>
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
@@ -104,11 +117,18 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
               justifyContent: 'space-between',
               paddingHorizontal: 5,
               width: width,
-            }}>
-            <Text style={[styles.text, {width: '50%', textAlign: 'center'}]}>
+            }}
+          >
+            <Text
+              allowFontScaling={false}
+              style={[styles.text, { width: '50%', textAlign: 'center' }]}
+            >
               {t('174').replace(' ', '\n')}
             </Text>
-            <Text style={[styles.text, {width: '50%', textAlign: 'center'}]}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.text, { width: '50%', textAlign: 'center' }]}
+            >
               {t('327').replace(' ', '\n')}
             </Text>
           </View>
@@ -117,22 +137,27 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
           <View
             style={{
               marginVertical: 10,
-            }}>
+            }}
+          >
             {blue ? (
               data?.length === 0 ? (
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.text,
-                    {fontSize: style.fontSize.small - 2, alignSelf: 'center'},
-                  ]}>
+                    { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
+                  ]}
+                >
                   {t('mavjud')}
                 </Text>
               ) : uz.length === 0 ? (
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.text,
-                    {fontSize: style.fontSize.small - 2, alignSelf: 'center'},
-                  ]}>
+                    { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
+                  ]}
+                >
                   {t('mavjud')}
                 </Text>
               ) : (
@@ -143,17 +168,23 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
                         disabled={disabled}
                         onPress={OnPress}
                         key={index}
-                        style={styles.listContainer}>
+                        style={styles.listContainer}
+                      >
                         <Text
+                          allowFontScaling={false}
                           style={[
                             styles.dayText,
                             {
                               color: returnColor(CheckDate(item?.end_date)),
                             },
-                          ]}>
+                          ]}
+                        >
                           {CheckDate(item?.end_date)}
                         </Text>
-                        <Text style={[styles.money, {color: '#000'}]}>
+                        <Text
+                          allowFontScaling={false}
+                          style={[styles.money, { color: '#000' }]}
+                        >
                           {item?.residual_amount?.replace(
                             /\B(?=(\d{3})+(?!\d))/g,
                             ' ',
@@ -167,18 +198,22 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
               )
             ) : data?.length === 0 ? (
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.text,
-                  {fontSize: style.fontSize.small - 2, alignSelf: 'center'},
-                ]}>
+                  { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
+                ]}
+              >
                 {t('mavjud')}
               </Text>
             ) : usd.length === 0 ? (
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.text,
-                  {fontSize: style.fontSize.small - 2, alignSelf: 'center'},
-                ]}>
+                  { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
+                ]}
+              >
                 {t('mavjud')}
               </Text>
             ) : (
@@ -189,23 +224,28 @@ const ListCardShowDetails = ({title, width, disabled, data = []}) => {
                       onPress={OnPress}
                       key={index}
                       disabled={disabled}
-                      style={styles.listContainer}>
+                      style={styles.listContainer}
+                    >
                       <Text
+                        allowFontScaling={false}
                         style={[
                           styles.dayText,
                           {
                             color: returnColor(CheckDate(item?.end_date)),
                           },
-                        ]}>
+                        ]}
+                      >
                         {CheckDate(item?.end_date)}
                       </Text>
                       <Text
+                        allowFontScaling={false}
                         style={[
                           styles.money,
                           {
                             color: '#000',
                           },
-                        ]}>
+                        ]}
+                      >
                         {item?.residual_amount?.replace(
                           /\B(?=(\d{3})+(?!\d))/g,
                           ' ',
@@ -238,15 +278,15 @@ const CheckDate = date => {
 const pp = (day: number) => {
   switch (Math.abs(day)) {
     case 1:
-      return tt('423', {count: 1});
+      return tt('423', { count: 1 });
     case 2:
-      return tt('426', {count: 2});
+      return tt('426', { count: 2 });
     case 3:
-      return tt('426', {count: 3});
+      return tt('426', { count: 3 });
     case 4:
-      return tt('426', {count: 4});
+      return tt('426', { count: 4 });
     case 5:
-      return tt('435', {count: 5});
+      return tt('435', { count: 5 });
     default:
       return tt('843');
   }
@@ -256,9 +296,9 @@ const returnColor = type => {
   switch (type) {
     case tt('843'):
       return 'red';
-    case tt('423', {count: 1}):
+    case tt('423', { count: 1 }):
       return 'red';
-    case tt('426', {count: 2}):
+    case tt('426', { count: 2 }):
       return 'red';
     default:
       return '#000';

@@ -1,53 +1,58 @@
 import {
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import RadioIconFill from '.././../images/radioButtonFill';
 import MeetInfoGiveDebtModal from '../../modal/MeetInfoGiveDebtModal';
 
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import Loading from '../components/Loading';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../../screens/constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../../screens/constants';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../components/ToastConfig';
+import { toastConfig } from '../components/ToastConfig';
 import CheckBox from '@react-native-community/checkbox';
-
-import DatePicker from '@react-native-community/datetimepicker';
+import DatePicker from 'react-native-date-picker';
+// import DatePicker, {
+//   DateTimePickerEvent,
+// } from '@react-native-community/datetimepicker';
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 import Famale from '../../images/Famale';
 import RadioButtonIcon from '../../images/radioButton';
 import OtherHeader from '../components/OtherHeader';
-import {Provider} from 'react-native-paper';
-import {settingDate} from '../../helper';
+import { Provider } from 'react-native-paper';
+import { settingDate } from '../../helper';
 import MainText from '../components/MainText';
-import {font, fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
+import { font, fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
 
-import {setNotification} from '../../store/reducers/HomeReducer';
-import {t} from 'i18next';
-import {Trans} from 'react-i18next';
+import { t } from 'i18next';
+import { Trans } from 'react-i18next';
 import TransText from '../components/TransText';
-import socketService from '../../helper/socketService';
-import {getMe} from '../../store/api/home';
+
+import { getMe } from '../../store/api/home';
+import DateModal from '../home/modal/DateModal';
 
 const GiveDebtUser = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {qarzoluvchi, type} = useRoute().params;
-  const {user} = useSelector(state => state.HomeReducer);
+  const theme = useColorScheme();
+  const { qarzoluvchi, type } = useRoute().params;
+  const { user } = useSelector(state => state.HomeReducer);
   const [checked, setChecked] = useState(false);
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(true);
@@ -72,7 +77,7 @@ const GiveDebtUser = () => {
 
   const getUsd = useCallback(async () => {
     try {
-      const {data} = await axios.get(
+      const { data } = await axios.get(
         'https://cbu.uz/oz/arkhiv-kursov-valyut/json/',
         {
           headers: {
@@ -180,7 +185,7 @@ const GiveDebtUser = () => {
 
         //tekshirib gurish garak yenam sender ikki api properties qushildi
         setLoading(true);
-        const {data} = await axios.post(
+        const { data } = await axios.post(
           URL + '/contract/create',
           {
             amount: Number(amount.replace(/\s/g, '')),
@@ -209,7 +214,7 @@ const GiveDebtUser = () => {
             visibilityTime: 2000,
             position: 'bottom',
             type: 'omad',
-            props: {title: 'Muvaffaqiyatli', desc: t('285')},
+            props: { title: 'Muvaffaqiyatli', desc: t('285') },
           });
           // socketService.sendNotification({id: qarzoluvchi.id});
           // socketService.emit('notification', user?.data?.id);
@@ -220,7 +225,7 @@ const GiveDebtUser = () => {
           setTimeout(() => {
             navigation.reset({
               index: 0,
-              routes: [{name: 'BottomTabNavigator'}],
+              routes: [{ name: 'BottomTabNavigator' }],
             });
           }, 2000);
         } else {
@@ -232,7 +237,7 @@ const GiveDebtUser = () => {
       if (type === 1) {
         //qarz berish
         setLoading(true);
-        const {data} = await axios.post(
+        const { data } = await axios.post(
           URL + '/contract/create',
           {
             amount: Number(amount.replace(/\s/g, '')),
@@ -283,12 +288,12 @@ const GiveDebtUser = () => {
             visibilityTime: 3000,
             position: 'bottom',
             type: 'omad',
-            props: {title: 'Muvaffaqiyatli', desc: t('285')},
+            props: { title: 'Muvaffaqiyatli', desc: t('285') },
           });
           setTimeout(() => {
             navigation.reset({
               index: 0,
-              routes: [{name: 'BottomTabNavigator'}],
+              routes: [{ name: 'BottomTabNavigator' }],
             });
           }, 2000);
         } else {
@@ -348,7 +353,8 @@ const GiveDebtUser = () => {
           flexDirection: 'row',
           justifyContent: 'space-evenly',
           marginTop: 20,
-        }}>
+        }}
+      >
         <TouchableOpacity
           onPress={() => {
             setActive(true);
@@ -356,7 +362,8 @@ const GiveDebtUser = () => {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-          }}>
+          }}
+        >
           {active ? (
             <RadioIconFill width={20} height={20} color={style.blue} />
           ) : (
@@ -370,7 +377,8 @@ const GiveDebtUser = () => {
           onPress={() => {
             setActive(false);
           }}
-          style={{flexDirection: 'row', alignItems: 'center'}}>
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
           {active ? (
             <RadioButtonIcon width={20} height={20} color={style.blue} />
           ) : (
@@ -386,7 +394,7 @@ const GiveDebtUser = () => {
   }, [active]);
   const renderInput = useMemo(() => {
     return (
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <TextInput
           value={onValue(amount)}
           placeholder={active ? 'UZS' : 'USD'}
@@ -414,7 +422,8 @@ const GiveDebtUser = () => {
           marginVertical: 10,
           width: '80%',
           alignSelf: 'center',
-        }}>
+        }}
+      >
         <TransText
           textAlign="center"
           tKey={291}
@@ -449,7 +458,8 @@ const GiveDebtUser = () => {
             width: style.width,
             position: 'absolute',
             height: style.height / 3,
-          }}>
+          }}
+        >
           <BackGroundIcon width="100%" height="100%" />
         </View>
         <OtherHeader title={type === 1 ? t('147') : t('150')} />
@@ -463,13 +473,15 @@ const GiveDebtUser = () => {
                     flexDirection: 'row',
                     marginLeft: 15,
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <View
                     style={{
                       backgroundColor: '#fff',
                       padding: 10,
                       borderRadius: 50,
-                    }}>
+                    }}
+                  >
                     {type !== 1 ? (
                       user?.data?.type === 2 ? (
                         user?.data?.gender == '1' ? (
@@ -490,7 +502,7 @@ const GiveDebtUser = () => {
                       <Juridic width={40} height={40} color={style.blue} />
                     )}
                   </View>
-                  <View style={{marginLeft: 10}}>
+                  <View style={{ marginLeft: 10 }}>
                     <MainText color={colors.red} size={fontSize[12]}>
                       {t('270')}:
                     </MainText>
@@ -517,13 +529,15 @@ const GiveDebtUser = () => {
                     marginLeft: 15,
                     marginTop: 15,
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <View
                     style={{
                       backgroundColor: '#fff',
                       padding: 10,
                       borderRadius: 50,
-                    }}>
+                    }}
+                  >
                     {type !== 1 ? (
                       qarzoluvchi.type === 2 ? (
                         qarzoluvchi.gender == '1' ? (
@@ -544,7 +558,7 @@ const GiveDebtUser = () => {
                       <Juridic width={50} height={50} color={style.blue} />
                     )}
                   </View>
-                  <View style={{marginLeft: 10}}>
+                  <View style={{ marginLeft: 10 }}>
                     <MainText color={colors.green} size={fontSize[12]}>
                       {t('273')}:
                     </MainText>
@@ -577,10 +591,11 @@ const GiveDebtUser = () => {
                     <MainText size={fontSize[12]}>{t('279')}</MainText>
                   </View>
 
-                  <View style={{flex: 1}}>
+                  <View style={{ flex: 1 }}>
                     <TouchableOpacity
                       onPress={() => setOpen(!open)}
-                      style={styles.TextInput}>
+                      style={styles.TextInput}
+                    >
                       <MainText size={fontSize[14]}>
                         {settingDate(date) === settingDate(Date.now()) ? (
                           <MainText
@@ -589,7 +604,8 @@ const GiveDebtUser = () => {
                               settingDate(date) === settingDate(Date.now())
                                 ? style.placeHolderColor
                                 : '#000'
-                            }>
+                            }
+                          >
                             dd.mm.yyyy
                           </MainText>
                         ) : (
@@ -606,7 +622,8 @@ const GiveDebtUser = () => {
                     alignItems: 'center',
                     marginTop: 10,
                     marginBottom: 10,
-                  }}>
+                  }}
+                >
                   <CheckBox
                     value={checked}
                     tintColor={'#DBDBDB'}
@@ -615,7 +632,7 @@ const GiveDebtUser = () => {
                       true: style.blue,
                       false: style.disabledButtonColor,
                     }}
-                    style={{height: 20, width: 20}}
+                    style={{ height: 20, width: 20 }}
                     boxType="square"
                     onValueChange={() => setChecked(!checked)}
                   />
@@ -652,15 +669,15 @@ const GiveDebtUser = () => {
                 </View>
                 {type === 0 ? (
                   user?.data?.cnt === 0 ? null : (
-                    <View style={{alignSelf: 'center', marginBottom: 8}}>
-                      <Text style={{color: 'black', fontFamily: font.medium}}>
+                    <View style={{ alignSelf: 'center', marginBottom: 8 }}>
+                      <Text style={{ color: 'black', fontFamily: font.medium }}>
                         <Trans
                           i18nKey={'717'}
                           values={{
                             nx: user?.data?.cnt,
                           }}
                           components={{
-                            nx: <Text style={{fontFamily: font.medium}} />,
+                            nx: <Text style={{ fontFamily: font.medium }} />,
                           }}
                         />
                       </Text>
@@ -689,7 +706,8 @@ const GiveDebtUser = () => {
                             ? style.disabledButtonColor
                             : style.blue,
                       },
-                    ]}>
+                    ]}
+                  >
                     <MainText color={colors.white}>{t('93')}</MainText>
                   </TouchableOpacity>
                 </View>
@@ -699,30 +717,66 @@ const GiveDebtUser = () => {
         </ScrollView>
 
         <MeetInfoGiveDebtModal toggleModal={toggleModal} visible={visible} />
-        {open && (
-          <DatePicker
-            open={open}
+        {/* {Platform.OS === 'android' && ( */}
+        {/* <DatePicker
             date={date}
-            style={{
-              backgroundColor: '#fff',
-              alignSelf: 'center',
-            }}
-            mode="date"
-            confirmText="OK"
-            cancelText={t('804')}
-            theme="light"
-            modal={true}
-            minimumDate={new Date()}
-            onCancel={() => {
-              setOpen(false);
-            }}
-            title={t('801')}
+            modal
+            open={open}
             onConfirm={date => {
               setDate(date);
               setOpen(false);
             }}
+            onCancel={() => {
+              setOpen(false);
+            }}
+            cancelText=''
+
+            // style={{
+            //   backgroundColor: theme === 'dark' ? '#000' : '#fff',
+            //   alignSelf: 'center',
+            //   borderRadius: 20,
+            // }}
+            mode="date"
+            minimumDate={new Date()}
+          /> */}
+        {/* )} */}
+
+        {/* {Platform.OS === 'ios' && (
+          <DateModal
+            open={open}
+            setOpen={setOpen}
+            title={t('801')}
+            date={date}
+            setDate={setDate}
+            min={new Date()}
+            // max={maxDate}
           />
-        )}
+        )} */}
+
+        <DatePicker
+          open={open}
+          date={date}
+          style={{
+            backgroundColor: '#fff',
+            alignSelf: 'center',
+            
+          }}
+          
+          mode="date"
+          confirmText="OK"
+          cancelText={t('804')}
+          theme="light"
+          modal={true}
+          minimumDate={new Date()}
+          onCancel={() => {
+            setOpen(false);
+          }}
+          title={t('801')}
+          onConfirm={date => {
+            setDate(date);
+            setOpen(false);
+          }}
+        />
 
         {/* <DateModal
         date={date}

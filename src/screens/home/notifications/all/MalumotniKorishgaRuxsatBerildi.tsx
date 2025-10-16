@@ -1,21 +1,21 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
+import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
 import axios from 'axios';
-import {URL} from '../../../constants';
-import {storage} from '../../../../store/api/token/getToken';
+import { URL } from '../../../constants';
+import { storage } from '../../../../store/api/token/getToken';
 
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {t} from 'i18next';
+import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
-import {filter_notification} from '../../../../store/reducers/HomeReducer';
+import { filter_notification } from '../../../../store/reducers/HomeReducer';
 
-const MalumotniKorishgaRuxsatBerildi = ({item, navigation, okay}) => {
-  const {user} = useSelector(state => state.HomeReducer);
+const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
+  const { user } = useSelector(state => state.HomeReducer);
   const dispatch = useDispatch();
 
   const SeeNotification = async () => {
@@ -44,7 +44,7 @@ const MalumotniKorishgaRuxsatBerildi = ({item, navigation, okay}) => {
       const info = await axios.put(
         URL + `/notification/ok/${item.id}`,
         {},
-        {headers: {Authorization: `Bearer ${token}`, Connection: 'close'}},
+        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
       );
       if (info?.status === 200) {
         // socketService.emit('notification', user?.data?.id);
@@ -61,59 +61,66 @@ const MalumotniKorishgaRuxsatBerildi = ({item, navigation, okay}) => {
 
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 15, marginHorizontal: 15}}>
+      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
         <View>
           <TextBold>{t('864') as string}</TextBold>
         </View>
-        <View style={{marginTop: 10}}>
-          <Text style={styles.notification}>
+        <View style={{ marginTop: 10 }}>
+          <Text allowFontScaling={false} style={styles.notification}>
             <TextBold>
               {item.dtypes === 2 ? ReturnName.returnDebitorName(item) : null}
               {item.dtypes === 1 ? item.dcompany : null}
             </TextBold>{' '}
             {t('867') as string}
           </Text>
-          <View style={{marginTop: 10, flexDirection: 'row'}}>
-            <Text style={styles.notificationTitle}>
-              <Text>{item?.created} </Text>
+          <View style={{ marginTop: 10, flexDirection: 'row' }}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
+              <Text allowFontScaling={false}>{item?.created} </Text>
             </Text>
-            <Text style={styles.notificationTitle}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
               {' '}
               {item.time?.slice(0, 5)}
             </Text>
           </View>
         </View>
-        <View style={{marginTop: 10}}>
+        <View style={{ marginTop: 10 }}>
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'flex-end',
               alignItems: 'center',
-            }}>
+            }}
+          >
             <TouchableOpacity
               onPress={SeeNotification}
               activeOpacity={0.8}
               style={[
                 styles.button,
-                {backgroundColor: '#4e91d2', marginRight: 10},
-              ]}>
+                { backgroundColor: '#4e91d2', marginRight: 10 },
+              ]}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
                 {t('950')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={RemoveNotification}
               activeOpacity={0.8}
-              style={[styles.button, {backgroundColor: '#4e91d2'}]}>
+              style={[styles.button, { backgroundColor: '#4e91d2' }]}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
                 Ok
               </Text>
             </TouchableOpacity>

@@ -6,29 +6,29 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useMemo, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
+import React, { useCallback, useMemo, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
 
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import ChangePasswordIcon from '../../images/ChangePassword';
 import PasswordIcon from '../../images/Password';
 import FingerIcon from '../../images/Finger';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import OtherHeader from '../components/OtherHeader';
-import {Switch} from 'react-native-paper';
-import {storage} from '../../store/api/token/getToken';
+import { Switch } from 'react-native-paper';
+import { storage } from '../../store/api/token/getToken';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import LottieView from 'lottie-react-native';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import FaceIdIcon from '../../images/faceid';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
 const Security = () => {
   const navigation = useNavigation();
-  const {i18n} = useTranslation();
+  const { i18n } = useTranslation();
   const [support, setSupport] = useState(false);
   const [value, setValue] = useState(() => {
     let a = storage.getBoolean('touch');
@@ -51,7 +51,7 @@ const Security = () => {
   }, []);
 
   const onSupportScan = async () => {
-    const {available} = await rnBiometrics.isSensorAvailable();
+    const { available } = await rnBiometrics.isSensorAvailable();
     setSupport(available ? true : false);
   };
 
@@ -64,26 +64,31 @@ const Security = () => {
             alignItems: 'center',
             width: '100%',
             justifyContent: 'space-between',
-          }}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {Platform.OS === 'ios' ? (
               <>
                 <FaceIdIcon width={30} height={30} color={style.blue} />
-                <Text style={styles.optionTx}>{t('faceid') as string}</Text>
+                <Text allowFontScaling={false} style={styles.optionTx}>
+                  {t('faceid') as string}
+                </Text>
               </>
             ) : (
               <>
                 <FingerIcon size={30} color={style.blue} />
-                <Text style={styles.optionTx}>{t('813') as string}</Text>
+                <Text allowFontScaling={false} style={styles.optionTx}>
+                  {t('813') as string}
+                </Text>
               </>
             )}
           </View>
-          <View style={{marginRight: 10}}>
+          <View style={{ marginRight: 10 }}>
             <Switch
               value={value}
               onValueChange={setTouch}
               thumbColor={value ? '#fff' : style.blue}
-              trackColor={{true: style.blue}}
+              trackColor={{ true: style.blue }}
             />
           </View>
         </View>
@@ -107,12 +112,15 @@ const Security = () => {
             <View style={styles.aboutUsContainer}>
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate('RecoveryPassword', {type: 1});
+                  navigation.navigate('RecoveryPassword', { type: 1 });
                 }}
-                style={styles.TouchableOpacity}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                style={styles.TouchableOpacity}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <PasswordIcon size={30} color={style.blue} />
-                  <Text style={styles.optionTx}>{t('678')}</Text>
+                  <Text allowFontScaling={false} style={styles.optionTx}>
+                    {t('678')}
+                  </Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
@@ -120,21 +128,24 @@ const Security = () => {
                   // change localpassword type 1
                   navigation.navigate('ChangeLocalPassword');
                 }}
-                style={styles.TouchableOpacity}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                style={styles.TouchableOpacity}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <ChangePasswordIcon size={30} />
-                  <Text style={styles.optionTx}>{t('774')}</Text>
+                  <Text allowFontScaling={false} style={styles.optionTx}>
+                    {t('774')}
+                  </Text>
                 </View>
               </TouchableOpacity>
               {support ? renderSwitch : null}
             </View>
           </View>
         </View>
-        <View style={{alignSelf: 'center', marginTop: normalize(100)}}>
+        <View style={{ alignSelf: 'center', marginTop: normalize(100) }}>
           <LottieView
             autoPlay
             source={require('../../images/lottie/list/8tdue8bgdH.json')}
-            style={{width: normalize(120), height: normalize(120)}}
+            style={{ width: normalize(120), height: normalize(120) }}
           />
         </View>
       </ScrollView>

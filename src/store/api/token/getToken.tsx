@@ -1,9 +1,6 @@
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({ id: 'storage' });
-console.log(storage.size, 'storage size');
-console.log(storage.getAllKeys(), 'all keys');
-
 
 const setStorageItem = (key: string, value: string | number | boolean) => {
   storage.set(key, value);

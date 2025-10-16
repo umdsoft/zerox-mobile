@@ -1,23 +1,25 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import TextBold from '../../../components/TextBold';
 
-import {style} from '../../../../theme/style';
-import {t} from 'i18next';
+import { style } from '../../../../theme/style';
+import { t } from 'i18next';
 
-import {navigate} from '../../../../navigation/NavigationRef';
-const ExpirePassport = ({item, okay}) => {
+import { navigate } from '../../../../navigation/NavigationRef';
+const ExpirePassport = ({ item, okay }) => {
   const onOkay = async () => {
     okay(item?.id);
   };
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 15, marginHorizontal: 15}}>
+      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
         <View>
           <TextBold>{t('title_expire') as string}</TextBold>
         </View>
-        <View style={{marginTop: 10}}>
-          <Text style={styles.notification}>{t('id_expire') as string}</Text>
+        <View style={{ marginTop: 10 }}>
+          <Text allowFontScaling={false} style={styles.notification}>
+            {t('id_expire') as string}
+          </Text>
         </View>
         <View>
           <View
@@ -26,12 +28,13 @@ const ExpirePassport = ({item, okay}) => {
               justifyContent: 'space-between',
               alignItems: 'center',
               marginTop: 10,
-            }}>
-            <View style={{flexDirection: 'row'}}>
-              <Text style={styles.notificationTitle}>
-                <Text>{item?.created} </Text>
+            }}
+          >
+            <View style={{ flexDirection: 'row' }}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
+                <Text allowFontScaling={false}>{item?.created} </Text>
               </Text>
-              <Text style={styles.notificationTitle}>
+              <Text allowFontScaling={false} style={styles.notificationTitle}>
                 {' '}
                 {item?.time?.slice(0, 5)}
               </Text>
@@ -43,7 +46,8 @@ const ExpirePassport = ({item, okay}) => {
               justifyContent: 'flex-end',
               alignItems: 'center',
               marginTop: 10,
-            }}>
+            }}
+          >
             <TouchableOpacity
               onPress={() => {
                 // i need to call api to get creditor and debitor
@@ -51,24 +55,30 @@ const ExpirePassport = ({item, okay}) => {
                 navigate('ScanFaceMyId');
               }}
               activeOpacity={0.8}
-              style={styles.button}>
+              style={styles.button}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
                 {t('747') as string}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onOkay}
               activeOpacity={0.8}
-              style={[styles.button, {marginLeft: 10}]}>
+              style={[styles.button, { marginLeft: 10 }]}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
                 Ok
               </Text>
             </TouchableOpacity>

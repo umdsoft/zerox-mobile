@@ -3,30 +3,29 @@ import {
   Linking,
   Platform,
   Pressable,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {normalize, style} from '../../theme/style';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalize, style } from '../../theme/style';
 
 import SetCode from '../../images/SetCode';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import Toast from 'react-native-toast-message';
 import ArrowLeft from '../../images/ArrowLeft';
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 import MainText from '../components/MainText';
-import {colors} from '../../theme/colors';
-import {font, fontSize} from '../../theme/font';
-import {t} from 'i18next';
+import { colors } from '../../theme/colors';
+import { font, fontSize } from '../../theme/font';
+import { t } from 'i18next';
 import BiometricModule from '../../../BiometricModule';
-import ReactNativeBiometrics, {BiometryTypes} from 'react-native-biometrics';
+import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
 import MarkIcon from '../../images/mark';
-import {scale, verticalScale} from '../../helper/scale';
-import {heightPercentageToDP} from 'react-native-responsive-screen';
+import { scale } from '../../helper/scale';
+import { heightPercentageToDP } from 'react-native-responsive-screen';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
@@ -53,20 +52,23 @@ const SetLocalPassword = () => {
         // result are success, failed, error
         const result = await BiometricModule.authenticate();
 
-        console.log(result, 'result');
-
         if (result === 'success') {
+          storage.set('appLocked', false);
+          if (storage.getString('pendingNavigation') !== undefined) {
+            navigation.navigate('Notification');
+            storage.delete('pendingNavigation');
+            return;
+          }
           setTimeout(() => {
             navigation.reset({
-              routes: [{name: 'BottomTabNavigator'}],
+              routes: [{ name: 'BottomTabNavigator' }],
               index: 0,
             });
           }, 500);
         }
       } else {
         if (Platform.OS === 'ios') {
-          const {biometryType} = await rnBiometrics.isSensorAvailable();
-          console.log(biometryType, 'biometryType');
+          const { biometryType } = await rnBiometrics.isSensorAvailable();
 
           if (biometryType === BiometryTypes.FaceID) {
             const result = await rnBiometrics.simplePrompt({
@@ -74,14 +76,20 @@ const SetLocalPassword = () => {
             });
 
             if (result.success) {
-              console.log('biometric success');
               storage.set('appLocked', false);
+
+              if (storage.getString('pendingNavigation') !== undefined) {
+                navigation.navigate('Notification');
+                storage.delete('pendingNavigation');
+                return;
+              }
+
               setTimeout(() => {
                 navigation.reset({
-                  routes: [{name: 'BottomTabNavigator'}],
+                  routes: [{ name: 'BottomTabNavigator' }],
                   index: 0,
                 });
-              }, 1200);
+              }, 500);
             } else {
               console.log('biometric failed');
             }
@@ -116,8 +124,15 @@ const SetLocalPassword = () => {
             storage.set('k2', password + val);
             storage.delete('isLoginScreen');
             storage.set('appLocked', false);
+            if (storage.getString('pendingNavigation') !== undefined) {
+              navigation.navigate('Notification');
+              storage.delete('pendingNavigation');
+              return;
+            }
             navigation.reset({
-              routes: [{name: 'BottomTabNavigator', params: {token: token}}],
+              routes: [
+                { name: 'BottomTabNavigator', params: { token: token } },
+              ],
               index: 0,
             });
           } else {
@@ -150,8 +165,13 @@ const SetLocalPassword = () => {
           const token = storage.getString('token');
           storage.delete('isLoginScreen');
           storage.set('appLocked', false);
+          if (storage.getString('pendingNavigation') !== undefined) {
+            navigation.navigate('Notification');
+            storage.delete('pendingNavigation');
+            return;
+          }
           navigation.reset({
-            routes: [{name: 'BottomTabNavigator', params: {token: token}}],
+            routes: [{ name: 'BottomTabNavigator', params: { token: token } }],
             index: 0,
           });
         } else {
@@ -167,7 +187,10 @@ const SetLocalPassword = () => {
             Toast.show({
               type: 'error2',
               position: 'top',
-              props: {title: 'Xatolik!', desc: t('parol', {count: count - 1})},
+              props: {
+                title: 'Xatolik!',
+                desc: t('parol', { count: count - 1 }),
+              },
               visibilityTime: 3000,
               autoHide: true,
               topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -236,7 +259,8 @@ const SetLocalPassword = () => {
           backgroundColor: '#fff',
           alignItems: 'center',
           justifyContent: 'center',
-        }}>
+        }}
+      >
         <StatusBar
           backgroundColor={'#fff'}
           barStyle={'dark-content'}
@@ -257,7 +281,8 @@ const SetLocalPassword = () => {
             alignItems: 'center',
             position: 'absolute',
             bottom: 30,
-          }}>
+          }}
+        >
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {
@@ -266,7 +291,8 @@ const SetLocalPassword = () => {
                 isLocal: true,
               });
             }}
-            style={[styles.enterButton]}>
+            style={[styles.enterButton]}
+          >
             <MainText color={colors.white} size={fontSize[14]}>
               {t('PIN-kodni tiklash')}
             </MainText>
@@ -275,12 +301,14 @@ const SetLocalPassword = () => {
             activeOpacity={0.8}
             onPress={() => {
               Linking.openURL('https://t.me/zeroxuz_bot');
-            }}>
+            }}
+          >
             <MainText
               ft={font.bold}
               color={colors.blue}
               mTop={15}
-              size={fontSize[12]}>
+              size={fontSize[12]}
+            >
               {t('Qo‘llab-quvvatlash xizmati bilan bog‘lanish')}
             </MainText>
           </TouchableOpacity>
@@ -293,9 +321,11 @@ const SetLocalPassword = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor={style.blue} />
       {count !== 0 ? (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           {!isLocal && (
-            <View style={{alignItems: 'center', marginLeft: 10, marginTop: 10}}>
+            <View
+              style={{ alignItems: 'center', marginLeft: 10, marginTop: 10 }}
+            >
               <TouchableOpacity
                 onPress={() => {
                   // 0 bulsa parol garakmidi dagani
@@ -312,7 +342,8 @@ const SetLocalPassword = () => {
                     flexDirection: 'row',
                     alignItems: 'center',
                   })
-                }>
+                }
+              >
                 <MainText color={colors.white} size={fontSize[12]}>
                   {t('PIN-kodni tiklash')}
                 </MainText>
@@ -344,20 +375,22 @@ const SetLocalPassword = () => {
             style={{
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <SetCode
               width={heightPercentageToDP(22)}
               height={heightPercentageToDP(30)}
-              style={{transform: [{scale: 1.3}]}}
+              style={{ transform: [{ scale: 1.3 }] }}
             />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             {isLocal ? (
               <View style={styles.setCodeTextContainer}>
                 <MainText
                   color={colors.white}
                   size={fontSize[14]}
-                  ft={font.bold}>
+                  ft={font.bold}
+                >
                   {step === 1 ? t('771') : t('PIN-kodni takrorlang')}
                 </MainText>
               </View>
@@ -366,14 +399,15 @@ const SetLocalPassword = () => {
                 <MainText
                   color={colors.white}
                   size={fontSize[14]}
-                  ft={font.bold}>
+                  ft={font.bold}
+                >
                   {t('PIN-kodni kiriting')}
                 </MainText>
               </View>
             )}
             <View style={styles.codeContainer}>
               <View style={styles.fourItem}>
-                {Array.from({length: 4}, (_v, i) => {
+                {Array.from({ length: 4 }, (_v, i) => {
                   return (
                     <View
                       key={i}
@@ -394,9 +428,10 @@ const SetLocalPassword = () => {
                   flex: 1,
                   alignSelf: 'center',
                   width: heightPercentageToDP(33),
-                }}>
+                }}
+              >
                 <View style={styles.codeNumberContainer}>
-                  {Array.from({length: 12}, (_v, i) => {
+                  {Array.from({ length: 12 }, (_v, i) => {
                     if (i === 9) {
                       return (
                         <View key={i} style={[styles.codeNumberContainer]}>
@@ -410,10 +445,11 @@ const SetLocalPassword = () => {
                               onPress={() => {
                                 onFingerScan();
                               }}
-                              style={styles.codeButton}>
+                              style={styles.codeButton}
+                            >
                               <Image
                                 source={require('../../images/auth/fingerprint.png')}
-                                style={{width: 30, height: 30}}
+                                style={{ width: 30, height: 30 }}
                                 resizeMode="cover"
                               />
                             </Pressable>
@@ -421,7 +457,7 @@ const SetLocalPassword = () => {
                             <View
                               style={[
                                 styles.codeButton,
-                                {backgroundColor: '#fff'},
+                                { backgroundColor: '#fff' },
                               ]}
                             />
                           )}
@@ -440,11 +476,13 @@ const SetLocalPassword = () => {
                                 radius: 50,
                                 borderless: true,
                               }}
-                              style={styles.codeButton}>
+                              style={styles.codeButton}
+                            >
                               <MainText
                                 // ft={font.bold}
                                 color={colors.black}
-                                size={fontSize[21]}>
+                                size={fontSize[21]}
+                              >
                                 0
                               </MainText>
                             </Pressable>
@@ -463,7 +501,8 @@ const SetLocalPassword = () => {
                                 radius: 50,
                                 borderless: true,
                               }}
-                              style={styles.codeButton}>
+                              style={styles.codeButton}
+                            >
                               <ArrowLeft
                                 width={12}
                                 height={12}
@@ -484,11 +523,13 @@ const SetLocalPassword = () => {
                               radius: 50,
                               borderless: true,
                             }}
-                            style={styles.codeButton}>
+                            style={styles.codeButton}
+                          >
                             <MainText
                               // ft={font.bold}
                               color={colors.black}
-                              size={fontSize[21]}>
+                              size={fontSize[21]}
+                            >
                               {i + 1}
                             </MainText>
                           </Pressable>

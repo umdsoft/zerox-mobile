@@ -17,7 +17,7 @@ const TimeChecker = () => {
           resizeMode="cover"
           style={{width: style.width / 1.5, height: style.height / 2.8}}
         />
-        <Text style={styles.text}>{t('time')}</Text>
+        <Text allowFontScaling={false} style={styles.text}>{t('time')}</Text>
       </View>
     </Modal>
   );

@@ -91,7 +91,7 @@ const SearchDebitor = () => {
                   placeholderTextColor={style.placeHolderColor}
                   style={styles.TextInput}
                   onChangeText={searchUser}
-                />
+                  allowFontScaling={false} />
               </View>
             </View>
           </View>

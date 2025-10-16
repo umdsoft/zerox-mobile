@@ -57,15 +57,14 @@ const Chart = ({data, title}) => {
           ]}
         />
       )}
-
       <View style={{marginLeft: normalize(25)}}>
-        <Text style={styles.key(style.blue)}>
+        <Text style={styles.key(style.blue)} allowFontScaling={false}>
           {t('195')} - {data?.jarayon}
         </Text>
-        <Text style={styles.key('#47bb78')}>
+        <Text style={styles.key('#47bb78')} allowFontScaling={false}>
           {t('198')} - {data?.tugallangan}
         </Text>
-        <Text style={styles.key('#feb116')}>
+        <Text style={styles.key('#feb116')} allowFontScaling={false}>
           {t('201')} - {data?.rad}
         </Text>
         {/* <Text style={[styles.key(style.blue), {marginTop: normalize(15)}]}>

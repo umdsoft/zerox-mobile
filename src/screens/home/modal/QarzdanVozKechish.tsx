@@ -31,23 +31,24 @@ const QarzdanVozKechish = ({data}) => {
             fontFamily: style.fontFamilyBold,
             color: '#000',
             fontSize: style.fontSize.xs,
-          }}>
+          }}
+          allowFontScaling={false}>
           D А L O L А T N O M А
         </Text>
       </View>
       <View style={{marginTop: 10, marginBottom: 10}}>
-        <Text style={styles.text}>
+        <Text style={styles.text} allowFontScaling={false}>
           ( <TextBold>{data?.number}</TextBold> -sonli qarz shartnomasi bo‘yicha
           qarzdan voz kechish to‘g‘risida) {'\n'}
           {'\n'}
           Men, <TextBold>{data.debitor_name}</TextBold> (pasport:{' '}
-          <Text style={styles.mainText}>{data?.debitor_passport}.</Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_passport}.</Text>{' '}
           <TextBold>{settingDate(data?.debitor_issued_date)} </TextBold>yilda{' '}
           <TextBold>{data?.debitor_issued}</TextBold> tomonidan berilgan) (qarz
           beruvchi) tomonimdan ushbu dalolatnoma quyidagilar haqida tuzildi:
           {'\n'}
           {'\n'}Men va fuqaro{' '}
-          <Text style={styles.mainText}>{data?.creditor_name}</Text> (pasport:{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> (pasport:{' '}
           <TextBold>{data.creditor_passport}</TextBold>{' '}
           <TextBold>{settingDate(data.creditor_issued_date)}</TextBold> yilda{' '}
           <TextBold>{data.creditor_issued}</TextBold> tomonidan berilgan) (qarz
@@ -57,7 +58,7 @@ const QarzdanVozKechish = ({data}) => {
           {'\n'}
           {'\n'}
           Shunga ko‘ra fuqaro{' '}
-          <Text style={styles.mainText}>{data?.creditor_name}</Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text>{' '}
           <TextBold>{data?.number}</TextBold>-sonli qarz shartnomasi bo‘yicha
           o‘z majburiyatlarini bajarishdan ozod qilindi. {'\n'}
           {'\n'}Voz kechilgan qarz mablagʼining umumiy miqdori{' '}
@@ -67,14 +68,14 @@ const QarzdanVozKechish = ({data}) => {
           .{'\n'}Mazkur dalolatnoma QR-kod orqali tasdiqlangan holda elektron
           tarzda tuzildi.{'\n'}
           Dalolatnoma ikki tomonning{' '}
-          <Text style={styles.mainText}>"Zerox"</Text> dasturidagi shaxsiy
+          <Text style={styles.mainText} allowFontScaling={false}>"Zerox"</Text> dasturidagi shaxsiy
           kabinetida saqlanadi. {'\n'}QR-kod orqali tasdiqlangan Dalolatnomaning
           saqlanishini Jamiyat o‘z zimmasiga oladi.{'\n'}
           {'\n'}
-          <Text style={{alignSelf: 'center'}}>
+          <Text style={{alignSelf: 'center'}} allowFontScaling={false}>
             <TextBold styles={{textAlign: 'center'}}>
               Qarz beruvchi (debitor):{' '}
-              <Text style={styles.mainText}>
+              <Text style={styles.mainText} allowFontScaling={false}>
                 {user.data.first_name +
                   ' ' +
                   user.data.last_name +

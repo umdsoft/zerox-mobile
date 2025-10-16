@@ -58,7 +58,7 @@ const CreateSecretWord = () => {
                   </MainText>
                 </View>
                 <View style={{flex: 1}}>
-                  <TextInput keyboardType="default" style={styles.TextInput} />
+                  <TextInput keyboardType="default" style={styles.TextInput} allowFontScaling={false} />
                 </View>
               </View>
               <View style={styles.TextInputLabelContainer}>
@@ -78,7 +78,7 @@ const CreateSecretWord = () => {
                   </MainText>
                 </View>
                 <View style={{flex: 1}}>
-                  <TextInput keyboardType="default" style={styles.TextInput} />
+                  <TextInput keyboardType="default" style={styles.TextInput} allowFontScaling={false} />
                 </View>
               </View>
             </View>

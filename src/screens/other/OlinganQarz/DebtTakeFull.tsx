@@ -1,39 +1,39 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {normalize, style} from '../../../theme/style';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { normalize, style } from '../../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {URL} from '../../constants';
-import {toastConfig} from '../../components/ToastConfig';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { URL } from '../../constants';
+import { toastConfig } from '../../components/ToastConfig';
 
-import {sortText} from '../../components/StatisticCard';
+import { sortText } from '../../components/StatisticCard';
 import CheckBox from '@react-native-community/checkbox';
 import TextBold from '../../components/TextBold';
 import axios from 'axios';
-import {storage} from '../../../store/api/token/getToken';
+import { storage } from '../../../store/api/token/getToken';
 import OtherHeader from '../../components/OtherHeader';
-import {settingDate} from '../../../helper';
+import { settingDate } from '../../../helper';
 
-import {setNotification} from '../../../store/reducers/HomeReducer';
-import {useDispatch, useSelector} from 'react-redux';
-import {t} from 'i18next';
-import {Trans} from 'react-i18next';
+import { setNotification } from '../../../store/reducers/HomeReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { t } from 'i18next';
+import { Trans } from 'react-i18next';
 import socketService from '../../../helper/socketService';
 
 const DebtTakeFull = () => {
   const navigation = useNavigation();
-  const {item} = useRoute().params;
+  const { item } = useRoute().params;
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
   const [checked, setChecked] = useState(false);
 
   const onPress = async () => {
     const token = storage.getString('token');
     try {
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/contract/act',
         {
           contract: item.id,
@@ -52,8 +52,28 @@ const DebtTakeFull = () => {
           res: item.debitor,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
+      );
+
+      console.log(
+        {
+          contract: item.id,
+          creditor: item.creditor,
+          debitor: item.debitor,
+          reciver: item.debitor,
+          end_date: item.end_date,
+          old_amount: Number(item.residual_amount),
+          inc: Number(item.residual_amount + item.inc),
+          ntype: 2,
+          refundable_amount: item.residual_amount,
+          residual_amount: 0,
+          status: 0,
+          type: 2,
+          sender: item.creditor,
+          res: item.debitor,
+        },
+        'bodyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy',
       );
 
       if (data.msg === 'end' && status === 200) {
@@ -119,20 +139,32 @@ const DebtTakeFull = () => {
       });
     }
   };
+
+  console.log(item, 'item');
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('441')} />
       <View style={[styles.main]}>
         <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+          <View
+            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+          >
             <View>
               <View style={[styles.card]}>
                 <View style={styles.insideMoney}>
-                  <Text style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                  >
                     <Trans
                       i18nKey={'444'}
                       values={{
@@ -147,10 +179,11 @@ const DebtTakeFull = () => {
                       }}
                       components={{
                         start: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                         id: (
                           <Text
+                            allowFontScaling={false}
                             onPress={() => {
                               navigation.navigate('DownloadStatistic', {
                                 item: item,
@@ -163,11 +196,11 @@ const DebtTakeFull = () => {
                           />
                         ),
                         sum: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                         end: <TextBold />,
                         name: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                       }}
                     />
@@ -181,7 +214,8 @@ const DebtTakeFull = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginTop: 20,
-                }}>
+                }}
+              >
                 <CheckBox
                   value={checked}
                   tintColor={style.blue}
@@ -190,17 +224,19 @@ const DebtTakeFull = () => {
                     false: style.disabledButtonColor,
                   }}
                   boxType="square"
-                  style={{height: 20, width: 20, marginRight: 10}}
+                  style={{ height: 20, width: 20, marginRight: 10 }}
                   onValueChange={() => setChecked(!checked)}
                 />
                 <Text
+                  allowFontScaling={false}
                   onPress={() => {
-                    navigation.navigate('Dalol', {type: 4, data: item});
+                    navigation.navigate('Dalol', { type: 4, data: item });
                   }}
                   style={[
                     styles.phoneText,
-                    {color: style.blue, maxWidth: '90%', marginLeft: 5},
-                  ]}>
+                    { color: style.blue, maxWidth: '90%', marginLeft: 5 },
+                  ]}
+                >
                   {t('372')}
                 </Text>
               </View>
@@ -218,8 +254,11 @@ const DebtTakeFull = () => {
                       ? style.disabledButtonColor
                       : style.blue,
                   },
-                ]}>
-                <Text style={[styles.textButton]}>{t('357')}</Text>
+                ]}
+              >
+                <Text allowFontScaling={false} style={[styles.textButton]}>
+                  {t('357')}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

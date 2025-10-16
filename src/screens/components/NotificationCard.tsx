@@ -12,18 +12,18 @@ const NotificationCard = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
-          <Text style={styles.notificationTitle}>Bildirishnomalar</Text>
+          <Text allowFontScaling={false} style={styles.notificationTitle}>Bildirishnomalar</Text>
           <TouchableOpacity activeOpacity={0.5}>
             <CloseIcon width={15} height={15} />
           </TouchableOpacity>
         </View>
         <View style={{marginTop: 5}}>
-          <Text style={[styles.notification]}>
+          <Text allowFontScaling={false} style={[styles.notification]}>
             Qarz muddati uzaytirilganligi{'\n'}to`g`risida bildirishnoma
           </Text>
         </View>
         <View style={{marginTop: 15}}>
-          <Text style={styles.notification}>
+          <Text allowFontScaling={false} style={styles.notification}>
             01.01.2021 yildagi 01/01/2021/000001-sonli shartnoma bilan
             rasmiylashtirilgan qarz shartnomasi muddati 01.01.2022 yilgacha
             uzaytirildi.
@@ -36,11 +36,11 @@ const NotificationCard = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
-            <Text style={styles.notification}>
+            <Text allowFontScaling={false} style={styles.notification}>
               Bugun soat {new Date().toLocaleString()}
             </Text>
             <TouchableOpacity activeOpacity={0.8} style={styles.button}>
-              <Text style={[styles.notification, {color: '#fff'}]}>Ok</Text>
+              <Text allowFontScaling={false} style={[styles.notification, {color: '#fff'}]}>Ok</Text>
             </TouchableOpacity>
           </View>
         </View>

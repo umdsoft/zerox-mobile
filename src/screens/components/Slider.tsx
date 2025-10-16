@@ -46,8 +46,8 @@ const Slider = () => {
       >
         <View style={{flexDirection: 'row'}}>
           <View style={{maxWidth: '70%'}}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.desc}>{item.desc}</Text>
+            <Text style={styles.title} allowFontScaling={false}>{item.title}</Text>
+            <Text style={styles.desc} allowFontScaling={false}>{item.desc}</Text>
           </View>
           <View>
             <Image

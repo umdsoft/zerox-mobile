@@ -86,6 +86,7 @@ const ShowUserDetails = () => {
 
               <View style={{alignSelf: 'center'}}>
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.textColor,
                     {textAlign: 'center', maxWidth: '90%', marginTop: 10},
@@ -100,26 +101,26 @@ const ShowUserDetails = () => {
 
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('684')}</Text>
+                  <Text allowFontScaling={false} style={styles.phoneText}>{t('684')}</Text>
                 </View>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.textColor}>{data?.brithday}</Text>
+                  <Text allowFontScaling={false} style={styles.textColor}>{data?.brithday}</Text>
                 </View>
               </View>
 
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('786')}</Text>
+                  <Text allowFontScaling={false} style={styles.phoneText}>{t('786')}</Text>
                 </View>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.textColor}>
+                  <Text allowFontScaling={false} style={styles.textColor}>
                     {data?.region} {data?.district}
                   </Text>
                 </View>
               </View>
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('255')}</Text>
+                  <Text allowFontScaling={false} style={styles.phoneText}>{t('255')}</Text>
                 </View>
                 <View style={{flex: 1, justifyContent: 'center'}}>
                   <TextInput
@@ -127,21 +128,21 @@ const ShowUserDetails = () => {
                     value={settingDate(data?.created_at)}
                     keyboardType="default"
                     style={styles.TextInput}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
 
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('120')}</Text>
+                  <Text allowFontScaling={false} style={styles.phoneText}>{t('120')}</Text>
                 </View>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.textColor}>{data?.uid}</Text>
+                  <Text allowFontScaling={false} style={styles.textColor}>{data?.uid}</Text>
                 </View>
               </View>
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}> {t('27')}</Text>
+                  <Text allowFontScaling={false} style={styles.phoneText}> {t('27')}</Text>
                 </View>
                 <View style={{flex: 1, justifyContent: 'center'}}>
                   <TextInput
@@ -149,7 +150,7 @@ const ShowUserDetails = () => {
                     value={data?.phone}
                     keyboardType="default"
                     style={styles.TextInput}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
             </View>

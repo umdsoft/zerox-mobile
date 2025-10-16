@@ -32,10 +32,7 @@ import { colors } from './src/theme';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
 import WebView from 'react-native-webview';
-import InitializeStorage, {
-  initStorage,
-  storage,
-} from './src/store/api/token/getToken';
+import { storage } from './src/store/api/token/getToken';
 
 const isTablet = DeviceInfo.isTablet();
 LogBox.ignoreLogs([
@@ -165,7 +162,7 @@ const App = () => {
         <FaceIdModal />
         <ContractModal />
         <NoInternet onChangeIntenet={onChangeIntenet} />
-        {/* <UpdateModal /> */}
+        <UpdateModal />
         <ExpirePassportModal />
       </I18nextProvider>
       <ToasWrapper />

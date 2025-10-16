@@ -8,29 +8,35 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {normalize, style} from '../../theme/style';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { normalize, style } from '../../theme/style';
 import CheckSms from '../../images/changeNumber';
 import Loading from '../components/Loading';
 import OtherHeader from '../components/OtherHeader';
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 import axios from 'axios';
-import {URL} from '../constants';
+import { URL } from '../constants';
 import Toast from 'react-native-toast-message';
 
-import {useDispatch, useSelector} from 'react-redux';
-import {HomeApi} from '../../store/api/home';
-import {t} from 'i18next';
-import {useTranslation} from 'react-i18next';
-import {fontSize} from '../../theme';
+import { useDispatch, useSelector } from 'react-redux';
+import { HomeApi } from '../../store/api/home';
+import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { fontSize } from '../../theme';
 
 import _BackgroundTimer from 'react-native-background-timer';
-import {useKeepAwake} from '@sayem314/react-native-keep-awake';
+import { useKeepAwake } from '@sayem314/react-native-keep-awake';
 
 import MainText from '../components/MainText';
-import {secToMin} from '../other/SaveUserDetails';
-import {OtpInput} from 'react-native-otp-entry';
+import { secToMin } from '../other/SaveUserDetails';
+import { OtpInput } from 'react-native-otp-entry';
 import {
   getHash,
   removeListener,
@@ -44,11 +50,11 @@ const ChangePhoneNumberSmsCheck = () => {
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState('');
-  const {phone} = route.params;
+  const { phone } = route.params;
   const navigation = useNavigation();
-  const {i18n} = useTranslation();
+  const { i18n } = useTranslation();
 
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
   const [timer, setTimer] = useState(120);
   const [isRetry, setIsRetry] = useState(true);
   const [autoFocus, setAutoFocus] = useState(false);
@@ -62,7 +68,7 @@ const ChangePhoneNumberSmsCheck = () => {
     try {
       setLoading(true);
       Keyboard.dismiss();
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + '/user/rephone',
         {
           phone: phone,
@@ -93,7 +99,7 @@ const ChangePhoneNumberSmsCheck = () => {
             desc: t("Sizning telefon raqamingiz o'zgartirildi"),
           },
         });
-        dispatch(HomeApi({page: 1}));
+        dispatch(HomeApi({ page: 1 }));
         setTimeout(() => {
           navigation.navigate('BottomTabNavigator');
         }, 2000);
@@ -176,7 +182,7 @@ const ChangePhoneNumberSmsCheck = () => {
       startTimer();
       setAutoFocus(true);
       const token = storage.getString('token');
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + '/user/rephone',
         {
           phone: phone.replace(/\s/g, ''),
@@ -266,19 +272,22 @@ const ChangePhoneNumberSmsCheck = () => {
         iconColor="#fff"
         titleColor="#000"
       />
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{marginTop: normalize(90)}}>
-            <View style={{alignItems: 'center'}}>
+          <View style={{ marginTop: normalize(90) }}>
+            <View style={{ alignItems: 'center' }}>
               <CheckSms />
             </View>
 
             <View style={styles.main}>
               <View>
                 <View
-                  style={[styles.TextInputLabelContainer, {marginBottom: 25}]}>
+                  style={[styles.TextInputLabelContainer, { marginBottom: 25 }]}
+                >
                   <View style={styles.retryPassword}>
-                    <Text style={styles.phoneText}>{t('852')}</Text>
+                    <Text allowFontScaling={false} style={styles.phoneText}>
+                      {t('852')}
+                    </Text>
                   </View>
                   <View
                     style={{
@@ -287,7 +296,8 @@ const ChangePhoneNumberSmsCheck = () => {
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       marginTop: 50,
-                    }}>
+                    }}
+                  >
                     <OtpInput
                       ref={refI}
                       onTextChange={text => {
@@ -342,8 +352,12 @@ const ChangePhoneNumberSmsCheck = () => {
                       ? style.disabledButtonColor
                       : style.blue,
                   },
-                ]}>
-                <Text style={[styles.enterText, {color: '#fff'}]}>
+                ]}
+              >
+                <Text
+                  allowFontScaling={false}
+                  style={[styles.enterText, { color: '#fff' }]}
+                >
                   {t('45')}
                 </Text>
               </TouchableOpacity>
@@ -356,10 +370,12 @@ const ChangePhoneNumberSmsCheck = () => {
                   }}
                   disabled={isRetry}
                   activeOpacity={0.8}
-                  style={[]}>
+                  style={[]}
+                >
                   <MainText
                     size={fontSize[12]}
-                    color={isRetry ? style.disabledButtonColor : style.blue}>
+                    color={isRetry ? style.disabledButtonColor : style.blue}
+                  >
                     {t('60')}
                   </MainText>
                 </TouchableOpacity>

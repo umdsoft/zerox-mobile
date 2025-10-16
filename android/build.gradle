@@ -18,6 +18,9 @@ buildscript {
         classpath('com.google.gms:google-services:4.4.3')
     }
 }
+ext {
+    ndkVersion = ndkVersion
+}
 allprojects {
     repositories {
         maven { url "https://artifactory.aigroup.uz:443/artifactory/myid" }

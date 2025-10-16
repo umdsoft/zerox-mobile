@@ -6,6 +6,7 @@ import {
   Platform,
   Button,
   Image,
+  ScrollView,
 } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackGroundIcon } from '../../../../helper/homeIcon';
@@ -316,95 +317,106 @@ const QrCode = () => {
       </View>
       <OtherHeader title={t('qrcode')} />
       <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <ViewShot
-            ref={viewShootRef}
-            // captureMode="mount"
-            // onCapture={onCapture}
-            options={{
-              format: 'png',
-              quality: 1,
-              result: 'base64',
-            }}
-          >
-            <View style={styles.darkBg}>
-              <View style={[styles.row]}>
-                <View style={styles.logoBox}>
-                  <Text style={styles.logoBoxA}>Zero</Text>
-                  <Text style={styles.logoBoxB}>X</Text>
-                </View>
-                <View style={{ alignSelf: 'center' }}>
-                  <QRCode
-                    // ref={qrRef}
-                    getRef={c => setProductQRref(c)}
-                    // style={{marginBottom: 20}}
-                    ecl="M"
-                    color={'#0063b6'}
-                    backgroundColor="#fff"
-                    size={170}
-                    logoBorderRadius={5}
-                    logo={require('../../../../images/iconapp.jpg')}
-                    value={item}
-                  />
-                </View>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontFamily: 'Montserrat-Medium',
-                    marginTop: 15,
-                    fontSize: 14,
-                    textAlign: 'center',
-                  }}
-                >
-                  {t('idNumber')}: {user?.data.uid}
-                </Text>
-              </View>
-
-              <View style={styles.max}>
-                <MainText
-                  textAlign={'center'}
-                  color={colors.white}
-                  style={styles.userName}
-                  size={fontSize[14]}
-                >
-                  {user?.data?.last_name +
-                    ' ' +
-                    user?.data?.first_name +
-                    ' ' +
-                    user.data.middle_name}
-                </MainText>
-              </View>
-            </View>
-          </ViewShot>
-          <Text
-            style={{
-              color: 'black',
-              fontFamily: 'Montserrat-Medium',
-              textAlign: 'center',
-              marginTop: 15,
-              fontSize: 14,
-            }}
-          >
-            {t('123')}
-          </Text>
-          <View style={styles.buttons}>
-            <TouchableOpacity
-              onPress={() => onDownload()}
-              style={styles.download}
+        <ScrollView>
+          <View style={styles.aboutUsContainer}>
+            <ViewShot
+              ref={viewShootRef}
+              // captureMode="mount"
+              // onCapture={onCapture}
+              options={{
+                format: 'png',
+                quality: 1,
+                result: 'base64',
+              }}
             >
-              <DownloadIcon width="20%" height="100%" />
-              <MainText color={colors.white} size={fontSize[12]}>
-                {t('126')}
-              </MainText>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => onShare()} style={styles.download}>
-              <ShareIcon width="20%" height="100%" />
-              <MainText color={colors.white} size={fontSize[12]}>
-                {t('129')}
-              </MainText>
-            </TouchableOpacity>
+              <View style={styles.darkBg}>
+                <View style={[styles.row]}>
+                  <View style={styles.logoBox}>
+                    <Text allowFontScaling={false} style={styles.logoBoxA}>
+                      Zero
+                    </Text>
+                    <Text allowFontScaling={false} style={styles.logoBoxB}>
+                      X
+                    </Text>
+                  </View>
+                  <View style={{ alignSelf: 'center' }}>
+                    <QRCode
+                      // ref={qrRef}
+                      getRef={c => setProductQRref(c)}
+                      // style={{marginBottom: 20}}
+                      ecl="M"
+                      color={'#0063b6'}
+                      backgroundColor="#fff"
+                      size={170}
+                      logoBorderRadius={5}
+                      logo={require('../../../../images/iconapp.jpg')}
+                      value={item}
+                    />
+                  </View>
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      color: 'black',
+                      fontFamily: 'Montserrat-Medium',
+                      marginTop: 15,
+                      fontSize: 14,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {t('idNumber')}: {user?.data.uid}
+                  </Text>
+                </View>
+
+                <View style={styles.max}>
+                  <MainText
+                    textAlign={'center'}
+                    color={colors.white}
+                    style={styles.userName}
+                    size={fontSize[14]}
+                  >
+                    {user?.data?.last_name +
+                      ' ' +
+                      user?.data?.first_name +
+                      ' ' +
+                      user.data.middle_name}
+                  </MainText>
+                </View>
+              </View>
+            </ViewShot>
+            <Text
+              allowFontScaling={false}
+              style={{
+                color: 'black',
+                fontFamily: 'Montserrat-Medium',
+                textAlign: 'center',
+                marginTop: 15,
+                fontSize: 14,
+              }}
+            >
+              {t('123')}
+            </Text>
+            <View style={styles.buttons}>
+              <TouchableOpacity
+                onPress={() => onDownload()}
+                style={styles.download}
+              >
+                <DownloadIcon width="20%" height="100%" />
+                <MainText color={colors.white} size={fontSize[12]}>
+                  {t('126')}
+                </MainText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => onShare()}
+                style={styles.download}
+              >
+                <ShareIcon width="20%" height="100%" />
+                <MainText color={colors.white} size={fontSize[12]}>
+                  {t('129')}
+                </MainText>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </View>
   );

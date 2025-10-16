@@ -31,7 +31,7 @@ const ChangeEmail = () => {
           <MainAndBotIcon width="70%" height="70%" />
         </View>
         <View style={{alignItems: 'center'}}>
-          <Text style={[styles.enterText, {fontFamily: style.fontFamilyBold}]}>
+          <Text allowFontScaling={false} style={[styles.enterText, {fontFamily: style.fontFamilyBold}]}>
             {t('848')}
           </Text>
         </View>
@@ -49,10 +49,11 @@ const ChangeEmail = () => {
                   paddingLeft: 5,
                   paddingRight: 5,
                 }}>
-                <Text style={styles.phoneText}>{t('15')}</Text>
+                <Text allowFontScaling={false} style={styles.phoneText}>{t('15')}</Text>
               </View>
               <View style={{flex: 1}}>
                 <TextInput
+                  allowFontScaling={false}
                   placeholder={t('847')}
                   placeholderTextColor={style.placeHolderColor}
                   keyboardType="email-address"
@@ -68,7 +69,7 @@ const ChangeEmail = () => {
               navigation.navigate('UserScreen');
             }}
             style={styles.enterButton}>
-            <Text style={[styles.enterText, {color: '#fff'}]}>{t('42')}</Text>
+            <Text allowFontScaling={false} style={[styles.enterText, {color: '#fff'}]}>{t('42')}</Text>
           </TouchableOpacity>
         </View>
       </View>

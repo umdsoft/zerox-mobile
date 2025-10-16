@@ -31,7 +31,9 @@ const ChangePasswordRetry = () => {
           <ChangePasswordIcon width="70%" height="70%" />
         </View>
         <View style={{alignItems: 'center'}}>
-          <Text style={[styles.enterText, {fontFamily: style.fontFamilyBold}]}>
+          <Text
+            style={[styles.enterText, {fontFamily: style.fontFamilyBold}]}
+            allowFontScaling={false}>
             {t('669')}
           </Text>
         </View>
@@ -49,7 +51,7 @@ const ChangePasswordRetry = () => {
                   paddingLeft: 5,
                   paddingRight: 5,
                 }}>
-                <Text style={styles.phoneText}>{t('687')}</Text>
+                <Text style={styles.phoneText} allowFontScaling={false}>{t('687')}</Text>
               </View>
 
               <View style={{flex: 1}}>
@@ -59,7 +61,7 @@ const ChangePasswordRetry = () => {
                   placeholderTextColor={style.placeHolderColor}
                   keyboardType="default"
                   style={styles.TextInput}
-                />
+                  allowFontScaling={false} />
               </View>
             </View>
             <View style={[styles.TextInputLabelContainer, {marginTop: 20}]}>
@@ -74,7 +76,7 @@ const ChangePasswordRetry = () => {
                   paddingLeft: 5,
                   paddingRight: 5,
                 }}>
-                <Text style={styles.phoneText}>{t('845')}</Text>
+                <Text style={styles.phoneText} allowFontScaling={false}>{t('845')}</Text>
               </View>
 
               <View style={{flex: 1}}>
@@ -84,7 +86,7 @@ const ChangePasswordRetry = () => {
                   placeholderTextColor={style.placeHolderColor}
                   keyboardType="default"
                   style={styles.TextInput}
-                />
+                  allowFontScaling={false} />
               </View>
             </View>
           </View>
@@ -95,7 +97,7 @@ const ChangePasswordRetry = () => {
               navigation.navigate('UserScreen');
             }}
             style={styles.enterButton}>
-            <Text style={[styles.enterText, {color: '#fff'}]}>{t('42')}</Text>
+            <Text style={[styles.enterText, {color: '#fff'}]} allowFontScaling={false}>{t('42')}</Text>
           </TouchableOpacity>
         </View>
       </View>

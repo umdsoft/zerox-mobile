@@ -129,7 +129,7 @@ const CreatePassword = () => {
                 styles.validationText,
                 { color: valid ? 'green' : '#000' },
               ]}
-            >
+              allowFontScaling={false}>
               {label}
             </Text>
           </View>
@@ -174,7 +174,7 @@ const CreatePassword = () => {
         autoCapitalize="none"
         autoCorrect={false}
         placeholderTextColor={colors.disabledButtonColor}
-      />
+        allowFontScaling={false} />
     );
   }, [showPassword, value]);
 
@@ -190,7 +190,7 @@ const CreatePassword = () => {
         autoCapitalize="none"
         autoCorrect={false}
         placeholderTextColor={colors.disabledButtonColor}
-      />
+        allowFontScaling={false} />
     );
   }, [confirmValue, showConfirmPassword]);
 
@@ -211,7 +211,7 @@ const CreatePassword = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 20, marginBottom: 30 }}
           showsVerticalScrollIndicator={false}
         >
           <View style={{ flex: 1 }}>
@@ -245,7 +245,7 @@ const CreatePassword = () => {
             <View style={styles.main}>
               <View style={{ width: '90%' }}>
                 <View style={styles.confirmInputContainer}>
-                  <Text style={styles.label}>{t('69')}</Text>
+                  <Text style={styles.label} allowFontScaling={false}>{t('69')}</Text>
                   {renderButton}
                   <TouchableOpacity
                     onPress={onChangeShow}
@@ -261,7 +261,7 @@ const CreatePassword = () => {
 
                 <View style={{ height: 20 }} />
                 <View style={styles.confirmInputContainer}>
-                  <Text style={styles.label}>{t('72')}</Text>
+                  <Text style={styles.label} allowFontScaling={false}>{t('72')}</Text>
                   {renderButtonConfirm}
                   <TouchableOpacity
                     onPress={onChangeShowConfirm}
@@ -294,7 +294,7 @@ const CreatePassword = () => {
                   },
                 ]}
               >
-                <Text style={styles.updateButtonText}>{t('45')}</Text>
+                <Text style={styles.updateButtonText} allowFontScaling={false}>{t('45')}</Text>
               </TouchableOpacity>
             </View>
           </View>

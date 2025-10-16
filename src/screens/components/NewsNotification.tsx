@@ -15,7 +15,7 @@ const NewsNotificationCard = ({data}) => {
       style={styles.container}>
       <View style={{marginVertical: 15, marginHorizontal: 15}}>
         <View style={{}}>
-          <Text style={styles.notificationTitle}>{data?.title}</Text>
+          <Text style={styles.notificationTitle} allowFontScaling={false}>{data?.title}</Text>
         </View>
         {/* <View style={{marginTop: 5}}>
           <Text style={[styles.notification, {fontSize: style.fontSize.small}]}>
@@ -23,14 +23,14 @@ const NewsNotificationCard = ({data}) => {
           </Text>
         </View> */}
         <View style={{marginTop: 15}}>
-          <Text style={styles.notification}>
+          <Text style={styles.notification} allowFontScaling={false}>
             {data?.description.length > 100
               ? data?.description.slice(0, 100) + '...'
               : data?.description}
           </Text>
         </View>
         <View style={{marginTop: 15}}>
-          <Text style={styles.notification}>{settingDate(data?.created)}</Text>
+          <Text style={styles.notification} allowFontScaling={false}>{settingDate(data?.created)}</Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -29,24 +29,25 @@ const QarzniToliqQaytarish = ({data}) => {
             fontFamily: style.fontFamilyBold,
             color: '#000',
             fontSize: style.fontSize.xs,
-          }}>
+          }}
+          allowFontScaling={false}>
           D А L O L А T N O M А
         </Text>
       </View>
       <View style={{marginTop: 10, marginBottom: 10, paddingHorizontal: 10}}>
-        <Text style={styles.text}>
-          <Text style={{textAlign: 'center'}}>
+        <Text style={styles.text} allowFontScaling={false}>
+          <Text style={{textAlign: 'center'}} allowFontScaling={false}>
             <TextBold>{data?.number}</TextBold> - sonli qarz shartnomasi
             bo‘yicha qarz mablag‘i qaytarilganligi to‘g‘risida {'\n'}
           </Text>
           {'\n'}Biz quyida imzo qo‘yuvchilar, fuqaro{' '}
-          <Text style={styles.mainText}>{data?.debitor_name}</Text> (pasport:{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_name}</Text> (pasport:{' '}
           <TextBold>
             {data?.debitor_passport}. {settingDate(data.debitor_issued_date)}
           </TextBold>{' '}
           yilda <TextBold>{data.debitor_issued}</TextBold> tomonidan berilgan)
           bir tomondan va fuqaro{' '}
-          <Text style={styles.mainText}>{data?.creditor_name}</Text> (pasport:{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> (pasport:{' '}
           <TextBold>
             {data?.creditor_passport}. {settingDate(data.creditor_issued_date)}
           </TextBold>{' '}
@@ -54,42 +55,42 @@ const QarzniToliqQaytarish = ({data}) => {
           ikkinchi tomondan, ushbu dalolatnoma quyidagilar haqida tuzildi:
           {'\n'}
           {'\n'} Men <TextBold>{data?.creditor_name}</TextBold> fuqaro{' '}
-          <Text style={styles.mainText}>{data?.debitor_name}</Text> dan{' '}
-          <Text style={styles.mainText}>{settingDate(data.created_at)}</Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_name}</Text> dan{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{settingDate(data.created_at)}</Text>{' '}
           yildagi <TextBold>{data.number}</TextBold>-sonli qarz shartnomasiga
           asosan{' '}
-          <Text style={styles.mainText}>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {sortText(data.amount)} {data.currency}
           </Text>{' '}
           miqdorida olingan qarz mablag’ining{' '}
-          <Text style={styles.mainText}>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {sortText(data.residual_amount)} {data.currency}
           </Text>{' '}
           miqdoridagi qismini{' '}
-          <Text style={styles.mainText}>{settingDate(new Date())}</Text> yilda
+          <Text style={styles.mainText} allowFontScaling={false}>{settingDate(new Date())}</Text> yilda
           qaytardim.{'\n'}
           {'\n'}
-          Men <Text style={styles.mainText}>
+          Men <Text style={styles.mainText} allowFontScaling={false}>
             {data?.debitor_name}
           </Text> fuqaro{' '}
-          <Text style={styles.mainText}>{data?.creditor_name}</Text> dan{' '}
-          <Text style={styles.mainText}>{settingDate(data.created_at)}</Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> dan{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{settingDate(data.created_at)}</Text>{' '}
           yildagi <TextBold>{data.number}</TextBold>-sonli qarz shartnomasiga
           asosan{' '}
-          <Text style={styles.mainText}>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {' '}
             {sortText(data.amount)} {data.currency}{' '}
           </Text>{' '}
           miqdorida berilgan qarz mablag’ining{' '}
-          <Text style={styles.mainText}>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {sortText(data.residual_amount)} {data.currency}
           </Text>{' '}
           miqdoridagi qismini{' '}
-          <Text style={styles.mainText}>{settingDate(new Date())}</Text> yilda
+          <Text style={styles.mainText} allowFontScaling={false}>{settingDate(new Date())}</Text> yilda
           qabul qilib oldim.{'\n'}
           {'\n'} Mazkur dalolatnoma QR-kod orqali tasdiqlangan holda elektron
           tarzda tuzildi.{'\n'}Dalolatnoma ikki tomonning{' '}
-          <Text style={styles.mainText}>"Zerox"</Text> dasturidagi shaxsiy
+          <Text style={styles.mainText} allowFontScaling={false}>"Zerox"</Text> dasturidagi shaxsiy
           kabinetida saqlanadi. {'\n'}QR-kod orqali tasdiqlangan Dalolatnomaning
           saqlanishini Jamiyat o‘z zimmasiga oladi.{'\n'}
           {'\n'}

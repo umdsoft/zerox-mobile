@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {style} from '../../../theme/style';
+import React, { useState } from 'react';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { style } from '../../../theme/style';
 import FileViewer from 'react-native-file-viewer';
 
-import {useRoute} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import ShareIcon from '../../../images/home/share.svg';
 import DownloadIcon from '../../../images/home/download.svg';
 import ReactNativeBlobUtil from 'react-native-blob-util';
@@ -21,13 +21,13 @@ import Share from 'react-native-share';
 import OtherHeader from '../../components/OtherHeader';
 import RNFS from 'react-native-fs';
 import MainText from '../../components/MainText';
-import {fontSize} from '../../../theme/font';
-import {colors} from '../../../theme/colors';
-import {t} from 'i18next';
-import {storage} from '../../../store/api/token/getToken';
+import { fontSize } from '../../../theme/font';
+import { colors } from '../../../theme/colors';
+import { t } from 'i18next';
+import { storage } from '../../../store/api/token/getToken';
 
 const DownloadStatistic = () => {
-  const {item, id} = useRoute().params;
+  const { item, id } = useRoute().params;
   const [loading, setLoading] = useState(true);
 
   const onShare = async () => {
@@ -69,7 +69,7 @@ const DownloadStatistic = () => {
             }`,
           });
         } else {
-          await Share.open({url: res.path()});
+          await Share.open({ url: res.path() });
         }
       })
       .catch(err => {
@@ -90,7 +90,7 @@ const DownloadStatistic = () => {
       visibilityTime: 2000,
       position: 'bottom',
       type: 'omad',
-      props: {title: 'Muvaffaqiyatli', desc: t('789') + '...'},
+      props: { title: 'Muvaffaqiyatli', desc: t('789') + '...' },
     });
     try {
       const lang = storage.getString('lang');
@@ -140,11 +140,11 @@ const DownloadStatistic = () => {
               'Download',
               resp.path(),
             );
-            await FileViewer.open(resp.path(), {showOpenWithDialog: true});
+            await FileViewer.open(resp.path(), { showOpenWithDialog: true });
           }
 
           Platform.OS === 'ios'
-            ? await FileViewer.open(resp.path(), {showOpenWithDialog: true})
+            ? await FileViewer.open(resp.path(), { showOpenWithDialog: true })
             : await forAndroid();
         });
 
@@ -158,7 +158,7 @@ const DownloadStatistic = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {title: 'Xatolik', desc: t('down_error')},
+        props: { title: 'Xatolik', desc: t('down_error') },
       });
     }
   };
@@ -198,7 +198,12 @@ const DownloadStatistic = () => {
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('324')} />
@@ -230,12 +235,14 @@ const DownloadStatistic = () => {
               justifyContent: 'space-around',
               marginTop: 10,
               marginBottom: 10,
-            }}>
+            }}
+          >
             {/* ------------------------   Yuklab olish   ------------------------ */}
             <TouchableOpacity
               onPress={onDownload}
               activeOpacity={0.8}
-              style={styles.download}>
+              style={styles.download}
+            >
               <DownloadIcon width="20" height="20" />
               <MainText color={colors.white} size={fontSize[12]}>
                 {t('126')}
@@ -245,14 +252,15 @@ const DownloadStatistic = () => {
             <TouchableOpacity
               onPress={onShare}
               activeOpacity={0.8}
-              style={styles.download}>
+              style={styles.download}
+            >
               <ShareIcon width="20" height="20" />
               <MainText color={colors.white} size={fontSize[12]}>
                 {t('129')}
               </MainText>
             </TouchableOpacity>
           </View>
-          <View style={{flex: 1, backgroundColor: '#fff'}}>
+          <View style={{ flex: 1, backgroundColor: '#fff' }}>
             {loading && (
               <View style={styles.indicator}>
                 <ActivityIndicator size={'large'} color={style.blue} />
@@ -261,9 +269,9 @@ const DownloadStatistic = () => {
             <Pdf
               trustAllCerts={false}
               enablePaging={true}
-              activityIndicator={() => (
-                <ActivityIndicator size={'large'} color={style.blue} />
-              )}
+              // renderActivityIndicator={() => (
+              //   <ActivityIndicator size={'small'} color={style.blue} />
+              // )}
               // source={{ uri: `https://pdf.zerox.uz/index.php?id=${item.uid}&download=0&lang=uz`, method: 'GET' }}
               source={{
                 uri: `https://pdf.zerox.uz/index.php?id=${

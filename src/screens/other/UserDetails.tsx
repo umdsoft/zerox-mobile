@@ -8,24 +8,24 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
 
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Edit from '../../images/Edit';
 import OtherHeader from '../components/OtherHeader';
 import Famale from '../../images/Famale';
-import {t} from 'i18next';
-import {URL} from '../constants';
+import { t } from 'i18next';
+import { URL } from '../constants';
 
 const UserDetails = () => {
   const navigation = useNavigation();
 
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
 
   return (
     <View style={styles.container}>
@@ -34,7 +34,8 @@ const UserDetails = () => {
           height: '40%',
           width: '100%',
           position: 'absolute',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('810')} />
@@ -43,34 +44,34 @@ const UserDetails = () => {
         <View>
           <View style={styles.main}>
             <View style={styles.aboutUsContainer}>
-              <View style={{flexDirection: 'row'}}>
-                {user.data.image === null ? (
-                  <View style={styles.userImageContainer}>
-                    {user?.data?.type === 2 ? (
-                      user?.data?.gender === 2 ? (
-                        <Famale
-                          width={normalize(50)}
-                          height={normalize(50)}
-                          color={style.blue}
-                        />
-                      ) : (
-                        <Person
-                          width={normalize(50)}
-                          height={normalize(50)}
-                          color={style.blue}
-                        />
-                      )
-                    ) : (
-                      <Juridic
+              <View style={{ flexDirection: 'row' }}>
+                {/* {user.data.image === null ? ( */}
+                <View style={styles.userImageContainer}>
+                  {user?.data?.type === 2 ? (
+                    user?.data?.gender === 2 ? (
+                      <Famale
                         width={normalize(50)}
-                        height={normalize(50)}
+                        height={normalize(normalize(100))}
                         color={style.blue}
                       />
-                    )}
-                  </View>
-                ) : (
-                  <>
-                    {/* {loadingImage ? (
+                    ) : (
+                      <Person
+                        width={normalize(50)}
+                        height={normalize(100)}
+                        color={style.blue}
+                      />
+                    )
+                  ) : (
+                    <Juridic
+                      width={normalize(50)}
+                      height={normalize(100)}
+                      color={style.blue}
+                    />
+                  )}
+                </View>
+                {/* ) : ( */}
+                <>
+                  {/* {loadingImage ? (
                       <View
                         style={{
                           height: normalize(100),
@@ -85,35 +86,53 @@ const UserDetails = () => {
                         />
                       </View>
                     ) : ( */}
-                    <Image
-                      source={{uri: URL.slice(0, -6) + user?.data?.image}}
+                  {/* <Image
+                      source={{ uri: URL.slice(0, -6) + user?.data?.image }}
                       width={normalize(70)}
                       height={normalize(100)}
                       style={{
                         borderRadius: 10,
                       }}
-                    />
-                    {/* )} */}
-                  </>
-                )}
-                <View style={{marginLeft: 10, flex: 1}}>
+                    /> */}
+                  {/* )} */}
+                </>
+                {/* )} */}
+                <View style={{ marginLeft: 10, flex: 1 }}>
                   {user.data.type === 2 ? (
                     <>
                       <View style={styles.info}>
-                        <Text style={styles.title}>{t('familiya')}</Text>
-                        <Text numberOfLines={1} style={styles.name}>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          {t('familiya')}
+                        </Text>
+                        <Text
+                          allowFontScaling={false}
+                          numberOfLines={1}
+                          style={styles.name}
+                        >
                           {user?.data?.last_name}
                         </Text>
                       </View>
                       <View style={styles.info}>
-                        <Text style={styles.title}>{t('ism')}</Text>
-                        <Text numberOfLines={1} style={styles.name}>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          {t('ism')}
+                        </Text>
+                        <Text
+                          allowFontScaling={false}
+                          numberOfLines={1}
+                          style={styles.name}
+                        >
                           {user?.data?.first_name}
                         </Text>
                       </View>
                       <View style={styles.info}>
-                        <Text style={styles.title}>{t('ota')}</Text>
-                        <Text numberOfLines={1} style={styles.name}>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          {t('ota')}
+                        </Text>
+                        <Text
+                          allowFontScaling={false}
+                          numberOfLines={1}
+                          style={styles.name}
+                        >
                           {user?.data?.middle_name}
                         </Text>
                       </View>
@@ -121,28 +140,44 @@ const UserDetails = () => {
                   ) : (
                     <>
                       <View style={styles.info}>
-                        <Text style={styles.title}>Direktor</Text>
-                        <Text style={styles.name}>{user?.data?.director}</Text>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          Direktor
+                        </Text>
+                        <Text allowFontScaling={false} style={styles.name}>
+                          {user?.data?.director}
+                        </Text>
                       </View>
                       <View style={styles.info}>
-                        <Text style={styles.title}>Kompaniya</Text>
-                        <Text style={styles.name}>{user?.data?.company}</Text>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          Kompaniya
+                        </Text>
+                        <Text allowFontScaling={false} style={styles.name}>
+                          {user?.data?.company}
+                        </Text>
                       </View>
                       <View style={styles.info}>
-                        <Text style={styles.title}>{t('786') as string}</Text>
-                        <Text style={styles.name}>{user?.data?.address}</Text>
+                        <Text allowFontScaling={false} style={styles.title}>
+                          {t('786') as string}
+                        </Text>
+                        <Text allowFontScaling={false} style={styles.name}>
+                          {user?.data?.address}
+                        </Text>
                       </View>
                     </>
                   )}
                 </View>
               </View>
-              <View style={{marginTop: 20}}>
+              <View style={{ marginTop: 20 }}>
                 {user.data.type === 2 ? (
                   <View style={styles.info}>
-                    <Text style={styles.title}>{t('684')}</Text>
+                    <Text allowFontScaling={false} style={styles.title}>
+                      {t('684')}
+                    </Text>
                     <Text
+                      allowFontScaling={false}
                       numberOfLines={1}
-                      style={[styles.name, {marginTop: 5}]}>
+                      style={[styles.name, { marginTop: 5 }]}
+                    >
                       {user?.data?.brithday}
                     </Text>
                   </View>
@@ -155,12 +190,17 @@ const UserDetails = () => {
                       alignItems: 'flex-end',
                       justifyContent: 'space-between',
                     },
-                  ]}>
+                  ]}
+                >
                   <View>
-                    <Text style={styles.title}>{t('27')}</Text>
+                    <Text allowFontScaling={false} style={styles.title}>
+                      {t('27')}
+                    </Text>
                     <Text
+                      allowFontScaling={false}
                       numberOfLines={1}
-                      style={[styles.name, {marginTop: 5}]}>
+                      style={[styles.name, { marginTop: 5 }]}
+                    >
                       {phoneSort(user?.data?.phone)}
                     </Text>
                   </View>
@@ -168,7 +208,8 @@ const UserDetails = () => {
                     <TouchableOpacity
                       onPress={() => {
                         navigation.navigate('ChangePhoneNumber');
-                      }}>
+                      }}
+                    >
                       <Edit width={normalize(18)} height={normalize(18)} />
                     </TouchableOpacity>
                   </View>
@@ -176,27 +217,41 @@ const UserDetails = () => {
                 {user.data.type === 2 ? (
                   <>
                     <View style={styles.info}>
-                      <Text style={styles.title}>{t('687')}</Text>
+                      <Text allowFontScaling={false} style={styles.title}>
+                        {t('687')}
+                      </Text>
                       <Text
+                        allowFontScaling={false}
                         numberOfLines={1}
-                        style={[styles.name, {marginTop: 5}]}>
+                        style={[styles.name, { marginTop: 5 }]}
+                      >
                         {user?.data?.pinfl}
                       </Text>
                     </View>
                   </>
                 ) : null}
                 <View style={styles.info}>
-                  <Text style={styles.title}>{t('120')}</Text>
-                  <Text numberOfLines={1} style={[styles.name, {marginTop: 5}]}>
+                  <Text allowFontScaling={false} style={styles.title}>
+                    {t('120')}
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    numberOfLines={1}
+                    style={[styles.name, { marginTop: 5 }]}
+                  >
                     {user?.data?.uid}
                   </Text>
                 </View>
                 <View style={styles.info}>
-                  <Text style={styles.title}>{t('255')}</Text>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text allowFontScaling={false} style={styles.title}>
+                    {t('255')}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text
+                      allowFontScaling={false}
                       numberOfLines={1}
-                      style={[styles.name, {marginTop: 5}]}>
+                      style={[styles.name, { marginTop: 5 }]}
+                    >
                       {settingDate(user?.data?.created_at)}
                     </Text>
                   </View>

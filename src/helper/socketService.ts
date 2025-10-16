@@ -1,17 +1,21 @@
 import notifee from '@notifee/react-native';
-import {io, Socket} from 'socket.io-client';
-import {storage} from '../store/api/token/getToken';
-import {Store} from '../store/store/Store';
+import { io, Socket } from 'socket.io-client';
+import { storage } from '../store/api/token/getToken';
+import { Store } from '../store/store/Store';
 import {
   getCreditorAndDebitorData,
   getCreditorDataAndDebitorData,
+  onGetContract,
 } from '../store/api/home';
-import {setNotification} from '../store/reducers/HomeReducer';
+import {
+  setChangeEndDate,
+  setNotification,
+} from '../store/reducers/HomeReducer';
 import i18next from 'i18next';
 import ReturnName from './returnName';
-import {sortText} from '../screens/components/StatisticCard';
-import {settingDate} from '../screens/other/UserDetails';
-import {getFullName} from '../screens/home/notifications/all/QarzShartnomasiRejectTime';
+import { sortText } from '../screens/components/StatisticCard';
+import { settingDate } from '../screens/other/UserDetails';
+import { getFullName } from '../screens/home/notifications/all/QarzShartnomasiRejectTime';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -43,6 +47,7 @@ class SocketService {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      secure: false,
 
       // Remove in production if SSL is configured correctly
       rejectUnauthorized: false,
@@ -138,7 +143,7 @@ class SocketService {
   private getNotifcations() {
     socketService.on('notification', data => {
       console.log('Notification received:', data);
-      Store.dispatch(setNotification({notification: data.not}));
+      Store.dispatch(setNotification({ notification: data.not }));
     });
   }
 
@@ -157,7 +162,7 @@ class SocketService {
       console.warn(`Cannot subscribe to event ${id}: socket not initialized`);
       return;
     }
-    this.socket.emit('register', {id});
+    this.socket.emit('register', { id });
   }
 
   async reciveNotification() {
@@ -247,11 +252,13 @@ class SocketService {
             }
           } else {
             console.log("'Notification already displayed, skipping');");
-            Store.dispatch(setNotification({notification: data.notification}));
+            Store.dispatch(
+              setNotification({ notification: data.notification }),
+            );
             // await Store.dispatch(getMe());
             return;
           }
-          Store.dispatch(setNotification({notification: data.notification}));
+          Store.dispatch(setNotification({ notification: data.notification }));
         } else {
           console.warn('App is not active, skipping notification display');
         }
@@ -465,6 +472,8 @@ class SocketService {
           });
         case 12:
           Store.dispatch(getCreditorDataAndDebitorData());
+          Store.dispatch(setChangeEndDate({ end_date: item.end_date }));
+          console.log(item, 'item in return body 12');
           return i18next.t('531', {
             name:
               item.dtypes === 2
@@ -477,7 +486,9 @@ class SocketService {
             end: settingDate(item.end_date),
           });
         case 16:
+          console.log(item, 'item in return body 16');
           Store.dispatch(getCreditorDataAndDebitorData());
+          Store.dispatch(setChangeEndDate({ end_date: item.end_date }));
           return i18next.t('531', {
             name:
               item.dtypes === 2

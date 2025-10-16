@@ -221,6 +221,7 @@ const SendMoney = () => {
         <View style={{ flex: 1 }}>
           <MaskedTextInput
             value={id}
+            allowFontScaling={false}
             keyboardType="default"
             placeholderTextColor={style.placeHolderColor}
             placeholder="100000/AA"
@@ -262,6 +263,7 @@ const SendMoney = () => {
             placeholder={t('1 000')}
             keyboardType="numeric"
             style={styles.TextInput}
+            allowFontScaling={false}
           />
         </View>
       </View>
@@ -352,7 +354,7 @@ const SendMoney = () => {
             <View>
               {renderId}
               {client.id ? (
-                <Text style={styles.clientText}>
+                <Text style={styles.clientText} allowFontScaling={false}>
                   {client.first_name +
                     '.' +
                     client.middle_name +

@@ -148,6 +148,7 @@ const UpdatePassword = () => {
                 styles.validationText,
                 { color: valid ? 'green' : '#000' },
               ]}
+              allowFontScaling={false}
             >
               {label}
             </Text>
@@ -187,10 +188,13 @@ const UpdatePassword = () => {
 
           <View style={styles.inputContainer}>
             <View style={styles.confirmInputContainer}>
-              <Text style={styles.label}>{t('696')}</Text>
+              <Text style={styles.label} allowFontScaling={false}>
+                {t('696')}
+              </Text>
               <TextInput
                 // title={t('696')}
                 // password={value}
+                allowFontScaling={false}
                 value={value}
                 style={styles.textInput}
                 onChangeText={handlePasswordChange}
@@ -199,8 +203,11 @@ const UpdatePassword = () => {
             </View>
 
             <View style={styles.confirmInputContainer}>
-              <Text style={styles.label}>{t('699')}</Text>
+              <Text style={styles.label} allowFontScaling={false}>
+                {t('699')}
+              </Text>
               <TextInput
+                allowFontScaling={false}
                 value={confirmValue}
                 onChangeText={setConfirmValue}
                 keyboardType="default"
@@ -224,7 +231,9 @@ const UpdatePassword = () => {
               },
             ]}
           >
-            <Text style={styles.updateButtonText}>{t('45')}</Text>
+            <Text style={styles.updateButtonText} allowFontScaling={false}>
+              {t('45')}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

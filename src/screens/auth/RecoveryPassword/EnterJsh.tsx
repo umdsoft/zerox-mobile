@@ -7,26 +7,26 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {normalize, style} from '../../../theme/style';
+import React, { useCallback, useState } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { normalize, style } from '../../../theme/style';
 import ResetPassword from '../../../images/RecoveryPassword';
 import axios from 'axios';
 import OtherHeader from '../../components/OtherHeader';
-import {URL} from '../../constants';
+import { URL } from '../../constants';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../../components/ToastConfig';
+import { toastConfig } from '../../components/ToastConfig';
 import Loading from '../../components/Loading';
-import {Modal} from 'react-native-paper';
+import { Modal } from 'react-native-paper';
 import MainText from '../../components/MainText';
-import {fontSize} from '../../../theme/font';
-import {colors} from '../../../theme/colors';
-import {t} from 'i18next';
-import {checkPhoneTime} from '../../../helper/timeChecker';
+import { fontSize } from '../../../theme/font';
+import { colors } from '../../../theme/colors';
+import { t } from 'i18next';
+import { checkPhoneTime } from '../../../helper/timeChecker';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
-  const {params} = useRoute();
+  const { params } = useRoute();
   const [value, setValue] = useState(''); // 33008943120050
   const [loading, setLoading] = useState(false);
   const [hide, setHide] = useState(false);
@@ -34,7 +34,7 @@ const EnterJsh = () => {
     setLoading(true);
     try {
       if (await checkPhoneTime()) {
-        const {data} = await axios.post(
+        const { data } = await axios.post(
           URL + '/user/askjshshir',
           {
             jshshir: value,
@@ -64,7 +64,7 @@ const EnterJsh = () => {
         if (data.success) {
           // navigation.navigate('Inforamation', { jshshir: value }); // 2500 tolash haqida ogohlantirsh chiqishi uchun
           // navigation.navigate('ScanFaceMyId');
-          navigation.navigate('MyIdScreen', {jshshir: value});
+          navigation.navigate('MyIdScreen', { jshshir: value });
           setTimeout(() => {
             setLoading(false);
           }, 500);
@@ -124,7 +124,9 @@ const EnterJsh = () => {
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View>
-          <View style={{alignSelf: 'center', marginTop: 20, marginBottom: 20}}>
+          <View
+            style={{ alignSelf: 'center', marginTop: 20, marginBottom: 20 }}
+          >
             <ResetPassword />
           </View>
           <View style={styles.main}>
@@ -135,8 +137,9 @@ const EnterJsh = () => {
                     {t('732').slice(0, -1)}
                   </MainText>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
+                    allowFontScaling={false}
                     maxLength={14}
                     value={value}
                     onChangeText={text => {
@@ -155,12 +158,14 @@ const EnterJsh = () => {
               alignSelf: 'center',
               marginTop: 10,
               alignItems: 'flex-end',
-            }}>
+            }}
+          >
             <TouchableOpacity onPress={onModal}>
               <MainText
                 color={colors.blue}
                 size={fontSize[14]}
-                style={styles.jshshir}>
+                style={styles.jshshir}
+              >
                 {t('735')}
               </MainText>
             </TouchableOpacity>
@@ -176,7 +181,8 @@ const EnterJsh = () => {
                   backgroundColor:
                     value.length >= 14 ? style.blue : style.disabledButtonColor,
                 },
-              ]}>
+              ]}
+            >
               <MainText size={fontSize[16]} color={colors.white}>
                 {t('45')}
               </MainText>
@@ -192,7 +198,7 @@ const EnterJsh = () => {
 
 export default EnterJsh;
 
-const ModalView = ({hide, setHide}) => {
+const ModalView = ({ hide, setHide }) => {
   const onClose = useCallback(() => {
     setHide(false);
   }, []);
@@ -206,7 +212,8 @@ const ModalView = ({hide, setHide}) => {
         />
         <TouchableOpacity
           onPress={onClose}
-          style={[styles.enterButton, {marginTop: 10}]}>
+          style={[styles.enterButton, { marginTop: 10 }]}
+        >
           <MainText color={colors.white} size={fontSize[16]}>
             {t('741')}
           </MainText>

@@ -32,7 +32,7 @@ const ExpirePassportModal = () => {
       <View style={styles.overlay}>
         <View style={styles.main}>
           <View style={styles.view}>
-            <Text style={styles.teext}>{t('expire_passport')}</Text>
+            <Text style={styles.teext} allowFontScaling={false}>{t('expire_passport')}</Text>
             <View
               style={{
                 flexDirection: 'row',
@@ -41,10 +41,10 @@ const ExpirePassportModal = () => {
               <TouchableOpacity
                 onPress={onClose}
                 style={[styles.btn, {marginRight: 10}]}>
-                <Text style={[styles.teextx, {color: '#fff'}]}>{t('747')}</Text>
+                <Text style={[styles.teextx, {color: '#fff'}]} allowFontScaling={false}>{t('747')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={onOk} style={styles.btn}>
-                <Text style={[styles.teextx, {color: '#fff'}]}>{t('OK')}</Text>
+                <Text style={[styles.teextx, {color: '#fff'}]} allowFontScaling={false}>{t('OK')}</Text>
               </TouchableOpacity>
             </View>
           </View>

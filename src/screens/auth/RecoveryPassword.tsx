@@ -477,6 +477,7 @@ const PasswordInput = React.memo(
         </View>
       </View>
       <TextInput
+        allowFontScaling={false}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={!showPassword}

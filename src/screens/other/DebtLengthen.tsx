@@ -35,10 +35,10 @@ const DebtLengthen = () => {
         <View style={styles.aboutUsContainer}>
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Qarzdor nomi</Text>
+              <Text style={styles.info} allowFontScaling={false}>Qarzdor nomi</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>Abdullayev Abdulla</Text>
+              <Text style={styles.info} allowFontScaling={false}>Abdullayev Abdulla</Text>
             </View>
           </View>
           <View
@@ -50,10 +50,10 @@ const DebtLengthen = () => {
           />
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Qarz summasi</Text>
+              <Text style={styles.info} allowFontScaling={false}>Qarz summasi</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>1,0 mln so’m</Text>
+              <Text style={styles.info} allowFontScaling={false}>1,0 mln so’m</Text>
             </View>
           </View>
           <View
@@ -65,10 +65,10 @@ const DebtLengthen = () => {
           />
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Qarz olingan sana </Text>
+              <Text style={styles.info} allowFontScaling={false}>Qarz olingan sana </Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>22.10.2021</Text>
+              <Text style={styles.info} allowFontScaling={false}>22.10.2021</Text>
             </View>
           </View>
           <View
@@ -80,10 +80,10 @@ const DebtLengthen = () => {
           />
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Qarz qaytarilgan sana</Text>
+              <Text style={styles.info} allowFontScaling={false}>Qarz qaytarilgan sana</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>22.10.2022</Text>
+              <Text style={styles.info} allowFontScaling={false}>22.10.2022</Text>
             </View>
           </View>
           <View
@@ -95,10 +95,10 @@ const DebtLengthen = () => {
           />
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Qaytarilgan summa </Text>
+              <Text style={styles.info} allowFontScaling={false}>Qaytarilgan summa </Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info}>1.0 mln so’m</Text>
+              <Text style={styles.info} allowFontScaling={false}>1.0 mln so’m</Text>
             </View>
           </View>
           <View
@@ -110,7 +110,7 @@ const DebtLengthen = () => {
           />
           <View style={styles.header}>
             <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info}>Hujjatla</Text>
+              <Text style={styles.info} allowFontScaling={false}>Hujjatla</Text>
             </View>
             <View style={[styles.item, {alignItems: 'center'}]}>
               <Text
@@ -120,7 +120,8 @@ const DebtLengthen = () => {
                 style={[
                   styles.info,
                   {color: style.blue, textDecorationLine: 'underline'},
-                ]}>
+                ]}
+                allowFontScaling={false}>
                 22/10/2021/000001
               </Text>
             </View>

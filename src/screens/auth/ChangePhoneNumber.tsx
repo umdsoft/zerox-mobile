@@ -82,6 +82,7 @@ const ChangePhoneNumber = () => {
       //   <MainText size={fontSize[14]} mrLeft={10}>
       //     +998
       //   </MainText>
+      // </View>
       <InputMask
         onChangeText={(formatted, extracted) => {
           setPhone(extracted);
@@ -89,7 +90,6 @@ const ChangePhoneNumber = () => {
         value={phone}
         icon={true}
       />
-      // </View>
     );
   }, [phone]);
 

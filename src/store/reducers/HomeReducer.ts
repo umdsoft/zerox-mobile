@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import {
   HomeApi,
   getCreditorAndDebitorData,
@@ -7,6 +7,7 @@ import {
   getMe,
   getNotificationWithPage,
   getNotifications,
+  onGetContract,
 } from '../api/home';
 
 type AppState = 'active' | 'background' | 'foreground';
@@ -24,9 +25,12 @@ const initialState = {
   devices: [],
   isActive: false,
   contract: false,
+  contractInfo: {},
   internet: true,
   update: false,
   expire: false,
+  debitor: [],
+  creditor: [],
   currect_device: {},
   usd: 1,
   fbNotificationId: '',
@@ -37,6 +41,7 @@ const initialState = {
     totalPage: 0,
     loading: false,
   },
+  contractLoading: false,
 };
 
 const HomeReducer = createSlice({
@@ -49,7 +54,7 @@ const HomeReducer = createSlice({
     stopLoading(state) {
       state.loading = false;
     },
-    filter_notification(state, {payload}) {
+    filter_notification(state, { payload }) {
       state.notification.bild = state.notification?.bild?.filter(
         item => item.id != payload,
       );
@@ -88,6 +93,12 @@ const HomeReducer = createSlice({
     },
     setAppState: (state, action) => {
       state.appState = action.payload.appState;
+    },
+    setChangeEndDate: (state, action) => {
+      state.contractInfo = {
+        ...state.contractInfo,
+        end_date: action.payload.end_date,
+      };
     },
   },
 
@@ -139,6 +150,23 @@ const HomeReducer = createSlice({
     builder.addCase(getNotificationWithPage.fulfilled, (state, action) => {
       state.notification.bild = action.payload?.notification.data;
     });
+
+    builder.addCase(onGetContract.fulfilled, (state, action) => {
+      state.contractInfo = action.payload?.contract?.data;
+      state.contractLoading = false;
+    });
+
+    builder.addCase(onGetContract.pending, state => {
+      state.contractLoading = true;
+    });
+
+    // builder.addCase(
+    //   getCreditorDataAndDebitorData.fulfilled,
+    //   (state, action) => {
+    //     state.debitor = action.payload?.debitor;
+    //     state.creditor = action.payload?.creditor;
+    //   },
+    // );
   },
 });
 export const {
@@ -155,5 +183,6 @@ export const {
   setFbNotificationId,
   setEmptyUser,
   checkExpire,
+  setChangeEndDate,
 } = HomeReducer.actions;
 export default HomeReducer.reducer;

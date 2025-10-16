@@ -114,7 +114,7 @@ const QrScan = () => {
 
       <TouchableOpacity onPress={() => setFlash(!flash)} style={styles.flash}>
         <Flash color={style.blue} />
-        <Text style={styles.flashText}>{t('chiroq')}</Text>
+        <Text allowFontScaling={false} style={styles.flashText}>{t('chiroq')}</Text>
       </TouchableOpacity>
       <View style={styles.logo}>
         <Logo
@@ -126,7 +126,7 @@ const QrScan = () => {
       </View>
 
       <View style={styles.title}>
-        <Text style={[styles.text, {fontSize: style.fontSize.xs}]}>
+        <Text allowFontScaling={false} style={[styles.text, {fontSize: style.fontSize.xs}]}>
           {t('798')}
         </Text>
       </View>
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     borderColor: style.blue,
     width: heightPercentageToDP(35),
     height: heightPercentageToDP(35),
-    marginTop: heightPercentageToDP('70%'),
+    // marginTop: heightPercentageToDP('30%'),
     alignSelf: 'center',
     backgroundColor: 'transparent',
     borderRadius: 20,

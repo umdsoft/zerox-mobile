@@ -16,3 +16,15 @@ function renderName(name: string) {
 }
 
 console.log(renderName(a), 'name');
+
+const date = '2026-10-10';
+
+const minimumDate = date => {
+  let today = new Date(date);
+  if (today < new Date()) {
+    today = new Date();
+  }
+  return today.getTime() + 86400000;
+};
+
+console.log(new Date(minimumDate(date)), 'minimumDate');

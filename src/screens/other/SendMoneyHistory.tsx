@@ -8,38 +8,38 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import OtherHeader from '../components/OtherHeader';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBarSendMoney from '../../navigation/TopTabBarSendMoney';
-import {useFetch} from '../../hooks/useFetch';
+import { useFetch } from '../../hooks/useFetch';
 import Loading from '../components/Loading';
-import {URL, renderHTMLS} from '../constants';
+import { URL, renderHTMLS } from '../constants';
 import PdfIcon from '../../images/pdf';
-import {sortText} from '../components/StatisticCard';
+import { sortText } from '../components/StatisticCard';
 
 import Transfer from '../../images/Transfer';
 import Transfer2 from '../../images/Transfer2';
-import {Modal} from 'react-native-paper';
+import { Modal } from 'react-native-paper';
 import Cancel from '../../images/Cancel';
 import CancelTransfer from '../../images/cancel_transfer';
 import Success from '../../images/Success';
 import LottieView from 'lottie-react-native';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { generatePDF } from 'react-native-html-to-pdf';
 
 import Money from '../../images/Money';
 import FileViewer from 'react-native-file-viewer';
-import {settingDate} from '../../helper';
-import {t} from 'i18next';
+import { settingDate } from '../../helper';
+import { t } from 'i18next';
 import TransText from '../components/TransText';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
-import {useTranslation} from 'react-i18next';
-import {useNavigation} from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 const TopTab = createMaterialTopTabNavigator();
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 const SendMoneyHistory = () => {
   let modalRef = useRef(null);
 
@@ -67,14 +67,14 @@ const SendMoneyHistory = () => {
             component={() => (
               <Enter openModal={openModal} closeModal={closeModal} />
             )}
-            options={{title: t('585')}}
+            options={{ title: t('585') }}
           />
           <TopTab.Screen
             name="Exit"
             component={() => (
               <Exit openModal={openModal} closeModal={closeModal} />
             )}
-            options={{title: t('588')}}
+            options={{ title: t('588') }}
           />
         </TopTab.Navigator>
       </View>
@@ -84,7 +84,7 @@ const SendMoneyHistory = () => {
     </View>
   );
 };
-const ListStatistic = ({item, index, type, openModal}) => {
+const ListStatistic = ({ item, index, type, openModal }) => {
   const la = useTranslation();
 
   const mainInfo = (userType: any) => {
@@ -98,7 +98,7 @@ const ListStatistic = ({item, index, type, openModal}) => {
               name: la[1].language === 'ru' ? `(${item?.dname})` : item?.dname,
             }}
             components={{
-              name: <Text style={styles.name} />,
+              name: <Text allowFontScaling={false} style={styles.name} />,
             }}
           />
           // <Text style={styles.number2}>
@@ -114,7 +114,7 @@ const ListStatistic = ({item, index, type, openModal}) => {
               name: la[1].language === 'ru' ? `(${item?.dname})` : item?.dname,
             }}
             components={{
-              name: <Text style={styles.name} />,
+              name: <Text allowFontScaling={false} style={styles.name} />,
             }}
           />
           // <Text style={styles.name}>
@@ -124,7 +124,11 @@ const ListStatistic = ({item, index, type, openModal}) => {
           // </Text>
         );
       case 5:
-        return <Text style={styles.number2}>{t('876')}</Text>;
+        return (
+          <Text allowFontScaling={false} style={styles.number2}>
+            {t('876')}
+          </Text>
+        );
 
       case 1:
         return (
@@ -134,7 +138,7 @@ const ListStatistic = ({item, index, type, openModal}) => {
               id: item?.number,
             }}
             components={{
-              id: <Text style={styles.number2} />,
+              id: <Text allowFontScaling={false} style={styles.number2} />,
             }}
           />
           // <Text style={styles.number2}>
@@ -144,7 +148,11 @@ const ListStatistic = ({item, index, type, openModal}) => {
         );
       // shurni bir tekshrish grak
       case 4:
-        return <Text style={styles.number2}>{t('602')}</Text>;
+        return (
+          <Text allowFontScaling={false} style={styles.number2}>
+            {t('602')}
+          </Text>
+        );
     }
   };
 
@@ -184,16 +192,20 @@ const ListStatistic = ({item, index, type, openModal}) => {
       onPress={() => {
         openModal(item, type);
       }}
-      style={styles.card}>
-      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+      style={styles.card}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={styles.icon}>{renderIcon(item.type)}</View>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           {mainInfo(item.type)}
           <View style={styles.uzs}>
-            <Text style={[styles.number(type), {color: '#000'}]}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.number(type), { color: '#000' }]}
+            >
               {settingDate(item?.created_at)} {item?.time?.slice(0, 5)}
             </Text>
-            <Text style={styles.number(type)}>
+            <Text allowFontScaling={false} style={styles.number(type)}>
               {type === 2 ? ' + ' : ' - '}
               {sortText(item?.amount)} UZS
             </Text>
@@ -204,8 +216,8 @@ const ListStatistic = ({item, index, type, openModal}) => {
   );
 };
 
-const Enter = ({openModal, closeModal}) => {
-  const {data, error, loading} = useFetch({
+const Enter = ({ openModal, closeModal }) => {
+  const { data, error, loading } = useFetch({
     method: 'GET',
     url: URL + '/home/cs?status=0',
   });
@@ -220,7 +232,7 @@ const Enter = ({openModal, closeModal}) => {
       <FlatList
         contentContainerStyle={styles.flat}
         data={data.data}
-        keyExtractor={({id}) =>
+        keyExtractor={({ id }) =>
           `${Math.round(Math.random) * 10000}` + id?.toString()
         }
         ListEmptyComponent={
@@ -229,7 +241,8 @@ const Enter = ({openModal, closeModal}) => {
               flex: 1,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <LottieView
               autoPlay
               source={require('../../images/not-found.json')}
@@ -241,7 +254,7 @@ const Enter = ({openModal, closeModal}) => {
             />
           </View>
         }
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <ListStatistic
             item={item}
             index={index}
@@ -254,8 +267,8 @@ const Enter = ({openModal, closeModal}) => {
   );
 };
 
-const Exit = ({openModal, closeModal}) => {
-  const {data, error, loading} = useFetch({
+const Exit = ({ openModal, closeModal }) => {
+  const { data, error, loading } = useFetch({
     method: 'GET',
     url: URL + '/home/cs?status=1',
   });
@@ -268,14 +281,15 @@ const Exit = ({openModal, closeModal}) => {
       <FlatList
         data={data.data}
         contentContainerStyle={styles.flat}
-        keyExtractor={({id}) => id?.toString()}
+        keyExtractor={({ id }) => id?.toString()}
         ListEmptyComponent={
           <View
             style={{
               flex: 1,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <LottieView
               autoPlay
               source={require('../../images/not-found.json')}
@@ -287,7 +301,7 @@ const Exit = ({openModal, closeModal}) => {
             />
           </View>
         }
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <ListStatistic
             item={item}
             index={index}
@@ -300,7 +314,7 @@ const Exit = ({openModal, closeModal}) => {
   );
 };
 
-const ShowDetailsModal = ({getRef}) => {
+const ShowDetailsModal = ({ getRef }) => {
   const vv = useTranslation();
   const navigation = useNavigation();
   const [show, setShow] = useState(false);
@@ -332,28 +346,46 @@ const ShowDetailsModal = ({getRef}) => {
         return (
           <>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('645')}</Text>
-              <Text style={styles.info}>{data?.dname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('645')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.dname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('648')}</Text>
-              <Text style={styles.info}>{data?.cname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('648')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.cname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('651')}</Text>
-              <Text style={styles.info}>{sortText(data.amount)} UZS</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('651')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {sortText(data.amount)} UZS
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('336')}</Text>
-              <Text style={styles.info}>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('336')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
                 {settingDate(data?.created_at)}
                 {'    '}
                 {data?.time?.slice(0, 5)}
               </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('120')}</Text>
-              <Text style={styles.info}>{data?.id}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('120')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.id}
+              </Text>
             </View>
           </>
         );
@@ -363,28 +395,46 @@ const ShowDetailsModal = ({getRef}) => {
         return (
           <>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('645')}</Text>
-              <Text style={styles.info}>{data?.cname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('645')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.cname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('648')}</Text>
-              <Text style={styles.info}>{data?.dname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('648')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.dname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('651')}</Text>
-              <Text style={styles.info}>{sortText(data.amount)} UZS</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('651')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {sortText(data.amount)} UZS
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('336')}</Text>
-              <Text style={styles.info}>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('336')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
                 {settingDate(data?.created_at)}
                 {'    '}
                 {data?.time?.slice(0, 5)}
               </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('120')}</Text>
-              <Text style={styles.info}>{data?.id}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('120')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.id}
+              </Text>
             </View>
           </>
         );
@@ -394,38 +444,56 @@ const ShowDetailsModal = ({getRef}) => {
         return (
           <>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('657')}</Text>
-              <Text style={[styles.info]}>{data?.dname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('657')}
+              </Text>
+              <Text allowFontScaling={false} style={[styles.info]}>
+                {data?.dname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('660')}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('660')}
+              </Text>
               <Text
+                allowFontScaling={false}
                 onPress={() => {
                   navigation.navigate('DownloadStatistic', {
                     item: data,
                     id: data.id,
                   });
                 }}
-                style={[styles.info, {color: style.blue}]}>
+                style={[styles.info, { color: style.blue }]}
+              >
                 {data?.number}
               </Text>
             </View>
 
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('663')}</Text>
-              <Text style={styles.info}>{sortText(data.amount)} UZS</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('663')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {sortText(data.amount)} UZS
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('336')}</Text>
-              <Text style={styles.info}>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('336')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
                 {settingDate(data?.created_at)}
                 {'    '}
                 {data?.time?.slice(0, 5)}
               </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('idNumber')}</Text>
-              <Text style={styles.info}>{data?.id}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('idNumber')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.id}
+              </Text>
             </View>
           </>
         );
@@ -434,25 +502,39 @@ const ShowDetailsModal = ({getRef}) => {
         return (
           <>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('657')}</Text>
-              <Text style={styles.info}>{data?.dname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('657')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.dname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('876')}</Text>
-              <Text style={styles.info}>{sortText(data.amount)} UZS</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('876')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {sortText(data.amount)} UZS
+              </Text>
             </View>
 
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('336')}</Text>
-              <Text style={styles.info}>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('336')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
                 {settingDate(data?.created_at)}
                 {'    '}
                 {data?.time?.slice(0, 5)}
               </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('idNumber')}</Text>
-              <Text style={styles.info}>{data?.id}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('idNumber')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.id}
+              </Text>
             </View>
           </>
         );
@@ -461,24 +543,38 @@ const ShowDetailsModal = ({getRef}) => {
         return (
           <>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('657')}</Text>
-              <Text style={[styles.info]}>{data?.dname}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('657')}
+              </Text>
+              <Text allowFontScaling={false} style={[styles.info]}>
+                {data?.dname}
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('651')}</Text>
-              <Text style={styles.info}>{sortText(data.amount)} UZS</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('651')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {sortText(data.amount)} UZS
+              </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('336')}</Text>
-              <Text style={styles.info}>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('336')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
                 {settingDate(data?.created_at)}
                 {'    '}
                 {data?.time?.slice(0, 5)}
               </Text>
             </View>
             <View style={styles.mainInside}>
-              <Text style={styles.infoTitle}>{t('idNumber')}</Text>
-              <Text style={styles.info}>{data?.id}</Text>
+              <Text allowFontScaling={false} style={styles.infoTitle}>
+                {t('idNumber')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.info}>
+                {data?.id}
+              </Text>
             </View>
           </>
         );
@@ -558,7 +654,7 @@ const ShowDetailsModal = ({getRef}) => {
       let fileName = await getAvailableFileName(baseFileName, fileExtension);
 
       // Generate PDF
-      let file = await RNHTMLtoPDF.convert({
+      let file = await generatePDF({
         fileName: fileName.replace(fileExtension, ''), // Remove extension for RNHTMLtoPDF
         html: renderHTMLS(data)!,
         directory: 'docs',
@@ -656,10 +752,11 @@ const ShowDetailsModal = ({getRef}) => {
       dismissable={true}
       onDismiss={onDismiss}
       visible={show}
-      style={styles.modal}>
+      style={styles.modal}
+    >
       <View style={styles.modalCotainer}>
         <View style={styles.modalHeader}>
-          <View style={{width: '90%'}}>
+          <View style={{ width: '90%' }}>
             <Text style={styles.title}>
               <RenderText type={data.type} />
             </Text>
@@ -685,7 +782,9 @@ const ShowDetailsModal = ({getRef}) => {
           )}
           {/* {data.type === 1 ? ( */}
           <Text
-            style={[styles.sum, {color: data.type === 5 ? 'red' : '#47bb78'}]}>
+            allowFontScaling={false}
+            style={[styles.sum, { color: data.type === 5 ? 'red' : '#47bb78' }]}
+          >
             {sortText(data?.amount)} UZS
           </Text>
           {/* ) : null} */}
@@ -697,7 +796,10 @@ const ShowDetailsModal = ({getRef}) => {
         <View>
           <TouchableOpacity onPress={onDownload} style={styles.downloadButton}>
             <PdfIcon width={normalize(15)} height={normalize(15)} />
-            <Text style={[styles.info, {color: '#fff', marginLeft: 4}]}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.info, { color: '#fff', marginLeft: 4 }]}
+            >
               {t('download')}
             </Text>
           </TouchableOpacity>
@@ -802,7 +904,7 @@ const styles = StyleSheet.create({
     fontSize: style.fontSize.xx - 2,
     color: '#000',
   },
-  topbar: {flex: 1, marginTop: 10},
+  topbar: { flex: 1, marginTop: 10 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,

@@ -46,7 +46,6 @@ const Language = () => {
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('til')} />
-
       <ScrollView showsVerticalScrollIndicator={false}>
         <View>
           <View style={styles.main}>
@@ -58,7 +57,7 @@ const Language = () => {
                 style={styles.TouchableOpacity}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Uzbekistan size={35} />
-                  <Text style={styles.optionTx}>O‘zbekcha </Text>
+                  <Text style={styles.optionTx} allowFontScaling={false}>O‘zbekcha </Text>
                 </View>
                 {i18n.language === 'uz' && (
                   <View style={styles.check}>
@@ -73,7 +72,7 @@ const Language = () => {
                 style={styles.TouchableOpacity}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Uzbekistan size={35} />
-                  <Text style={styles.optionTx}>Ўзбекча</Text>
+                  <Text style={styles.optionTx} allowFontScaling={false}>Ўзбекча</Text>
                 </View>
                 {i18n.language === 'kr' && (
                   <View style={styles.check}>
@@ -88,7 +87,7 @@ const Language = () => {
                 style={styles.TouchableOpacity}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Russian size={35} />
-                  <Text style={styles.optionTx}>Русский </Text>
+                  <Text style={styles.optionTx} allowFontScaling={false}>Русский </Text>
                 </View>
                 {i18n.language === 'ru' && (
                   <View style={styles.check}>

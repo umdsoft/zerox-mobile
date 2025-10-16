@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
+import React, { useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Card from '../components/Card';
 import BerilganQarzIcon from '../../images/home/QarzOlganIcon.svg';
 import MuddatUtganPlus from '../../images/home/MuddatUtgan+.svg';
@@ -19,29 +19,29 @@ import OlinganQarz from '../../images/home/OlingaQarz.svg';
 import GiveDebtIcon from '../../images/tab/GiveDebtIconBlue.svg';
 // import ListCard from '../components/ListCard';
 import axios from 'axios';
-import {URL} from '../constants';
-import {storage} from '../../store/api/token/getToken';
+import { URL } from '../constants';
+import { storage } from '../../store/api/token/getToken';
 import Loading from '../components/Loading';
 import PersonIcon from '../../images/home/person';
 import JuridicIcon from '../../images/home/juridic';
-import {settingDate} from './UserDetails';
+import { settingDate } from './UserDetails';
 import OtherHeader from '../components/OtherHeader';
 import ListCardShowDetails from '../components/ListCardShowDetails';
 import Famale from '../../images/Famale';
-import {useTranslation} from 'react-i18next';
-import {TakeIcon} from '../../navigation/Index';
-import {expire_passport_check} from '../../helper/timeChecker';
+import { useTranslation } from 'react-i18next';
+import { TakeIcon } from '../../navigation/Index';
+import { expire_passport_check } from '../../helper/timeChecker';
 import Toast from 'react-native-toast-message';
-import {useDispatch, useSelector} from 'react-redux';
-import {checkExpire} from '../../store/reducers/HomeReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { checkExpire } from '../../store/reducers/HomeReducer';
 
 const UserInformationOfDebt = () => {
   const navigation = useNavigation();
-  const {user, type, ctok, dtok, item} = useRoute().params;
-  const {t} = useTranslation();
+  const { user, type, ctok, dtok, item } = useRoute().params;
+  const { t } = useTranslation();
   const userInfo = useSelector(state => state.HomeReducer);
   const [me, setMe] = useState({});
-  const [data, setData] = useState({profile: {}, creditor: {}, debitor: {}});
+  const [data, setData] = useState({ profile: {}, creditor: {}, debitor: {} });
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
@@ -116,7 +116,8 @@ const UserInformationOfDebt = () => {
           width: style.width,
           position: 'absolute',
           height: style.height / 3,
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={type === 1 ? '' : t('qidiruv')} />
@@ -129,55 +130,63 @@ const UserInformationOfDebt = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginHorizontal: 10,
-                }}>
-                {item?.dimage === null ? (
-                  <View style={styles.userImageContainer}>
-                    {data?.profile?.type === 1 ? (
-                      <JuridicIcon
-                        width={style.width / 7}
-                        height={style.width / 7}
-                        color={style.blue}
-                      />
-                    ) : data?.profile?.gender === 2 ? (
-                      <Famale
-                        width={style.width / 7}
-                        height={style.width / 7}
-                        color={style.blue}
-                      />
-                    ) : (
-                      <PersonIcon
-                        width={style.width / 7}
-                        height={style.width / 7}
-                        color={style.blue}
-                      />
-                    )}
-                  </View>
-                ) : (
-                  <Image
+                }}
+              >
+                {/* {item?.dimage === null ? ( */}
+                <View style={styles.userImageContainer}>
+                  {data?.profile?.type === 1 ? (
+                    <JuridicIcon
+                      width={normalize(45)}
+                      height={normalize(90)}
+                      color={style.blue}
+                    />
+                  ) : data?.profile?.gender === 2 ? (
+                    <Famale
+                      width={normalize(45)}
+                      height={normalize(90)}
+                      color={style.blue}
+                    />
+                  ) : (
+                    <PersonIcon
+                      width={normalize(45)}
+                      height={normalize(90)}
+                      // width={style.width / 7}
+                      // height={style.width / 7}
+                      color={style.blue}
+                    />
+                  )}
+                </View>
+                {/* ) : ( */}
+                {/* <Image
                     source={{uri: URL.slice(0, -6) + item?.dimage}}
                     width={normalize(70)}
                     height={normalize(100)}
                     style={{
                       borderRadius: 10,
                     }}
-                  />
-                )}
+                  /> */}
+                {/* )} */}
                 <View
                   style={{
                     marginLeft: 10,
                     maxWidth: '70%',
                     width: '70%',
-                  }}>
+                  }}
+                >
                   <View
                     style={{
                       borderBottomColor: style.blue,
                       borderBottomWidth: 1,
                       paddingBottom: 3,
-                    }}>
-                    <Text style={[styles.phoneText, {color: style.blue}]}>
+                    }}
+                  >
+                    <Text
+                      style={[styles.phoneText, { color: style.blue }]}
+                      allowFontScaling={false}
+                    >
                       {t('fish')}
                     </Text>
-                    <Text style={styles.phoneText}>
+                    <Text style={styles.phoneText} allowFontScaling={false}>
                       {data.profile?.last_name +
                         ' ' +
                         data.profile?.first_name +
@@ -190,11 +199,15 @@ const UserInformationOfDebt = () => {
                       borderBottomColor: style.blue,
                       borderBottomWidth: 1,
                       paddingBottom: 3,
-                    }}>
-                    <Text style={[styles.phoneText, {color: style.blue}]}>
+                    }}
+                  >
+                    <Text
+                      style={[styles.phoneText, { color: style.blue }]}
+                      allowFontScaling={false}
+                    >
                       {t('reg')}
                     </Text>
-                    <Text style={styles.phoneText}>
+                    <Text style={styles.phoneText} allowFontScaling={false}>
                       {settingDate(data?.profile?.created_at?.slice(0, 10))}
                     </Text>
                   </View>
@@ -203,17 +216,23 @@ const UserInformationOfDebt = () => {
                       borderBottomColor: style.blue,
                       borderBottomWidth: 1,
                       paddingBottom: 3,
-                    }}>
-                    <Text style={[styles.phoneText, {color: style.blue}]}>
+                    }}
+                  >
+                    <Text
+                      style={[styles.phoneText, { color: style.blue }]}
+                      allowFontScaling={false}
+                    >
                       {t('120')}
                     </Text>
-                    <Text style={styles.phoneText}>{data?.profile?.uid}</Text>
+                    <Text style={styles.phoneText} allowFontScaling={false}>
+                      {data?.profile?.uid}
+                    </Text>
                   </View>
                 </View>
               </View>
             </View>
 
-            <View style={{flex: 1, marginHorizontal: 10}}>
+            <View style={{ flex: 1, marginHorizontal: 10 }}>
               <View style={styles.cardViewContainer}>
                 <View>
                   <Card
@@ -291,14 +310,15 @@ const UserInformationOfDebt = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                }}>
+                }}
+              >
                 {/* Qarz berish */}
                 <TouchableOpacity
                   onPress={() => {
                     if (
                       expire_passport_check(userInfo?.user.data.expiry_date)
                     ) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     navigation.navigate('GiveDebtUser', {
@@ -307,7 +327,8 @@ const UserInformationOfDebt = () => {
                     });
                   }}
                   activeOpacity={0.8}
-                  style={styles.qarzberish}>
+                  style={styles.qarzberish}
+                >
                   <View
                     style={{
                       flex: 1,
@@ -315,17 +336,20 @@ const UserInformationOfDebt = () => {
                       justifyContent: 'space-between',
                       width: '100%',
                       alignItems: 'center',
-                    }}>
+                    }}
+                  >
                     <Text
                       style={{
                         fontFamily: style.fontFamilyMedium,
                         fontSize: style.fontSize.xx - 2,
                         color: '#fff',
-                      }}>
+                      }}
+                      allowFontScaling={false}
+                    >
                       {t('147')}
                     </Text>
-                    <View style={{backgroundColor: '#fff', borderRadius: 8}}>
-                      <View style={{padding: 5}}>
+                    <View style={{ backgroundColor: '#fff', borderRadius: 8 }}>
+                      <View style={{ padding: 5 }}>
                         <TakeIcon width={25} height={25} color={style.blue} />
                       </View>
                     </View>
@@ -338,7 +362,7 @@ const UserInformationOfDebt = () => {
                     if (
                       expire_passport_check(userInfo?.user.data.expiry_date)
                     ) {
-                      dispatch(checkExpire({expire: true}));
+                      dispatch(checkExpire({ expire: true }));
                       return;
                     }
                     navigation.navigate('GiveDebtUser', {
@@ -347,7 +371,8 @@ const UserInformationOfDebt = () => {
                     });
                   }}
                   activeOpacity={0.8}
-                  style={styles.qarzberish}>
+                  style={styles.qarzberish}
+                >
                   <View
                     style={{
                       flex: 1,
@@ -355,17 +380,20 @@ const UserInformationOfDebt = () => {
                       justifyContent: 'space-between',
                       width: '100%',
                       alignItems: 'center',
-                    }}>
+                    }}
+                  >
                     <Text
                       style={{
                         fontFamily: style.fontFamilyMedium,
                         fontSize: style.fontSize.xx - 2,
                         color: '#fff',
-                      }}>
+                      }}
+                      allowFontScaling={false}
+                    >
                       {t('150')}
                     </Text>
-                    <View style={{backgroundColor: '#fff', borderRadius: 8}}>
-                      <View style={{padding: 5}}>
+                    <View style={{ backgroundColor: '#fff', borderRadius: 8 }}>
+                      <View style={{ padding: 5 }}>
                         <GiveDebtIcon width={25} height={25} />
                       </View>
                     </View>
@@ -416,6 +444,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     marginTop: 20,
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    borderRadius: 10,
   },
   userImage: {
     width: style.width / 7,

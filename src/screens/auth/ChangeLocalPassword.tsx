@@ -174,7 +174,7 @@ const ChangeLocalPassword = () => {
                             borderless: true,
                           }}
                           style={styles.codeButton}>
-                          <Text style={styles.textCode}>0</Text>
+                          <Text allowFontScaling={false} style={styles.textCode}>0</Text>
                         </Pressable>
                       </View>
                     );
@@ -243,7 +243,7 @@ const ChangeLocalPassword = () => {
                             borderless: true,
                           }}
                           style={styles.codeButton}>
-                          <Text style={styles.textCode}>{i + 1}</Text>
+                          <Text allowFontScaling={false} style={styles.textCode}>{i + 1}</Text>
                         </Pressable>
                       </View>
                     );
@@ -262,11 +262,11 @@ const renderText = step => {
   console.log(step, 'step');
   switch (step) {
     case 1:
-      return <Text style={styles.text}>{t('882')}</Text>;
+      return <Text allowFontScaling={false} style={styles.text}>{t('882')}</Text>;
     case 2:
-      return <Text style={styles.text}>{t('850')}</Text>;
+      return <Text allowFontScaling={false} style={styles.text}>{t('850')}</Text>;
     case 3:
-      return <Text style={styles.text}>{t('851')}</Text>;
+      return <Text allowFontScaling={false} style={styles.text}>{t('851')}</Text>;
   }
 };
 

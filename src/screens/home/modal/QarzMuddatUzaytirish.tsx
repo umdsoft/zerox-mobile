@@ -31,22 +31,23 @@ const QarzMuddatUzaytirish = ({data, date}) => {
             fontFamily: style.fontFamilyBold,
             color: '#000',
             fontSize: style.fontSize.xs,
-          }}>
+          }}
+          allowFontScaling={false}>
           D А L O L А T N O M А
         </Text>
       </View>
       <View style={{marginTop: 10, marginBottom: 10, paddingHorizontal: 10}}>
-        <Text style={styles.text}>
+        <Text style={styles.text} allowFontScaling={false}>
           ( <TextBold>{data?.number} </TextBold>- sonli qarz shartnomasining
           muddati uzaytirilganligi to‘g‘risida ) {'\n'} {'\n'}
           {'   '}Men, <TextBold>{data.debitor_name}</TextBold> (pasport:{' '}
-          <Text style={styles.mainText}>{data?.debitor_passport}</Text>.{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_passport}</Text>.{' '}
           <TextBold>{settingDate(data?.debitor_issued_date)}</TextBold> yilda{' '}
           <TextBold>{data?.debitor_issued}</TextBold> tomonidan berilgan) (qarz
           beruvchi) tomonidan ushbu dalolatnoma quyidagilar haqida tuzildi:{' '}
           {'\n'} {'\n'}
           {'   '}Men va fuqaro{' '}
-          <Text style={styles.mainText}>{data?.creditor_name}</Text> (pasport:{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> (pasport:{' '}
           <TextBold>
             {data.creditor_passport} {settingDate(data.creditor_issued_date)}
           </TextBold>{' '}
@@ -60,14 +61,14 @@ const QarzMuddatUzaytirish = ({data, date}) => {
           belgilandi. Mazkur dalolatnoma QR-kod orqali tasdiqlangan holda
           elektron tarzda tuzildi. {'\n'}
           {'   '} Dalolatnoma qarz beruvchi va qarz oluvchining{' '}
-          <Text style={styles.mainText}>"Zerox"</Text> dasturidagi shaxsiy
+          <Text style={styles.mainText} allowFontScaling={false}>"Zerox"</Text> dasturidagi shaxsiy
           kabinetida saqlanadi. QR-kod orqali tasdiqlangan Dalolatnomaning
           saqlanishini Jamiyat o‘z zimmasiga oladi.{'\n'}
           {'\n'}
           <TextBold styles={{textAlign: 'center'}}>
             Qarz beruvchi:
             {'\n'}FISH :{' '}
-            <Text style={styles.mainText}>
+            <Text style={styles.mainText} allowFontScaling={false}>
               {user.data.first_name +
                 ' ' +
                 user.data.last_name +

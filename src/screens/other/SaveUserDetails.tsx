@@ -1,5 +1,5 @@
-import {useNavigation, useRoute} from '@react-navigation/native';
-import React, {useCallback, useMemo, useState} from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,31 +7,31 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {style} from '../../theme/style';
-import {BackGroundIcon} from '../../helper/homeIcon';
+import { style } from '../../theme/style';
+import { BackGroundIcon } from '../../helper/homeIcon';
 import OtherHeader from '../components/OtherHeader';
 import axios from 'axios';
-import {URL} from '../constants';
-import {useDispatch, useSelector} from 'react-redux';
-import {storage} from '../../store/api/token/getToken';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {toastConfig} from '../components/ToastConfig';
+import { URL } from '../constants';
+import { useDispatch, useSelector } from 'react-redux';
+import { storage } from '../../store/api/token/getToken';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { toastConfig } from '../components/ToastConfig';
 import BackgroundTimer from 'react-native-background-timer';
 import AskPermission from '../../images/AskPermissonIcon';
 import AskPermissionNearby from '../../images/AskPermissonNearby';
 import EyeIcon from '../../images/Eye';
 
-import {checkExpire, setNotification} from '../../store/reducers/HomeReducer';
-import {t} from 'i18next';
+import { checkExpire, setNotification } from '../../store/reducers/HomeReducer';
+import { t } from 'i18next';
 import socketService from '../../helper/socketService';
-import {expire_passport_check} from '../../helper/timeChecker';
+import { expire_passport_check } from '../../helper/timeChecker';
 
 const UserInfo = () => {
   const userInfo = useSelector(state => state.HomeReducer);
-  const {params} = useRoute();
+  const { params } = useRoute();
   const navigation = useNavigation();
 
-  const {user, type} = params;
+  const { user, type } = params;
 
   const [active, setActive] = useState(false);
   const [first, setFirst] = useState(false);
@@ -57,10 +57,10 @@ const UserInfo = () => {
     setResolve(false);
     console.log('obj', obj);
     try {
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
-        {headers: {Authorization: `Bearer ${token}`, Connection: 'close'}},
+        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
       );
       console.log('data', data);
       console.log('status', status);
@@ -69,7 +69,7 @@ const UserInfo = () => {
         position: 'bottom',
         visibilityTime: 2000,
         type: 'omad',
-        props: {title: t('243'), desc: t('228')},
+        props: { title: t('243'), desc: t('228') },
       });
       if (status === 201) {
         setTimeout(() => {
@@ -80,7 +80,10 @@ const UserInfo = () => {
           // socketService.on('notification', data => {
           //   dispatch(setNotification({notification: data.not}));
           // });
-          navigation.navigate('Home');
+          navigation.reset({
+            routes: [{ name: 'BottomTabNavigator' }],
+            index: 0,
+          });
         }, 3000);
       }
     } catch (error) {
@@ -89,25 +92,30 @@ const UserInfo = () => {
   }, []);
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <View
         style={{
           width: style.width,
           position: 'absolute',
           height: style.height / 3,
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('Ma’lumot')} />
       <View style={styles.main}>
         <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+          <View
+            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+          >
             <View>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
+              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('fish')}</Text>
+                  <Text style={styles.phoneText} allowFontScaling={false}>
+                    {t('fish')}
+                  </Text>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
                     value={
                       user?.last_name +
@@ -122,16 +130,19 @@ const UserInfo = () => {
                     keyboardType="default"
                     style={[
                       styles.TextInput,
-                      {paddingLeft: 15, paddingTop: 18, paddingBottom: 18},
+                      { paddingLeft: 15, paddingTop: 18, paddingBottom: 18 },
                     ]}
+                    allowFontScaling={false}
                   />
                 </View>
               </View>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
+              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
                 <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText}>{t('120')}</Text>
+                  <Text style={styles.phoneText} allowFontScaling={false}>
+                    {t('120')}
+                  </Text>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
                     placeholderTextColor={style.placeHolderColor}
                     value={user?.uid}
@@ -147,13 +158,14 @@ const UserInfo = () => {
                         paddingBottom: 18,
                       },
                     ]}
+                    allowFontScaling={false}
                   />
                 </View>
               </View>
             </View>
 
             <View>
-              <Text style={styles.tix}>
+              <Text style={styles.tix} allowFontScaling={false}>
                 {resolve
                   ? t('246')
                   : reject
@@ -169,6 +181,7 @@ const UserInfo = () => {
                 style={[
                   styles.getUserInfoButton,
                   {
+                    marginTop: 10,
                     backgroundColor:
                       active && first
                         ? style.disabledButtonColor
@@ -177,23 +190,26 @@ const UserInfo = () => {
                         : style.blue,
                     flexDirection: 'row',
                   },
-                ]}>
+                ]}
+              >
                 {resolve ? <EyeIcon /> : <AskPermission />}
                 <Text
                   style={[
                     styles.textButton,
-                    {fontSize: style.fontSize.small - 1, marginLeft: 8},
-                  ]}>
+                    { fontSize: style.fontSize.small - 1, marginLeft: 8 },
+                  ]}
+                  allowFontScaling={false}
+                >
                   {' '}
                   {resolve ? t('252') : t('225')}
                 </Text>
               </TouchableOpacity>
             </View>
-            <View>
+            <View style={{ marginTop: 10 }}>
               <TouchableOpacity
                 onPress={() => {
                   if (expire_passport_check(userInfo.user.data.expiry_date)) {
-                    dispatch(checkExpire({expire: true}));
+                    dispatch(checkExpire({ expire: true }));
                     return;
                   }
 
@@ -203,19 +219,35 @@ const UserInfo = () => {
                   });
                 }}
                 activeOpacity={0.8}
-                style={[styles.getUserInfoButton, {flexDirection: 'row'}]}>
-                <AskPermissionNearby />
-                <Text
-                  style={[
-                    styles.textButton,
-                    {
-                      fontSize: style.fontSize.small - 1,
-                      marginLeft: 8,
-                      flexWrap: 'wrap',
-                    },
-                  ]}>
-                  {type === 1 ? t('222') : t('288')}
-                </Text>
+                style={[styles.getUserInfoButton, {}]}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '85%',
+                    paddingHorizontal: 10,
+                    alignSelf: 'center',
+                  }}
+                >
+                  <AskPermissionNearby />
+
+                  <View style={{ marginLeft: 4 }}>
+                    <Text
+                      style={[
+                        styles.textButton,
+                        {
+                          fontSize: style.fontSize.small - 1,
+                          flexWrap: 'wrap',
+                          textAlign: 'center',
+                        },
+                      ]}
+                      allowFontScaling={false}
+                    >
+                      {type === 1 ? t('222') : t('288')}
+                    </Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -249,7 +281,6 @@ const styles = StyleSheet.create({
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,
     color: '#fff',
-    textAlign: 'center',
   },
   registerButton: {
     width: '90%',
@@ -296,13 +327,11 @@ const styles = StyleSheet.create({
     paddingRight: 5,
   },
   getUserInfoButton: {
-    alignItems: 'center',
+    // alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: style.blue,
     borderRadius: 10,
     paddingVertical: 15,
-    paddingHorizontal: 10,
-    marginTop: 10,
   },
   phoneText: {
     fontFamily: style.fontFamilyMedium,

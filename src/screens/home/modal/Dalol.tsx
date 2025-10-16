@@ -1,17 +1,17 @@
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {style} from '../../../theme/style';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { style } from '../../../theme/style';
 
-import {useRoute} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
 import OtherHeader from '../../components/OtherHeader';
 import Pdf from 'react-native-pdf';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 const Dalol = () => {
   const route = useRoute();
-  const {type, data, date, sum} = route.params;
-  const {t, i18n} = useTranslation();
+  const { type, data, date, sum } = route.params;
+  const { t, i18n } = useTranslation();
 
   console.log(route.params, 'route.params');
 
@@ -22,7 +22,8 @@ const Dalol = () => {
           position: 'absolute',
           height: style.height / 3,
           width: '100%',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('Dalolatnoma')} />
@@ -33,7 +34,8 @@ const Dalol = () => {
           flex: 1,
           marginBottom: 20,
           borderRadius: 12,
-        }}>
+        }}
+      >
         <Pdf
           trustAllCerts={false}
           source={{
@@ -54,7 +56,7 @@ const Dalol = () => {
           onError={error => {
             console.log(error, 'error');
           }}
-          style={{flex: 1, width: '100%', height: '100%'}}
+          style={{ flex: 1, width: '100%', height: '100%' }}
         />
         {/* <ScrollView>
           <CheckingType
@@ -70,6 +72,9 @@ const Dalol = () => {
 };
 
 const returnURL = (type, data, lang, date, sum) => {
+  console.log(
+    `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=1&amount=${data.amount}&refundable_amount=${sum}&residual_amount=${data.residual_amount}&end_date=${data.end_date}&uid=${data.uid}&lang=${lang}`,
+  );
   switch (type) {
     case 2:
       return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=4&vos_summa=${data.residual_amount}&uid=${data.uid}&lang=${lang}`;

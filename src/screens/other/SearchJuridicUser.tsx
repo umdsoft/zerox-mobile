@@ -1,4 +1,5 @@
 import {
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,11 +17,12 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from '../components/ToastConfig';
 // import TextInputMask from 'react-native-text-input-mask';
 import axios from 'axios';
-import DatePicker from '@react-native-community/datetimepicker';
+import DatePicker from 'react-native-date-picker';
 import { URL } from '../constants';
 import OtherHeader from '../components/OtherHeader';
 import { t } from 'i18next';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
+import DateModal from '../home/modal/DateModal';
 const SearchJuridicUser = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
@@ -172,29 +174,57 @@ const SearchJuridicUser = () => {
           )}
         </View>
       </ScrollView>
-      {open && (
+      {/* {Platform.OS === 'android' && open && (
         <DatePicker
-          open={open}
-          date={date}
+          value={date}
+          display="calendar"
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: theme === 'dark' ? '#000' : '#fff',
             alignSelf: 'center',
+            borderRadius: 20,
           }}
           mode="date"
-          confirmText="OK"
-          cancelText={t('804')}
-          theme="light"
-          modal={true}
-          onCancel={() => {
-            setOpen(false);
-          }}
-          title="Tug’ilgan sanani kiriting"
-          onConfirm={date => {
-            setDate(date);
+          onChange={(event: DateTimePickerEvent, date?: Date) => {
+            setDate(date!);
             setOpen(false);
           }}
         />
       )}
+
+      {Platform.OS === 'ios' && (
+        <DateModal
+          open={open}
+          setOpen={setOpen}
+          title={t('801')}
+          date={date}
+          setDate={setDate}
+
+          // max={maxDate}
+        />
+        
+      )} */}
+      <DatePicker
+        open={open}
+        date={date}
+        style={{
+          backgroundColor: '#fff',
+          alignSelf: 'center',
+        }}
+        mode="date"
+        confirmText="OK"
+        cancelText={t('804')}
+        theme="light"
+        modal={true}
+        minimumDate={new Date()}
+        onCancel={() => {
+          setOpen(false);
+        }}
+        title={t('801')}
+        onConfirm={date => {
+          setDate(date);
+          setOpen(false);
+        }}
+      />
       {/* <Toast config={toastConfig} /> */}
       {/* <DateModal
         open={open}

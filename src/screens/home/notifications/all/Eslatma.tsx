@@ -17,7 +17,7 @@ const Eslatma = ({item, okay, navigation}) => {
           <TextBold>{t('eslatma')}</TextBold>
         </View>
         <View style={{marginTop: 10}}>
-          <Text style={styles.notification}>{t('eslatma1')}</Text>
+          <Text style={styles.notification} allowFontScaling={false}>{t('eslatma1')}</Text>
         </View>
         <View>
           <View
@@ -28,10 +28,10 @@ const Eslatma = ({item, okay, navigation}) => {
               marginTop: 10,
             }}>
             <View style={{flexDirection: 'row'}}>
-              <Text style={styles.notificationTitle}>
-                <Text>{item?.created} </Text>
+              <Text style={styles.notificationTitle} allowFontScaling={false}>
+                <Text  allowFontScaling={false}>{item?.created} </Text>
               </Text>
-              <Text style={styles.notificationTitle}>
+              <Text style={styles.notificationTitle} allowFontScaling={false}>
                 {' '}
                 {item?.time?.slice(0, 5)}
               </Text>
@@ -60,7 +60,8 @@ const Eslatma = ({item, okay, navigation}) => {
                 style={[
                   styles.notification,
                   {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                ]}
+                allowFontScaling={false}>
                 {t('22')}
               </Text>
             </TouchableOpacity>
@@ -72,7 +73,8 @@ const Eslatma = ({item, okay, navigation}) => {
                 style={[
                   styles.notification,
                   {color: '#fff', fontSize: style.fontSize.xx - 2},
-                ]}>
+                ]}
+                allowFontScaling={false}>
                 Ok
               </Text>
             </TouchableOpacity>

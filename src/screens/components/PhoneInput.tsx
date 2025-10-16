@@ -22,7 +22,7 @@ const PhoneInput = ({onChangeText, value, icon = false, max}) => {
             value="+998"
             editable={false}
             style={styles.phoneNumberText}
-          />
+            allowFontScaling={false} />
         </View>
       )}
       <View style={{flex: 1}}>
@@ -34,7 +34,7 @@ const PhoneInput = ({onChangeText, value, icon = false, max}) => {
           onChangeText={onChangeText}
           keyboardType="number-pad"
           style={[styles.TextInput]}
-        />
+          allowFontScaling={false} />
       </View>
     </View>
   );

@@ -1,43 +1,45 @@
 import {
   ActivityIndicator,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
 
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {toastConfig} from '../components/ToastConfig';
-import DatePicker from '@react-native-community/datetimepicker';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+
+import DatePicker from 'react-native-date-picker';
 import axios from 'axios';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
 import TextBold from '../components/TextBold';
 import OtherHeader from '../components/OtherHeader';
-import {settingDate} from '../../helper';
+import { settingDate } from '../../helper';
 
-import {setNotification} from '../../store/reducers/HomeReducer';
-import {useDispatch, useSelector} from 'react-redux';
-import {t} from 'i18next';
-import {Trans} from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import { t } from 'i18next';
+import { Trans } from 'react-i18next';
 import MainText from '../components/MainText';
-import {font} from '../../theme/font';
-import socketService from '../../helper/socketService';
+import { font } from '../../theme/font';
+
+import DateModal from '../home/modal/DateModal';
 
 const DebtDateLengthAsk = () => {
-  const {item} = useRoute().params;
-
+  const { item } = useRoute().params;
+  const theme = useColorScheme();
   const navigation = useNavigation();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
   const [info, setInfo] = useState({});
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);
@@ -45,9 +47,12 @@ const DebtDateLengthAsk = () => {
     const token = storage.getString('token');
     try {
       setLoading(true);
-      const {data, status} = await axios.get(URL + `/contract/by/${item?.id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
-      });
+      const { data, status } = await axios.get(
+        URL + `/contract/by/${item?.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+        },
+      );
       if (
         status === 200 &&
         data.success === false &&
@@ -100,7 +105,7 @@ const DebtDateLengthAsk = () => {
 
     try {
       setLoading1(true);
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/contract/act',
         {
           contract: info.id,
@@ -119,7 +124,7 @@ const DebtDateLengthAsk = () => {
           res: info.debitor,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
 
@@ -168,7 +173,7 @@ const DebtDateLengthAsk = () => {
       setLoading1(false);
       Toast.show({
         autoHide: true,
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
@@ -181,7 +186,7 @@ const DebtDateLengthAsk = () => {
   }, [getData]);
   // console.log('redddd');
 
-  console.log(info.created_at, 'info.created_at');
+  console.log(info, 'info.created_at');
   console.log(date, 'date');
   // console.log(plus_day(date), 'plus_day(info?.end_date)');
   // console.log(formatDate(plus_day(date)), 'checkingDate(date)');
@@ -189,7 +194,12 @@ const DebtDateLengthAsk = () => {
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('462')} />
@@ -201,11 +211,15 @@ const DebtDateLengthAsk = () => {
             </View>
           ) : (
             <View
-              style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            >
               <View>
                 <View style={[styles.card]}>
                   <View style={styles.insideMoney}>
-                    <Text style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+                    <Text
+                      allowFontScaling={false}
+                      style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                    >
                       <Trans
                         t={t}
                         i18nKey="465"
@@ -220,6 +234,7 @@ const DebtDateLengthAsk = () => {
                           ),
                           id: (
                             <Text
+                              allowFontScaling={false}
                               onPress={() => {
                                 navigation.navigate('DownloadStatistic', {
                                   item: info,
@@ -232,7 +247,9 @@ const DebtDateLengthAsk = () => {
                             />
                           ),
                           end: (
-                            <TextBold styles={{fontSize: style.fontSize.xx}} />
+                            <TextBold
+                              styles={{ fontSize: style.fontSize.xx }}
+                            />
                           ),
                         }}
                       />
@@ -247,11 +264,13 @@ const DebtDateLengthAsk = () => {
                       Yangi muddatni kiriting
                     </Text> */}
                   </View>
-                  <View style={{flex: 1}}>
+                  <View style={{ flex: 1 }}>
                     <TouchableOpacity
                       onPress={() => setOpen(!open)}
-                      style={styles.TextInput}>
+                      style={styles.TextInput}
+                    >
                       <Text
+                        allowFontScaling={false}
                         style={[
                           styles.dateText,
                           {
@@ -260,7 +279,8 @@ const DebtDateLengthAsk = () => {
                                 ? '#a9a9a9'
                                 : '#000',
                           },
-                        ]}>
+                        ]}
+                      >
                         {settingDate(date) === settingDate(Date.now())
                           ? t('369')
                           : settingDate(date)}
@@ -285,11 +305,14 @@ const DebtDateLengthAsk = () => {
                         ? style.disabledButtonColor
                         : style.blue,
                     },
-                  ]}>
+                  ]}
+                >
                   {loading1 ? (
                     <ActivityIndicator size={'small'} />
                   ) : (
-                    <Text style={[styles.textButton]}>{t('357')}</Text>
+                    <Text allowFontScaling={false} style={[styles.textButton]}>
+                      {t('357')}
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -297,6 +320,7 @@ const DebtDateLengthAsk = () => {
           )}
         </View>
       </View>
+
       {open && (
         <DatePicker
           open={open}
@@ -323,6 +347,36 @@ const DebtDateLengthAsk = () => {
           }}
         />
       )}
+
+      {/* {Platform.OS === 'android' && open && (
+        <DatePicker
+          value={date}
+          display="calendar"
+          style={{
+            backgroundColor: theme === 'dark' ? '#000' : '#fff',
+            alignSelf: 'center',
+            borderRadius: 20,
+          }}
+          mode="date"
+          onChange={(event: DateTimePickerEvent, date?: Date) => {
+            setDate(date!);
+            setOpen(false);
+          }}
+          minimumDate={new Date(minimumDate(info?.end_date))}
+        />
+      )} */}
+
+      {/* {Platform.OS === 'ios' && (
+        <DateModal
+          open={open}
+          setOpen={setOpen}
+          title={t('801')}
+          date={date}
+          setDate={setDate}
+          min={new Date(minimumDate(info?.end_date))}
+          // max={maxDate}
+        />
+      )} */}
 
       {/* <Toast config={toastConfig} /> */}
     </View>

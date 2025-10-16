@@ -56,7 +56,7 @@ const NewRecoveryPassword = () => {
                   textAlign: 'center',
                 },
               ]}
-            >
+              allowFontScaling={false}>
               {type === 2
                 ? 'Parolni tiklash uchun maxfiy so’zni kiriting'
                 : 'Parolni o‘zgartirish uchun\nmaxfiy so‘zni kiriting'}
@@ -75,7 +75,7 @@ const NewRecoveryPassword = () => {
                     color: style.disabledButtonColor,
                   },
                 ]}
-              >
+                allowFontScaling={false}>
                 Maxfiy so‘z: Men aytgan gap
               </Text>
 
@@ -92,7 +92,7 @@ const NewRecoveryPassword = () => {
                     paddingRight: 5,
                   }}
                 >
-                  <Text style={styles.phoneText}>Maxfiy so’zni kiriting</Text>
+                  <Text style={styles.phoneText} allowFontScaling={false}>Maxfiy so’zni kiriting</Text>
                 </View>
                 <View style={{flex: 1}}>
                   <TextInput
@@ -102,7 +102,7 @@ const NewRecoveryPassword = () => {
                     }}
                     keyboardType="default"
                     style={styles.TextInput}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
             </View>
@@ -127,7 +127,7 @@ const NewRecoveryPassword = () => {
                 },
               ]}
             >
-              <Text style={[styles.enterText, {color: '#fff'}]}>
+              <Text style={[styles.enterText, {color: '#fff'}]} allowFontScaling={false}>
                 Davom etish
               </Text>
             </TouchableOpacity>

@@ -183,7 +183,7 @@ const NewPasswordEnter = () => {
                   }}
                   keyboardType="default"
                   style={styles.TextInput}
-                />
+                  allowFontScaling={false} />
               </View>
             </View>
             {renderValidation}

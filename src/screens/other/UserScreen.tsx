@@ -142,7 +142,7 @@ const UserScreen = () => {
           <View style={styles.Main}>
             <View style={styles.aboutUsContainer}>
               <View style={{flexDirection: 'row'}}>
-                {user.data.image === null ? (
+                {/* {user.data.image === null ? ( */}
                   <View style={styles.userImageContainer}>
                     {user?.data?.type === 2 ? (
                       user?.data?.gender === 2 ? (
@@ -166,7 +166,7 @@ const UserScreen = () => {
                       />
                     )}
                   </View>
-                ) : (
+                {/* ) : ( */}
                   <>
                     {/* {loadingImage ? (
                       <View
@@ -183,7 +183,7 @@ const UserScreen = () => {
                         />
                       </View>
                     ) : ( */}
-                    <Image
+                    {/* <Image
                       source={{uri: URL.slice(0, -6) + user?.data?.image}}
                       width={normalize(70)}
                       // onLoadEnd={() => setLoadingImage(false)}
@@ -193,10 +193,10 @@ const UserScreen = () => {
                       style={{
                         borderRadius: 10,
                       }}
-                    />
+                    /> */}
                     {/* )} */}
                   </>
-                )}
+                {/* )} */}
 
                 <View style={{marginLeft: 10, flex: 1}}>
                   {user?.data?.type === 2 ? (

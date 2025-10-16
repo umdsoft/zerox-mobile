@@ -1,43 +1,47 @@
 import {
   ActivityIndicator,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
+import React, { useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {toastConfig} from '../components/ToastConfig';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { toastConfig } from '../components/ToastConfig';
 import Loading from '../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
-import {formatDate} from './DebtDateLengthAsk';
-import DatePicker from '@react-native-community/datetimepicker';
+import { formatDate } from './DebtDateLengthAsk';
+import DatePicker from 'react-native-date-picker';
 import TextBold from '../components/TextBold';
 import axios from 'axios';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
 import OtherHeader from '../components/OtherHeader';
-import {settingDate} from '../../helper';
-import {useDispatch, useSelector} from 'react-redux';
+import { settingDate } from '../../helper';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {setNotification} from '../../store/reducers/HomeReducer';
-import {t} from 'i18next';
-import {Trans} from 'react-i18next';
+import { setNotification } from '../../store/reducers/HomeReducer';
+import { t } from 'i18next';
+import { Trans } from 'react-i18next';
 import MainText from '../components/MainText';
-import {font} from '../../theme/font';
+import { font } from '../../theme/font';
 import socketService from '../../helper/socketService';
-import {getCreditorDataAndDebitorData} from '../../store/api/home';
+import { getCreditorDataAndDebitorData } from '../../store/api/home';
+import DateModal from '../home/modal/DateModal';
 
 const DebtDateLength = () => {
-  const {item} = useRoute().params;
+  const { item } = useRoute().params;
+  const theme = useColorScheme();
   const [check, setCheck] = useState(false);
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
   const navigation = useNavigation();
   const [info, setInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -54,9 +58,12 @@ const DebtDateLength = () => {
 
     try {
       setLoading(true);
-      const {data, status} = await axios.get(URL + `/contract/by/${item.id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
-      });
+      const { data, status } = await axios.get(
+        URL + `/contract/by/${item.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+        },
+      );
       console.log('datadata', data);
       if (status === 200) {
         setInfo(data.data);
@@ -73,7 +80,7 @@ const DebtDateLength = () => {
     try {
       setLoading1(true);
 
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/contract/deb-uzay',
         {
           contract: info.id,
@@ -89,7 +96,7 @@ const DebtDateLength = () => {
           res: info.debitor,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
 
@@ -116,7 +123,7 @@ const DebtDateLength = () => {
           visibilityTime: 3000,
           position: 'bottom',
           type: 'omad',
-          props: {title: t('237'), desc: t('375')},
+          props: { title: t('237'), desc: t('375') },
         });
         dispatch(getCreditorDataAndDebitorData());
         setTimeout(() => {
@@ -137,7 +144,7 @@ const DebtDateLength = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
       });
     }
   };
@@ -146,7 +153,12 @@ const DebtDateLength = () => {
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('363')} />
@@ -156,12 +168,15 @@ const DebtDateLength = () => {
             <Loading />
           ) : (
             <View
-              style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            >
               <View>
                 <View style={[styles.card]}>
                   <View style={styles.insideMoney}>
                     {/* //360 */}
-                    <Text style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+                    <Text
+                      style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                    >
                       <Trans
                         t={t}
                         i18nKey="366"
@@ -188,7 +203,9 @@ const DebtDateLength = () => {
                             />
                           ),
                           end: (
-                            <TextBold styles={{fontSize: style.fontSize.xx}} />
+                            <TextBold
+                              styles={{ fontSize: style.fontSize.xx }}
+                            />
                           ),
                         }}
                       />
@@ -198,10 +215,11 @@ const DebtDateLength = () => {
               </View>
               <View>
                 <View style={styles.TextInputLabelContainer}>
-                  <View style={{flex: 1}}>
+                  <View style={{ flex: 1 }}>
                     <TouchableOpacity
                       onPress={() => setOpen(!open)}
-                      style={styles.TextInput}>
+                      style={styles.TextInput}
+                    >
                       <Text
                         style={[
                           styles.dateText,
@@ -211,7 +229,8 @@ const DebtDateLength = () => {
                                 ? '#a9a9a9'
                                 : '#000',
                           },
-                        ]}>
+                        ]}
+                      >
                         {settingDate(date) === settingDate(Date.now())
                           ? t('369')
                           : settingDate(date)}
@@ -224,7 +243,8 @@ const DebtDateLength = () => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     marginTop: 20,
-                  }}>
+                  }}
+                >
                   <CheckBox
                     value={check}
                     tintColor={style.blue}
@@ -233,7 +253,7 @@ const DebtDateLength = () => {
                       false: style.disabledButtonColor,
                     }}
                     boxType="square"
-                    style={{width: 20, height: 20}}
+                    style={{ width: 20, height: 20 }}
                     onValueChange={() => setCheck(!check)}
                   />
                   <Text
@@ -246,8 +266,9 @@ const DebtDateLength = () => {
                     }}
                     style={[
                       styles.phoneText,
-                      {color: style.blue, maxWidth: '90%', marginLeft: 10},
-                    ]}>
+                      { color: style.blue, maxWidth: '90%', marginLeft: 10 },
+                    ]}
+                  >
                     {t('372')}
                   </Text>
                 </View>
@@ -266,7 +287,8 @@ const DebtDateLength = () => {
                           ? style.blue
                           : style.disabledButtonColor,
                     },
-                  ]}>
+                  ]}
+                >
                   {loading1 ? (
                     <ActivityIndicator size={'small'} color={'#fff'} />
                   ) : (
@@ -278,30 +300,58 @@ const DebtDateLength = () => {
           )}
         </View>
       </View>
-      {open && (
+      {/* {Platform.OS === 'android' && open && (
         <DatePicker
-          open={open}
-          date={date}
+          value={date}
+          display="calendar"
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: theme === 'dark' ? '#000' : '#fff',
             alignSelf: 'center',
+            borderRadius: 20,
           }}
           mode="date"
-          confirmText="OK"
-          cancelText={t('804')}
-          theme="light"
-          modal={true}
-          onCancel={() => {
-            setOpen(false);
-          }}
-          title={t('801')}
-          onConfirm={date => {
-            setDate(date);
+          onChange={(event: DateTimePickerEvent, date?: Date) => {
+            setDate(date!);
             setOpen(false);
           }}
           minimumDate={new Date(plus_day(item?.end_date))}
         />
       )}
+
+      {Platform.OS === 'ios' && (
+        <DateModal
+          open={open}
+          setOpen={setOpen}
+          title={t('801')}
+          date={date}
+          setDate={setDate}
+          min={new Date(plus_day(item?.end_date))}
+          // max={maxDate}
+        />
+      )} */}
+
+      <DatePicker
+        open={open}
+        date={date}
+        style={{
+          backgroundColor: '#fff',
+          alignSelf: 'center',
+        }}
+        mode="date"
+        confirmText="OK"
+        cancelText={t('804')}
+        theme="light"
+        modal={true}
+        onCancel={() => {
+          setOpen(false);
+        }}
+        title={t('801')}
+        onConfirm={date => {
+          setDate(date);
+          setOpen(false);
+        }}
+        minimumDate={new Date(plus_day(item?.end_date))}
+      />
 
       {/* <DateModal
         open={open}

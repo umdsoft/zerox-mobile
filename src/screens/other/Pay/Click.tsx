@@ -186,7 +186,7 @@ const Pay = () => {
                       setAmount(val);
                     }}
                     style={[styles.TextInput, {paddingLeft: 15}]}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
               <TouchableOpacity
@@ -200,7 +200,7 @@ const Pay = () => {
                     backgroundColor: style.blue,
                   },
                 ]}>
-                <Text style={styles.text}>{t('45')}</Text>
+                <Text style={styles.text} allowFontScaling={false}>{t('45')}</Text>
               </TouchableOpacity>
             </View>
           </View>

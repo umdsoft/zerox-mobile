@@ -16,11 +16,13 @@ const InputMask = ({ onChangeText, value, icon = false }) => {
             value="+998"
             editable={false}
             style={styles.phoneNumberText}
+            allowFontScaling={false}
           />
         </View>
       )}
       <View style={{ flex: 1 }}>
         <MaskedTextInput
+          allowFontScaling={false}
           value={value}
           mask="[00] [000] [00] [00]"
           placeholder="__ ___-__-__"

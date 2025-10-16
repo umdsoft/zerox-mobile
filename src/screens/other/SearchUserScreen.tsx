@@ -1,44 +1,53 @@
 import {
+  Dimensions,
+  Platform,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import React, { useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
-import {URL} from '../constants';
+import { URL } from '../constants';
 import axios from 'axios';
 // import TextInputMask from 'react-native-text-input-mask';
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 
 import OtherHeader from '../components/OtherHeader';
-import DatePicker from '@react-native-community/datetimepicker';
-import {useDispatch, useSelector} from 'react-redux';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {toastConfig} from '../components/ToastConfig';
+import DatePicker from 'react-native-date-picker';
+import { useDispatch, useSelector } from 'react-redux';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { toastConfig } from '../components/ToastConfig';
 
 import AskPermission from '../../images/AskPermissonIcon';
 import AskPermissionNearby from '../../images/AskPermissonNearby';
 import EyeIcon from '../../images/Eye';
 import MainText from '../components/MainText';
-import {fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
-import {settingDate} from '../../helper';
-import {t} from 'i18next';
-import {checkExpire, setNotification} from '../../store/reducers/HomeReducer';
+import { fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
+import { settingDate } from '../../helper';
+import { t } from 'i18next';
+import { checkExpire, setNotification } from '../../store/reducers/HomeReducer';
 import socketService from '../../helper/socketService';
-import {expire_passport_check} from '../../helper/timeChecker';
+import { expire_passport_check } from '../../helper/timeChecker';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
+import DateModal from '../home/modal/DateModal';
+import QuestionMarkIcon from '../../images/questionMark';
+import Popover from 'react-native-popover-view';
+import { Mode } from 'react-native-popover-view/dist/Types';
+import { widthPercentageToDP } from 'react-native-responsive-screen';
+const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
-  const {type} = useRoute().params;
+  const { type } = useRoute().params;
   const theme = useColorScheme();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [error, setError] = useState(false);
@@ -53,7 +62,7 @@ const SearchUserScreen = () => {
   const SearchUser = async () => {
     try {
       if (expire_passport_check(user.data.expiry_date)) {
-        dispatch(checkExpire({expire: true}));
+        dispatch(checkExpire({ expire: true }));
         return;
       }
 
@@ -71,7 +80,7 @@ const SearchUserScreen = () => {
       } else {
         setLoading(true);
         setError(false);
-        const {data, status} = await axios.post(
+        const { data, status } = await axios.post(
           URL + '/user/search',
           {
             id: userID.replace('/', ''),
@@ -136,7 +145,8 @@ const SearchUserScreen = () => {
           width: style.width,
           position: 'absolute',
           height: style.height / 3,
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('267')} />
@@ -157,24 +167,51 @@ const SearchUserScreen = () => {
                     width: '100%',
                     alignSelf: 'center',
                     marginVertical: 20,
-                  }}>
-                  <View style={{alignSelf: 'center'}}>
+                  }}
+                >
+                  <View style={{ alignSelf: 'center' }}>
                     <View style={styles.TextInputLabelContainer}>
-                      <View style={styles.inputTitle}>
-                        <MainText size={fontSize[12]}>{t('210')}</MainText>
+                      <View
+                        style={[styles.inputTitle, { flexDirection: 'row' }]}
+                      >
+                        <MainText size={fontSize[12]}>{t('121')}</MainText>
+                        <Popover
+                          mode={Mode.RN_MODAL}
+                          popoverStyle={{ borderRadius: 10 }}
+                          displayArea={{
+                            x: width / 2 - 100,
+                            y: 0,
+                            width: 300,
+                            height: 80,
+                          }}
+                          from={
+                            <TouchableOpacity style={{ marginLeft: 5 }}>
+                              <QuestionMarkIcon
+                                width={20}
+                                height={20}
+                                color={style.blue}
+                              />
+                            </TouchableOpacity>
+                          }
+                        >
+                          <View style={{ padding: 10, width: 250 }}>
+                            <MainText size={fontSize[11]}>{t('130')}</MainText>
+                          </View>
+                        </Popover>
                       </View>
-                      <View style={{flex: 1}}>
+
+                      <View style={{ flex: 1 }}>
                         <MaskedTextInput
                           value={userID}
                           placeholder="100000/AA"
                           autoCapitalize="characters"
                           onChangeText={(formatted, extracted) => {
-                            setUserID(extracted);
+                            setUserID(extracted.toUpperCase());
                           }}
                           mask="[000000]{/}[AA]"
                           placeholderTextColor={style.placeHolderColor}
                           keyboardType="default"
-                          style={[styles.TextInput, {paddingLeft: 15}]}
+                          style={[styles.TextInput, { paddingLeft: 15 }]}
                         />
                       </View>
                     </View>
@@ -182,16 +219,18 @@ const SearchUserScreen = () => {
                       <View style={styles.inputTitle}>
                         <MainText size={fontSize[12]}>{t('213')}</MainText>
                       </View>
-                      <View style={{flex: 1}}>
+                      <View style={{ flex: 1 }}>
                         <TouchableOpacity
                           onPress={() => setOpen(!open)}
-                          style={styles.button}>
+                          style={styles.button}
+                        >
                           <MainText size={fontSize[14]}>
                             {settingDate(date) === settingDate(Date.now()) ? (
                               <MainText
                                 color={colors.placeHolderColor}
                                 size={fontSize[14]}
-                                style={{opacity: 0.5}}>
+                                style={{ opacity: 0.5 }}
+                              >
                                 {' '}
                                 dd.mm.yyyy{' '}
                               </MainText>
@@ -209,7 +248,8 @@ const SearchUserScreen = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginTop: 20,
-                    }}>
+                    }}
+                  >
                     <TouchableOpacity
                       disabled={userID.length === 9 ? false : true}
                       onPress={SearchUser}
@@ -221,7 +261,8 @@ const SearchUserScreen = () => {
                             ? style.disabledButtonColor
                             : style.blue,
                         },
-                      ]}>
+                      ]}
+                    >
                       <MainText color={colors.white} size={fontSize[14]}>
                         {t('216')}
                       </MainText>
@@ -234,36 +275,68 @@ const SearchUserScreen = () => {
         </View>
       </ScrollView>
 
-      {open && (
+      {/* {Platform.OS === 'android' && open && (
         <DatePicker
-          open={open}
-          date={date}
+          // date={date}
+          value={date}
+          display="calendar"
           // textColor="#000"
           style={{
             backgroundColor: theme === 'dark' ? '#000' : '#fff',
             alignSelf: 'center',
+            borderRadius: 20,
           }}
           mode="date"
-          confirmText="OK"
-          cancelText={t('804')}
-          theme="light"
-          modal={true}
-          onCancel={() => {
-            setOpen(false);
-          }}
-          title={t('213')}
-          onConfirm={date => {
-            setDate(date);
+          // cancelText={t('804')}
+
+          // title={t('213')}
+          onChange={(event: DateTimePickerEvent, date?: Date) => {
+            setDate(date!);
             setOpen(false);
           }}
         />
-      )}
+      )} */}
+
+      {/* {Platform.OS === 'ios' && (
+        <DateModal
+          open={open}
+          setOpen={setOpen}
+          title={t('213')}
+          date={date}
+          setDate={setDate}
+          // min={minDate}
+          // max={maxDate}
+        />
+      )} */}
+      <DatePicker
+        open={open}
+        date={date}
+        style={{
+          backgroundColor: '#fff',
+          alignSelf: 'center',
+        }}
+        mode="date"
+        confirmText="OK"
+        cancelText={t('804')}
+        theme="light"
+        modal={true}
+        onCancel={() => {
+          setOpen(false);
+        }}
+        title={t('213')}
+        onConfirm={date => {
+          setDate(date);
+          setOpen(false);
+        }}
+        maximumDate={new Date()}
+      />
+
       {/* <Toast config={toastConfig} /> */}
     </View>
   );
 };
 
-const UserInfo = ({user, navigation, type}) => {
+const UserInfo = ({ user, navigation, type }) => {
   const userInfo = useSelector(state => state.HomeReducer);
 
   const [active, setActive] = useState(false);
@@ -288,10 +361,10 @@ const UserInfo = ({user, navigation, type}) => {
     setResolve(false);
 
     try {
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
-        {headers: {Authorization: `Bearer ${token}`, Connection: 'close'}},
+        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
       );
       console.log(data, 'asdasd');
 
@@ -300,7 +373,7 @@ const UserInfo = ({user, navigation, type}) => {
         position: 'bottom',
         visibilityTime: 2000,
         type: 'omad',
-        props: {title: t('243'), desc: t('228')},
+        props: { title: t('243'), desc: t('228') },
       });
       if (status === 201) {
         // socketService.sendNotification({
@@ -310,9 +383,13 @@ const UserInfo = ({user, navigation, type}) => {
         // socketService.on('notification', data => {
         //   dispatch(setNotification({notification: data.not}));
         // });
+
         setTimeout(() => {
-          navigation.navigate('Home');
-        }, 3000);
+          navigation.reset({
+            routes: [{ name: 'BottomTabNavigator' }],
+            index: 0,
+          });
+        }, 2000);
       }
     } catch (error) {
       console.log(error);
@@ -320,16 +397,18 @@ const UserInfo = ({user, navigation, type}) => {
   };
 
   return (
-    <View style={{flex: 1, paddingBottom: 10}}>
+    <View style={{ flex: 1, paddingBottom: 10 }}>
       <View style={styles.main}>
         <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+          <View
+            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+          >
             <View>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
+              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
                 <View style={styles.inputTitle}>
                   <MainText size={fontSize[12]}>{t('fish')}</MainText>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
                     value={
                       user?.last_name +
@@ -344,16 +423,16 @@ const UserInfo = ({user, navigation, type}) => {
                     keyboardType="default"
                     style={[
                       styles.TextInput,
-                      {paddingLeft: 15, paddingTop: 18, paddingBottom: 18},
+                      { paddingLeft: 15, paddingTop: 18, paddingBottom: 18 },
                     ]}
                   />
                 </View>
               </View>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
+              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
                 <View style={styles.inputTitle}>
                   <MainText size={fontSize[12]}>{t('120')}</MainText>
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <TextInput
                     placeholderTextColor={style.placeHolderColor}
                     value={user?.uid}
@@ -401,7 +480,8 @@ const UserInfo = ({user, navigation, type}) => {
                         : style.blue,
                     flexDirection: 'row',
                   },
-                ]}>
+                ]}
+              >
                 {resolve ? <EyeIcon /> : <AskPermission />}
                 <MainText color={colors.white} mrLeft={8} size={fontSize[12]}>
                   {resolve ? t('252') : t('225')}
@@ -417,11 +497,34 @@ const UserInfo = ({user, navigation, type}) => {
                   });
                 }}
                 activeOpacity={0.8}
-                style={[styles.getUserInfoButton, {flexDirection: 'row'}]}>
-                <AskPermissionNearby />
-                <MainText color={colors.white} mrLeft={8} size={fontSize[12]}>
-                  {type === 1 ? t('222') : t('288')}
-                </MainText>
+                style={[styles.getUserInfoButton, { flexDirection: 'row' }]}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '85%',
+                    paddingHorizontal: 10,
+                    alignSelf: 'center',
+                  }}
+                >
+                  <AskPermissionNearby />
+                  <View style={{ marginLeft: 4 }}>
+                    <Text
+                      style={[
+                        styles.textButton,
+                        {
+                          fontSize: style.fontSize.small - 1,
+                          flexWrap: 'wrap',
+                          textAlign: 'center',
+                        },
+                      ]}
+                      allowFontScaling={false}
+                    >
+                      {type === 1 ? t('222') : t('288')}
+                    </Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
           </View>

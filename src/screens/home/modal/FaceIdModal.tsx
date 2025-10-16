@@ -20,7 +20,9 @@ const FaceIdModal = () => {
     <Modal visible={isActive} onDismiss={onClose}>
       <View style={styles.main}>
         <View style={{marginTop: 8, maxWidth: '90%'}}>
-          <Text style={[styles.text, {fontFamily: style.fontFamilyMedium}]}>
+          <Text
+            style={[styles.text, {fontFamily: style.fontFamilyMedium}]}
+            allowFontScaling={false}>
             {t('Identifikatsiya')}
           </Text>
         </View>
@@ -41,13 +43,13 @@ const FaceIdModal = () => {
             }}
             activeOpacity={0.8}
             style={styles.enterButton}>
-            <Text style={styles.btnText}>{t('otish')}</Text>
+            <Text style={styles.btnText} allowFontScaling={false}>{t('otish')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onClose}
             activeOpacity={0.8}
             style={styles.enterButton}>
-            <Text style={styles.btnText}>{t('750')}</Text>
+            <Text style={styles.btnText} allowFontScaling={false}>{t('750')}</Text>
           </TouchableOpacity>
         </View>
       </View>

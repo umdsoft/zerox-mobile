@@ -56,7 +56,7 @@ const Header = ({count, show}) => {
               <AlarmIcon width={normalize(25)} height={normalize(25)} />
               {show && (
                 <View style={styles.count}>
-                  <Text style={styles.textColor}>{count}</Text>
+                  <Text allowFontScaling={false} style={styles.textColor}>{count}</Text>
                 </View>
               )}
             </TouchableOpacity>

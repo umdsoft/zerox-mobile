@@ -1,35 +1,35 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../components/ToastConfig';
+import { toastConfig } from '../components/ToastConfig';
 
 import Loading from '../components/Loading';
 import axios from 'axios';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
 import OtherHeader from '../components/OtherHeader';
-import {settingDate} from '../../helper';
+import { settingDate } from '../../helper';
 
-import {setNotification} from '../../store/reducers/HomeReducer';
-import {useDispatch, useSelector} from 'react-redux';
+import { setNotification } from '../../store/reducers/HomeReducer';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {Trans, useTranslation} from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import TextBold from '../components/TextBold';
 import socketService from '../../helper/socketService';
 
 const FullDebtSelect = () => {
-  const {item} = useRoute().params;
-  const {t} = useTranslation();
+  const { item } = useRoute().params;
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [info, setInfo] = useState({});
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
 
   useEffect(() => {
     getData();
@@ -40,9 +40,12 @@ const FullDebtSelect = () => {
     const token = storage.getString('token');
     try {
       setLoading(true);
-      const {data, status} = await axios.get(URL + `/contract/by/${item.id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
-      });
+      const { data, status } = await axios.get(
+        URL + `/contract/by/${item.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+        },
+      );
       if (status === 200) {
         setInfo(data.data);
         setLoading(false);
@@ -55,7 +58,7 @@ const FullDebtSelect = () => {
   const onPress = async () => {
     const token = storage.getString('token');
     try {
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + '/contract/talab',
         {
           act: info?.act,
@@ -66,7 +69,7 @@ const FullDebtSelect = () => {
           residual_amount: info?.residual_amount,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
       console.log(info, 'find');
@@ -90,7 +93,7 @@ const FullDebtSelect = () => {
           visibilityTime: 3000,
           position: 'bottom',
           type: 'omad',
-          props: {title: 'Muvaffaqiyatli', desc: t('360')},
+          props: { title: 'Muvaffaqiyatli', desc: t('360') },
         });
         // socketService.sendNotification({id: info?.creditor});
         // socketService.emit('notification', user?.data?.id);
@@ -107,29 +110,39 @@ const FullDebtSelect = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
       });
     }
   };
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={dotHelper(t('351'))} />
       <View style={[styles.main]}>
         {loading ? (
           <View
-            style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          >
             <Loading />
           </View>
         ) : (
           <View style={styles.aboutUsContainer}>
             <View
-              style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-              <View style={{marginTop: 10}}>
-                <Text style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            >
+              <View style={{ marginTop: 10 }}>
+                <Text
+                  allowFontScaling={false}
+                  style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                >
                   <Trans
                     t={t}
                     i18nKey="354"
@@ -140,10 +153,11 @@ const FullDebtSelect = () => {
                     }}
                     components={{
                       start: (
-                        <TextBold styles={{fontSize: style.fontSize.xx}} />
+                        <TextBold styles={{ fontSize: style.fontSize.xx }} />
                       ),
                       count: (
                         <Text
+                          allowFontScaling={false}
                           onPress={() => {
                             navigation.navigate('DownloadStatistic', {
                               item: info,
@@ -155,7 +169,9 @@ const FullDebtSelect = () => {
                           }}
                         />
                       ),
-                      name: <TextBold styles={{fontSize: style.fontSize.xx}} />,
+                      name: (
+                        <TextBold styles={{ fontSize: style.fontSize.xx }} />
+                      ),
                     }}
                   />
                 </Text>
@@ -164,8 +180,11 @@ const FullDebtSelect = () => {
                 <TouchableOpacity
                   onPress={onPress}
                   activeOpacity={0.8}
-                  style={[styles.registerButton, {marginTop: 20}]}>
-                  <Text style={[styles.textButton]}>{t('357') as string}</Text>
+                  style={[styles.registerButton, { marginTop: 20 }]}
+                >
+                  <Text allowFontScaling={false} style={[styles.textButton]}>
+                    {t('357') as string}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

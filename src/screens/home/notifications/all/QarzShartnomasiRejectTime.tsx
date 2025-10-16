@@ -1,13 +1,13 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {memo} from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { memo } from 'react';
 
-import {style} from '../../../../theme/style';
+import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
-import {t} from 'i18next';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 export const getFullName = (role: string, item: any) => {
   if (role === 'sender') {
     return item.creditor === item.csender
@@ -21,25 +21,25 @@ export const getFullName = (role: string, item: any) => {
   return '';
 };
 
-const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
-  const {user} = useSelector(state => state.HomeReducer);
+const QarzShartnomasiRejectTime = ({ item, okay, navigation }) => {
+  const { user } = useSelector(state => state.HomeReducer);
 
   const onOkay = async () => {
     okay(item.id);
   };
 
   const onPress = () => {
-    navigation.navigate('DownloadStatistic', {item: item, id: item.id});
+    navigation.navigate('DownloadStatistic', { item: item, id: item.id });
   };
 
   if (item.creciver === user.data.id) {
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>{t('498') as string}</TextBold>
           </View>
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={501}
               values={{
@@ -54,7 +54,13 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
               }}
               components={{
                 name: <TextBold />,
-                id: <Text onPress={onPress} style={styles.number} />,
+                id: (
+                  <Text
+                    allowFontScaling={false}
+                    onPress={onPress}
+                    style={styles.number}
+                  />
+                ),
                 start: <TextBold />,
               }}
             />
@@ -84,12 +90,13 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -97,12 +104,15 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
               <TouchableOpacity
                 onPress={onOkay}
                 activeOpacity={0.8}
-                style={styles.button}>
+                style={styles.button}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   Ok
                 </Text>
               </TouchableOpacity>
@@ -116,14 +126,14 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
     // 495 adi avval kalit sozi uni o'zgartiraman
     return (
       <View style={styles.container}>
-        <View style={{marginVertical: 15, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
           <View>
             <TextBold>
               <TextBold>{t('498') as string}</TextBold>
             </TextBold>
           </View>
 
-          <View style={{marginTop: 10}}>
+          <View style={{ marginTop: 10 }}>
             <TransText
               tKey={495}
               values={{
@@ -138,7 +148,13 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
               }}
               components={{
                 name: <TextBold />,
-                id: <Text onPress={onPress} style={styles.number} />,
+                id: (
+                  <Text
+                    allowFontScaling={false}
+                    onPress={onPress}
+                    style={styles.number}
+                  />
+                ),
                 start: <TextBold />,
               }}
             />
@@ -169,12 +185,13 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginTop: 10,
-              }}>
-              <View style={{flexDirection: 'row'}}>
-                <Text style={styles.notificationTitle}>
-                  <Text>{item?.created} </Text>
+              }}
+            >
+              <View style={{ flexDirection: 'row' }}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
+                  <Text allowFontScaling={false}>{item?.created} </Text>
                 </Text>
-                <Text style={styles.notificationTitle}>
+                <Text allowFontScaling={false} style={styles.notificationTitle}>
                   {' '}
                   {item.time.slice(0, 5)}
                 </Text>
@@ -182,12 +199,15 @@ const QarzShartnomasiRejectTime = ({item, okay, navigation}) => {
               <TouchableOpacity
                 onPress={onOkay}
                 activeOpacity={0.8}
-                style={styles.button}>
+                style={styles.button}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   Ok
                 </Text>
               </TouchableOpacity>

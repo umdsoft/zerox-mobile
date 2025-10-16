@@ -1,23 +1,23 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {normalize, style} from '../../../theme/style';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { normalize, style } from '../../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import Loading from '../../components/Loading';
 import axios from 'axios';
-import {storage} from '../../../store/api/token/getToken';
-import {URL} from '../../constants';
+import { storage } from '../../../store/api/token/getToken';
+import { URL } from '../../constants';
 import OtherHeader from '../../components/OtherHeader';
 import QismanIcon from '../../../images/qismanqaytarish';
 import FullIcon from '../../../images/toliqqay';
-import {t} from 'i18next';
-import {fontSize} from '../../../theme';
+import { t } from 'i18next';
+import { fontSize } from '../../../theme';
 
 const DebtTakeSelect = () => {
   const navigation = useNavigation();
-  const {item} = useRoute().params;
+  const { item } = useRoute().params;
 
   const [info, setInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -28,9 +28,12 @@ const DebtTakeSelect = () => {
     const token = storage.getString('token');
     try {
       setLoading(true);
-      const {data, status} = await axios.get(URL + `/contract/by/${item?.id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
-      });
+      const { data, status } = await axios.get(
+        URL + `/contract/by/${item?.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+        },
+      );
       if (status === 200) {
         setInfo(data);
         setLoading(false);
@@ -48,7 +51,8 @@ const DebtTakeSelect = () => {
           height: normalize(250),
 
           width: '100%',
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('438')} />
@@ -59,33 +63,47 @@ const DebtTakeSelect = () => {
               flex: 1,
               justifyContent: 'center',
               alignItems: 'center',
-            }}>
+            }}
+          >
             <Loading />
           </View>
         ) : (
           <View style={styles.aboutUsContainer}>
             <View
-              style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            >
               <View>
                 <TouchableOpacity
                   onPress={() => {
-                    navigation.navigate('DebtTakeFull', {item: info.data});
+                    navigation.navigate('DebtTakeFull', {
+                      item: info.data,
+                      id: item?.id,
+                    });
                   }}
                   activeOpacity={0.8}
-                  style={[styles.registerButton, {marginTop: 20}]}>
+                  style={[styles.registerButton, { marginTop: 20 }]}
+                >
                   <FullIcon />
-                  <Text style={[styles.textButton]}>{t('441')}</Text>
+                  <Text style={[styles.textButton]} allowFontScaling={false}>
+                    {t('441')}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View>
                 <TouchableOpacity
                   onPress={() => {
-                    navigation.navigate('DebtTakePart', {item: info.data});
+                    navigation.navigate('DebtTakePart', {
+                      item: info.data,
+                      id: item?.id,
+                    });
                   }}
                   activeOpacity={0.8}
-                  style={[styles.registerButton, {marginTop: 20}]}>
+                  style={[styles.registerButton, { marginTop: 20 }]}
+                >
                   <QismanIcon />
-                  <Text style={[styles.textButton]}>{t('450')}</Text>
+                  <Text style={[styles.textButton]} allowFontScaling={false}>
+                    {t('450')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

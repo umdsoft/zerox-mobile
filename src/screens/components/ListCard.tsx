@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo, useCallback, useState} from 'react';
-import {normalize, style} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
+import React, { memo, useCallback, useState } from 'react';
+import { normalize, style } from '../../theme/style';
+import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
-import {t} from 'i18next';
-import {fontSize} from '../../theme/font';
+import { t } from 'i18next';
+import { fontSize } from '../../theme/font';
 
 const ListCard = ({
   title,
@@ -64,26 +64,30 @@ const ListCard = ({
   };
   console.log(JSON.stringify(data, null, 2), 'data');
   return (
-    <View style={[styles.containerrr, {width: width}]}>
+    <View style={[styles.containerrr, { width: width }]}>
       <View>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-          }}>
+          }}
+        >
           <TouchableOpacity
             onPress={() => {
               onChangeColor(true);
             }}
             style={[
               styles.valyut,
-              {backgroundColor: blue ? style.blue : '#fff'},
-            ]}>
+              { backgroundColor: blue ? style.blue : '#fff' },
+            ]}
+          >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.valyutText,
-                {color: blue ? '#fff' : style.textColor},
-              ]}>
+                { color: blue ? '#fff' : style.textColor },
+              ]}
+            >
               UZS
             </Text>
           </TouchableOpacity>
@@ -93,23 +97,32 @@ const ListCard = ({
             }}
             style={[
               styles.valyut,
-              {backgroundColor: blue ? '#fff' : style.blue},
-            ]}>
+              { backgroundColor: blue ? '#fff' : style.blue },
+            ]}
+          >
             <Text
+              allowFontScaling={false}
               style={[
                 styles.valyutText,
-                {color: blue ? style.textColor : '#fff'},
-              ]}>
+                { color: blue ? style.textColor : '#fff' },
+              ]}
+            >
               USD
             </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.titleContainer}>
           <View style={styles.titleTime}>
-            <Text style={[styles.text, {fontSize: fontSize[12]}]}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.text, { fontSize: fontSize[12] }]}
+            >
               {t('174')}
             </Text>
-            <Text style={[styles.text, {fontSize: fontSize[12]}]}>
+            <Text
+              allowFontScaling={false}
+              style={[styles.text, { fontSize: fontSize[12] }]}
+            >
               {t('327')}
             </Text>
           </View>
@@ -118,14 +131,15 @@ const ListCard = ({
           <View
             style={{
               marginVertical: 10,
-            }}>
+            }}
+          >
             {blue ? (
               data?.length === 0 ? (
-                <View style={{alignSelf: 'center'}}>
+                <View style={{ alignSelf: 'center' }}>
                   <LottieView
                     autoPlay
                     source={require('../../images/lottie/list/zyDdwfLniz.json')}
-                    style={{width: normalize(120), height: normalize(120)}}
+                    style={{ width: normalize(120), height: normalize(120) }}
                   />
                   {/* <Text
                     style={[
@@ -140,11 +154,11 @@ const ListCard = ({
                   </Text> */}
                 </View>
               ) : uz.length === 0 ? (
-                <View style={{alignSelf: 'center'}}>
+                <View style={{ alignSelf: 'center' }}>
                   <LottieView
                     autoPlay
                     source={require('../../images/lottie/list/zyDdwfLniz.json')}
-                    style={{width: normalize(120), height: normalize(120)}}
+                    style={{ width: normalize(120), height: normalize(120) }}
                   />
                   {/* <Text
                     style={[
@@ -167,22 +181,26 @@ const ListCard = ({
                           onPress(item);
                         }}
                         key={index * Math.random()}
-                        style={styles.listContainer}>
+                        style={styles.listContainer}
+                      >
                         <View
                           style={{
                             width: '100%',
 
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                          }}>
+                          }}
+                        >
                           <View>
                             <Text
+                              allowFontScaling={false}
                               style={[
                                 styles.dayText,
                                 {
                                   color: returnColor(CheckDate(item?.end_date)),
                                 },
-                              ]}>
+                              ]}
+                            >
                               {CheckDate(item?.end_date)}
                             </Text>
                           </View>
@@ -192,8 +210,12 @@ const ListCard = ({
                               width: '50%',
                               justifyContent: 'flex-start',
                               left: 40,
-                            }}>
-                            <Text style={[styles.money, {color: '#000'}]}>
+                            }}
+                          >
+                            <Text
+                              allowFontScaling={false}
+                              style={[styles.money, { color: '#000' }]}
+                            >
                               {item?.residual_amount?.replace(
                                 /\B(?=(\d{3})+(?!\d))/g,
                                 ' ',
@@ -209,11 +231,11 @@ const ListCard = ({
                 })
               )
             ) : data?.length === 0 ? (
-              <View style={{alignSelf: 'center'}}>
+              <View style={{ alignSelf: 'center' }}>
                 <LottieView
                   autoPlay
                   source={require('../../images/lottie/list/zyDdwfLniz.json')}
-                  style={{width: normalize(120), height: normalize(120)}}
+                  style={{ width: normalize(120), height: normalize(120) }}
                 />
                 {/* <Text
                   style={[
@@ -228,11 +250,11 @@ const ListCard = ({
                 </Text> */}
               </View>
             ) : usd.length === 0 ? (
-              <View style={{alignSelf: 'center'}}>
+              <View style={{ alignSelf: 'center' }}>
                 <LottieView
                   autoPlay
                   source={require('../../images/lottie/list/zyDdwfLniz.json')}
-                  style={{width: normalize(120), height: normalize(120)}}
+                  style={{ width: normalize(120), height: normalize(120) }}
                 />
                 {/* <Text
                   style={[
@@ -255,22 +277,26 @@ const ListCard = ({
                         onPress(item);
                       }}
                       key={index * Math.random()}
-                      style={styles.listContainer}>
+                      style={styles.listContainer}
+                    >
                       <View
                         style={{
                           width: '100%',
 
                           flexDirection: 'row',
                           justifyContent: 'space-between',
-                        }}>
+                        }}
+                      >
                         <View>
                           <Text
+                            allowFontScaling={false}
                             style={[
                               styles.dayText,
                               {
                                 color: returnColor(CheckDate(item?.end_date)),
                               },
-                            ]}>
+                            ]}
+                          >
                             {CheckDate(item?.end_date)}
                           </Text>
                         </View>
@@ -280,8 +306,12 @@ const ListCard = ({
                             width: '50%',
                             justifyContent: 'flex-start',
                             left: 40,
-                          }}>
-                          <Text style={[styles.money, {color: '#000'}]}>
+                          }}
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            style={[styles.money, { color: '#000' }]}
+                          >
                             {item?.residual_amount?.replace(
                               /\B(?=(\d{3})+(?!\d))/g,
                               ' ',
@@ -338,15 +368,15 @@ const pp = (day: number) => {
   console.log(day, 'day');
   switch (Math.abs(day)) {
     case 1:
-      return t('423', {count: 1});
+      return t('423', { count: 1 });
     case 2:
-      return t('426', {count: 2});
+      return t('426', { count: 2 });
     case 3:
-      return t('426', {count: 3});
+      return t('426', { count: 3 });
     case 4:
-      return t('426', {count: 4});
+      return t('426', { count: 4 });
     case 5:
-      return t('435', {count: 5});
+      return t('435', { count: 5 });
     default:
       return t('843');
   }
@@ -356,9 +386,9 @@ const returnColor = type => {
   switch (type) {
     case t('843'):
       return 'red';
-    case t('423', {count: 1}):
+    case t('423', { count: 1 }):
       return 'red';
-    case t('426', {count: 2}):
+    case t('426', { count: 2 }):
       return 'red';
     default:
       return '#000';

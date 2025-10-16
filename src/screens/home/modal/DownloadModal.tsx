@@ -34,7 +34,8 @@ const DownloadModal = ({hide, onHide, data, path}) => {
               fontFamily: style.fontFamilyBold,
               color: '#000',
               fontSize: style.fontSize.xs,
-            }}>
+            }}
+            allowFontScaling={false}>
             {t('Bildirishnoma')}
           </Text>
         </View>
@@ -43,7 +44,7 @@ const DownloadModal = ({hide, onHide, data, path}) => {
             <TransText
               tKey={'noti'}
               components={{
-                id: <Text style={styles.text} />,
+                id: <Text style={styles.text} allowFontScaling={false} />,
               }}
               values={{id: data.number}}
             />
@@ -55,7 +56,7 @@ const DownloadModal = ({hide, onHide, data, path}) => {
         )}
         {data?.type == 0 ? (
           <View style={{marginTop: 10, marginBottom: 10}}>
-            <Text style={styles.text}>
+            <Text style={styles.text} allowFontScaling={false}>
               Siz o'zingizni qr kodingizni yuklab oldingiz.
             </Text>
           </View>
@@ -80,7 +81,8 @@ const DownloadModal = ({hide, onHide, data, path}) => {
                 color: '#fff',
                 fontSize: style.fontSize.xx,
                 textAlign: 'center',
-              }}>
+              }}
+              allowFontScaling={false}>
               {t('21')}
             </Text>
           </TouchableOpacity>
@@ -104,7 +106,8 @@ const DownloadModal = ({hide, onHide, data, path}) => {
                 color: '#fff',
                 fontSize: style.fontSize.xx,
                 textAlign: 'center',
-              }}>
+              }}
+              allowFontScaling={false}>
               {t('ochish')}
             </Text>
           </TouchableOpacity>

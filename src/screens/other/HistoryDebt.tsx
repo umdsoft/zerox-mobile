@@ -5,14 +5,14 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
+import React, { useEffect, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { normalize, style } from '../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Search from '../../images/Search';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
 import axios from 'axios';
 import Loading from '../components/Loading';
 import OtherHeader from '../components/OtherHeader';
@@ -20,15 +20,15 @@ import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 
 import Famale from '../../images/Famale';
-import {fontSize} from '../../theme/font';
+import { fontSize } from '../../theme/font';
 import MainText from '../components/MainText';
-import {t} from 'i18next';
+import { t } from 'i18next';
 
 const HistoryDebt = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [searchdata, setSearchData] = useState([]);
-  const {type} = useRoute().params;
+  const { type } = useRoute().params;
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -36,8 +36,8 @@ const HistoryDebt = () => {
   const fetchData = async signal => {
     const token = storage.getString('token');
     try {
-      const {data, status} = await axios.get(URL + '/contract/oldi-bardi', {
-        headers: {Authorization: 'Bearer ' + token, Connection: 'close'},
+      const { data, status } = await axios.get(URL + '/contract/oldi-bardi', {
+        headers: { Authorization: 'Bearer ' + token, Connection: 'close' },
         signal,
       });
       console.log('data', data);
@@ -71,16 +71,18 @@ const HistoryDebt = () => {
           width: style.width,
           position: 'absolute',
           height: style.height / 3,
-        }}>
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('207')} />
       <View style={[styles.main]}>
         <View style={styles.aboutUsContainer}>
           <View
-            style={{width: '100%', alignSelf: 'center', marginVertical: 20}}>
+            style={{ width: '100%', alignSelf: 'center', marginVertical: 20 }}
+          >
             <View style={[styles.max]}>
-              <View style={{alignSelf: 'center'}}>
+              <View style={{ alignSelf: 'center' }}>
                 <View
                   style={{
                     position: 'absolute',
@@ -91,7 +93,8 @@ const HistoryDebt = () => {
                     borderTopLeftRadius: 10,
                     borderBottomLeftRadius: 10,
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <Search color="black" height={20} width={20} />
                 </View>
                 <View>
@@ -109,82 +112,87 @@ const HistoryDebt = () => {
                       setSearch(text);
                     }}
                     style={[styles.TextInput]}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
             </View>
-            <View
-              style={{
-                marginTop: 55,
-                paddingLeft: 20,
-                paddingRight: 20,
-              }}>
-              <FlatList
-                data={search.length === 0 ? data : searchdata}
-                keyExtractor={(item, index) => index.toString()}
-                showsVerticalScrollIndicator={false}
-                renderItem={({item, index}) => {
-                  return (
-                    <View key={item.id} style={styles.listButtonContainer}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          navigation.navigate('UserInfo', {
-                            user: item,
-                            type: type,
-                          });
-                        }}
-                        style={styles.TouchableOpacity}
-                        activeOpacity={0.8}>
-                        <View style={styles.circle}>
-                          <View style={{margin: 5}}>
-                            {item.type === 2 ? (
-                              item.gender === 2 ? (
-                                <Famale
-                                  width={normalize(30)}
-                                  height={normalize(30)}
-                                  color={style.blue}
-                                />
-                              ) : (
-                                <Person
-                                  width={normalize(30)}
-                                  height={normalize(30)}
-                                  color={style.blue}
-                                />
-                              )
-                            ) : (
-                              <Juridic
+          </View>
+          <View
+            style={{
+              marginTop: 55,
+              paddingLeft: 20,
+              paddingRight: 20,
+              marginBottom: 95,
+            }}
+          >
+            <FlatList
+              data={search.length === 0 ? data : searchdata}
+              keyExtractor={(item, index) => index.toString()}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item, index }) => {
+                return (
+                  <View key={item.id} style={styles.listButtonContainer}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        navigation.navigate('UserInfo', {
+                          user: item,
+                          type: type,
+                        });
+                      }}
+                      style={styles.TouchableOpacity}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.circle}>
+                        <View style={{ margin: 5 }}>
+                          {item.type === 2 ? (
+                            item.gender === 2 ? (
+                              <Famale
                                 width={normalize(30)}
                                 height={normalize(30)}
                                 color={style.blue}
                               />
-                            )}
-                          </View>
+                            ) : (
+                              <Person
+                                width={normalize(30)}
+                                height={normalize(30)}
+                                color={style.blue}
+                              />
+                            )
+                          ) : (
+                            <Juridic
+                              width={normalize(30)}
+                              height={normalize(30)}
+                              color={style.blue}
+                            />
+                          )}
                         </View>
-                        {item.type === 2 ? (
-                          <MainText
-                            style={{maxWidth: '70%'}}
-                            mrLeft={6}
-                            size={fontSize[12]}>
-                            {item?.last_name +
-                              ' ' +
-                              item.first_name +
-                              ' ' +
-                              item.middle_name}
-                          </MainText>
-                        ) : (
-                          <MainText
-                            style={{maxWidth: '70%'}}
-                            mrLeft={6}
-                            size={fontSize[12]}>
-                            {item?.company}
-                          </MainText>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  );
-                }}
-              />
-            </View>
+                      </View>
+                      {item.type === 2 ? (
+                        <MainText
+                          style={{ maxWidth: '70%' }}
+                          mrLeft={6}
+                          size={fontSize[12]}
+                        >
+                          {item?.last_name +
+                            ' ' +
+                            item.first_name +
+                            ' ' +
+                            item.middle_name}
+                        </MainText>
+                      ) : (
+                        <MainText
+                          style={{ maxWidth: '70%' }}
+                          mrLeft={6}
+                          size={fontSize[12]}
+                        >
+                          {item?.company}
+                        </MainText>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                );
+              }}
+            />
           </View>
         </View>
       </View>

@@ -9,23 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
-import {normalize, style} from '../../../theme/style';
-import {androidFace, iosFace} from '../../../nativemodule/android.event';
+import { normalize, style } from '../../../theme/style';
+import { androidFace, iosFace } from '../../../nativemodule/android.event';
 import OtherHeader from '../../components/OtherHeader';
 import axios from 'axios';
-import {URL} from '../../constants';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { URL } from '../../constants';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Loading from '../../components/Loading';
-import {t} from 'i18next';
-import {storage} from '../../../store/api/token/getToken';
+import { t } from 'i18next';
+import { storage } from '../../../store/api/token/getToken';
 
 const MyIdScreen = () => {
   const navigation = useNavigation();
-  const {jshshir} = useRoute().params;
+  const { jshshir } = useRoute().params;
 
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,7 @@ const MyIdScreen = () => {
 
           if (response.data.success && response.data.code == 1) {
             storage.clearAll();
-            navigation.navigate('UpdatePassword', {user: response.data.data});
+            navigation.navigate('UpdatePassword', { user: response.data.data });
           }
 
           if (
@@ -166,7 +166,8 @@ const MyIdScreen = () => {
       style={{
         flex: 1,
         backgroundColor: '#fff',
-      }}>
+      }}
+    >
       <OtherHeader
         title={t('747')}
         backgroundColor={style.blue}
@@ -186,7 +187,9 @@ const MyIdScreen = () => {
           }}
         />
 
-        <Text style={styles.text}>{t('744')}</Text>
+        <Text allowFontScaling={false} style={styles.text}>
+          {t('744')}
+        </Text>
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
@@ -195,12 +198,15 @@ const MyIdScreen = () => {
           Platform.OS === 'android' ? androidFace(lang) : iosFace();
           //  navigation.navigate('ScanFaceMyId');
         }}
-        style={[styles.enterButton]}>
+        style={[styles.enterButton]}
+      >
         <Text
+          allowFontScaling={false}
           style={[
             styles.enterText,
-            {color: '#fff', fontFamily: style.fontFamilyMedium},
-          ]}>
+            { color: '#fff', fontFamily: style.fontFamilyMedium },
+          ]}
+        >
           {t('45')}
         </Text>
       </TouchableOpacity>

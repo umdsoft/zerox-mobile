@@ -41,7 +41,7 @@ const FullDebtBack = () => {
                 <View style={styles.insideMoney}>
                   <Text
                     style={[styles.hisob, {fontSize: style.fontSize.small}]}
-                  >
+                    allowFontScaling={false}>
                     01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz
                     fuqaro Abdullayev Abdulladan qarzni to’liq qaytarishini
                     talab qilmoqdasiz.
@@ -66,7 +66,7 @@ const FullDebtBack = () => {
                   }}
                   onValueChange={() => setCheck(!check)}
                 />
-                <Text style={styles.phoneText}>
+                <Text style={styles.phoneText} allowFontScaling={false}>
                   Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
                   tanishdim
                 </Text>
@@ -77,7 +77,7 @@ const FullDebtBack = () => {
                 activeOpacity={0.8}
                 style={[styles.registerButton, {marginTop: 20}]}
               >
-                <Text style={[styles.textButton]}>Tasdiqlash</Text>
+                <Text style={[styles.textButton]} allowFontScaling={false}>Tasdiqlash</Text>
               </TouchableOpacity>
             </View>
           </View>

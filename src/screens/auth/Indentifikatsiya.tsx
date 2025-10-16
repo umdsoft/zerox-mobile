@@ -40,7 +40,8 @@ const Identifikatsiya = () => {
               style={[
                 styles.enterText,
                 {marginBottom: 30, fontFamily: style.fontFamilyBold},
-              ]}>
+              ]}
+              allowFontScaling={false}>
               Identifikatsiya
             </Text>
           </View>
@@ -58,7 +59,8 @@ const Identifikatsiya = () => {
                   maxWidth: '100%',
                   fontFamily: style.fontFamilyMedium,
                 },
-              ]}>
+              ]}
+              allowFontScaling={false}>
               Jismoniy shaxs sifatida identifikatsiyadan o’tish uchun mobil
               hisobingizda yetarlicha mablag’ bo’lishi lozim.
             </Text>
@@ -68,7 +70,7 @@ const Identifikatsiya = () => {
               <View
                 style={[styles.TextInputLabelContainer, {marginBottom: 25}]}>
                 <View style={styles.retryPassword}>
-                  <Text style={styles.phoneText}>
+                  <Text style={styles.phoneText} allowFontScaling={false}>
                     Pasport seriya va raqamini kiriting
                   </Text>
                 </View>
@@ -78,12 +80,12 @@ const Identifikatsiya = () => {
                     placeholderTextColor={style.placeHolderColor}
                     keyboardType="default"
                     style={styles.TextInput}
-                  />
+                    allowFontScaling={false} />
                 </View>
               </View>
               <View style={styles.TextInputLabelContainer}>
                 <View style={styles.retryPassword}>
-                  <Text style={styles.phoneText}>
+                  <Text style={styles.phoneText} allowFontScaling={false}>
                     Tug`ilgan sanani kiriting
                   </Text>
                 </View>
@@ -94,7 +96,8 @@ const Identifikatsiya = () => {
                         fontFamily: style.fontFamilyMedium,
                         color: style.textColor,
                         fontSize: style.fontSize.xx,
-                      }}>
+                      }}
+                      allowFontScaling={false}>
                       22/11/1997
                     </Text>
                   </TouchableOpacity>
@@ -122,7 +125,8 @@ const Identifikatsiya = () => {
                       maxWidth: '90%',
                       fontFamily: style.fontFamilyMedium,
                     },
-                  ]}>
+                  ]}
+                  allowFontScaling={false}>
                   “Davom etish” bilan sizning mobil hisobingizdan 2000 so’m
                   miqdorida mablag’ yechib olinadi.
                 </Text>
@@ -131,7 +135,7 @@ const Identifikatsiya = () => {
           </View>
           <View style={styles.enterButtonContainer}>
             <TouchableOpacity activeOpacity={0.8} style={styles.enterButton}>
-              <Text style={[styles.enterText, {color: '#fff'}]}>
+              <Text style={[styles.enterText, {color: '#fff'}]} allowFontScaling={false}>
                 Davom etish
               </Text>
             </TouchableOpacity>

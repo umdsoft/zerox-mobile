@@ -10,6 +10,7 @@ interface TextBoldProps {
 const TextBold: React.FC<TextBoldProps> = ({children, styles}) => {
   return (
     <Text
+      allowFontScaling={false}
       style={{
         fontFamily: style.fontFamilyBold,
         fontSize: style.fontSize.xx - 2,

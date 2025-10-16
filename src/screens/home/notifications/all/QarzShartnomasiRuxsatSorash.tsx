@@ -5,28 +5,28 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo, useCallback, useState} from 'react';
+import React, { memo, useCallback, useState } from 'react';
 
-import {style} from '../../../../theme/style';
+import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
 import axios from 'axios';
-import {URL} from '../../../constants';
-import {storage} from '../../../../store/api/token/getToken';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { URL } from '../../../constants';
+import { storage } from '../../../../store/api/token/getToken';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 
-import {useDispatch, useSelector} from 'react-redux';
-import {filter_notification} from '../../../../store/reducers/HomeReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { filter_notification } from '../../../../store/reducers/HomeReducer';
 
-import {t} from 'i18next';
+import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 
-const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
+const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
 
   const resoleShow = useCallback(async () => {
     const token = storage.getString('token');
@@ -38,17 +38,17 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
         creditor: item.creditor,
         reciver: user.data.id === item.debitor ? item.creditor : item.debitor,
       };
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + `/notification/eby/${item.id}`,
         body,
-        {headers: {Authorization: `Bearer ${token}`, Connection: 'close'}},
+        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
       );
 
       if (status === 200) {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: {title: 'Muvaffaqiyatli', desc: t('249')},
+          props: { title: 'Muvaffaqiyatli', desc: t('249') },
           type: 'omad',
           visibilityTime: 3000,
         });
@@ -78,16 +78,16 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
         creditor: item.creditor,
         reciver: user.data.id === item.debitor ? item.creditor : item.debitor,
       };
-      const {data, status} = await axios.post(
+      const { data, status } = await axios.post(
         URL + `/notification/eby/${item.id}`,
         body,
-        {headers: {Authorization: `Bearer ${token}`, Connection: 'close'}},
+        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
       );
       if (status === 200) {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: {title: 'Muvaffaqiyatli', desc: t('261')},
+          props: { title: 'Muvaffaqiyatli', desc: t('261') },
           type: 'omad',
           visibilityTime: 3000,
         });
@@ -107,11 +107,11 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
   }, [dispatch, item.creditor, item.debitor, item.id, user.data.id]);
   return (
     <View style={styles.container}>
-      <View style={{marginVertical: 15, marginHorizontal: 15}}>
+      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
         <View>
           <TextBold>{t('861') as string}</TextBold>
         </View>
-        <View style={{marginTop: 10}}>
+        <View style={{ marginTop: 10 }}>
           <TransText
             tKey={237}
             values={{
@@ -122,7 +122,7 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
                   ? item.dcompany
                   : null,
             }}
-            components={{name: <TextBold />}}
+            components={{ name: <TextBold /> }}
           />
           {/* <Text style={styles.notification}>
             <TextBold>
@@ -133,36 +133,40 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
             so‘ramoqda.
           </Text>
           */}
-          <View style={{marginTop: 10, flexDirection: 'row'}}>
-            <Text style={styles.notificationTitle}>
-              <Text>{item?.created} </Text>
+          <View style={{ marginTop: 10, flexDirection: 'row' }}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
+              <Text allowFontScaling={false}>{item?.created} </Text>
             </Text>
-            <Text style={styles.notificationTitle}>
+            <Text allowFontScaling={false} style={styles.notificationTitle}>
               {' '}
               {item.time?.slice(0, 5)}
             </Text>
           </View>
         </View>
-        <View style={{marginTop: 10}}>
+        <View style={{ marginTop: 10 }}>
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-            }}>
+            }}
+          >
             <TouchableOpacity
               disabled={loading}
               onPress={resoleShow}
               activeOpacity={0.8}
-              style={styles.button}>
+              style={styles.button}
+            >
               {loading ? (
                 <ActivityIndicator size={'small'} color={'#fff'} />
               ) : (
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   {t('240') as string}
                 </Text>
               )}
@@ -171,15 +175,18 @@ const QarzShartnomasiRuxsatSorash = ({item, navigation, okay}) => {
               disabled={rejectLoading}
               onPress={rejectShow}
               activeOpacity={0.8}
-              style={[styles.button, {backgroundColor: 'red'}]}>
+              style={[styles.button, { backgroundColor: 'red' }]}
+            >
               {rejectLoading ? (
                 <ActivityIndicator size={'small'} color={'#fff'} />
               ) : (
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.notification,
-                    {color: '#fff', fontSize: style.fontSize.xx - 2},
-                  ]}>
+                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                  ]}
+                >
                   {t('96') as string}
                 </Text>
               )}

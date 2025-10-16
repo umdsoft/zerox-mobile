@@ -28,7 +28,7 @@ export const toastConfig = {
         </View>
         <View style={styles.textContainer}>
           {/* <Text style={styles.title}>{props?.title}</Text> */}
-          <Text style={styles.desc}>{props?.desc}</Text>
+          <Text allowFontScaling={false} style={styles.desc}>{props?.desc}</Text>
         </View>
       </View>
     );
@@ -42,7 +42,7 @@ export const toastConfig = {
       </View>
       <View style={styles.textContainer}>
         {/* <Text style={styles.title}>{props?.title}</Text> */}
-        <Text style={styles.desc}>{props?.desc}</Text>
+        <Text allowFontScaling={false} style={styles.desc}>{props?.desc}</Text>
       </View>
     </View>
   ),
@@ -68,8 +68,8 @@ export const toastConfig = {
 
   tomatoToast: ({text1, props}) => (
     <View style={{height: 60, width: '90%', backgroundColor: 'tomato'}}>
-      <Text>{text1}</Text>
-      <Text>{props.uuid}</Text>
+      <Text  allowFontScaling={false}>{text1}</Text>
+      <Text  allowFontScaling={false}>{props.uuid}</Text>
     </View>
   ),
 };

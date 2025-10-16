@@ -109,7 +109,7 @@ const ResetPassCode = () => {
                 }}
                 keyboardType="default"
                 style={[styles.TextInput, {paddingLeft: 15}]}
-              />
+                allowFontScaling={false} />
 
               <View style={styles.eye}>
                 <TouchableOpacity

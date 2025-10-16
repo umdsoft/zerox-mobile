@@ -6,36 +6,40 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useMemo, useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {style} from '../../../theme/style';
+import React, { useEffect, useMemo, useState } from 'react';
+import { BackGroundIcon } from '../../../helper/homeIcon';
+import { style } from '../../../theme/style';
 
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../../components/ToastConfig';
-import {URL} from '../../constants';
-import {sortText} from '../../components/StatisticCard';
+import { toastConfig } from '../../components/ToastConfig';
+import { URL } from '../../constants';
+import { sortText } from '../../components/StatisticCard';
 
 import CheckBox from '@react-native-community/checkbox';
 
 import axios from 'axios';
-import {storage} from '../../../store/api/token/getToken';
+import { storage } from '../../../store/api/token/getToken';
 import OtherHeader from '../../components/OtherHeader';
-import {settingDate} from '../../../helper';
-import {setNotification} from '../../../store/reducers/HomeReducer';
-import {useDispatch, useSelector} from 'react-redux';
-import {t} from 'i18next';
-import {Trans} from 'react-i18next';
+import { settingDate } from '../../../helper';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { t } from 'i18next';
+import { Trans } from 'react-i18next';
 import TextBold from '../../components/TextBold';
-import socketService from '../../../helper/socketService';
+
+import { onGetContract } from '../../../store/api/home';
+import Loading from '../../components/Loading';
 
 const DebtTakePart = () => {
   const navigation = useNavigation();
-  const {item} = useRoute().params;
+  let { id } = useRoute().params;
   const [sum, setSum] = useState('');
   const dispatch = useDispatch();
-  const {user} = useSelector(state => state.HomeReducer);
+  const { contractInfo, contractLoading } = useSelector(
+    state => state.HomeReducer,
+  );
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -44,29 +48,31 @@ const DebtTakePart = () => {
     try {
       setLoading(true);
       const dd = {
-        contract: item.id,
-        creditor: item.creditor,
-        debitor: item.debitor,
-        end_date: item.end_date,
-        inc: Number(sum.replace(/\s/g, '')) + Number(item.inc),
-        reciver: item.debitor,
+        contract: contractInfo.id,
+        creditor: contractInfo.creditor,
+        debitor: contractInfo.debitor,
+        end_date: contractInfo.end_date,
+        inc: Number(sum.replace(/\s/g, '')) + Number(contractInfo.inc),
+        reciver: contractInfo.debitor,
         refundable_amount: Number(sum.replace(/\s/g, '')),
-        old_amount: Number(item.residual_amount),
+        old_amount: Number(contractInfo.residual_amount),
         residual_amount:
-          Number(item.residual_amount) - Number(sum.replace(/\s/g, '')),
+          Number(contractInfo.residual_amount) - Number(sum.replace(/\s/g, '')),
         status: 0,
         // type 1 bulgan
         type:
-          Number(item.residual_amount) - Number(sum.replace(/\s/g, '')) === 0
+          Number(contractInfo.residual_amount) -
+            Number(sum.replace(/\s/g, '')) ===
+          0
             ? 2
             : 1,
         ntype: 1,
-        sender: item.creditor,
-        res: item.debitor,
+        sender: contractInfo.creditor,
+        res: contractInfo.debitor,
       };
 
-      const {data, status} = await axios.post(URL + '/contract/act', dd, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+      const { data, status } = await axios.post(URL + '/contract/act', dd, {
+        headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
       });
 
       console.log(data, 'data in debt take part');
@@ -146,7 +152,10 @@ const DebtTakePart = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onChangeText = text => {
     if (Number(text.replace(/\s/g, '')) >= 1) {
-      if (Number(text.replace(/\s/g, '')) <= Number(item.amount - item.inc)) {
+      if (
+        Number(text.replace(/\s/g, '')) <=
+        Number(contractInfo.amount - contractInfo.inc)
+      ) {
         setSum(text);
       } else {
         setSum('');
@@ -170,10 +179,21 @@ const DebtTakePart = () => {
     return arr.join('').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
+  useEffect(() => {
+    getData();
+  }, []);
+  const getData = async () => {
+    try {
+      dispatch(onGetContract({ id: id }));
+    } catch (error) {
+      console.warn(error, 'error in debt take part');
+    }
+  };
+
   const renderInput = useMemo(() => {
     return (
       <View style={styles.TextInputLabelContainer}>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <TextInput
             value={onValue(sum)}
             placeholder={t('276')}
@@ -181,60 +201,78 @@ const DebtTakePart = () => {
             keyboardType="numeric"
             onChangeText={onChangeText}
             style={styles.TextInput}
+            allowFontScaling={false}
           />
         </View>
       </View>
     );
   }, [onChangeText, sum]);
 
+  if (contractLoading) {
+    return <Loading />;
+  }
   return (
     <View style={styles.container}>
       <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
+        style={{
+          position: 'absolute',
+          height: style.height / 3,
+          width: '100%',
+        }}
+      >
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('450')} />
       <View style={[styles.main]}>
         <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
+          <View
+            style={{
+              width: '90%',
+              alignSelf: 'center',
+              marginVertical: 20,
+            }}
+          >
             <View>
               <View style={[styles.card]}>
                 <View style={styles.insideMoney}>
-                  <Text style={[styles.hisob]}>
+                  <Text style={[styles.hisob]} allowFontScaling={false}>
                     <Trans
                       i18nKey={'453'}
                       values={{
-                        start: settingDate(item.created_at),
-                        end: item.number,
-                        id: item.number,
-                        name: item?.debitor_name,
+                        start: settingDate(contractInfo.created_at),
+                        end: contractInfo.number,
+                        id: contractInfo.number,
+                        name: contractInfo?.debitor_name,
                         sum: `${
-                          sortText(item.amount - item.inc) + ' ' + item.currency
+                          sortText(contractInfo.amount - contractInfo.inc) +
+                          ' ' +
+                          contractInfo.currency
                         }`,
                       }}
                       components={{
                         start: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                         id: (
                           <Text
                             onPress={() => {
                               navigation.navigate('DownloadStatistic', {
-                                item: item,
-                                id: item.id,
+                                item: contractInfo,
+                                id: contractInfo.id,
                               });
                             }}
                             style={{
                               color: style.blue,
                             }}
+                            allowFontScaling={false}
                           />
                         ),
                         end: <TextBold />,
                         name: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                         sum: (
-                          <TextBold styles={{fontSize: style.fontSize.xx}} />
+                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
                         ),
                       }}
                     />
@@ -249,7 +287,8 @@ const DebtTakePart = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginTop: 20,
-                }}>
+                }}
+              >
                 <CheckBox
                   value={checked}
                   tintColor={style.blue}
@@ -258,21 +297,23 @@ const DebtTakePart = () => {
                     false: style.disabledButtonColor,
                   }}
                   boxType="square"
-                  style={{height: 20, width: 20, marginRight: 10}}
+                  style={{ height: 20, width: 20, marginRight: 10 }}
                   onValueChange={() => setChecked(!checked)}
                 />
                 <Text
                   onPress={() => {
                     navigation.navigate('Dalol', {
                       type: 5,
-                      data: item,
+                      data: contractInfo,
                       sum: sum.replace(/\s/g, ''),
                     });
                   }}
                   style={[
                     styles.phoneText,
-                    {color: style.blue, maxWidth: '90%', marginLeft: 5},
-                  ]}>
+                    { color: style.blue, maxWidth: '90%', marginLeft: 5 },
+                  ]}
+                  allowFontScaling={false}
+                >
                   {t('372')}
                 </Text>
               </View>
@@ -291,18 +332,20 @@ const DebtTakePart = () => {
                         ? style.blue
                         : style.disabledButtonColor,
                   },
-                ]}>
+                ]}
+              >
                 {loading ? (
                   <ActivityIndicator size={'small'} color={'#fff'} />
                 ) : (
-                  <Text style={[styles.textButton]}>{t('357')}</Text>
+                  <Text style={[styles.textButton]} allowFontScaling={false}>
+                    {t('357')}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </View>
-
       {/* <Toast config={toastConfig} /> */}
     </View>
   );

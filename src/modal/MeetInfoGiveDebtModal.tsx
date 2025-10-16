@@ -1,10 +1,10 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
-import {Portal, Modal} from 'react-native-paper';
-import {style} from '../theme/style';
-const MeetInfoGiveDebtModal = ({visible, toggleModal}) => {
+import { Portal, Modal } from 'react-native-paper';
+import { style } from '../theme/style';
+const MeetInfoGiveDebtModal = ({ visible, toggleModal }) => {
   return (
-    <View style={{flex: 1, backgroundColor: '#fff'}}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Portal>
         <Modal
           visible={visible}
@@ -16,10 +16,11 @@ const MeetInfoGiveDebtModal = ({visible, toggleModal}) => {
             alignItems: 'center',
             alignSelf: 'center',
             borderRadius: 15,
-          }}>
+          }}
+        >
           <ScrollView>
-            <Text>Q A R Z Sh A R T N O M A S I</Text>
-            <Text style={styles.text}>
+            <Text allowFontScaling={false}>Q A R Z Sh A R T N O M A S I</Text>
+            <Text allowFontScaling={false} style={styles.text}>
               Fuqaro QURAMBOYEV JAMSHID RASHID O‘G‘LI (pasport: AA6605963.
               22.08.2014 yilda ХАНКИНСКИЙ РОВД ХОРЕЗМСКОЙ ОБЛАСТИ tomonidan
               berilgan) (keyingi o‘rinlarda “Qarz beruvchi”) birinchi tomondan,
@@ -31,7 +32,7 @@ const MeetInfoGiveDebtModal = ({visible, toggleModal}) => {
               quyidagilar haqida tuzdilar:
             </Text>
 
-            <Text style={styles.text}></Text>
+            <Text allowFontScaling={false} style={styles.text}></Text>
           </ScrollView>
         </Modal>
       </Portal>

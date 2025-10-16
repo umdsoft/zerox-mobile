@@ -1,7 +1,7 @@
-import {Text, TextStyle} from 'react-native';
+import { Text, TextStyle } from 'react-native';
 import React from 'react';
-import {font, fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
+import { font, fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
 
 interface MainTextProps {
   size?: number;
@@ -38,6 +38,7 @@ const MainText: React.FC<MainTextProps> = ({
 }) => {
   return (
     <Text
+      allowFontScaling={false}
       // onPress={onPress}
       style={[
         style,
@@ -54,7 +55,8 @@ const MainText: React.FC<MainTextProps> = ({
           marginBottom: mBottom,
           marginTop: mTop,
         },
-      ]}>
+      ]}
+    >
       {children}
     </Text>
   );

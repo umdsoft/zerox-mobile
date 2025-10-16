@@ -4,7 +4,7 @@ import React from 'react';
 export default function ShowContract() {
   return (
     <View>
-      <Text>ShowContract</Text>
+      <Text  allowFontScaling={false}>ShowContract</Text>
     </View>
   );
 }

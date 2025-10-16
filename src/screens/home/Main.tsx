@@ -1,19 +1,19 @@
-import {Platform, StatusBar, StyleSheet, View} from 'react-native';
-import React, {useCallback, useEffect, useMemo} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 
-import {Portal, Provider} from 'react-native-paper';
+import { Portal, Provider } from 'react-native-paper';
 import messaging from '@react-native-firebase/messaging';
 
-import notifee, {EventType} from '@notifee/react-native';
+import notifee, { EventType } from '@notifee/react-native';
 // Components
 import Header from '../components/Header';
-import {BottomTabNavigator} from '../../navigation/BottomTabBar';
-import {BackGroundIcon} from '../../helper/homeIcon';
+import { BottomTabNavigator } from '../../navigation/BottomTabBar';
+import { BackGroundIcon } from '../../helper/homeIcon';
 
 // Styles
-import {style} from '../../theme/style';
+import { style } from '../../theme/style';
 
 // Store
 import {
@@ -23,18 +23,18 @@ import {
   getNotificationWithPage,
   onPostDefaultLang,
 } from '../../store/api/home';
-import {createFmtTokenAction} from '../../store/api/user';
-import {storage} from '../../store/api/token/getToken';
-import {setUsd} from '../../store/reducers/HomeReducer';
+import { createFmtTokenAction } from '../../store/api/user';
+import { storage } from '../../store/api/token/getToken';
+import { setUsd } from '../../store/reducers/HomeReducer';
 
 // Helpers
 
-import {handleNotificationPermission} from '../../helper/handlePermission';
-import {fetchUSDExchangeRate} from '../../helper/getUsdExchange';
-import {NotificationBadgeModule} from '../../nativemodule/notificationBadge';
+import { handleNotificationPermission } from '../../helper/handlePermission';
+import { fetchUSDExchangeRate } from '../../helper/getUsdExchange';
+import { NotificationBadgeModule } from '../../nativemodule/notificationBadge';
 
 const Main = () => {
-  const {user, notification} = useSelector(state => state.HomeReducer);
+  const { user, notification } = useSelector(state => state.HomeReducer);
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -50,7 +50,7 @@ const Main = () => {
 
       const token = await messaging().getToken();
       storage.set('fcmtoken', token);
-      await dispatch(createFmtTokenAction({fmt_token: token}));
+      await dispatch(createFmtTokenAction({ fmt_token: token }));
       dispatch(getMe());
     } catch (error) {
       console.error('Failed to register FCM token:', error);
@@ -64,7 +64,7 @@ const Main = () => {
       await registerFCMToken();
     } else {
       try {
-        await dispatch(createFmtTokenAction({fmt_token: storedToken}));
+        await dispatch(createFmtTokenAction({ fmt_token: storedToken }));
         dispatch(getMe());
       } catch (error) {
         console.error('Failed to use stored FCM token:', error);
@@ -76,7 +76,7 @@ const Main = () => {
   const handleNotificationEvents = useCallback(() => {
     const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
       console.warn('Notification received in foreground:', remoteMessage);
-      dispatch(getNotificationWithPage({page: 1}));
+      dispatch(getNotificationWithPage({ page: 1 }));
       dispatch(getCreditorAndDebitorData());
 
       // try {
@@ -108,7 +108,7 @@ const Main = () => {
 
     // ✅ Foreground tap handler
     const unsubscribeForeground = notifee.onForegroundEvent(
-      ({type, detail}) => {
+      ({ type, detail }) => {
         if (type === EventType.PRESS) {
           console.log(
             'User tapped notification in foreground:',
@@ -128,12 +128,12 @@ const Main = () => {
 
             navigation.reset({
               index: 0,
-              routes: [{name: 'SetLocalPassword'}],
+              routes: [{ name: 'SetLocalPassword' }],
             });
           } else {
             // Directly go to notification screen
             navigation.navigate('Notification');
-            dispatch(getNotifications({page: 1}));
+            dispatch(getNotifications({ page: 1 }));
           }
           // navigation.navigate('Notification');
           // dispatch(getNotifications({page: 1}));
@@ -160,12 +160,12 @@ const Main = () => {
 
             navigation.reset({
               index: 0,
-              routes: [{name: 'SetLocalPassword'}],
+              routes: [{ name: 'SetLocalPassword' }],
             });
           } else {
             // Directly go to notification screen
             navigation.navigate('Notification');
-            dispatch(getNotifications({page: 1}));
+            dispatch(getNotifications({ page: 1 }));
           }
           // navigation.navigate('Notification');
           // dispatch(getNotifications({page: 1}));
@@ -204,7 +204,7 @@ const Main = () => {
     const unsubscribeRefToken = messaging().onTokenRefresh(async token => {
       console.warn('FCM token refreshed:', token);
       storage.set('fcmtoken', token);
-      dispatch(createFmtTokenAction({fmt_token: token}));
+      dispatch(createFmtTokenAction({ fmt_token: token }));
       dispatch(getMe());
     });
 
@@ -229,7 +229,7 @@ const Main = () => {
 
       // Fetch USD exchange rate
       const usdRate = await fetchUSDExchangeRate();
-      dispatch(setUsd({usd: usdRate}));
+      dispatch(setUsd({ usd: usdRate }));
     } catch (error) {
       console.error('Initialization error:', error);
     }
@@ -241,7 +241,7 @@ const Main = () => {
       console.log('Default language:', defaultLanguage);
       console.log('User ID:', user?.data?.id);
       const d = await dispatch(
-        onPostDefaultLang({lang: defaultLanguage, id: user?.data?.id}),
+        onPostDefaultLang({ lang: defaultLanguage, id: user?.data?.id }),
       ).unwrap();
       console.log('Default language set successfully:', d);
     } catch (error) {
