@@ -40,7 +40,7 @@ import { MaskedTextInput } from 'react-native-advanced-input-mask';
 import DateModal from '../home/modal/DateModal';
 import QuestionMarkIcon from '../../images/questionMark';
 import Popover from 'react-native-popover-view';
-import { Mode } from 'react-native-popover-view/dist/Types';
+import { Mode, Placement } from 'react-native-popover-view/dist/Types';
 import { widthPercentageToDP } from 'react-native-responsive-screen';
 const { width } = Dimensions.get('window');
 
@@ -176,14 +176,15 @@ const SearchUserScreen = () => {
                       >
                         <MainText size={fontSize[12]}>{t('121')}</MainText>
                         <Popover
-                          mode={Mode.RN_MODAL}
                           popoverStyle={{ borderRadius: 10 }}
                           displayArea={{
-                            x: width / 2 - 100,
-                            y: 0,
+                            x: 100,
+                            y: 200,
                             width: 300,
-                            height: 80,
+                            height: 250,
                           }}
+                          placement={Placement.BOTTOM}
+                          // placement={Placement.BOTTOM}
                           from={
                             <TouchableOpacity style={{ marginLeft: 5 }}>
                               <QuestionMarkIcon

@@ -46,6 +46,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID to securely authenticate you.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Zerox needs access to your camera to scan QR codes.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

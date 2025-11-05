@@ -15,10 +15,24 @@ import { getNotificationWithPage } from './src/store/api/home';
 import { setFbNotificationId } from './src/store/reducers/HomeReducer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Appearance, AppRegistry, LogBox } from 'react-native';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 LogBox.ignoreAllLogs();
 Appearance.setColorScheme('light');
+
+crashlytics().log('App mounted successfully');
+
+// Catch global JS errors
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  crashlytics().recordError(error);
+  console.error('Global error:', error);
+
+  if (isFatal) {
+    // Optional: show custom crash screen or restart app
+  }
+});
+
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Message handled in the background!', remoteMessage);
   Store.dispatch(

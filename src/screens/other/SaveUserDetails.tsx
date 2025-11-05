@@ -205,7 +205,7 @@ const UserInfo = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-            <View style={{ marginTop: 10 }}>
+            <View>
               <TouchableOpacity
                 onPress={() => {
                   if (expire_passport_check(userInfo.user.data.expiry_date)) {
@@ -219,7 +219,7 @@ const UserInfo = () => {
                   });
                 }}
                 activeOpacity={0.8}
-                style={[styles.getUserInfoButton, {}]}
+                style={[styles.getUserInfoButton, { flexDirection: 'row' }]}
               >
                 <View
                   style={{
@@ -327,11 +327,13 @@ const styles = StyleSheet.create({
     paddingRight: 5,
   },
   getUserInfoButton: {
-    // alignItems: 'center',
+    alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: style.blue,
     borderRadius: 10,
     paddingVertical: 15,
+    paddingHorizontal: 5,
+    marginTop: 10,
   },
   phoneText: {
     fontFamily: style.fontFamilyMedium,

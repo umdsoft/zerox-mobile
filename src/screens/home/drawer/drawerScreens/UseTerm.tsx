@@ -21,9 +21,10 @@ import FileViewer from 'react-native-file-viewer';
 
 import Toast from 'react-native-toast-message';
 
-import RNFS from 'react-native-fs';
+// import RNFS from 'react-native-fs';
+
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import { checkMultiple, PERMISSIONS, request } from 'react-native-permissions';
+
 import { storage } from '../../../../store/api/token/getToken';
 
 const UseTerm = () => {
@@ -31,31 +32,6 @@ const UseTerm = () => {
   // const filePath = `${RNFS.ExternalDirectoryPath}/files/yoriqnoma.pdf`;
   const [loading, setLoading] = useState(true);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      if (Platform.Version <= 33) {
-        checkMultiple([
-          PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-          PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-        ]).then(result => {
-          if (
-            result[PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE] === 'granted' &&
-            result[PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE] === 'granted'
-          ) {
-            console.log('Permission is already granted');
-          } else {
-            request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE).then(result => {
-              if (result === 'granted') {
-                console.log('Permission is granted');
-              } else {
-                console.log('Permission is not granted');
-              }
-            });
-          }
-        });
-      }
-    }
-  }, []);
 
   const onDownload = async () => {
     try {
@@ -70,15 +46,15 @@ const UseTerm = () => {
 
       const filePath =
         Platform.OS === 'android'
-          ? `${RNFS.DownloadDirectoryPath}${setNameByLang(lang!)}`
-          : `${RNFS.DocumentDirectoryPath}${setNameByLang(lang!)}`;
+          ? `${ReactNativeBlobUtil.fs.dirs.DownloadDir}${setNameByLang(lang!)}`
+          : `${ReactNativeBlobUtil.fs.dirs.DocumentDir}${setNameByLang(lang!)}`;
 
       // Check if the file exists
-      const fileExists = await RNFS.exists(filePath);
+      const fileExists = await ReactNativeBlobUtil.fs.exists(filePath);
 
       // Delete the existing file if overwrite is true
       if (fileExists) {
-        await RNFS.unlink(filePath);
+        await ReactNativeBlobUtil.fs.unlink(filePath);
         console.log(`Existing file deleted: ${filePath}`);
       }
       setDownloadLoading(true);
@@ -91,31 +67,31 @@ const UseTerm = () => {
           mediaScannable: false,
           mime: 'application/pdf',
           useDownloadManager: true,
-          path: RNFS.DownloadDirectoryPath + setNameByLang(lang!),
+          path: ReactNativeBlobUtil.fs.dirs.DownloadDir + setNameByLang(lang!),
         },
         path:
           Platform.OS === 'android'
-            ? RNFS.DownloadDirectoryPath + setNameByLang(lang!)
-            : RNFS.DocumentDirectoryPath + setNameByLang(lang!),
+            ? ReactNativeBlobUtil.fs.dirs.DownloadDir + setNameByLang(lang!)
+            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
       }).fetch('GET', `https://pdf.zerox.uz/yoriqnoma.pdf`);
       if (
-        !(await RNFS.exists(
+        !(await ReactNativeBlobUtil.fs.exists(
           Platform.OS === 'android'
-            ? RNFS.DownloadDirectoryPath
-            : RNFS.DocumentDirectoryPath + setNameByLang(lang!),
+            ? ReactNativeBlobUtil.fs.dirs.DownloadDir
+            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
         ))
       ) {
-        await RNFS.copyFile(
+        await ReactNativeBlobUtil.fs.cp(
           res.data,
           Platform.OS === 'android'
-            ? RNFS.DownloadDirectoryPath
-            : RNFS.DocumentDirectoryPath + setNameByLang(lang!),
+            ? ReactNativeBlobUtil.fs.dirs.DownloadDir
+            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
         );
       }
       await FileViewer.open(
         Platform.OS === 'android'
-          ? RNFS.DownloadDirectoryPath
-          : RNFS.DocumentDirectoryPath + setNameByLang(lang!),
+          ? ReactNativeBlobUtil.fs.dirs.DownloadDir
+          : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
       );
       setDownloadLoading(false);
     } catch (e) {

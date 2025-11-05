@@ -14,14 +14,12 @@ import { normalize, style } from '../../../theme/style';
 import {
   QrCodeIcon,
   AboutIcon,
-  DeviceIcon,
   SecurityIcon,
   ShareIcon,
   ServiceSupport,
   Facebook,
   Instagram,
   Telegram,
-  Twitter,
   Youtube,
   TwitterIcon,
 } from '../../../helper/drawerIcon';
@@ -38,7 +36,6 @@ import TarifIcon from '../../../images/drawer/Tarif';
 import { t } from 'i18next';
 import LogoKR from '../../../images/drawer/KrLogo';
 import LogoRU from '../../../images/drawer/RuLogo';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DrawerScreen = () => {
   const { user } = useSelector(state => state.HomeReducer);
@@ -54,7 +51,7 @@ const DrawerScreen = () => {
         url:
           Platform.OS === 'android'
             ? 'https://play.google.com/store/apps/details?id=com.zeroxuz'
-            : 'https://apps.apple.com/uz/app/zerox/id1560000000',
+            : 'https://apps.apple.com/uz/app/zerox/id6446497826',
         title: 'Ishonch kafolati',
       });
       if (result.action === Share.sharedAction) {

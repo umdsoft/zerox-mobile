@@ -24,19 +24,15 @@ import universalStyle from '../../../../theme/universalStyle';
 import OtherHeader from '../../../components/OtherHeader';
 
 import MainText from '../../../components/MainText';
-import { font, fontSize } from '../../../../theme/font';
+
 import { colors } from '../../../../theme/colors';
 import { t } from 'i18next';
-import {
-  checkMultiple,
-  PERMISSIONS,
-  requestMultiple,
-  RESULTS,
-} from 'react-native-permissions';
+
 import RNBlobUtil from 'react-native-blob-util';
 
-import RNFS from 'react-native-fs';
+// import RNFS from 'react-native-fs';
 import ViewShot from 'react-native-view-shot';
+import { fontSize } from '../../../../theme';
 
 // https://www.npmjs.com/package/node-html-to-image
 
@@ -97,9 +93,9 @@ const QrCode = () => {
           fileName = `${baseFileName}(${counter}).${fileExtension}`;
           filePath = `${downloadDir}/${fileName}`;
         }
-
         // Copy the generated PDF into Downloads (or Documents on iOS)
-        const destPath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+        const destPath = `${RNBlobUtil.fs.dirs.CacheDir}/${fileName}`;
+
         if (Platform.OS === 'android') {
           await RNBlobUtil.MediaCollection.copyToMediaStore(
             {
@@ -112,8 +108,9 @@ const QrCode = () => {
           );
         } else {
           await RNBlobUtil.fs.cp(file.filePath!, filePath);
-          await RNFS.copyFile(filePath!, destPath);
+          await RNBlobUtil.fs.cp(filePath!, destPath);
         }
+
         console.log('File saved at:', filePath);
 
         await FileViewer.open(file.filePath!);
@@ -244,17 +241,17 @@ const QrCode = () => {
         generatePDF(options)
           .then(async ({ filePath }) => {
             if (
-              await RNFS.exists(
-                `${RNFS.CachesDirectoryPath}/${user?.data?.uid}.pdf`,
+              await RNBlobUtil.fs.exists(
+                `${RNBlobUtil.fs.dirs.CacheDir}/${user?.data?.uid}.pdf`,
               )
             ) {
-              await RNFS.unlink(
-                `${RNFS.CachesDirectoryPath}/${user?.data?.uid}.pdf`,
+              await RNBlobUtil.fs.unlink(
+                `${RNBlobUtil.fs.dirs.CacheDir}/${user?.data?.uid}.pdf`,
               );
             }
 
-            const destPath = `${RNFS.CachesDirectoryPath}/${user?.data?.uid}.pdf`;
-            await RNFS.copyFile(filePath!, destPath);
+            const destPath = `${RNBlobUtil.fs.dirs.CacheDir}/${user?.data?.uid}.pdf`;
+            await RNBlobUtil.fs.cp(filePath!, destPath);
 
             await Share.open({
               url: `file://${destPath}`,
@@ -265,10 +262,10 @@ const QrCode = () => {
                 console.log('Share is good', res);
               })
               .catch(async error => {
-                await RNFS.unlink(destPath);
+                await RNBlobUtil.fs.unlink(destPath);
                 console.log('Share is bad', error);
               });
-            await RNFS.unlink(destPath);
+            await RNBlobUtil.fs.unlink(destPath);
           })
           .catch(error => {
             console.log('RNHTMLtoPDF', error.message);
@@ -276,39 +273,6 @@ const QrCode = () => {
       });
     });
   };
-
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      checkMultiple([
-        PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-        PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-      ]).then(result => {
-        if (
-          result[PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE] ===
-            RESULTS.GRANTED &&
-          result[PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE] === RESULTS.GRANTED
-        ) {
-          console.log('Permission is granted');
-        } else {
-          requestMultiple([
-            PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-            PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-          ]).then(result => {
-            if (
-              result[PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE] ===
-                RESULTS.GRANTED &&
-              result[PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE] ===
-                RESULTS.GRANTED
-            ) {
-              console.log('Permission is granted');
-            }
-          });
-        }
-      });
-    }
-    // storage.delete('url');
-    // storage.delete('url2');
-  }, []);
 
   return (
     <View style={styles.container}>

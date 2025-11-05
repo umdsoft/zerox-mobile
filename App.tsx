@@ -33,6 +33,7 @@ import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
 import WebView from 'react-native-webview';
 import { storage } from './src/store/api/token/getToken';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 const isTablet = DeviceInfo.isTablet();
 LogBox.ignoreLogs([
@@ -40,14 +41,25 @@ LogBox.ignoreLogs([
   'ColorPropType will be removed',
 ]);
 
+const defaultHandler = ErrorUtils.getGlobalHandler();
+
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  crashlytics().recordError(error);
+  crashlytics().log(`JS Error: ${error.message}`);
+
+  if (isFatal) {
+    crashlytics().crash(); // optional - simulate fatal crash
+  }
+
+  // Call the default handler too
+  defaultHandler(error, isFatal);
+});
+
 const checkVersion = () => {
   const version = DeviceInfo.getVersion();
   const vv = storage.getString('version');
-  if (vv === undefined) {
+  if (vv !== version) {
     storage.set('version', version);
-  } else if (vv !== version) {
-    storage.set('version', version);
-    storage.clearAll();
   }
 };
 
@@ -162,7 +174,7 @@ const App = () => {
         <FaceIdModal />
         <ContractModal />
         <NoInternet onChangeIntenet={onChangeIntenet} />
-        <UpdateModal />
+        {/* <UpdateModal /> */}
         <ExpirePassportModal />
       </I18nextProvider>
       <ToasWrapper />

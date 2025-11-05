@@ -157,7 +157,7 @@ const ScanFaceMyId = () => {
       try {
         const form = new FormData();
         form.append('code', data.code);
-        form.append('image', data.image);
+        // form.append('image', data.image);
 
         const response = await axios.post(URL + '/user/isactivate', form, {
           headers: {

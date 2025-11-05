@@ -19,7 +19,7 @@ import Pdf from 'react-native-pdf';
 
 import Share from 'react-native-share';
 import OtherHeader from '../../components/OtherHeader';
-import RNFS from 'react-native-fs';
+// import RNFS from 'react-native-fs';
 import MainText from '../../components/MainText';
 import { fontSize } from '../../../theme/font';
 import { colors } from '../../../theme/colors';
@@ -37,7 +37,7 @@ const DownloadStatistic = () => {
       overwrite: true,
       appendExt: 'pdf',
       path:
-        RNFS.DocumentDirectoryPath +
+        ReactNativeBlobUtil.fs.dirs.DocumentDir +
         `/${item?.number?.split('/')?.join('_')}${setNameByLang(lang!)}`,
     })
       .fetch(
@@ -45,9 +45,9 @@ const DownloadStatistic = () => {
         `https://pdf.zerox.uz/index.php?id=${item?.uid}&download=0&lang=${lang}`,
       )
       .then(async res => {
-        RNFS.copyFile(
+        ReactNativeBlobUtil.fs.cp(
           res.path(),
-          `${RNFS.CachesDirectoryPath}/${item?.number
+          `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${item?.number
             ?.split('/')
             ?.join('_')}${setNameByLang(lang!)}`,
         )
@@ -63,7 +63,7 @@ const DownloadStatistic = () => {
             failOnCancel: false,
             url: `${
               `file://` +
-              `${RNFS.CachesDirectoryPath}/${item?.number
+              `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${item?.number
                 ?.split('/')
                 ?.join('_')}${setNameByLang(lang!)}`
             }`,
@@ -106,11 +106,11 @@ const DownloadStatistic = () => {
       }&download=0&lang=${storage.getString('lang') || 'uz'}`;
 
       // Check if the file exists
-      const fileExists = await RNFS.exists(filePath);
+      const fileExists = await ReactNativeBlobUtil.fs.exists(filePath);
 
       // Delete the existing file if overwrite is true
       if (fileExists) {
-        await RNFS.unlink(filePath);
+        await ReactNativeBlobUtil.fs.unlink(filePath);
         console.log(`Existing file deleted: ${filePath}`);
       }
 

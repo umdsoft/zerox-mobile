@@ -35,9 +35,16 @@ const UpdateModal = () => {
     >
       <View style={styles.main}>
         <View style={styles.view}>
-          <Text style={styles.teext} allowFontScaling={false}>{t('newUpdate')}</Text>
+          <Text style={styles.teext} allowFontScaling={false}>
+            {t('newUpdate')}
+          </Text>
           <TouchableOpacity onPress={onClose} style={styles.btn}>
-            <Text style={[styles.teext, { color: '#fff' }]} allowFontScaling={false}>{t('update')}</Text>
+            <Text
+              style={[styles.teext, { color: '#fff' }]}
+              allowFontScaling={false}
+            >
+              {t('update')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -52,7 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     width: '90%',
     // height: normalize(100),
-    height: '60%',
+    height: Platform.OS === 'ios' ? '60%' : '40%',
     alignSelf: 'center',
     padding: 10,
     borderRadius: 12,

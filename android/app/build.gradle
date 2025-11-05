@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: 'com.google.gms.google-services'
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
@@ -83,8 +84,8 @@ android {
         applicationId "com.zeroxuz"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.5"
+        versionCode 13
+        versionName "1.6"
         missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
     }
     signingConfigs {

@@ -20,7 +20,7 @@ import Pdf from 'react-native-pdf';
 import OtherHeader from '../components/OtherHeader';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
-import RNFS from 'react-native-fs';
+// import RNFS from 'react-native-fs';
 import { t } from 'i18next';
 import { useSelector } from 'react-redux';
 
@@ -84,8 +84,6 @@ const Contract = () => {
             : await forAndroid();
         });
     } catch (error) {
-      Alert.alert('Xatolik', JSON.stringify(error));
-      console.warn(error);
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
