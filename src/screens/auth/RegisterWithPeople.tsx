@@ -1,28 +1,30 @@
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import BackButton from '../components/BackButton';
-import {normalize, style} from '../../theme/style';
+import { normalize, style } from '../../theme/style';
 import RegisterWithPeopleIcon from '../../images/auth/illustrationregisterwithpeople.svg';
 import Loading from '../components/Loading';
 
 import PhoneInput from '../components/PhoneInput';
 import MainText from '../components/MainText';
-import {font, fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
-import {t} from 'i18next';
-import {URL} from '../../screens/constants';
-import {useTranslation} from 'react-i18next';
+import { font, fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
+import { t } from 'i18next';
+import { URL } from '../../screens/constants';
+import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 import InputMask from '../components/InputMask';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -49,12 +51,12 @@ const RegisterWithPeople = () => {
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const route = useRoute();
-  const {type} = route.params;
+  const { type } = route.params;
   const navigation = useNavigation();
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(false);
 
-  const {i18n} = useTranslation();
+  const { i18n } = useTranslation();
 
   const PostData = async () => {
     try {
@@ -179,7 +181,7 @@ const RegisterWithPeople = () => {
           setLoading(false);
           navigation.navigate(
             type === 1 ? 'CheckSmsPassword' : 'ChangePhoneNumber',
-            {phone: phone.replace(/\s/g, '')},
+            { phone: phone.replace(/\s/g, '') },
           );
         }
       }
@@ -204,29 +206,32 @@ const RegisterWithPeople = () => {
     <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}
+      >
         <ScrollView>
           <View
             style={[
               styles.BackButton,
-              {marginTop: Platform.OS === 'android' ? 10 : normalize(10)},
-            ]}>
+              { marginTop: Platform.OS === 'android' ? 10 : normalize(10) },
+            ]}
+          >
             <BackButton
               navigation={navigation}
               IconColor="#fff"
               backgroundColor={style.blue}
             />
           </View>
-          <View style={{width: style.width, height: style.height}}>
+          <View style={{ width: style.width, height: style.height }}>
             <View
               style={{
                 alignItems: 'center',
                 flex: 0.5,
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <RegisterWithPeopleIcon width="70%" height="70%" />
             </View>
-            <View style={{alignItems: 'center'}}>
+            <View style={{ alignItems: 'center' }}>
               <MainText size={fontSize[16]} ft={font.bold} color={colors.black}>
                 {t('42')}
               </MainText>
@@ -268,9 +273,22 @@ const RegisterWithPeople = () => {
                       ? style.disabledButtonColor
                       : style.blue,
                   },
-                ]}>
+                ]}
+              >
                 <MainText color={colors.white} size={fontSize[16]}>
                   {t('45')}
+                </MainText>
+              </TouchableOpacity>
+            </View>
+            <View style={{ alignSelf: 'flex-end', marginRight: 20 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  Linking.openURL('https://t.me/zeroxuz_bot');
+                }}
+                activeOpacity={0.6}
+              >
+                <MainText color={style.blue} size={fontSize[12]} mTop={20}>
+                  {t('support')}
                 </MainText>
               </TouchableOpacity>
             </View>

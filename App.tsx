@@ -174,7 +174,7 @@ const App = () => {
         <FaceIdModal />
         <ContractModal />
         <NoInternet onChangeIntenet={onChangeIntenet} />
-        {/* <UpdateModal /> */}
+        <UpdateModal />
         <ExpirePassportModal />
       </I18nextProvider>
       <ToasWrapper />
