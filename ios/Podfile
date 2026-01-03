@@ -40,3 +40,42 @@ target 'ZeroX' do
     )
   end
 end
+# require Pod::Executable.execute_command('node', ['-p',
+#   'require.resolve(
+#     "react-native/scripts/react_native_pods.rb",
+#     {paths: [process.argv[1]]},
+#   )', __dir__]).strip
+
+# platform :ios, min_ios_version_supported
+# prepare_react_native_project!
+
+# # Add this line
+# use_modular_headers!
+
+# target 'ZeroX' do
+#   config = use_native_modules!
+
+#   use_react_native!(
+#     :path => config[:reactNativePath],
+#     :app_path => "#{Pod::Config.instance.installation_root}/.."
+#   )
+
+#   # Firebase
+#   pod 'Firebase'
+#   pod 'FirebaseCoreInternal'
+#   pod 'GoogleUtilities'
+#   pod 'FirebaseCore'
+#   pod 'FirebaseInstallations'
+#   pod 'GoogleDataTransport'
+#   pod 'nanopb'
+#   pod 'FirebaseCoreExtension'
+#   pod 'MyIdSDK', '~> 2.4.9'
+
+#   post_install do |installer|
+#     react_native_post_install(
+#       installer,
+#       config[:reactNativePath],
+#       :mac_catalyst_enabled => false
+#     )
+#   end
+# end

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		289296B5A1426564C7FBFF35 /* Pods_ZeroX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 887F2F2203AA19B0E102EF37 /* Pods_ZeroX.framework */; };
+		3278232C8543431452077355 /* Pods_ZeroX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04CF61DA907D3312FFCE13C3 /* Pods_ZeroX.framework */; };
 		4FD37AA7E18D4057985A9331 /* Montserrat-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4F88F1B4B4CC4B74BE02C0C3 /* Montserrat-Thin.ttf */; };
 		74737B7F74B44C0F9FE0B6A7 /* Montserrat-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F8F7111740764FD2AF3F6D3E /* Montserrat-Medium.ttf */; };
 		74D4A1872E8FF38300E36EDF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 74D4A1862E8FF38300E36EDF /* GoogleService-Info.plist */; };
@@ -24,6 +24,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		04CF61DA907D3312FFCE13C3 /* Pods_ZeroX.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZeroX.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* ZeroX.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZeroX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ZeroX/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ZeroX/Info.plist; sourceTree = "<group>"; };
@@ -41,7 +42,6 @@
 		78DB2CCA484D4D5F831C6BC1 /* Montserrat-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Regular.ttf"; path = "../assets/fonts/Montserrat-Regular.ttf"; sourceTree = "<group>"; };
 		7A470944DACC43A3920AF0EB /* Montserrat-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Light.ttf"; path = "../assets/fonts/Montserrat-Light.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ZeroX/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		887F2F2203AA19B0E102EF37 /* Pods_ZeroX.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZeroX.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC00726A6A154AFD9897AF72 /* Cambria.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Cambria.ttf; path = ../assets/fonts/Cambria.ttf; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F8F7111740764FD2AF3F6D3E /* Montserrat-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Medium.ttf"; path = "../assets/fonts/Montserrat-Medium.ttf"; sourceTree = "<group>"; };
@@ -52,7 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				289296B5A1426564C7FBFF35 /* Pods_ZeroX.framework in Frameworks */,
+				3278232C8543431452077355 /* Pods_ZeroX.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,7 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				887F2F2203AA19B0E102EF37 /* Pods_ZeroX.framework */,
+				04CF61DA907D3312FFCE13C3 /* Pods_ZeroX.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -348,7 +348,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.7;
+				MARKETING_VERSION = 1.8;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -384,7 +384,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.7;
+				MARKETING_VERSION = 1.8;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

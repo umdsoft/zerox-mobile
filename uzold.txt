@@ -69,11 +69,11 @@
     "114": "Qo‘llab-quvvatlash xizmati",
     "117": "Tariflar",
     "120": "ID raqami",
-
+    "121": "Tizimdagi ID raqamini kiriting",
     "123": "Qarz shartnomasini tez va oson rasmiylashtirish uchun ushbu QR-kodni ZeroX ilovasi yordamida skanerlang va tegishli jarayonlarni amalga oshiring.",
     "126": "Yuklab olish",
     "129": "Ulashish",
-
+    "130": "Foydalanuvchini izlashda tizim tomonidan har bir foydalanuvchiga beriladigan ID raqami kiritiladi. ID raqamini shaxsiy kabinet orqali bilib olishingiz mumkin.",
     "132": "Tizim bilan bog‘liq murojaatlarni qabul qilish maqsadida tashkil etilgan.",
     "135": "Mobil hisob",
     "138": "Debitor qarzdorlik",
@@ -131,9 +131,9 @@
     "273": "Qarz beruvchi",
     "276": "Summani kiriting",
     "279": "Qarz muddatini belgilang",
-    "282": "Qarz shartnomasi va dalolatnoma bilan tanishdim",
+    "282": "Qarz shartnomasi bilan tanishdim.",
 
-    "285": "Qarz shartnomasi va dalolatnomani rasmiylashtirish to‘g‘risida so‘rov yuborildi.",
+    "285": "Qarz shartnomasini rasmiylashtirish to‘g‘risida so‘rov yuborildi.",
     "288": "Ma’lumotlarni ko‘rmasdan qarz olish",
     "291": "Xizmat haqi sifatida hisobingizdan\n<amount>{{amount}}</amount> so‘m yechiladi.",
 
@@ -149,7 +149,7 @@
     "321": "Tugallangan sana",
     "324": "Qarz shartnomasi",
     "327": "Qarz miqdori",
-    "330": "Qaytarilgan qarz miqdori",
+    "330": "Qaytarilgan qarz\nmiqdori",
     "333": "Voz kechilgan qarz miqdori",
     "336": "Sana",
     "339": "Holat",
@@ -204,13 +204,13 @@
     "465": "<start>{{start}}</start> yildagi <id>{{id}}</id>-sonli qarz shartnomasi bo‘yicha qarzni qaytarish muddatini uzaytirish uchun so‘rovnoma yubormoqdasiz. Qarzni qaytarishning hozirgi muddati - <end>{{end}}</end> yil.",
     "468": "Qarz muddatini uzaytirish bo‘yicha so‘rov yuborildi.",
     "471": "Batafsil",
-    "474": "Qarz shartnomasini rasmiylashtirish va qarz berilganligini tasdiqlash to‘g‘risida",
+    "474": "Qarz shartnomasini rasmiylashtirish to‘g‘risida",
 
     "477": "<name>{{name}}</name> Sizga <sum>{{sum}}</sum> miqdorida qarz bermoqda. Agar “Tasdiqlash”ni tanlasangiz, 15/2/2024-3-sonli qarz shartnomasi rasmiylashtiriladi va mobil hisobingizdan xizmat haqi sifatida 1 000 UZS yechiladi.",
     "480": "Qarz shartnomasining rad qilinganligi to‘g‘risida",
 
     "483": "<name>{{name}}</name>ga <sum>{{sum}}</sum> miqdorida qarz berish to‘g‘risidagi shartnoma rad qilindi.",
-    "486": "Qarz shartnomasi va dalolatnoma tasdiqlanganligi to‘g‘risida",
+    "486": "Qarz shartnomasining qabul qilinganligi to‘g‘risida",
 
     "489": "<name>{{name}}</name> va Sizning o‘rtangizda 15/2/2024-5-sonli qarz shartnomasi rasmiylashtirildi. Ushbu shartnoma asosida Siz <name>{{name}}</name>ga 10 USD miqdorida qarz berdingiz.",
     "492": "Qarz shartnomasining qabul qilinmaganligi to‘g‘risida",
@@ -219,18 +219,18 @@
     "498": "Qarz shartnomasining qabul qilinmaganligi to‘g‘risida",
 
     "501": "<name>{{name}}</name> tomonidan <start>{{start}}</start> yilda <id>{{id}}</id>-sonli qarz shartnomasini rasmiylashtirish uchun Sizga so‘rovnoma yuborilgan. Ushbu qarz shartnomasi <start>{{start}}</start> yil soat 23:59 ga qadar Siz tomoningizdan qabul qilinmaganligi sababli tizim tomonidan rad qilindi.",
-    "504": "Qarz shartnomasini rasmiylashtirish va qarz olinganligini tasdiqlash to‘g‘risida",
+    "504": "Qarz shartnomasini rasmiylashtirish to‘g‘risida",
 
     "507": "<name>{{name}}</name> Sizdan <sum>{{sum}}</sum> miqdorida qarz berishingizni so‘ramoqda. Agar “Tasdiqlash”ni tanlasangiz, 15/2/2024-6-sonli qarz shartnomasi rasmiylashtiriladi.",
     "510": "Qarz shartnomasining rad qilinganligi to‘g‘risida",
 
     "513": "<name>{{name}}</name>dan <sum>{{sum}}</sum> miqdorida qarz olish to‘g‘risidagi shartnoma rad qilindi.",
-    "516": "Qarz shartnomasi va dalolatnoma tasdiqlanganligi to‘g‘risida",
+    "516": "Qarz shartnomasining qabul qilinganligi to‘g‘risida",
 
-    "519": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi va dalolatnoma rasmiylashtirildi. Ushbu shartnoma va dalolatnoma asosida Siz <name>{{name}}</name>dan <sum>{{sum}}</sum> miqdorida qarz oldingiz. Xizmat haqi sifatida hisobingizdan <sum1>{{sum1}}</sum1> yechildi.",
-    "520": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi va dalolatnoma rasmiylashtirildi. Ushbu shartnoma va dalolatnoma asosida Siz <name>{{name}}</name>dan <sum>{{sum}}</sum> miqdorida qarz oldingiz.",
+    "519": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtirildi. Ushbu shartnoma asosida Siz <name>{{name}}</name>dan <sum>{{sum}}</sum> miqdorida qarz oldingiz. Xizmat haqi sifatida hisobingizdan <sum1>{{sum1}}</sum1> yechildi.",
+    "520": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtirildi. Ushbu shartnoma asosida Siz <name>{{name}}</name>dan <sum>{{sum}}</sum> miqdorida qarz oldingiz.",
     "522": "Qarzni qaytarish talab qilinganligi to‘g‘risida",
-    "523": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtirildi. Ushbu shartnoma va dalolatnoma asosida <name>{{name}}</name>ga <sum>{{sum}}</sum> miqdorda qarz berdingiz.",
+    "523": "<name>{{name}}</name> va Sizning o‘rtangizda <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtirildi. Ushbu shartnoma asosida Siz <name>{{name}}</name>ga <sum>{{sum}}</sum> miqdorda qarz berdingiz.",
     "525": "<name>{{name}}</name>  Sizdan <start>{{start}}</start> yildagi <id>{{id}}</id>-sonli qarz shartnomasiga asosan berilgan <sum>{{sum}}</sum> qarzni qaytarishingizni talab qilmoqda.",
     "528": "Qarz muddati uzaytirilganligi to‘g‘risida",
 
@@ -319,7 +319,7 @@
     "744": "Parolingizni tiklash uchun identifikatsiyadan o‘tishingiz kerak.",
     "747": "Identifikatsiyadan o‘tish",
     "750": "Yopish",
-    "753": "Ilovadan foydalanishingiz uchun shaxsingizni tasdiqlashingiz kerak.\nIdentifikatsiya jarayonidagi rasmingiz shaxsiy kabinetingizda saqlanishi sababli o‘zingizni tartibga keltirib oling va kameraga to‘g‘ri qarang.",
+    "753": "Ilovadan foydalanishingiz uchun shaxsingizni tasdiqlashingiz kerak.",
     "756": "Tizimda ro‘yxatdan o‘tilganligi to‘g‘risida",
 
     "759": "Tabriklaymiz! Siz tizimda muvaffaqiyatli ro‘yxatdan o‘tdingiz va tizim funksiyalaridan to‘liq foydalanish imkoniga ega bo‘ldingiz. Sizdan tizimga kirish parolini esda saqlashingizni va uni boshqa shaxslarga oshkor qilmasligingizni so‘raymiz. ",
@@ -433,10 +433,10 @@
     "noti": "<id>{{id}}</id>-sonli qarz shartnomasi va ilova hujjatlarni yuklab oldingiz.",
     "rejectdebt": "<name>{{name}}</name> <start>{{start}}</start> yildagi <id>{{id}}</id>-sonli qarz shartnomasiga asosan <sum>{{sum}}</sum> qarz mablag‘ini qaytarish bo‘yicha Sizga so‘rov yuborgan. Biroq ushbu so‘rov <end>{{end}}</end> yil soat 23:59 ga qadar Siz tomoningizdan qabul qilinmaganligi sababli tizim tomonidan bekor qilindi.",
     "rejectdebt1": "<id>{{id}}</id>-sonli qarz shartnomasi bo'yicha <sum>{{sum}}</sum> qaytarilganligi yuzasidan yuborgan so'rovingiz <name>{{name}}</name>  tomonidan <end>{{end}}</end> yil soat 23:59 ga qadar qabul qilinmaganligi sababli tizim tomonidan bekor qilindi. Qayta so'rov yuborishingiz mumkin.",
-    "contract1": "<name>{{name}}</name> Sizga <sum>{{sum}}</sum> miqdorida qarz bermoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi. Shuningdek, Siz ushbu so‘rovni qabul qilish orqali <sum>{{sum}}</sum> miqdorida qarz olganligingizni tasdiqlaysiz va bu bo‘yicha dalolatnoma rasmiylashtiriladi.",
-    "contract10": "<name>{{name}}</name> Sizga <sum>{{sum}}</sum> miqdorida qarz bermoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi va mobil hisobingizdan xizmat haqi sifatida <summ>{{summ}} UZS</summ>  yechiladi. Shuningdek, Siz ushbu so‘rovni qabul qilish orqali <sum>{{sum}}</sum> miqdorida qarz olganligingizni tasdiqlaysiz va bu bo‘yicha dalolatnoma rasmiylashtiriladi.",
+    "contract1": "<name>{{name}}</name> Sizga <sum>{{sum}}</sum> miqdorida qarz bermoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi.",
+    "contract10": "<name>{{name}}</name> Sizga <sum>{{sum}}</sum> miqdorida qarz bermoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi va mobil hisobingizdan xizmat haqi sifatida <summ>{{summ}} UZS</summ>  yechiladi.",
     "con2": "va mobil hisobingizdan xizmat haqi sifatida <summ>{{summ}} UZS</summ>  yechiladi.",
-    "contract2": "<name>{{name}}</name> Sizdan <sum>{{sum}}</sum> miqdorida qarz berishingizni so'ramoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi. Shuningdek, Siz ushbu so‘rovni qabul qilish orqali <sum>{{sum}}</sum> miqdorida qarz berganligingizni tasdiqlaysiz va bu bo‘yicha dalolatnoma rasmiylashtiriladi.",
+    "contract2": "<name>{{name}}</name> Sizdan <sum>{{sum}}</sum> miqdorida qarz berishingizni so'ramoqda. Agar \"Tasdiqlash\"ni tanlasangiz, <id>{{id}}</id>-sonli qarz shartnomasi rasmiylashtiriladi.",
     "down_error": "Yuklab olish amalga oshmadi.",
     "143": "Выданный заём",
     "qidiruv": "Qidiruv natijasi",
