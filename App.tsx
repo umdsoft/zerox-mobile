@@ -1,20 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, memo } from 'react';
 import './src/i18n/index';
-import { Linking, LogBox, StatusBar, StyleSheet, View } from 'react-native';
+import { LogBox, StyleSheet, View, Linking } from 'react-native';
 import 'react-native-gesture-handler';
 import { useDispatch } from 'react-redux';
+import type { NavigationProp } from '@react-navigation/native';
 
 import Navigation from './src/navigation/Navigation';
-
 import { style } from './src/theme/style';
+import { colors } from './src/theme';
 import { useNetInfo } from '@react-native-community/netinfo';
-
 import './src/store/api/token/getToken';
-
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './src/i18n/index';
 import FaceIdModal from './src/screens/home/modal/FaceIdModal';
@@ -26,158 +22,149 @@ import NoInternet from './src/screens/home/modal/NoInternet';
 import { checkingInternet } from './src/store/reducers/HomeReducer';
 import UpdateModal from './src/screens/home/modal/UpdateModal';
 import { getMe } from './src/store/api/home';
-
 import useAppStateListener from './src/hooks/useAppStateListener';
-import { colors } from './src/theme';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
 import WebView from 'react-native-webview';
 import { storage } from './src/store/api/token/getToken';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { logError } from './src/log';
+import {
+  APP_LOADING_TIMEOUT,
+  TABLET_WEBVIEW_URL,
+  LOG_BOX_IGNORE_MESSAGES,
+  DEEP_LINK_PATHS,
+  STORAGE_KEYS,
+} from './src/constants';
 
 const isTablet = DeviceInfo.isTablet();
-LogBox.ignoreLogs([
-  'ViewPropTypes will be removed',
-  'ColorPropType will be removed',
-]);
+LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
 
 const defaultHandler = ErrorUtils.getGlobalHandler();
 
-ErrorUtils.setGlobalHandler((error, isFatal) => {
+/**
+ * Global error handler for crash reporting
+ */
+ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
   crashlytics().recordError(error);
   crashlytics().log(`JS Error: ${error.message}`);
 
   if (isFatal) {
-    crashlytics().crash(); // optional - simulate fatal crash
+    crashlytics().crash();
   }
 
-  // Call the default handler too
-  defaultHandler(error, isFatal);
+  // Call the default handler
+  if (defaultHandler) {
+    defaultHandler(error, isFatal);
+  }
 });
 
-const checkVersion = () => {
+/**
+ * Checks and updates app version in storage
+ */
+const checkVersion = (): void => {
   const version = DeviceInfo.getVersion();
-  const vv = storage.getString('version');
-  if (vv !== version) {
-    storage.set('version', version);
+  const storedVersion = storage.getString(STORAGE_KEYS.VERSION);
+  if (storedVersion !== version) {
+    storage.set(STORAGE_KEYS.VERSION, version);
   }
 };
 
-const App = () => {
+/**
+ * Main application component
+ */
+const App: React.FC = () => {
   useAppStateListener();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(true);
-
+  const navigation = useNavigation<NavigationProp<any>>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const dispatch = useDispatch();
-
   const netInfo = useNetInfo();
+
+  // Handle initial loading timeout
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, APP_LOADING_TIMEOUT);
+
+    return () => clearTimeout(timer);
   }, [netInfo.isConnected]);
 
+  // Handle internet connectivity changes
   useEffect(() => {
-    if (netInfo.isConnected) {
-      dispatch(checkingInternet({ internet: false }));
-    } else {
-      dispatch(checkingInternet({ internet: true }));
-    }
-  }, [netInfo, dispatch]);
+    const isConnected = netInfo.isConnected ?? false;
+    dispatch(checkingInternet({ internet: !isConnected }));
+  }, [netInfo.isConnected, dispatch]);
+
   const onChangeIntenet = useCallback(() => {
-    if (netInfo.isConnected) {
-      dispatch(checkingInternet({ internet: false }));
-    } else {
-      dispatch(checkingInternet({ internet: true }));
-    }
-  }, [netInfo, dispatch]);
+    const isConnected = netInfo.isConnected ?? false;
+    dispatch(checkingInternet({ internet: !isConnected }));
+  }, [netInfo.isConnected, dispatch]);
 
-  // const handleAppStateChange = useCallback(
-  //   (nextAppState: AppStateStatus) => {
-  //     console.log('AppState changed to');
-  //     if (nextAppState === 'active') {
-  //       console.log('App has come to the foreground!');
-  //       dispatch(setAppState({appState: 'active'}));
-  //       dispatch(getMe());
-  //     } else if (AppState.currentState === 'background') {
-  //       dispatch(setAppState({appState: 'background'}));
-  //       console.log('App has gone to the background!');
-  //     }
-  //   },
-  //   [dispatch],
-  // );
-
+  // Handle deep linking
   useEffect(() => {
-    const handleDeepLink = event => {
-      const url = event.url;
-      console.log('Deep link URL:', url);
-      if (url.includes('UserMoneyResult')) {
+    const handleDeepLink = (event: { url: string }) => {
+      const { url } = event;
+      if (url.includes(DEEP_LINK_PATHS.USER_MONEY_RESULT)) {
         dispatch(getMe());
-        navigation.navigate('UserMoneyResult');
+        navigation.navigate(DEEP_LINK_PATHS.USER_MONEY_RESULT);
       }
     };
 
     // Listen for deep links
-    Linking.addEventListener('url', handleDeepLink);
+    const subscription = Linking.addEventListener('url', handleDeepLink);
 
     // Handle deep links if the app was opened via a link
-    Linking.getInitialURL().then(url => {
-      if (url) handleDeepLink({ url });
-    });
+    Linking.getInitialURL()
+      .then(url => {
+        if (url) {
+          handleDeepLink({ url });
+        }
+      })
+      .catch(logError);
 
     return () => {
-      Linking.removeAllListeners('url');
+      subscription?.remove();
     };
   }, [dispatch, navigation]);
-  // useEffect(() => {
-  //   return notifee.onForegroundEvent(({type, detail}) => {
-  //     if (type === EventType.PRESS && detail.notification) {
-  //       console.log('User pressed notification', detail.notification);
-  //       navigation.navigate('Notification');
-  //     }
-  //   });
-  // }, [navigation]);
-  // useEffect(() => {
-  //   const subs = AppState.addEventListener('change', handleAppStateChange);
-  //   return () => {
-  //     subs.remove();
-  //   };
-  // }, [handleAppStateChange]);
+
+  // Check version on mount
   useEffect(() => {
     checkVersion();
-    // CaptureProtection.prevent();
   }, []);
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const ToasWrapper = React.memo(() => <Toast config={toastConfig} />);
+  const ToastWrapper = memo(() => <Toast config={toastConfig} />);
 
   if (isLoading) {
     return <Enter />;
   }
 
-  return isTablet ? (
-    <WebView
-      source={{ uri: 'https://zerox.uz' }}
-      style={{ flex: 1 }}
-      startInLoadingState={true}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-    />
-  ) : (
+  // Show WebView for tablet devices
+  if (isTablet) {
+    return (
+      <WebView
+        source={{ uri: TABLET_WEBVIEW_URL }}
+        style={{ flex: 1 }}
+        startInLoadingState
+        javaScriptEnabled
+        domStorageEnabled
+      />
+    );
+  }
+
+  return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.blue }}
-      edges={['top', 'bottom']}
-    >
+      edges={['top', 'bottom']}>
       <I18nextProvider i18n={i18n}>
         <Navigation />
         <FaceIdModal />
         <ContractModal />
         <NoInternet onChangeIntenet={onChangeIntenet} />
-        <UpdateModal />
+        {/* <UpdateModal /> */}
         <ExpirePassportModal />
       </I18nextProvider>
-      <ToasWrapper />
+      <ToastWrapper />
       <View
         style={{
           position: 'absolute',
@@ -192,22 +179,13 @@ const App = () => {
   );
 };
 
-const Enter = () => {
+/**
+ * Loading screen component shown during app initialization
+ */
+const Enter: React.FC = () => {
   return (
-    <SafeAreaView style={[styles.container]}>
-      <StatusBar
-        backgroundColor={'#fff'}
-        barStyle="dark-content"
-        animated={true}
-      />
-      {/* <ImageBackground
-        style={styles.ImageBackground}
-        resizeMode="cover"
-        source={require('./src/images/bac')}>
-        <View style={styles.logoContainer}>
-          <Logo width={normalize(120)} height={normalize(120)} />
-        </View>
-      </ImageBackground> */}
+    <SafeAreaView style={styles.container}>
+      {/* Loading screen content can be added here */}
     </SafeAreaView>
   );
 };
@@ -221,15 +199,5 @@ const styles = StyleSheet.create({
   ImageBackground: {
     width: style.width,
     height: style.height,
-  },
-  logoContainer: {
-    flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ishonch: {
-    fontSize: style.fontSize.xs + 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
   },
 });

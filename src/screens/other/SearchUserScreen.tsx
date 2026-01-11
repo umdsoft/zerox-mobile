@@ -174,12 +174,12 @@ const SearchUserScreen = () => {
                       <View
                         style={[styles.inputTitle, { flexDirection: 'row' }]}
                       >
-                        <MainText size={fontSize[12]}>{t('121')}</MainText>
+                        <MainText size={fontSize[12]}>{t('210')}</MainText>
                         <Popover
                           popoverStyle={{ borderRadius: 10 }}
                           displayArea={{
-                            x: 100,
-                            y: 200,
+                            x: 50,
+                            y: 150,
                             width: 300,
                             height: 250,
                           }}
@@ -424,7 +424,12 @@ const UserInfo = ({ user, navigation, type }) => {
                     keyboardType="default"
                     style={[
                       styles.TextInput,
-                      { paddingLeft: 15, paddingTop: 18, paddingBottom: 18 },
+                      {
+                        paddingLeft: 15,
+                        paddingTop: 18,
+                        paddingBottom: 18,
+                        fontSize: fontSize[12],
+                      },
                     ]}
                   />
                 </View>
@@ -447,6 +452,7 @@ const UserInfo = ({ user, navigation, type }) => {
                         width: '100%',
                         paddingTop: 18,
                         paddingBottom: 18,
+                        fontSize: fontSize[12],
                       },
                     ]}
                   />
@@ -459,10 +465,10 @@ const UserInfo = ({ user, navigation, type }) => {
                 {resolve
                   ? t('246')
                   : reject
-                  ? t('258')
-                  : !active
-                  ? t('219')
-                  : t('231')}
+                    ? t('258')
+                    : !active
+                      ? t('219')
+                      : t('231')}
               </MainText>
               <TouchableOpacity
                 disabled={active && first}
@@ -477,8 +483,8 @@ const UserInfo = ({ user, navigation, type }) => {
                       active && first
                         ? style.disabledButtonColor
                         : resolve
-                        ? '#48BB78'
-                        : style.blue,
+                          ? '#48BB78'
+                          : style.blue,
                     flexDirection: 'row',
                   },
                 ]}
@@ -515,7 +521,7 @@ const UserInfo = ({ user, navigation, type }) => {
                       style={[
                         styles.textButton,
                         {
-                          fontSize: style.fontSize.small - 1,
+                          fontSize: fontSize[12],
                           flexWrap: 'wrap',
                           textAlign: 'center',
                         },

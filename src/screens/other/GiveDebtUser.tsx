@@ -98,12 +98,9 @@ const GiveDebtUser = () => {
   useEffect(() => {
     const lang = storage.getString('lang');
     console.log(
-      `https://pdf.zerox.uz/free_contract.php?debitor=${
-        type === 0 ? qarzoluvchi?.uid : user?.data?.uid
-      }&creditor=${
-        type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
-        active ? 'UZS' : 'USD'
+      `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid
+      }&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
+      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${active ? 'UZS' : 'USD'
       }&day=${formatDateMinus(date)}&lang=${lang}`,
     );
     getUsd();
@@ -118,13 +115,10 @@ const GiveDebtUser = () => {
   const toggleModal = () => {
     const lang = storage.getString('lang');
     navigation.navigate('Contract', {
-      url: `https://pdf.zerox.uz/free_contract.php?debitor=${
-        type === 0 ? qarzoluvchi?.uid : user?.data?.uid
-      }&creditor=${
-        type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
-        active ? 'UZS' : 'USD'
-      }&day=${formatDateMinus(date)}&lang=${lang}`,
+      url: `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid
+        }&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
+        }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${active ? 'UZS' : 'USD'
+        }&day=${formatDateMinus(date)}&lang=${lang}`,
       title: t('306'),
     });
   };
@@ -509,15 +503,15 @@ const GiveDebtUser = () => {
                     <MainText size={fontSize[12]} style={styles.username}>
                       {type !== 1
                         ? user?.data?.last_name +
-                          ' ' +
-                          user?.data?.first_name +
-                          ' ' +
-                          user?.data?.middle_name
+                        ' ' +
+                        user?.data?.first_name +
+                        ' ' +
+                        user?.data?.middle_name
                         : qarzoluvchi.last_name +
-                          ' ' +
-                          qarzoluvchi.first_name +
-                          ' ' +
-                          qarzoluvchi.middle_name}
+                        ' ' +
+                        qarzoluvchi.first_name +
+                        ' ' +
+                        qarzoluvchi.middle_name}
                     </MainText>
                   </View>
                 </View>
@@ -565,15 +559,15 @@ const GiveDebtUser = () => {
                     <MainText size={fontSize[12]} style={styles.username}>
                       {type === 0
                         ? qarzoluvchi.last_name +
-                          ' ' +
-                          qarzoluvchi.first_name +
-                          ' ' +
-                          qarzoluvchi.middle_name
+                        ' ' +
+                        qarzoluvchi.first_name +
+                        ' ' +
+                        qarzoluvchi.middle_name
                         : user?.data?.last_name +
-                          ' ' +
-                          user?.data?.first_name +
-                          ' ' +
-                          user?.data?.middle_name}
+                        ' ' +
+                        user?.data?.first_name +
+                        ' ' +
+                        user?.data?.middle_name}
                     </MainText>
                   </View>
                 </View>
@@ -622,6 +616,8 @@ const GiveDebtUser = () => {
                     alignItems: 'center',
                     marginTop: 10,
                     marginBottom: 10,
+                    maxWidth: '80%',
+                    alignSelf: "center"
                   }}
                 >
                   <CheckBox
@@ -702,7 +698,7 @@ const GiveDebtUser = () => {
                       {
                         backgroundColor:
                           disabled ||
-                          settingDate(date) === settingDate(Date.now())
+                            settingDate(date) === settingDate(Date.now())
                             ? style.disabledButtonColor
                             : style.blue,
                       },
@@ -759,15 +755,16 @@ const GiveDebtUser = () => {
           style={{
             backgroundColor: '#fff',
             alignSelf: 'center',
-            
+
           }}
-          
+
           mode="date"
           confirmText="OK"
           cancelText={t('804')}
           theme="light"
           modal={true}
           minimumDate={new Date()}
+          maximumDate={new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000)} // maximum date should be 2 years
           onCancel={() => {
             setOpen(false);
           }}
@@ -808,7 +805,7 @@ const styles = StyleSheet.create({
 
   text: {
     fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
+    fontSize: fontSize[12],
     color: style.blue,
     marginLeft: 10,
   },

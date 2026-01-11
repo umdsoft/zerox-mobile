@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   },
   phoneText: {
     fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2.5,
+    fontSize: style.fontSize.xx - 3.5,
     color: style.textColor,
   },
   hisob: {

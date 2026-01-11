@@ -22,9 +22,11 @@ const config = {
   },
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
-    jsonExts: assetExts.filter(ext => ext !== 'json'),
     sourceExts: [...sourceExts, 'svg', 'json'],
   },
+  // Performance optimizations
+  resetCache: false,
+  maxWorkers: 2,
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

@@ -74,7 +74,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
         <View style={styles.container}>
           <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
             <View>
-              <TextBold>{t('504')}</TextBold>
+              <TextBold>{t('474')}</TextBold>
             </View>
             <View style={{ marginTop: 10 }}>
               <TransText
@@ -84,8 +84,8 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                     item.dtypes === 2
                       ? ReturnName.returnCreditorName(item)
                       : item.dtypes === 1
-                      ? item.dcompany
-                      : null,
+                        ? item.dcompany
+                        : null,
                   sum: sortText(item.amount) + ' ' + item.currency,
                   id: item.number,
                   date: item.created,
@@ -261,8 +261,8 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                     item.ctypes === 2
                       ? ReturnName.returnDebitorName(item)
                       : item.ctypes === 1
-                      ? item.ccompany
-                      : null,
+                        ? item.ccompany
+                        : null,
                   sum: sortText(item.amount) + ' ' + item.currency,
                   id: item.number,
                   date: item.created,
