@@ -127,7 +127,10 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation("uz.myid.sdk.capture:myid-capture-sdk:2.4.8")
+    debugImplementation("uz.myid.sdk.capture:myid-capture-sdk-debug:3.1.4")
+    releaseImplementation("uz.myid.sdk.capture:myid-capture-sdk:3.1.4")
+
+
     implementation("androidx.biometric:biometric:1.2.0-alpha04")
     implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation 'me.leolin:ShortcutBadger:1.1.22'

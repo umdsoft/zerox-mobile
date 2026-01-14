@@ -10,8 +10,8 @@ export default class ReturnName {
    * @returns Formatted creditor name
    */
   public static returnCreditorName(item: User): string {
-    return `${item.clastName || ''} ${item.cfirstName || ''} ${
-      item.cmiddleName || ''
+    return `${item.c_last_name || ''} ${item.c_first_name || ''} ${
+      item.c_middle_name || ''
     }`.trim();
   }
 
@@ -21,8 +21,8 @@ export default class ReturnName {
    * @returns Formatted debitor name
    */
   public static returnDebitorName(item: User): string {
-    return `${item.dlastName || ''} ${item.dfirstName || ''} ${
-      item.dmiddleName || ''
+    return `${item.d_last_name || ''} ${item.d_first_name || ''} ${
+      item.d_middle_name || ''
     }`.trim();
   }
 }

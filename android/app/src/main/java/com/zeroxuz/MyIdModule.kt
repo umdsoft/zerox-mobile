@@ -71,7 +71,6 @@ class MyIdModule(private val reactContext: ReactApplicationContext) : ReactConte
         val bitmap = result.getGraphicFieldImageByType(MyIdGraphicFieldType.FacePortrait)
         val base64Image = bitmap?.let { encodeToBase64(it) }
         params.putString("code", result.code)
-        params.putDouble("comparison", result.comparison)
         params.putString("image", base64Image)
         sendEvent("onSuccess", params)
     }
@@ -115,6 +114,7 @@ class MyIdModule(private val reactContext: ReactApplicationContext) : ReactConte
                 .withEnvironment(MyIdEnvironment.Production)
                 .withCameraShape(MyIdCameraShape.Circle)
                 .build()
+
         if (reactContext.currentActivity != null) {
             myIdClient.startActivityForResult(
                 reactContext.currentActivity!!, 1, myIdConfig, this
