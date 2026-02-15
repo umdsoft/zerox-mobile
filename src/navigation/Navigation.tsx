@@ -89,7 +89,7 @@ import Types from '../screens/home/drawer/drawerScreens/Types';
 import ResetPassCode from '../screens/other/ResetPassCode';
 import UpdateLocalPassCode from '../screens/auth/UpdateLocalPassCode';
 import NewsScreen from '../screens/other/NewsScreen';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import UpdatePasswordWithJshir from '../screens/auth/UpdatePasswordWithJshir';
 import ChangePassportData from '../screens/ChangePassportData';
 
@@ -256,7 +256,7 @@ const StackNavigator = () => {
       }}
       initialRouteName={
         // 'ResetPassCode'
-        is === undefined ? 'SelectLanguageScreen' : 'SetLocalPassword'
+        is === undefined ? 'SelectLanguageScreen' : 'ScanFaceMyId'
       }
     >
       {AllNavigators.map((val, index) => {

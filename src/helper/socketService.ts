@@ -5,7 +5,6 @@ import { Store } from '../store/store/Store';
 import {
   getCreditorAndDebitorData,
   getCreditorDataAndDebitorData,
-  onGetContract,
 } from '../store/api/home';
 import {
   setChangeEndDate,
@@ -17,10 +16,66 @@ import { sortText } from '../screens/components/StatisticCard';
 import { settingDate } from '../screens/other/UserDetails';
 import { getFullName } from '../screens/home/notifications/all/QarzShartnomasiRejectTime';
 
+// TypeScript Interfaces
+interface RegisteredResponse {
+  success: boolean;
+  userId: number;
+  deviceCount: number;
+}
+
+interface SubscribedResponse {
+  success: boolean;
+  room: string;
+}
+
+interface ActiveSessionsResponse {
+  success: boolean;
+  deviceCount: number;
+  timestamp: number;
+}
+
+interface MeResponse {
+  user: UserData;
+  timestamp: number;
+}
+
+interface MeeeResponse {
+  user: UserData;
+}
+
+interface UserData {
+  id: number;
+  balance: number;
+  first_name: string;
+  last_name: string;
+}
+
+interface PongResponse {
+  timestamp: number;
+}
+
+interface ErrorResponse {
+  code: 'INVALID_USER_ID' | 'RATE_LIMIT' | 'UNAUTHORIZED';
+  message: string;
+}
+
+type SocketEventCallback<T = any> = (data: T) => void;
+
 class SocketService {
   private socket: Socket | null = null;
   private isInitialized = false;
   private isDisplayingNotification = false;
+  private userId: string | null = null;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private deviceCount = 0;
+
+  // Callbacks for external listeners
+  public onRegistered: SocketEventCallback<RegisteredResponse> | null = null;
+  public onUserDataUpdate: SocketEventCallback<MeeeResponse> | null = null;
+  public onActiveSessionsUpdate: SocketEventCallback<ActiveSessionsResponse> | null =
+    null;
+  public onError: SocketEventCallback<ErrorResponse> | null = null;
+  public onConnectionChange: ((connected: boolean) => void) | null = null;
 
   async init(id: string): Promise<void> {
     console.log('Initializing socket with id:', id);
@@ -38,18 +93,19 @@ class SocketService {
       return;
     }
 
-    // Use port 5000 for local dev, remove port for production if proxied to 443
+    this.userId = id;
+
     const socketUrl = 'https://app.zerox.uz';
 
     this.socket = io(socketUrl, {
       autoConnect: false,
       timeout: 20000,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      transports: ['websocket', 'polling'],
       secure: false,
-
-      // Remove in production if SSL is configured correctly
       rejectUnauthorized: false,
       query: {
         token,
@@ -59,9 +115,11 @@ class SocketService {
 
     this.isInitialized = true;
 
+    // Connection events
     this.socket.on('connect', () => {
       console.log('Socket connected:', this.socket?.id);
-      // this.initSubscribeWithId(Store.getState().HomeReducer.user?.data?.id);
+      this.onConnectionChange?.(true);
+      this.startPingInterval();
     });
 
     this.socket.on('connect_error', error => {
@@ -70,13 +128,35 @@ class SocketService {
 
     this.socket.on('disconnect', reason => {
       console.log('Socket disconnected:', reason);
-      this.isInitialized = reason === 'io client disconnect';
+      this.onConnectionChange?.(false);
+      this.stopPingInterval();
+      if (reason === 'io client disconnect') {
+        this.isInitialized = false;
+      }
     });
+
+    // Reconnection events
+    this.socket.io.on('reconnect', (attemptNumber: number) => {
+      console.log('Reconnected after', attemptNumber, 'attempts');
+      if (this.userId) {
+        this.initSubscribeWithId(this.userId);
+      }
+    });
+
+    this.socket.io.on('reconnect_attempt', (attemptNumber: number) => {
+      console.log('Reconnecting... Attempt:', attemptNumber);
+    });
+
+    this.socket.io.on('reconnect_error', (error: Error) => {
+      console.error('Reconnection error:', error.message);
+    });
+
+    // Server events
+    this.setupServerEventListeners();
 
     // Initialize real-time listener
     await this.onRealTime();
-    // this.onMeChange();
-    // this.getNotifcations();
+    this.onMeChange();
     await this.reciveNotification();
   }
 
@@ -105,13 +185,23 @@ class SocketService {
   }
 
   restart(): void {
-    if (this.socket?.connected) {
+    if (!this.socket) {
       console.warn('Cannot restart: socket not initialized');
-      this.socket.disconnect();
       return;
-    } else {
-      // this.initSubscribeWithId(Store.getState().HomeReducer.user?.data?.id);
-      this.socket!.connect();
+    }
+
+    if (this.socket.connected) {
+      console.log('Socket already connected, disconnecting first...');
+      this.socket.disconnect();
+    }
+
+    this.socket.connect();
+
+    // Re-register after connection
+    if (this.userId) {
+      this.socket.once('connect', () => {
+        this.initSubscribeWithId(this.userId!);
+      });
     }
   }
 
@@ -126,25 +216,140 @@ class SocketService {
     });
   }
   private onMeChange(): void {
-    this.on('meee', data => {
+    this.on('meee', (data: MeeeResponse) => {
       console.log('meChange received:', data);
+      this.onUserDataUpdate?.(data);
     });
+  }
+
+  private setupServerEventListeners(): void {
+    if (!this.socket) return;
+
+    // Initial connection confirmation
+    this.socket.on('socket', (data: string) => {
+      console.log('Socket event received:', data);
+    });
+
+    // Registration confirmation
+    this.socket.on('registered', (data: RegisteredResponse) => {
+      console.log('Registered:', data);
+      this.deviceCount = data.deviceCount;
+      this.onRegistered?.(data);
+    });
+
+    // Subscription confirmation
+    this.socket.on('subscribed', (data: SubscribedResponse) => {
+      console.log('Subscribed to room:', data.room);
+    });
+
+    // Active sessions response
+    this.socket.on('active_sessions', (data: ActiveSessionsResponse) => {
+      console.log('Active sessions:', data.deviceCount);
+      this.deviceCount = data.deviceCount;
+      this.onActiveSessionsUpdate?.(data);
+    });
+
+    // User data response
+    this.socket.on('me', (data: MeResponse) => {
+      console.log('Me response:', data);
+      this.onUserDataUpdate?.({ user: data.user });
+    });
+
+    // Pong response
+    this.socket.on('pong', (data: PongResponse) => {
+      console.log('Pong received, server timestamp:', data.timestamp);
+    });
+
+    // Error handling
+    this.socket.on('error', (error: ErrorResponse) => {
+      console.error('Socket error:', error.code, error.message);
+      this.onError?.(error);
+      this.handleSocketError(error);
+    });
+  }
+
+  private handleSocketError(error: ErrorResponse): void {
+    switch (error.code) {
+      case 'INVALID_USER_ID':
+        console.error('Invalid user ID - re-authentication required');
+        break;
+      case 'RATE_LIMIT':
+        console.warn('Rate limit exceeded - reducing request frequency');
+        break;
+      case 'UNAUTHORIZED':
+        console.error('Unauthorized - login required');
+        break;
+      default:
+        console.error('Unknown socket error:', error);
+    }
+  }
+
+  private startPingInterval(): void {
+    this.stopPingInterval();
+    // Send ping every 30 seconds
+    this.pingInterval = setInterval(() => {
+      this.ping();
+    }, 30000);
+  }
+
+  private stopPingInterval(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+  }
+
+  ping(): void {
+    if (!this.socket?.connected) {
+      console.warn('Cannot ping: socket not connected');
+      return;
+    }
+    this.socket.emit('ping');
+  }
+
+  requestUserData(): void {
+    if (!this.socket?.connected || !this.userId) {
+      console.warn(
+        'Cannot request user data: socket not connected or no user ID',
+      );
+      return;
+    }
+    this.socket.emit('me', { id: Number(this.userId) });
+  }
+
+  getActiveSessions(): void {
+    if (!this.socket?.connected || !this.userId) {
+      console.warn(
+        'Cannot get active sessions: socket not connected or no user ID',
+      );
+      return;
+    }
+    this.socket.emit('active_sessions', { userId: Number(this.userId) });
+  }
+
+  subscribe(userId?: string): void {
+    const id = userId || this.userId;
+    if (!this.socket?.connected || !id) {
+      console.warn('Cannot subscribe: socket not connected or no user ID');
+      return;
+    }
+    this.socket.emit('subscribe', { uid: Number(id) });
+  }
+
+  getDeviceCount(): number {
+    return this.deviceCount;
   }
 
   disconnect(): void {
     if (this.socket) {
+      this.stopPingInterval();
       this.socket.disconnect();
       this.socket = null;
       this.isInitialized = false;
+      this.userId = null;
+      this.deviceCount = 0;
       console.log('Socket service disconnected and reset');
     }
-  }
-
-  private getNotifcations() {
-    socketService.on('notification', data => {
-      console.log('Notification received:', data);
-      Store.dispatch(setNotification({ notification: data.not }));
-    });
   }
 
   async off(event: string, cb?: (data: any) => void): Promise<void> {

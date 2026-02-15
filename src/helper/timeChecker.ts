@@ -82,6 +82,7 @@ export const checkPhoneTime = async (): Promise<boolean> => {
         Connection: 'close',
       },
     });
+    console.log('Server time response:', data);
     const [datePart, timePart] = data.data.split(', ');
     const [day, month, year] = datePart.split('/').map(Number);
     const [hours, minutes, seconds] = timePart.split(':').map(Number);

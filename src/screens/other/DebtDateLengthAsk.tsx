@@ -147,7 +147,10 @@ const DebtDateLengthAsk = () => {
         //   dispatch(setNotification({notification: data.not}));
         // });
         setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'BottomTabNavigator' as never }],
+          });
           setLoading1(false);
         }, 2000);
         return;
@@ -337,6 +340,13 @@ const DebtDateLengthAsk = () => {
           // add one day to info.end_date
           // i have to check to here leta is bigger than today i need to get that otherwise i will take today
           minimumDate={new Date(minimumDate(info?.end_date))}
+          maximumDate={
+            new Date(
+              new Date(plus_day(item?.end_date)).setFullYear(
+                new Date(plus_day(item?.end_date)).getFullYear() + 2,
+              ),
+            )
+          }
           onCancel={() => {
             setOpen(false);
           }}

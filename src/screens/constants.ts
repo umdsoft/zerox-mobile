@@ -1,10 +1,13 @@
-import {io} from 'socket.io-client';
-import {sortText} from './components/StatisticCard';
-import {settingDate} from './other/UserDetails';
-import {t} from 'i18next';
+import { io } from 'socket.io-client';
+import { sortText } from './components/StatisticCard';
+import { settingDate } from './other/UserDetails';
+import { t } from 'i18next';
 
-const URL = 'https://app.zerox.uz/api/v1';
-export const SOCKET_URL = 'http://app.zerox.uz';
+// const URL = 'https://app.zerox.uz/api/v1';
+const URL = 'https://trembl-racks-advised-sandy.trycloudflare.com/api/v1';
+// export const SOCKET_URL = 'http://app.zerox.uz';
+export const SOCKET_URL =
+  'https://trembl-racks-advised-sandy.trycloudflare.com';
 export const socket = io(SOCKET_URL, {
   timeout: 5000,
 });
@@ -12,7 +15,7 @@ export const socket = io(SOCKET_URL, {
 const createStatus = 201;
 const errorStatus = 400;
 const successStatus = 200;
-export {URL, createStatus, errorStatus, successStatus};
+export { URL, createStatus, errorStatus, successStatus };
 
 const htmlStyle = `<head>
 <meta charset="UTF-8">

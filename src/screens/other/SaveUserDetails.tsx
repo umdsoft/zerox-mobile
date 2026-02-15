@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,15 +15,14 @@ import { URL } from '../constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { storage } from '../../store/api/token/getToken';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { toastConfig } from '../components/ToastConfig';
-import BackgroundTimer from 'react-native-background-timer';
+
 import AskPermission from '../../images/AskPermissonIcon';
 import AskPermissionNearby from '../../images/AskPermissonNearby';
 import EyeIcon from '../../images/Eye';
 
-import { checkExpire, setNotification } from '../../store/reducers/HomeReducer';
+import { checkExpire } from '../../store/reducers/HomeReducer';
 import { t } from 'i18next';
-import socketService from '../../helper/socketService';
+
 import { expire_passport_check } from '../../helper/timeChecker';
 
 const UserInfo = () => {
@@ -311,7 +310,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     paddingLeft: 10,
     justifyContent: 'center',
-    fontSize: style.fontSize.xx,
+    fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,
     textTransform: 'uppercase',

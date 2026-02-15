@@ -27,16 +27,25 @@ class MyIdModule: RCTEventEmitter {
   }
 
   @objc
-  func startMyId() {
+  func startMyId(sessionId: String, lang: String) {
+    let setlang: MyIdLocale
+
+    if lang == "uz" {
+      setlang = .uzbek
+    } else if lang == "ru" {
+      setlang = .russian
+    } else {
+      setlang = .english
+    }
+
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-      
       let config = MyIdConfig()
-      config.sessionId = "zerox_sdk-FQEPbkzGnIZrejYj6AHdXRsWIywt9lcRiDZDhXJC"
+      config.sessionId = sessionId
       config.clientHash = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB"
       config.clientHashId = "7b4507ca-9b70-4e92-8bfe-767db25a0be2"
       config.environment = .production
       config.cameraShape = .circle
-      config.locale = .uzbek
+      config.locale = setlang
       MyIdClient.start(withConfig: config, withDelegate: self)
     }
   }
@@ -46,12 +55,12 @@ extension MyIdModule: MyIdClientDelegate {
   func onEvent(event: MyIdSDK.MyIdEvent) {
     print("event")
   }
-  
+
   func onSuccess(result: MyIdResult) {
     if let image = result.image {
       if let imageData = image.jpegData(compressionQuality: 1) { // Compression quality can be adjusted
         let base64String = imageData.base64EncodedString(options: .lineLength64Characters)
-        //"comparison": result.comparisonValue,
+        // "comparison": result.comparisonValue,
         sendEvent(withName: "onSuccess", body: ["code": result.code, "image": base64String])
       } else {
         // Handle failure to get image data
@@ -64,6 +73,7 @@ extension MyIdModule: MyIdClientDelegate {
   }
 
   func onError(exception: MyIdSDK.MyIdException) {
+    print(exception.message)
     sendEvent(
       withName: "onError",
       body: [

@@ -1,5 +1,5 @@
 import {
-  Alert,
+  ActivityIndicator,
   DeviceEventEmitter,
   NativeEventEmitter,
   NativeModules,
@@ -9,25 +9,25 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import LottieView from 'lottie-react-native';
-import {normalize, style} from '../theme/style';
-import {androidFace, iosFace} from '../nativemodule/android.event';
+import { normalize, style } from '../theme/style';
+import { androidFace, iosFace } from '../nativemodule/android.event';
 import OtherHeader from './components/OtherHeader';
-import {storage} from '../store/api/token/getToken';
+import { storage } from '../store/api/token/getToken';
 import axios from 'axios';
 
-import {useDispatch} from 'react-redux';
-import {HomeApi, getMe} from '../store/api/home';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {contractModalShow} from '../store/reducers/HomeReducer';
-import {useTranslation} from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { HomeApi, getMe } from '../store/api/home';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
+import { contractModalShow } from '../store/reducers/HomeReducer';
+import { useTranslation } from 'react-i18next';
 import Loading from './components/Loading';
-import {t} from 'i18next';
-import {URL} from './constants';
+import { t } from 'i18next';
+import { URL } from './constants';
 
 const returnMessage = response => {
   switch (response.data.code) {
@@ -147,8 +147,43 @@ const returnMessage = response => {
 const ScanFaceMyId = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {i18n} = useTranslation();
+  const { i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+
+  const getSessionId = useCallback(async () => {
+    let token = storage.getString('token');
+    try {
+      setLoading2(true);
+      const response = await axios.post(
+        URL + '/user/myid/session',
+        {
+          method: 'face',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Connection: 'close',
+          },
+        },
+      );
+
+      console.log(response.data, 'session id');
+
+      if (response.data.success) {
+        return response.data.data.session_id;
+      } else {
+        console.log(response.data.msg, 'response');
+      }
+    } catch (err) {
+      console.log(JSON.stringify(err, null, 2), 'error');
+      returnMessage(err.response);
+    } finally {
+      setLoading2(false);
+    }
+  }, []);
+
   const Indentificator = useCallback(async () => {
     const nativeEvent = new NativeEventEmitter(NativeModules.MyIdModule);
 
@@ -176,10 +211,10 @@ const ScanFaceMyId = () => {
               navigation.navigate('BottomTabNavigator');
             } else {
               setLoading(false);
-              dispatch(HomeApi({page: 1}));
+              dispatch(HomeApi({ page: 1 }));
               navigation.navigate('BottomTabNavigator');
               setTimeout(() => {
-                dispatch(contractModalShow({show: true}));
+                dispatch(contractModalShow({ show: true }));
               }, 1000);
             }
           });
@@ -274,7 +309,8 @@ const ScanFaceMyId = () => {
       style={{
         flex: 1,
         backgroundColor: '#fff',
-      }}>
+      }}
+    >
       <OtherHeader
         title={t('otish')}
         backgroundColor={style.blue}
@@ -294,29 +330,41 @@ const ScanFaceMyId = () => {
           }}
         />
 
-        <Text style={styles.text} allowFontScaling={false}>{t('753')}</Text>
+        <Text style={styles.text} allowFontScaling={false}>
+          {t('753')}
+        </Text>
       </View>
       <TouchableOpacity
+        disabled={loading2}
         activeOpacity={0.8}
         onPress={() => {
-          Platform.OS === 'android'
-            ? androidFace(
-                i18n.language.toString() === 'uz' ||
-                  i18n.language.toString() === 'kril'
-                  ? 'uz'
-                  : 'ru',
-              )
-            : iosFace();
+          getSessionId().then(session_id => {
+            try {
+              if (Platform.OS === 'android') {
+                androidFace(session_id, i18n.language);
+              } else {
+                iosFace(session_id, i18n.language);
+              }
+            } catch (error) {
+              console.log(error, 'face error');
+            }
+          });
         }}
-        style={[styles.enterButton]}>
-        <Text
-          style={[
-            styles.enterText,
-            {color: '#fff', fontFamily: style.fontFamilyMedium},
-          ]}
-          allowFontScaling={false}>
-          {t('45')}
-        </Text>
+        style={[styles.enterButton]}
+      >
+        {loading2 ? (
+          <ActivityIndicator color="#fff" size={'small'} />
+        ) : (
+          <Text
+            style={[
+              styles.enterText,
+              { color: '#fff', fontFamily: style.fontFamilyMedium },
+            ]}
+            allowFontScaling={false}
+          >
+            {t('45')}
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -332,7 +380,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   text: {
-    fontSize: style.fontSize.xx,
+    fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: '#000',
     marginTop: 20,
@@ -350,7 +398,7 @@ const styles = StyleSheet.create({
   },
   enterText: {
     fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xs,
+    fontSize: style.fontSize.xx - 1,
     color: style.textColor,
   },
 });

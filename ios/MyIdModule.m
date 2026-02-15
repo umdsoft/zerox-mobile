@@ -13,10 +13,10 @@
 
 RCT_EXTERN_METHOD(startMyId)
 
-//RCT_EXTERN_METHOD(startMyId:
-//  (NSString *) clientId
-//  (NSString *) passportData
+RCT_EXTERN_METHOD(startMyId:
+  (NSString *) sessionId
+  (NSString *) lang
 //  (NSString *) dateOfBirth
-//)
+)
 
 @end

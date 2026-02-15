@@ -98,9 +98,12 @@ const GiveDebtUser = () => {
   useEffect(() => {
     const lang = storage.getString('lang');
     console.log(
-      `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid
-      }&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${active ? 'UZS' : 'USD'
+      `https://pdf.zerox.uz/free_contract.php?debitor=${
+        type === 0 ? qarzoluvchi?.uid : user?.data?.uid
+      }&creditor=${
+        type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
+      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
+        active ? 'UZS' : 'USD'
       }&day=${formatDateMinus(date)}&lang=${lang}`,
     );
     getUsd();
@@ -115,10 +118,13 @@ const GiveDebtUser = () => {
   const toggleModal = () => {
     const lang = storage.getString('lang');
     navigation.navigate('Contract', {
-      url: `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid
-        }&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-        }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${active ? 'UZS' : 'USD'
-        }&day=${formatDateMinus(date)}&lang=${lang}`,
+      url: `https://pdf.zerox.uz/free_contract.php?debitor=${
+        type === 0 ? qarzoluvchi?.uid : user?.data?.uid
+      }&creditor=${
+        type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
+      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
+        active ? 'UZS' : 'USD'
+      }&day=${formatDateMinus(date)}&lang=${lang}`,
       title: t('306'),
     });
   };
@@ -390,13 +396,13 @@ const GiveDebtUser = () => {
     return (
       <View style={{ flex: 1 }}>
         <TextInput
+          allowFontScaling={false}
           value={onValue(amount)}
           placeholder={active ? 'UZS' : 'USD'}
           placeholderTextColor={style.placeHolderColor}
           keyboardType="numeric"
           onChangeText={text => {
             let a = Number(text.replace(/[^0-9]/g, ''));
-            console.log(a, 'asdsad');
             if (a > 0) {
               setAmount(a.toString());
             } else {
@@ -503,15 +509,15 @@ const GiveDebtUser = () => {
                     <MainText size={fontSize[12]} style={styles.username}>
                       {type !== 1
                         ? user?.data?.last_name +
-                        ' ' +
-                        user?.data?.first_name +
-                        ' ' +
-                        user?.data?.middle_name
+                          ' ' +
+                          user?.data?.first_name +
+                          ' ' +
+                          user?.data?.middle_name
                         : qarzoluvchi.last_name +
-                        ' ' +
-                        qarzoluvchi.first_name +
-                        ' ' +
-                        qarzoluvchi.middle_name}
+                          ' ' +
+                          qarzoluvchi.first_name +
+                          ' ' +
+                          qarzoluvchi.middle_name}
                     </MainText>
                   </View>
                 </View>
@@ -559,15 +565,15 @@ const GiveDebtUser = () => {
                     <MainText size={fontSize[12]} style={styles.username}>
                       {type === 0
                         ? qarzoluvchi.last_name +
-                        ' ' +
-                        qarzoluvchi.first_name +
-                        ' ' +
-                        qarzoluvchi.middle_name
+                          ' ' +
+                          qarzoluvchi.first_name +
+                          ' ' +
+                          qarzoluvchi.middle_name
                         : user?.data?.last_name +
-                        ' ' +
-                        user?.data?.first_name +
-                        ' ' +
-                        user?.data?.middle_name}
+                          ' ' +
+                          user?.data?.first_name +
+                          ' ' +
+                          user?.data?.middle_name}
                     </MainText>
                   </View>
                 </View>
@@ -617,7 +623,7 @@ const GiveDebtUser = () => {
                     marginTop: 10,
                     marginBottom: 10,
                     maxWidth: '80%',
-                    alignSelf: "center"
+                    alignSelf: 'center',
                   }}
                 >
                   <CheckBox
@@ -658,7 +664,11 @@ const GiveDebtUser = () => {
                       }}
                     />
                   </Text> */}
-                  <Text onPress={toggleModal} style={styles.text}>
+                  <Text
+                    allowFontScaling={false}
+                    onPress={toggleModal}
+                    style={styles.text}
+                  >
                     {t('282') as string}
                   </Text>
                   {/* <MainText size={fontSize[12]}>bilan tanishdim</MainText> */}
@@ -698,7 +708,7 @@ const GiveDebtUser = () => {
                       {
                         backgroundColor:
                           disabled ||
-                            settingDate(date) === settingDate(Date.now())
+                          settingDate(date) === settingDate(Date.now())
                             ? style.disabledButtonColor
                             : style.blue,
                       },
@@ -755,9 +765,7 @@ const GiveDebtUser = () => {
           style={{
             backgroundColor: '#fff',
             alignSelf: 'center',
-
           }}
-
           mode="date"
           confirmText="OK"
           cancelText={t('804')}
@@ -805,7 +813,7 @@ const styles = StyleSheet.create({
 
   text: {
     fontFamily: style.fontFamilyMedium,
-    fontSize: fontSize[12],
+    fontSize: 14,
     color: style.blue,
     marginLeft: 10,
   },
@@ -905,7 +913,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     justifyContent: 'center',
     fontFamily: style.fontFamilyMedium,
-    fontSize: fontSize[14],
+    fontSize: fontSize[13],
     color: style.textColor,
   },
   buttontime: {

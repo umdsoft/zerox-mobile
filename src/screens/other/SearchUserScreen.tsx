@@ -206,6 +206,7 @@ const SearchUserScreen = () => {
                           value={userID}
                           placeholder="100000/AA"
                           autoCapitalize="characters"
+                          allowFontScaling={false}
                           onChangeText={(formatted, extracted) => {
                             setUserID(extracted.toUpperCase());
                           }}
@@ -421,6 +422,7 @@ const UserInfo = ({ user, navigation, type }) => {
                     multiline={true}
                     placeholderTextColor={style.placeHolderColor}
                     editable={false}
+                    allowFontScaling={false}
                     keyboardType="default"
                     style={[
                       styles.TextInput,
@@ -444,6 +446,7 @@ const UserInfo = ({ user, navigation, type }) => {
                     value={user?.uid}
                     multiline={true}
                     editable={false}
+                    allowFontScaling={false}
                     keyboardType="default"
                     style={[
                       styles.TextInput,
@@ -465,10 +468,10 @@ const UserInfo = ({ user, navigation, type }) => {
                 {resolve
                   ? t('246')
                   : reject
-                    ? t('258')
-                    : !active
-                      ? t('219')
-                      : t('231')}
+                  ? t('258')
+                  : !active
+                  ? t('219')
+                  : t('231')}
               </MainText>
               <TouchableOpacity
                 disabled={active && first}
@@ -483,8 +486,8 @@ const UserInfo = ({ user, navigation, type }) => {
                       active && first
                         ? style.disabledButtonColor
                         : resolve
-                          ? '#48BB78'
-                          : style.blue,
+                        ? '#48BB78'
+                        : style.blue,
                     flexDirection: 'row',
                   },
                 ]}

@@ -148,8 +148,7 @@ const DebtDateLength = () => {
       });
     }
   };
-  console.log('sadasds');
-  // console.log(JSON.stringify(checkingDate(item.end_date), null, 2));
+
   return (
     <View style={styles.container}>
       <View
@@ -175,7 +174,11 @@ const DebtDateLength = () => {
                   <View style={styles.insideMoney}>
                     {/* //360 */}
                     <Text
-                      style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                      allowFontScaling={false}
+                      style={[
+                        styles.hisob,
+                        { fontSize: style.fontSize.xx - 1 },
+                      ]}
                     >
                       <Trans
                         t={t}
@@ -191,6 +194,7 @@ const DebtDateLength = () => {
                           ),
                           count: (
                             <Text
+                              allowFontScaling={false}
                               onPress={() => {
                                 navigation.navigate('DownloadStatistic', {
                                   item: info,
@@ -346,6 +350,13 @@ const DebtDateLength = () => {
           setOpen(false);
         }}
         title={t('801')}
+        maximumDate={
+          new Date(
+            new Date(plus_day(item?.end_date)).setFullYear(
+              new Date(plus_day(item?.end_date)).getFullYear() + 2,
+            ),
+          )
+        } // from now to two years
         onConfirm={date => {
           setDate(date);
           setOpen(false);
