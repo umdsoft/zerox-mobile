@@ -256,7 +256,9 @@ const StackNavigator = () => {
       }}
       initialRouteName={
         // 'ResetPassCode'
-        is === undefined ? 'SelectLanguageScreen' : 'ScanFaceMyId'
+        //ScanFaceMyId
+        //SetLocalPassword
+        is === undefined ? 'SelectLanguageScreen' : 'SetLocalPassword'
       }
     >
       {AllNavigators.map((val, index) => {

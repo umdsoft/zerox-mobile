@@ -4,10 +4,9 @@ import { settingDate } from './other/UserDetails';
 import { t } from 'i18next';
 
 // const URL = 'https://app.zerox.uz/api/v1';
-const URL = 'https://trembl-racks-advised-sandy.trycloudflare.com/api/v1';
+const URL = 'https://tb.zerox.uz/api/v1';
 // export const SOCKET_URL = 'http://app.zerox.uz';
-export const SOCKET_URL =
-  'https://trembl-racks-advised-sandy.trycloudflare.com';
+export const SOCKET_URL = 'https://tb.zerox.uz';
 export const socket = io(SOCKET_URL, {
   timeout: 5000,
 });

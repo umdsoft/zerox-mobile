@@ -1,21 +1,17 @@
 import {
   ActivityIndicator,
-  DeviceEventEmitter,
-  NativeEventEmitter,
-  NativeModules,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useNavigation } from '@react-navigation/native';
 
 import LottieView from 'lottie-react-native';
 import { normalize, style } from '../theme/style';
-import { androidFace, iosFace } from '../nativemodule/android.event';
+
 import OtherHeader from './components/OtherHeader';
 import { storage } from '../store/api/token/getToken';
 import axios from 'axios';
@@ -28,6 +24,12 @@ import { useTranslation } from 'react-i18next';
 import Loading from './components/Loading';
 import { t } from 'i18next';
 import { URL } from './constants';
+import {
+  MyIdCameraShape,
+  MyIdEnvironment,
+  MyIdLocale,
+  useMyId,
+} from 'react-native-nitro-myid';
 
 const returnMessage = response => {
   switch (response.data.code) {
@@ -145,6 +147,7 @@ const returnMessage = response => {
 };
 
 const ScanFaceMyId = () => {
+  const { start } = useMyId();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { i18n } = useTranslation();
@@ -153,6 +156,7 @@ const ScanFaceMyId = () => {
 
   const getSessionId = useCallback(async () => {
     let token = storage.getString('token');
+    console.log(token, 'asdsa');
     try {
       setLoading2(true);
       const response = await axios.post(
@@ -172,7 +176,7 @@ const ScanFaceMyId = () => {
       console.log(response.data, 'session id');
 
       if (response.data.success) {
-        return response.data.data.session_id;
+        return response.data.sessionId;
       } else {
         console.log(response.data.msg, 'response');
       }
@@ -184,10 +188,8 @@ const ScanFaceMyId = () => {
     }
   }, []);
 
-  const Indentificator = useCallback(async () => {
-    const nativeEvent = new NativeEventEmitter(NativeModules.MyIdModule);
-
-    const postData = async data => {
+  const Indentificator = useCallback(
+    async data => {
       let token = storage.getString('token');
       try {
         const form = new FormData();
@@ -201,6 +203,8 @@ const ScanFaceMyId = () => {
             Connection: 'close',
           },
         });
+
+        console.log(response.data, 'activate');
 
         if (response.data.success) {
           setLoading(true);
@@ -220,7 +224,7 @@ const ScanFaceMyId = () => {
           });
         } else {
           console.log(response.data.msg, 'response');
-          response.data.msg === 'user-is-active'
+          response.data.msg === 'user-isActive'
             ? Toast.show({
                 autoHide: true,
                 visibilityTime: 3000,
@@ -245,61 +249,57 @@ const ScanFaceMyId = () => {
               });
         }
       } catch (err) {
+        console.log(JSON.stringify(err, null, 2), 'errorasdas');
         returnMessage(err.response);
       }
-    };
-    if (Platform.OS === 'android') {
-      DeviceEventEmitter.addListener('onSuccess', async data => {
-        console.log('success');
-        postData(data);
-      });
-      DeviceEventEmitter.addListener('onError', data => {
-        console.log(data, 'error face');
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            // title: 'Xatolik',
-            desc: t('Xatolik!'),
-          },
-        });
-      });
-    }
-    if (Platform.OS === 'ios') {
-      nativeEvent.addListener('onSuccess', data => {
-        console.log(data, 'data');
-        postData(data);
-      });
-      nativeEvent.addListener('onError', data => {
-        console.log(data, 'errorr');
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            // title: 'Xatolik',
-            desc: t(data.message),
-          },
-        });
-      });
-      nativeEvent.addListener('onUserExited', data => {
-        console.log(data, 'user find');
-      });
-    }
-  }, [dispatch, navigation]);
+    },
+    [dispatch, navigation],
+  );
 
-  useEffect(() => {
-    Indentificator();
+  const onHandlePostData = useCallback(async () => {
+    const resp = await getSessionId();
+    console.log(resp, 'session id');
 
-    return () => {
-      DeviceEventEmitter.removeAllListeners('onSuccess');
-      DeviceEventEmitter.removeAllListeners('onError');
-      DeviceEventEmitter.removeAllListeners('onUserExited');
-    };
-  }, [Indentificator]);
+    const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
+
+    if (resp) {
+      try {
+        start(
+          {
+            sessionId: resp,
+            clientHash:
+              'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
+            clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
+            environment: MyIdEnvironment.PRODUCTION,
+            cameraShape: MyIdCameraShape.ELLIPSE,
+            locale: lang,
+          },
+          {
+            onSuccess: data => {
+              Indentificator(data);
+            },
+            onError: err => {
+              console.log('myid error', err);
+              Toast.show({
+                autoHide: true,
+                visibilityTime: 3000,
+                position: 'bottom',
+                type: 'error2',
+                props: {
+                  // title: 'Xatolik',
+                  desc: t('Xatolik!'),
+                },
+              });
+            },
+            onUserExited: () => {},
+          },
+        );
+      } catch (error) {
+        console.log(error, 'face error');
+      }
+    }
+  }, [Indentificator, getSessionId, i18n.language, start]);
+
   if (loading) {
     return <Loading />;
   }
@@ -337,19 +337,7 @@ const ScanFaceMyId = () => {
       <TouchableOpacity
         disabled={loading2}
         activeOpacity={0.8}
-        onPress={() => {
-          getSessionId().then(session_id => {
-            try {
-              if (Platform.OS === 'android') {
-                androidFace(session_id, i18n.language);
-              } else {
-                iosFace(session_id, i18n.language);
-              }
-            } catch (error) {
-              console.log(error, 'face error');
-            }
-          });
-        }}
+        onPress={onHandlePostData}
         style={[styles.enterButton]}
       >
         {loading2 ? (

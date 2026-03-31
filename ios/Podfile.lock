@@ -216,6 +216,66 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - NitroModules (0.33.9):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
+  - NitroMyid (0.1.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - MyIdSDK (~> 3.1.3)
+    - NitroModules
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
@@ -3311,7 +3371,8 @@ DEPENDENCIES:
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - HtmlToPdf (from `../node_modules/react-native-html-to-pdf`)
   - lottie-react-native (from `../node_modules/lottie-react-native`)
-  - MyIdSDK (~> 3.1.3)
+  - NitroModules (from `../node_modules/react-native-nitro-modules`)
+  - NitroMyid (from `../node_modules/react-native-nitro-myid`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
@@ -3458,6 +3519,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-html-to-pdf"
   lottie-react-native:
     :path: "../node_modules/lottie-react-native"
+  NitroModules:
+    :path: "../node_modules/react-native-nitro-modules"
+  NitroMyid:
+    :path: "../node_modules/react-native-nitro-myid"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3682,6 +3747,8 @@ SPEC CHECKSUMS:
   lottie-react-native: d2b7601b28c063bde347fac764166b5362037846
   MyIdSDK: 91a3ec894152550990a1ae0f758b3f6cc7aceeae
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  NitroModules: 18e41c298d86fc753fc754969fa9f84044e70711
+  NitroMyid: c5eb0382902278a778d6c669e019c310e1753bb5
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
@@ -3784,6 +3851,6 @@ SPEC CHECKSUMS:
   VisionCamera: 30b358b807324c692064f78385e9a732ce1bebfe
   Yoga: 9b30b783a17681321b52ac507a37219d7d795ace
 
-PODFILE CHECKSUM: 099b1fb609c39b317ea8d80fb38a601916280965
+PODFILE CHECKSUM: 687b4dac914a7849ffb44dcb66a79ecc1c0d8ece
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
