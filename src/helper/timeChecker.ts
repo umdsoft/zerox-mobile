@@ -2,7 +2,6 @@ import { t } from 'i18next';
 import { logDebug } from '@src/log';
 import Toast from 'react-native-toast-message';
 import { URL } from '../screens/constants';
-import axios from 'axios';
 
 const MAX_ALLOWED_DIFF_MS = 10 * 60 * 60 * 1000; // 24 hours in milliseconds
 // 4 hours
@@ -77,12 +76,13 @@ export const getTimeLeft = (deadline: string): string => {
 export const checkPhoneTime = async (): Promise<boolean> => {
   try {
     const deviceDate = new Date();
-    const { data, status } = await axios.get(URL + '/dashboard/get-time', {
+    const response = await fetch(URL + '/dashboard/get-time', {
       headers: {
         Connection: 'close',
       },
+      method: 'GET',
     });
-    console.log('Server time response:', data);
+    const data = await response.json();
     const [datePart, timePart] = data.data.split(', ');
     const [day, month, year] = datePart.split('/').map(Number);
     const [hours, minutes, seconds] = timePart.split(':').map(Number);

@@ -22,7 +22,7 @@ import { t } from 'i18next';
 
 const UpdatePassword = () => {
   const navigation = useNavigation();
-  const { user } = useRoute().params;
+  const { user, token } = useRoute().params;
 
   const [value, setValue] = useState('');
   const [confirmValue, setConfirmValue] = useState('');
@@ -66,10 +66,14 @@ const UpdatePassword = () => {
         },
         {
           headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
             Connection: 'close',
           },
         },
       );
+
+      console.log(response, 'asdsad');
 
       if (response.data.success) {
         Toast.show({
@@ -107,6 +111,7 @@ const UpdatePassword = () => {
         setLoading(false);
       }
     } catch (error) {
+      console.log(error, 'error');
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
@@ -120,7 +125,7 @@ const UpdatePassword = () => {
     } finally {
       setLoading(false);
     }
-  }, [value, navigation]);
+  }, [user.pinfl, value, navigation, token]);
 
   const renderValidation = useMemo(
     () => (

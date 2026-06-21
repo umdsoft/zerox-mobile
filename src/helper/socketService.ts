@@ -123,7 +123,7 @@ class SocketService {
     });
 
     this.socket.on('connect_error', error => {
-      console.error('Connection error:', error.message);
+      // console.error('Connection error:', error.message);
     });
 
     this.socket.on('disconnect', reason => {
@@ -137,18 +137,18 @@ class SocketService {
 
     // Reconnection events
     this.socket.io.on('reconnect', (attemptNumber: number) => {
-      console.log('Reconnected after', attemptNumber, 'attempts');
+      // console.log('Reconnected after', attemptNumber, 'attempts');
       if (this.userId) {
         this.initSubscribeWithId(this.userId);
       }
     });
 
     this.socket.io.on('reconnect_attempt', (attemptNumber: number) => {
-      console.log('Reconnecting... Attempt:', attemptNumber);
+      // console.log('Reconnecting... Attempt:', attemptNumber);
     });
 
     this.socket.io.on('reconnect_error', (error: Error) => {
-      console.error('Reconnection error:', error.message);
+      // console.error('Reconnection error:', error.message);
     });
 
     // Server events

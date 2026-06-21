@@ -355,6 +355,8 @@ const getNotificationWithPage = createAsyncThunk(
         },
       );
 
+      console.log(data, 'dasda');
+
       return {
         notification: data,
       };

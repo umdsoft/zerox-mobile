@@ -1,28 +1,27 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
-import React, { useCallback, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { normalize, style } from '../../../theme/style';
-import ResetPassword from '../../../images/RecoveryPassword';
+import i18n from '@src/i18n';
 import axios from 'axios';
+import { t } from 'i18next';
+import React, { useCallback, useState } from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Modal } from 'react-native-paper';
+import Toast from 'react-native-toast-message';
+import { checkPhoneTime } from '../../../helper/timeChecker';
+import ResetPassword from '../../../images/RecoveryPassword';
+import { colors } from '../../../theme/colors';
+import { fontSize } from '../../../theme/font';
+import { normalize, style } from '../../../theme/style';
+import Loading from '../../components/Loading';
+import MainText from '../../components/MainText';
 import OtherHeader from '../../components/OtherHeader';
 import { URL } from '../../constants';
-import Toast from 'react-native-toast-message';
-import { toastConfig } from '../../components/ToastConfig';
-import Loading from '../../components/Loading';
-import { Modal } from 'react-native-paper';
-import MainText from '../../components/MainText';
-import { fontSize } from '../../../theme/font';
-import { colors } from '../../../theme/colors';
-import { t } from 'i18next';
-import { checkPhoneTime } from '../../../helper/timeChecker';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
@@ -35,10 +34,11 @@ const EnterJsh = () => {
     try {
       if (await checkPhoneTime()) {
         const { data } = await axios.post(
-          URL + '/user/askjshshir',
+          URL + '/user/askjshshir/init',
           {
             jshshir: value,
             phone: '+998' + params?.phone,
+            lang: i18n.language,
           },
           {
             headers: {
@@ -46,6 +46,8 @@ const EnterJsh = () => {
             },
           },
         );
+        console.log('data', data);
+
         if (data.code === 2) {
           Toast.show({
             autoHide: true,
@@ -64,7 +66,10 @@ const EnterJsh = () => {
         if (data.success) {
           // navigation.navigate('Inforamation', { jshshir: value }); // 2500 tolash haqida ogohlantirsh chiqishi uchun
           // navigation.navigate('ScanFaceMyId');
-          navigation.navigate('MyIdScreen', { jshshir: value });
+          navigation.navigate('MyIdScreen', {
+            jshshir: value,
+            token: data.reset_token,
+          });
           setTimeout(() => {
             setLoading(false);
           }, 500);
@@ -104,7 +109,7 @@ const EnterJsh = () => {
       });
       setLoading(false);
     }
-  }, [navigation, value]);
+  }, [navigation, params?.phone, value]);
 
   const onModal = useCallback(() => {
     setHide(!hide);

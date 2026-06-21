@@ -11,28 +11,28 @@ import {
   Button,
   Linking,
 } from 'react-native';
-import React, {useEffect, useMemo, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {normalize, style} from '../../theme/style';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { normalize, style } from '../../theme/style';
 import PhoneLoginImage from '../../images/phoneloginimage.svg';
 
-import {useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 import Loading from '../components/Loading';
-import {LoginWithPhoneSendPasswordApi} from '../../store/api/auth';
+import { LoginWithPhoneSendPasswordApi } from '../../store/api/auth';
 
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import PhoneInput from '../components/PhoneInput';
 
 import BackButton from '../components/BackButton';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import MainText from '../components/MainText';
-import {colors} from '../../theme/colors';
-import {fontSize} from '../../theme/font';
-import {t} from 'i18next';
+import { colors } from '../../theme/colors';
+import { fontSize } from '../../theme/font';
+import { t } from 'i18next';
 import * as yup from 'yup';
-import {checkPhoneTime} from '../../helper/timeChecker';
+import { checkPhoneTime } from '../../helper/timeChecker';
 import InputMask from '../components/InputMask';
 
 const schema = yup.object().shape({
@@ -60,7 +60,6 @@ const LoginWithPhone = () => {
             password: password,
           }),
         ).unwrap();
-        console.log('response', response);
 
         if (response.message === 'user-nft' && response.success === false) {
           Toast.show({
@@ -103,7 +102,7 @@ const LoginWithPhone = () => {
             position: 'bottom',
             type: 'error2',
             props: {
-              desc: t('10001', {count: response.attemptsLeft}),
+              desc: t('10001', { count: response.attemptsLeft }),
             },
           });
 
@@ -142,7 +141,10 @@ const LoginWithPhone = () => {
               setError(false);
               navigation.reset({
                 routes: [
-                  {name: 'BottomTabNavigator', params: {token: response.token}},
+                  {
+                    name: 'BottomTabNavigator',
+                    params: { token: response.token },
+                  },
                 ],
                 index: 0,
               });
@@ -161,7 +163,7 @@ const LoginWithPhone = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            desc: t('10001', {count: e.attemptsLeft || 0}),
+            desc: t('10001', { count: e.attemptsLeft || 0 }),
           },
         });
 
@@ -176,7 +178,7 @@ const LoginWithPhone = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            desc: t('10001', {count: e.attemptsLeft || 0}),
+            desc: t('10001', { count: e.attemptsLeft || 0 }),
           },
         });
         setLoading(false);
@@ -195,6 +197,7 @@ const LoginWithPhone = () => {
       setLoading(false);
       return;
     }
+    setLoading(false);
   };
 
   const disabled = useMemo(() => {
@@ -212,8 +215,9 @@ const LoginWithPhone = () => {
       <View
         style={[
           styles.BackButton,
-          {marginTop: Platform.OS === 'android' ? 10 : normalize(10)},
-        ]}>
+          { marginTop: Platform.OS === 'android' ? 10 : normalize(10) },
+        ]}
+      >
         <BackButton
           navigation={navigation}
           IconColor="#fff"
@@ -221,15 +225,17 @@ const LoginWithPhone = () => {
         />
       </View>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{width: style.width, height: style.height}}>
+          <View style={{ width: style.width, height: style.height }}>
             <View
               style={{
                 alignItems: 'center',
                 flex: 0.6,
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <PhoneLoginImage width="70%" height="70%" />
             </View>
             {/* <View style={{alignItems: 'center'}}>
@@ -272,7 +278,8 @@ const LoginWithPhone = () => {
                     style={{
                       flex: 1,
                       // backgroundColor: 'red',
-                    }}>
+                    }}
+                  >
                     <TextInput
                       secureTextEntry={eye}
                       placeholderTextColor={style.placeHolderColor}
@@ -282,8 +289,9 @@ const LoginWithPhone = () => {
                         setPassword(text);
                       }}
                       keyboardType="default"
-                      style={[styles.TextInput, {paddingLeft: 15}]}
-                      allowFontScaling={false} />
+                      style={[styles.TextInput, { paddingLeft: 15 }]}
+                      allowFontScaling={false}
+                    />
                     <View style={styles.eye}>
                       <TouchableOpacity
                         onPress={() => {
@@ -317,36 +325,41 @@ const LoginWithPhone = () => {
                       ? style.disabledButtonColor
                       : style.blue,
                   },
-                ]}>
+                ]}
+              >
                 <MainText
                   color={colors.white}
                   size={fontSize[16]}
                   style={[
                     styles.enterText,
-                    {color: '#fff', fontFamily: style.fontFamilyMedium},
-                  ]}>
+                    { color: '#fff', fontFamily: style.fontFamilyMedium },
+                  ]}
+                >
                   {t('24')}
                 </MainText>
               </TouchableOpacity>
             </View>
-            <View style={{marginTop: 20}}>
+            <View style={{ marginTop: 20 }}>
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-evenly',
-                }}>
+                }}
+              >
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => {
                     setError(false);
                     navigation.navigate('UpdatePasswordWithJshir');
                     // navigation.navigate('EnterJsh');
-                  }}>
+                  }}
+                >
                   <MainText
                     color={colors.blue}
                     size={fontSize[13]}
-                    style={[styles.forgotPasswordText, {color: style.blue}]}>
+                    style={[styles.forgotPasswordText, { color: style.blue }]}
+                  >
                     {t('33')}
                   </MainText>
                 </TouchableOpacity>
@@ -354,13 +367,15 @@ const LoginWithPhone = () => {
                   activeOpacity={0.8}
                   onPress={() => {
                     setError(false);
-                    navigation.navigate('RegisterWithPeople', {type: 1});
+                    navigation.navigate('RegisterWithPeople', { type: 1 });
                   }}
-                  style={styles.registerButton}>
+                  style={styles.registerButton}
+                >
                   <MainText
                     color={colors.white}
                     size={fontSize[13]}
-                    style={styles.forgotPasswordText}>
+                    style={styles.forgotPasswordText}
+                  >
                     {t('36')}
                   </MainText>
                 </TouchableOpacity>

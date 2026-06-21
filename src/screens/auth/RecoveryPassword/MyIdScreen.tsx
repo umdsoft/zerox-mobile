@@ -1,87 +1,97 @@
+import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
-  DeviceEventEmitter,
-  NativeEventEmitter,
-  NativeModules,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
-import LottieView from 'lottie-react-native';
-import { normalize, style } from '../../../theme/style';
-import { androidFace, iosFace } from '../../../nativemodule/android.event';
-import OtherHeader from '../../components/OtherHeader';
+import i18n from '@src/i18n';
 import axios from 'axios';
-import { URL } from '../../constants';
-import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import Loading from '../../components/Loading';
 import { t } from 'i18next';
+import LottieView from 'lottie-react-native';
+import {
+  MyIdCameraShape,
+  MyIdEnvironment,
+  MyIdLocale,
+  useMyId,
+} from 'react-native-nitro-myid';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { storage } from '../../../store/api/token/getToken';
+import { normalize, style } from '../../../theme/style';
+import Loading from '../../components/Loading';
+import OtherHeader from '../../components/OtherHeader';
+import { URL } from '../../constants';
 
 const MyIdScreen = () => {
+  const { start } = useMyId();
   const navigation = useNavigation();
-  const { jshshir } = useRoute().params;
+  const { jshshir, token } = useRoute().params;
 
   const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
 
-  const Indentificator = useCallback(async () => {
-    const nativeEvent = new NativeEventEmitter(NativeModules.MyIdModule);
-    const postData = async data => {
-      if (data) {
-        setLoading(true);
-        try {
-          const response = await axios.post(
-            URL + '/user/myidchecking',
-            {
-              code: data.code,
-              jshshir: jshshir,
+  const getSessionId = useCallback(async () => {
+    try {
+      setLoading2(true);
+      const response = await axios.post(
+        URL + '/user/askjshshir/myid-session',
+        {
+          method: 'face',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Connection: 'close',
+          },
+        },
+      );
+
+      if (response.data.success) {
+        return response.data.sessionId;
+      } else {
+        console.log(response.data.msg, 'response');
+      }
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading2(false);
+    }
+  }, []);
+
+  const Indentificator = useCallback(
+    async data => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          URL + '/user/myidchecking',
+          {
+            code: data.code,
+            jshshir: jshshir,
+          },
+          {
+            headers: {
+              Connection: 'close',
             },
-            {
-              headers: {
-                Connection: 'close',
-              },
-            },
-          );
+          },
+        );
 
-          if (response.data.success && response.data.code == 1) {
-            storage.clearAll();
-            navigation.navigate('UpdatePassword', { user: response.data.data });
-          }
+        if (response.data.success && response.data.code == 1) {
+          storage.clearAll();
+          navigation.navigate('UpdatePassword', {
+            user: response.data.data,
+            token: token,
+          });
+        }
 
-          if (
-            response.data.success == false &&
-            response.data.error === 'user-not-found'
-          ) {
-            Toast.show({
-              autoHide: true,
-              visibilityTime: 3000,
-              position: 'bottom',
-              type: 'error2',
-              props: {
-                title: 'Xatolik',
-                desc: t('Identifikatsiya amalga oshmadi.'),
-              },
-            });
-          }
-
-          if (response.data.success === false || response.data.code == 3) {
-            Toast.show({
-              autoHide: true,
-              visibilityTime: 3000,
-              position: 'bottom',
-              type: 'error2',
-              props: {
-                title: 'Xatolik',
-                desc: t('Identifikatsiya amalga oshmadi.'),
-              },
-            });
-          }
-        } catch (error) {
+        if (
+          response.data.success == false &&
+          response.data.msg === 'user not equal'
+        ) {
           Toast.show({
             autoHide: true,
             visibilityTime: 3000,
@@ -92,11 +102,21 @@ const MyIdScreen = () => {
               desc: t('Identifikatsiya amalga oshmadi.'),
             },
           });
-          throw new Error(error as string);
-        } finally {
-          setLoading(false);
         }
-      } else {
+
+        if (response.data.success === false || response.data.code == 3) {
+          Toast.show({
+            autoHide: true,
+            visibilityTime: 3000,
+            position: 'bottom',
+            type: 'error2',
+            props: {
+              title: 'Xatolik',
+              desc: t('Identifikatsiya amalga oshmadi.'),
+            },
+          });
+        }
+      } catch (error) {
         Toast.show({
           autoHide: true,
           visibilityTime: 3000,
@@ -107,59 +127,69 @@ const MyIdScreen = () => {
             desc: t('Identifikatsiya amalga oshmadi.'),
           },
         });
+        throw new Error(error as string);
+      } finally {
+        setLoading(false);
       }
+    },
+    [navigation, jshshir],
+  );
+
+  const onHandlePostData = useCallback(async () => {
+    const resp = await getSessionId();
+    console.log(resp, 'resp');
+
+    const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
+
+    const prod = {
+      sessionId: resp,
+      clientHash:
+        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
+      clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
+      environment: MyIdEnvironment.PRODUCTION,
+      cameraShape: MyIdCameraShape.CIRCLE,
+      locale: lang,
     };
-
-    if (Platform.OS === 'android') {
-      DeviceEventEmitter.addListener('onSuccess', async data => {
-        console.log(data, 'myid screen');
-        postData(data);
-      });
-      DeviceEventEmitter.addListener('onError', data => {
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            title: 'Xatolik',
-            desc: t('Identifikatsiya amalga oshmadi.'),
+    const test = {
+      sessionId: resp,
+      clientHash:
+        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZVrqQt5Py76zh2cdkrizznvuRaFzW66mzzmgOvG7va92Nqk5AhstNCDJCYU+NzPtTCDxJF4qo3MSDOU+U2utyx6tuLoqxZS3vt833GOJmXGd9c77b1n9aazo9WMjk+i6GGpVrb28sKJNbzQWriTJhYfxz42EP5iKMnSXUyEZMFN6LZddJ4YpO7TnFSEYKBECOW0+NxRH+I3D2B+l+w231Jb3zJjSQyNd6tDoRKu4CcqEqTDHRFg3OQvQJschMDKnpPOERtQoksbRyysIufufz8r5yIBtPaA8rZqy1VFTa2tGCOoC4ZNPMv5kLFZstTVNp4hnfw7djdfWNUGJP12AQIDAQAB',
+      clientHashId: '97496c4e-e979-4697-8a38-98848872cfc2',
+      environment: MyIdEnvironment.SANDBOX,
+      cameraShape: MyIdCameraShape.CIRCLE,
+      locale: lang,
+    };
+    if (resp) {
+      try {
+        start(prod, {
+          onSuccess: async data => {
+            await Indentificator(data);
+          },
+          onError: _ => {
+            Toast.show({
+              autoHide: true,
+              visibilityTime: 3000,
+              position: 'bottom',
+              type: 'error2',
+              props: {
+                title: 'Xatolik',
+                desc: t('Identifikatsiya amalga oshmadi.'),
+              },
+            });
+          },
+          onUserExited: () => {
+            console.warn('errere');
           },
         });
-      });
+      } catch (error) {
+        console.log(error, 'face error');
+      }
     }
-    if (Platform.OS === 'ios') {
-      nativeEvent.addListener('onSuccess', data => {
-        console.log(data, 'data');
-        postData(data);
-      });
-      nativeEvent.addListener('onError', data => {
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            title: 'Xatolik',
-            desc: t('Identifikatsiya amalga oshmadi.'),
-          },
-        });
-      });
-      nativeEvent.addListener('onUserExited', data => {
-        console.log(data, 'user find');
-      });
-    }
-  }, [navigation, jshshir]);
-
-  useEffect(() => {
-    setLoading(false);
-    Indentificator();
-  }, [Indentificator]);
+  }, [Indentificator, getSessionId, start]);
 
   if (loading) {
     return <Loading />;
   }
-  console.log(storage.getString('lang'), 'lang');
 
   return (
     <View
@@ -193,22 +223,23 @@ const MyIdScreen = () => {
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => {
-          let lang = storage.getString('lang');
-          Platform.OS === 'android' ? androidFace(lang) : iosFace();
-          //  navigation.navigate('ScanFaceMyId');
-        }}
+        disabled={loading2}
+        onPress={onHandlePostData}
         style={[styles.enterButton]}
       >
-        <Text
-          allowFontScaling={false}
-          style={[
-            styles.enterText,
-            { color: '#fff', fontFamily: style.fontFamilyMedium },
-          ]}
-        >
-          {t('45')}
-        </Text>
+        {loading2 ? (
+          <ActivityIndicator color={'white'} size={'small'} />
+        ) : (
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.enterText,
+              { color: '#fff', fontFamily: style.fontFamilyMedium },
+            ]}
+          >
+            {t('45')}
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );

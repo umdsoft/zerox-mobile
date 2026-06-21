@@ -245,7 +245,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - NitroMyid (0.1.0):
+  - NitroMyid (0.1.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -3748,7 +3748,7 @@ SPEC CHECKSUMS:
   MyIdSDK: 91a3ec894152550990a1ae0f758b3f6cc7aceeae
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   NitroModules: 18e41c298d86fc753fc754969fa9f84044e70711
-  NitroMyid: c5eb0382902278a778d6c669e019c310e1753bb5
+  NitroMyid: b5910105898a1787c3772d0ccccc707f5d9eda81
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
@@ -3853,4 +3853,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 687b4dac914a7849ffb44dcb66a79ecc1c0d8ece
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

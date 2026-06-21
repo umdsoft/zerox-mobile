@@ -1,31 +1,28 @@
+import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Linking,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import BackButton from '../components/BackButton';
-import { normalize, style } from '../../theme/style';
 import RegisterWithPeopleIcon from '../../images/auth/illustrationregisterwithpeople.svg';
+import { normalize, style } from '../../theme/style';
+import BackButton from '../components/BackButton';
 import Loading from '../components/Loading';
 
-import PhoneInput from '../components/PhoneInput';
-import MainText from '../components/MainText';
-import { font, fontSize } from '../../theme/font';
-import { colors } from '../../theme/colors';
 import { t } from 'i18next';
-import { URL } from '../../screens/constants';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
+import { URL } from '../../screens/constants';
 import { storage } from '../../store/api/token/getToken';
+import { colors } from '../../theme/colors';
+import { font, fontSize } from '../../theme/font';
 import InputMask from '../components/InputMask';
+import MainText from '../components/MainText';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 

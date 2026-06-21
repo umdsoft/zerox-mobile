@@ -1,12 +1,12 @@
-import {FlatList, RefreshControl, StyleSheet, View, Text} from 'react-native';
-import React, {useCallback, useEffect, useId, useRef, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import { FlatList, RefreshControl, StyleSheet, View, Text } from 'react-native';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { BackGroundIcon } from '../../helper/homeIcon';
+import { style } from '../../theme/style';
+import { useNavigation } from '@react-navigation/native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBar from '../../navigation/TopTabBar';
 import NewsNotificationCard from '../components/NewsNotification';
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Qarzdanvozkechilganligitogrisida from './notifications/all/Qarzdanvozkechilganligitogrisida';
 import QarzShartnomasiniRasmiylashtirishTogrisida from './notifications/all/QarzShartnomasiniRasmiylashtirishTogrisida';
 import Qarzmuddatiuzaytirilganligitogrisida from './notifications/all/Qarzmuddatiuzaytirilganligitogrisida';
@@ -14,24 +14,24 @@ import QarzToliqQaytarilganli from './notifications/all/QarzToliqQaytarilganli';
 import Qarzniqaytarishtalabqilinganligitogrisida from './notifications/all/Qarzniqaytarishtalabqilinganligitogrisida';
 import Qarzqismanqaytarilganli from './notifications/all/Qarzqismanqaytarilganli';
 import Qarzmuddatiniuzaytirishsoralganligitogrisida from './notifications/all/Qarzmuddatiniuzaytirishsoralganligitogrisida';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 
-import {filter_notification} from '../../store/reducers/HomeReducer';
+import { filter_notification } from '../../store/reducers/HomeReducer';
 import Qarzniqaytarishqabulqilinmaganligitogrisida from './notifications/all/Qarzniqaytarishqabulqilinmaganligitogrisida';
 import QarzniQaytarishQabulQilinganligiTogrisida from './notifications/all/QarzniQaytarishQabulQilinganligiTogrisida';
 import QarzShartnomasiningRadQilinganligiTogrisida from './notifications/all/QarzShartnomasiningRadQilinganligiTogrisida';
 import QarzShartnomasiningQabulQilinganligiTogrisida from './notifications/all/QarzShartnomasiningQabulQilinganligiTogrisida';
 import QarzMuddatiniUzaytirishRadEtilganligiTogrisida from './notifications/all/QarzMuddatiniUzaytirishRadEtilganligiTogrisida';
 import axios from 'axios';
-import {storage} from '../../store/api/token/getToken';
-import {URL} from '../constants';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
 import QarzShartnomasiRuxsatSorash from './notifications/all/QarzShartnomasiRuxsatSorash';
 import QarzniQaytarishRadQilinganligi from './notifications/all/QarzniQaytarishRadQilinganligi';
 import OtherHeader from '../components/OtherHeader';
 import QarzShartnomasiRejectTime from './notifications/all/QarzShartnomasiRejectTime';
 import PulMablagOtkazilganligi from './notifications/all/PulMablagOtkazilganligi';
 import PulMablagOtkazilganligiHaqida from './notifications/all/PulMablagOtkazilganligiHaqida';
-import {toastMessage} from '../../helper';
+import { toastMessage } from '../../helper';
 import {
   getCreditorDataAndDebitorData,
   getNotificationWithPage,
@@ -44,13 +44,13 @@ import QarzniMuddatUzaytirishQabul from './notifications/all/QarzniMuddatUzaytir
 import MalumotniKorishgaRadEtildi from './notifications/all/MalumotniKorishgaRadEtildi';
 import MalumotniKorishgaRuxsatBerildi from './notifications/all/MalumotniKorishgaRuxsatBerildi';
 import MainText from '../components/MainText';
-import {fontSize} from '../../theme/font';
+import { fontSize } from '../../theme/font';
 
-import {t} from 'i18next';
+import { t } from 'i18next';
 import socketService from '../../helper/socketService';
 
 import Eslatma from './notifications/all/Eslatma';
-import Animated, {LinearTransition} from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import ExpirePassport from './notifications/all/Expire_Passport';
 
 type ObjType = {
@@ -72,17 +72,17 @@ const Notification = () => {
         <BackGroundIcon width="100%" height="100%" />
       </View>
       <OtherHeader title={t('666')} />
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <View style={styles.main}>
           <View style={styles.aboutUsContainer}>
             <TopTab.Navigator tabBar={props => <TopTabBar {...props} />}>
               <TopTab.Screen
-                options={{tabBarLabel: t('666')}}
+                options={{ tabBarLabel: t('666') }}
                 name="Bildrishnoma"
                 component={Bildrishnoma}
               />
               <TopTab.Screen
-                options={{tabBarLabel: t('669')}}
+                options={{ tabBarLabel: t('669') }}
                 name="News"
                 component={News}
               />
@@ -130,20 +130,20 @@ const News = () => {
     <View style={styles.container}>
       <FlatList
         data={[]}
-        keyExtractor={({id}) => id?.toString()}
+        keyExtractor={({ id }) => id?.toString()}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 10}}
+        contentContainerStyle={{ paddingBottom: 10 }}
         // refreshControl={
         //   <RefreshControl refreshing={loading} onRefresh={onRefresh} />
         // }
         ListEmptyComponent={() => {
           return (
-            <View style={{alignItems: 'center', marginTop: 20}}>
+            <View style={{ alignItems: 'center', marginTop: 20 }}>
               <MainText size={fontSize[12]}> {t('pp1')}</MainText>
             </View>
           );
         }}
-        renderItem={({item, index}) => {
+        renderItem={({ item, index }) => {
           return <NewsNotificationCard data={item} key={index} />;
         }}
       />
@@ -155,7 +155,7 @@ const Bildrishnoma = () => {
   const [page, setPage] = useState(1);
   const dispatch = useDispatch<any>();
   const id = useId();
-  const {user, pagination} = useSelector(state => state?.HomeReducer);
+  const { user, pagination } = useSelector(state => state?.HomeReducer);
 
   const [uzayloadinLoading, setUzayloadinLoading] = useState(false);
 
@@ -170,13 +170,13 @@ const Bildrishnoma = () => {
     if (page <= pagination?.totalPage) {
       setLoading(true);
       try {
-        dispatch(getNotificationWithPage({page: 1}));
+        dispatch(getNotificationWithPage({ page: 1 }));
         // socketService.on('notification', data => {
         //   dispatch(setNotification({notification: data.not}));
         // });
       } catch (error) {
         setLoading(false);
-        navigation.reset({routes: [{name: 'LoginWithPhone'}], index: 0});
+        navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
       } finally {
         setLoading(false);
       }
@@ -194,10 +194,10 @@ const Bildrishnoma = () => {
         const info = await axios.put(
           URL + `/notification/ok/${idx}`,
           {},
-          {headers: {Authorization: `Bearer ${token}`}},
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         if (info?.status === 200) {
-          socketService.emit('notification', {userId: user?.data?.id});
+          socketService.emit('notification', { userId: user?.data?.id });
           // socketService.on('notification', data => {
           //   console.log('socket in notifcation', data);
           //   dispatch(setNotification({notification: data.not}));
@@ -207,7 +207,7 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: {title: 'Muvaffaqiyatli', desc: toastMessage(type)},
+            props: { title: 'Muvaffaqiyatli', desc: toastMessage(type) },
             type: 'omad',
             visibilityTime: 2000,
           });
@@ -216,7 +216,7 @@ const Bildrishnoma = () => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+          props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
           type: 'error2',
           visibilityTime: 2000,
         });
@@ -259,11 +259,11 @@ const Bildrishnoma = () => {
       }
 
       try {
-        const {data} = await axios.put(
+        const { data } = await axios.put(
           URL + `/notification/success/${item.id}`,
           obj,
           {
-            headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
           },
         );
 
@@ -350,7 +350,7 @@ const Bildrishnoma = () => {
       }
 
       try {
-        const {data} = await axios.put(
+        const { data } = await axios.put(
           URL + `/notification/success/${item.id}`,
           obj,
           // {
@@ -366,14 +366,14 @@ const Bildrishnoma = () => {
           //   // res: user?.data?.id,
           // },
           {
-            headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
           },
         );
         if (data.success) {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: {title: 'Muvaffaqiyatli', desc: t('261')},
+            props: { title: 'Muvaffaqiyatli', desc: t('261') },
             type: 'omad',
             visibilityTime: 3000,
           });
@@ -386,7 +386,7 @@ const Bildrishnoma = () => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+          props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
           type: 'error2',
           visibilityTime: 3000,
         });
@@ -398,7 +398,7 @@ const Bildrishnoma = () => {
     const token = storage.getString('token');
 
     try {
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + `/notification/qisman-qaytarish/${item.id}`,
         {
           act: item.act,
@@ -409,7 +409,7 @@ const Bildrishnoma = () => {
           stype: status,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
       if (data.success) {
@@ -432,7 +432,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -442,7 +442,7 @@ const Bildrishnoma = () => {
     const token = storage.getString('token');
 
     try {
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         URL + `/notification/toliq-qaytarish/${item.id}`,
         {
           act: item.act,
@@ -453,7 +453,7 @@ const Bildrishnoma = () => {
           stype: status,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
 
@@ -469,7 +469,7 @@ const Bildrishnoma = () => {
           visibilityTime: 3000,
         });
         dispatch(filter_notification(item.id));
-        dispatch(HomeApi({page: 1}));
+        dispatch(HomeApi({ page: 1 }));
       }
       // socketService.sendNotification({
       //   id: item.reciver === item.debitor ? item.creditor : item.debitor,
@@ -478,7 +478,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -499,7 +499,7 @@ const Bildrishnoma = () => {
           reciver: item.reciver !== item.debitor ? item.debitor : item.creditor,
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
         },
       );
 
@@ -508,7 +508,7 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: {title: 'Muvaffaqiyatli', desc: t('264')},
+            props: { title: 'Muvaffaqiyatli', desc: t('264') },
             type: 'omad',
             visibilityTime: 3000,
           });
@@ -517,7 +517,7 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: {title: 'Muvaffaqiyatli', desc: t('261')},
+            props: { title: 'Muvaffaqiyatli', desc: t('261') },
             type: 'omad',
             visibilityTime: 3000,
           });
@@ -538,7 +538,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -798,11 +798,11 @@ const Bildrishnoma = () => {
   );
 
   return (
-    <View style={{flex: 1, backgroundColor: '#fff'}}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Animated.FlatList
         ref={listRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 10}}
+        contentContainerStyle={{ paddingBottom: 10 }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={onRefresh} />
         }
@@ -812,7 +812,7 @@ const Bildrishnoma = () => {
         data={notificationData?.bild}
         onEndReachedThreshold={0.5}
         // renderItem={renderItems}
-        renderItem={({item, index}) => renderItems(item, index)}
+        renderItem={({ item, index }) => renderItems(item, index)}
       />
     </View>
   );

@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +30,7 @@ import {
   MyIdEnvironment,
   MyIdLocale,
   useMyId,
+  startMyId,
 } from 'react-native-nitro-myid';
 
 const returnMessage = response => {
@@ -173,15 +175,12 @@ const ScanFaceMyId = () => {
         },
       );
 
-      console.log(response.data, 'session id');
-
       if (response.data.success) {
         return response.data.sessionId;
       } else {
         console.log(response.data.msg, 'response');
       }
     } catch (err) {
-      console.log(JSON.stringify(err, null, 2), 'error');
       returnMessage(err.response);
     } finally {
       setLoading2(false);
@@ -192,19 +191,18 @@ const ScanFaceMyId = () => {
     async data => {
       let token = storage.getString('token');
       try {
-        const form = new FormData();
-        form.append('code', data.code);
-        // form.append('image', data.image);
-
-        const response = await axios.post(URL + '/user/isactivate', form, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-            Connection: 'close',
+        const response = await axios.post(
+          URL + '/user/isactivate',
+          {
+            code: data.code,
           },
-        });
-
-        console.log(response.data, 'activate');
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Connection: 'close',
+            },
+          },
+        );
 
         if (response.data.success) {
           setLoading(true);
@@ -223,8 +221,7 @@ const ScanFaceMyId = () => {
             }
           });
         } else {
-          console.log(response.data.msg, 'response');
-          response.data.msg === 'user-isActive'
+          response.data.msg === 'user-is-active'
             ? Toast.show({
                 autoHide: true,
                 visibilityTime: 3000,
@@ -249,7 +246,6 @@ const ScanFaceMyId = () => {
               });
         }
       } catch (err) {
-        console.log(JSON.stringify(err, null, 2), 'errorasdas');
         returnMessage(err.response);
       }
     },
@@ -262,39 +258,60 @@ const ScanFaceMyId = () => {
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
+    const prod = {
+      sessionId: resp,
+      clientHash:
+        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
+      clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
+      environment: MyIdEnvironment.PRODUCTION,
+      cameraShape: MyIdCameraShape.CIRCLE,
+      locale: lang,
+    };
+    const test = {
+      sessionId: resp,
+      clientHash:
+        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZVrqQt5Py76zh2cdkrizznvuRaFzW66mzzmgOvG7va92Nqk5AhstNCDJCYU+NzPtTCDxJF4qo3MSDOU+U2utyx6tuLoqxZS3vt833GOJmXGd9c77b1n9aazo9WMjk+i6GGpVrb28sKJNbzQWriTJhYfxz42EP5iKMnSXUyEZMFN6LZddJ4YpO7TnFSEYKBECOW0+NxRH+I3D2B+l+w231Jb3zJjSQyNd6tDoRKu4CcqEqTDHRFg3OQvQJschMDKnpPOERtQoksbRyysIufufz8r5yIBtPaA8rZqy1VFTa2tGCOoC4ZNPMv5kLFZstTVNp4hnfw7djdfWNUGJP12AQIDAQAB',
+      clientHashId: '97496c4e-e979-4697-8a38-98848872cfc2',
+      environment: MyIdEnvironment.SANDBOX,
+      cameraShape: MyIdCameraShape.CIRCLE,
+      locale: lang,
+    };
+
     if (resp) {
       try {
-        start(
-          {
-            sessionId: resp,
-            clientHash:
-              'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
-            clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
-            environment: MyIdEnvironment.PRODUCTION,
-            cameraShape: MyIdCameraShape.ELLIPSE,
-            locale: lang,
+        start(prod, {
+          onSuccess: async data => {
+            await Indentificator(data);
           },
-          {
-            onSuccess: data => {
-              Indentificator(data);
-            },
-            onError: err => {
-              console.log('myid error', err);
-              Toast.show({
-                autoHide: true,
-                visibilityTime: 3000,
-                position: 'bottom',
-                type: 'error2',
-                props: {
-                  // title: 'Xatolik',
-                  desc: t('Xatolik!'),
-                },
-              });
-            },
-            onUserExited: () => {},
+          onError: err => {
+            console.log('myid error', err);
+            Toast.show({
+              autoHide: true,
+              visibilityTime: 3000,
+              position: 'bottom',
+              type: 'error2',
+              props: {
+                // title: 'Xatolik',
+                desc: t('Xatolik!'),
+              },
+            });
           },
-        );
+          onUserExited: () => {
+            Toast.show({
+              autoHide: true,
+              visibilityTime: 3000,
+              position: 'bottom',
+              type: 'error2',
+              props: {
+                // title: 'Xatolik',
+                desc: t('Xatolik!'),
+              },
+            });
+            console.warn('user exited');
+          },
+        });
       } catch (error) {
+        Alert.alert('Response catch myid', JSON.stringify(error));
         console.log(error, 'face error');
       }
     }

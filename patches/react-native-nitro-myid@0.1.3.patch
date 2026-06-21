@@ -1,0 +1,39 @@
+diff --git a/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt b/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
+index ac4245bd056ad825e5990da0b76b4a80d400fe03..4c99a52b13ef44a898fc4a1083c83423122eac8a 100644
+--- a/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
++++ b/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
+@@ -40,6 +40,23 @@ class NitroMyid : HybridNitroMyidSpec(), MyIdResultListener {
+ 
+     private var currentActivity: Activity? = null
+ 
++    // The instance that owns the in-flight flow. The MyId SDK delivers its
++    // result through the host Activity's onActivityResult, which must forward
++    // here so the SDK can invoke our MyIdResultListener callbacks.
++    @Volatile private var activeInstance: NitroMyid? = null
++
++    /**
++     * Forward the host Activity's onActivityResult to the MyId SDK so it can
++     * resolve the pending start() flow. Call from MainActivity.onActivityResult,
++     * gating on REQUEST_CODE_MY_ID there. The SDK's handleActivityResult expects
++     * the Activity resultCode (RESULT_OK / RESULT_CANCELED), not the requestCode;
++     * passing the requestCode here makes it report onUserExited for every result.
++     */
++    fun handleActivityResult(resultCode: Int) {
++      val inst = activeInstance ?: return
++      inst.myIdClient.handleActivityResult(resultCode, inst)
++    }
++
+     /**
+      * Call this in your MainApplication.onCreate() to enable automatic Activity tracking.
+      * Example: NitroMyid.init(this)
+@@ -70,6 +87,10 @@ class NitroMyid : HybridNitroMyidSpec(), MyIdResultListener {
+     onErrorCallback = onError
+     onUserExitedCallback = onUserExited
+ 
++    // Register as the active flow so the host Activity's onActivityResult can
++    // route the SDK result back into this instance (see handleActivityResult).
++    activeInstance = this
++
+     // Build SDK config
+     val sdkConfigBuilder =
+             SdkConfig.Builder(config.sessionId)

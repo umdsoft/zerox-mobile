@@ -1,9 +1,11 @@
 package com.zeroxuz
 
+import android.content.Intent
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.margelo.nitro.nitromyid.NitroMyid
 
 class MainActivity : ReactActivity() {
 
@@ -19,4 +21,16 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  /**
+   * The MyId SDK delivers its capture result through onActivityResult. Forward
+   * it to NitroMyid so the JS start() Promise (onSuccess/onError/onUserExited)
+   * resolves; without this the result is dropped and onSuccess never fires.
+   */
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode == NitroMyid.REQUEST_CODE_MY_ID) {
+      NitroMyid.handleActivityResult(resultCode)
+    }
+  }
 }
