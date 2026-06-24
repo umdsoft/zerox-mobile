@@ -78,19 +78,21 @@ const MyIdScreen = () => {
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
+    // Diagnostika: sessiya PINFL'ga bog'lanmagan bo'lsa FACE_DETECTION baribir majburlanadi.
+    if (__DEV__ && !pinflBound) {
+      console.log('MyID(recovery): sessiya pinfl-bound EMAS — FACE_DETECTION baribir majburlandi');
+    }
+
     const prod = {
       sessionId,
       clientHash:
         'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
       clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
       environment: MyIdEnvironment.PRODUCTION,
-      // Sessiya PINFL'ga bog'langan bo'lsa (pinflBound) — MyID 1:1 yuz mosligini qiladi
-      // (hujjat sahifasi YO'Q) → FACE_DETECTION TEZ va PINFL'ni qaytaradi. Bog'lanmagan bo'lsa
-      // (backend bo'sh sessiyaga qaytgan) — IDENTIFICATION (hujjat orqali PINFL topiladi):
-      // sekinroq lekin ishlaydi. Shunday qilib HAR DOIM to'g'ri + imkon qadar TEZ.
-      entryType: pinflBound
-        ? MyIdEntryType.FACE_DETECTION
-        : MyIdEntryType.IDENTIFICATION,
+      // HAR DOIM FACE_DETECTION (tez, hujjat sahifasi YO'Q). Eslatma: bu MyID sessiyasi
+      // PINFL'ga bog'langan bo'lishini talab qiladi (backend {pinfl, birth_date} yuboradi).
+      // Bog'lanmagan sessiyada MyID xato berishi mumkin — backend bog'lashни ta'minlasin.
+      entryType: MyIdEntryType.FACE_DETECTION,
       cameraShape: MyIdCameraShape.CIRCLE,
       locale: lang,
     };
