@@ -43,8 +43,6 @@ const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
     });
   };
 
-  console.log('data', data);
-
   return (
     <View style={[styles.containerrr, { width: width }]}>
       <View>

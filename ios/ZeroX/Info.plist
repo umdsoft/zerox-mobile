@@ -41,8 +41,10 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<!-- ATS yoqilgan: ixtiyoriy HTTP (cleartext) endi ruxsat etilmaydi (MITM himoyasi).
+		     NSAllowsLocalNetworking=true faqat Metro dev-server (localhost) uchun qoladi. -->
 		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>

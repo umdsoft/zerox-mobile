@@ -1,15 +1,16 @@
-import { io } from 'socket.io-client';
 import { sortText } from './components/StatisticCard';
 import { settingDate } from './other/UserDetails';
 import { t } from 'i18next';
 
-// const URL = 'https://app.zerox.uz/api/v1';
-const URL = 'https://tb.zerox.uz/api/v1';
-// export const SOCKET_URL = 'http://app.zerox.uz';
-export const SOCKET_URL = 'https://tb.zerox.uz';
-export const socket = io(SOCKET_URL, {
-  timeout: 5000,
-});
+// ⚙️ YAGONA JOY — REST API va Socket BIR serverdan boshqariladi.
+//   Test:        https://tb.zerox.uz
+//   Production:  https://app.zerox.uz
+// Server almashtirish uchun FAQAT shu HOST qatorini o'zgartiring.
+const HOST = 'https://tb.zerox.uz';
+// const HOST = 'https://app.zerox.uz'; // PRODUCTION
+
+const URL = `${HOST}/api/v1`;
+export const SOCKET_URL = HOST;
 
 const createStatus = 201;
 const errorStatus = 400;

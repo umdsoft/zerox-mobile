@@ -2,8 +2,12 @@
  * @format
  */
 
+// CSPRNG polyfill — eng birinchi (shifrlash kaliti uchun crypto.getRandomValues).
+import 'react-native-get-random-values';
+import React, {useEffect, useState} from 'react';
 import App from './App';
 import {name as appName} from './app.json';
+import {initSecureStorage} from './src/store/api/token/getToken';
 import {Provider} from 'react-redux';
 import {Store} from './src/store/store/Store';
 import messaging from '@react-native-firebase/messaging';
@@ -46,6 +50,8 @@ ErrorUtils.setGlobalHandler((error, isFatal) => {
  * Background message handler for Firebase Cloud Messaging
  */
 messaging().setBackgroundMessageHandler(async remoteMessage => {
+  // Shifrlangan storage tayyor bo'lsin (handler token'ni storage'dan o'qiydi).
+  await initSecureStorage();
   logDebug('Message handled in the background', remoteMessage);
   
   if (remoteMessage?.data?.id) {
@@ -66,6 +72,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
  * Background event handler for Notifee notifications
  */
 notifee.onBackgroundEvent(async ({type, detail}) => {
+  // Shifrlangan storage tayyor bo'lsin (handler token'ni storage'dan o'qiydi).
+  await initSecureStorage();
   logDebug('Background event triggered', {type, detail});
   
   if (type === EventType.PRESS && detail?.notification) {
@@ -85,6 +93,18 @@ notifee.onBackgroundEvent(async ({type, detail}) => {
  * Main application wrapper with providers
  */
 const MainApp = () => {
+  // Maxfiy storage (shifrlangan MMKV) tayyor bo'lguncha render'ni kutamiz — App ichidagi
+  // token/PIN o'qishlari shifrlangan storage'dan ishlashi uchun. registerComponent SINXRON
+  // (pastda) — shu sabab "ZeroX has not been registered" xatosi bo'lmaydi.
+  const [storageReady, setStorageReady] = useState(false);
+  useEffect(() => {
+    initSecureStorage().finally(() => setStorageReady(true));
+  }, []);
+
+  if (!storageReady) {
+    return null; // storage init tez (keychain) — qisqa vaqt native splash ko'rinadi
+  }
+
   return (
     <NavigationContainer ref={navigationRef} linking={linking}>
       <SafeAreaProvider>
@@ -96,4 +116,5 @@ const MainApp = () => {
   );
 };
 
+// registerComponent SINXRON — native runApplication("ZeroX")'dan OLDIN ro'yxatdan o'tadi.
 AppRegistry.registerComponent(appName, () => MainApp);

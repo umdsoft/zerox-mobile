@@ -42,7 +42,6 @@ const EnterJsh = () => {
           },
           {
             headers: {
-              Connection: 'close',
             },
           },
         );
@@ -96,15 +95,29 @@ const EnterJsh = () => {
           // }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Backend xatoni {success:false, error:'...'} + HTTP 4xx bilan qaytaradi
+      // (429 = rate-limit, 400 = invalid). Axios 4xx'da throw qiladi — shu yerda
+      // ANIQ xabar beramiz. (Oldin hammasi "JShShIR noto'g'ri" edi, shuning uchun
+      // rate-limit ham xuddi noto'g'ri JShShIR kabi ko'rinardi — chalg'ituvchi.)
+      const status = error?.response?.status;
+      const errCode = error?.response?.data?.error;
+      let desc;
+      if (status === 429 || errCode === 'too-many-attempts') {
+        desc = t('Juda ko‘p urinish. Birozdan so‘ng qayta urinib ko‘ring.');
+      } else if (errCode === 'invalid-credentials') {
+        desc = t('JShShIR yoki telefon raqami noto‘g‘ri.');
+      } else {
+        desc = t('JShShIR noto‘g‘ri kiritilgan');
+      }
       Toast.show({
         autoHide: true,
-        visibilityTime: 3000,
+        visibilityTime: 4000,
         position: 'bottom',
         type: 'error2',
         props: {
           title: 'Xatolik',
-          desc: t('JShShIR noto‘g‘ri kiritilgan'),
+          desc,
         },
       });
       setLoading(false);

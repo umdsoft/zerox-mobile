@@ -18,7 +18,6 @@ const UserSearch = createAsyncThunk(
           },
           {
             headers: {
-              Connection: 'close',
             },
           },
         );
@@ -41,7 +40,6 @@ const UserSearch = createAsyncThunk(
           },
           {
             headers: {
-              Connection: 'close',
             },
           },
         );
@@ -71,7 +69,6 @@ const createFmtTokenAction = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         },
       );

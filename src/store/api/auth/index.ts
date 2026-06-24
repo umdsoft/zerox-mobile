@@ -20,7 +20,6 @@ const CreatePasswordSendApi = createAsyncThunk(
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );
@@ -47,7 +46,6 @@ const LoginWithPhoneSendPasswordApi = createAsyncThunk(
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );
@@ -75,7 +73,6 @@ const SmsCheckCodeApi = createAsyncThunk(
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );
@@ -100,7 +97,6 @@ const UserDataPostApi = createAsyncThunk(
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );
@@ -128,7 +124,6 @@ const UpdatePasswordWithJshirApi = createAsyncThunk(
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );

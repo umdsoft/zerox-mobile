@@ -13,25 +13,21 @@ const HomeApi = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
 
-            Connection: 'close',
           },
         }),
         axios.get(URL + '/home/my?type=debitor', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + '/home/my?type=creditor', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + `/notification/me?page=${state.page || 1}&limit=500`, {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
       ]);
@@ -52,9 +48,13 @@ const HomeApi = createAsyncThunk(
           pagination: notification.data?.pagination,
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log({ 'Notification-Error-1': error.message });
-      rejectWithValue(error.response.data);
+      // error.response network-error'da undefined (ikkilamchi crash) → guard;
+      // + return (oldin return yo'q edi → reject hech qachon ishlamasdi).
+      return rejectWithValue(
+        error?.response?.data ?? { message: error?.message ?? 'Network error' },
+      );
     }
   },
 );
@@ -68,19 +68,16 @@ const getCreditorAndDebitorData = createAsyncThunk(
         axios.get(URL + '/user/me', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + '/home/my?type=debitor', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + '/home/my?type=creditor', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
       ]);
@@ -103,7 +100,6 @@ const getMe = createAsyncThunk('getme', async state => {
     const { data } = await axios.get(URL + '/user/me', {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
     return {
@@ -122,7 +118,6 @@ const getNotifications = createAsyncThunk('notification', async state => {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          Connection: 'close',
         },
       },
     );
@@ -142,7 +137,6 @@ const getVersionAction = createAsyncThunk('getVersion', async state => {
     const { data } = await axios.get(URL + `/version/get?type=${state.type}`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
 
@@ -163,7 +157,6 @@ const postDeviceIdAction = createAsyncThunk('postDeviceId', async state => {
     const { data } = await axios.post(URL + '/user/active-device', state, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
 
@@ -193,7 +186,6 @@ const updateDeviceStatusAction = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         },
       );
@@ -212,7 +204,6 @@ const closeActiveDeviceAction = createAsyncThunk(
       const { data } = await axios.delete(URL + '/user/close-device', {
         data: {
           device_id: state.device_id,
-          Connection: 'close',
         },
         headers: {
           Authorization: `Bearer ${token}`,
@@ -239,7 +230,6 @@ const getDevicesAction = createAsyncThunk('getDevicesAction', async () => {
     const { data } = await axios.get(URL + '/user/devices', {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
 
@@ -267,7 +257,6 @@ const onListTimePostAction = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         },
       );
@@ -290,7 +279,6 @@ const onDeleteDevices = createAsyncThunk('onDeleteDevices', async state => {
       },
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
 
@@ -318,7 +306,6 @@ const getCreditorDataAndDebitorData = createAsyncThunk(
         axios.get(URL + '/home/my?type=debitor', {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + '/home/my?type=creditor', {
@@ -350,7 +337,6 @@ const getNotificationWithPage = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         },
       );
@@ -377,7 +363,6 @@ const onPostDefaultLang = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            Connection: 'close',
           },
         },
       );
@@ -399,7 +384,6 @@ const onGetNews = createAsyncThunk('onGetNews', async () => {
     const { data } = await axios.get(URL + `/news/get?lang=${lang}`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
     console.log('onGetNewsssss', data);
@@ -420,7 +404,6 @@ const onGetContract = createAsyncThunk('onGetContract', async ({ id }) => {
     const { data } = await axios.get(URL + `/contract/by/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        Connection: 'close',
       },
     });
     return {

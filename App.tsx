@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, memo } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './src/i18n/index';
 import { LogBox, StyleSheet, View, Linking } from 'react-native';
 import 'react-native-gesture-handler';
@@ -133,8 +133,6 @@ const App: React.FC = () => {
     checkVersion();
   }, []);
 
-  const ToastWrapper = memo(() => <Toast config={toastConfig} />);
-
   if (isLoading) {
     return <Enter />;
   }
@@ -164,7 +162,7 @@ const App: React.FC = () => {
         {/* <UpdateModal /> */}
         <ExpirePassportModal />
       </I18nextProvider>
-      <ToastWrapper />
+      <Toast config={toastConfig} />
       <View
         style={{
           position: 'absolute',
@@ -182,13 +180,13 @@ const App: React.FC = () => {
 /**
  * Loading screen component shown during app initialization
  */
-const Enter: React.FC = () => {
+function Enter() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Loading screen content can be added here */}
     </SafeAreaView>
   );
-};
+}
 
 export default App;
 const styles = StyleSheet.create({

@@ -17,7 +17,7 @@ import Loading from '../components/Loading';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
-import { URL } from '../../screens/constants';
+import { URL } from '../constants';
 import { storage } from '../../store/api/token/getToken';
 import { colors } from '../../theme/colors';
 import { font, fontSize } from '../../theme/font';

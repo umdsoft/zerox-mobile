@@ -1,12 +1,12 @@
 import {NativeModules} from 'react-native';
-import {storage} from '../store/api/token/getToken';
+import {prefsStorage} from '../store/api/token/getToken';
 
 const NotificationBadge = NativeModules?.NotificationBadgeModule;
 
 export const NotificationBadgeModule = {
   setBadgeCount: (count: number) => {
     if (NotificationBadge) {
-      const lang = storage.getString('lang') || 'uz';
+      const lang = prefsStorage.getString('lang') || 'uz';
       if (lang === 'ru') {
         NotificationBadge.setNumber(
           count,

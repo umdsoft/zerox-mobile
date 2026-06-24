@@ -78,7 +78,6 @@ export const checkPhoneTime = async (): Promise<boolean> => {
     const deviceDate = new Date();
     const response = await fetch(URL + '/dashboard/get-time', {
       headers: {
-        Connection: 'close',
       },
       method: 'GET',
     });

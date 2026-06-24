@@ -43,7 +43,7 @@ const ContractModal = () => {
           URL + '/user/edit_contract',
           {},
           {
-            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 

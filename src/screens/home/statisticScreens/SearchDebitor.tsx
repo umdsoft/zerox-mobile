@@ -1,5 +1,5 @@
 import {Platform, StyleSheet, TextInput, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import BackGroundIcon from '../../../images/Background';
 import {normalize, style} from '../../../theme/style';
 import BackButton from '../../components/BackButton';
@@ -23,6 +23,8 @@ const SearchDebitor = () => {
     return storage.getString('token');
   });
   const navigation = useNavigation();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const {data, loading} = useFetch({
     method: 'GET',
     url: URL + url,
@@ -31,35 +33,38 @@ const SearchDebitor = () => {
   if (loading) {
     return <Loading />;
   }
-  console.log(URL + url, ' url in search debitor');
-  console.log(data, ' data in search debitor');
 
-  const searchUser = async text => {
-    if (token) {
-      setTimeout(() => {
-        axios
-          .get(URL + searchUrl + text, {
-            headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
-          })
-          .then(res => {
-            if (res.data.data.length === 0) {
-              setIsCheck(true);
-            } else {
-              setIsCheck(false);
-            }
-            setSearchData(res.data?.data);
-          })
-          .catch(err => {
-            console.log(err, 'error search');
-            // if (err.response.status === 401) {
-            //   navigation.navigate('LoginWithPhone');
-            // }
-          });
-      }, 400);
-    } else {
-      console.log('token yok');
+  const searchUser = (text: string) => {
+    if (!token) {
       navigation.navigate('LoginWithPhone');
+      return;
     }
+    // C-008: TO'G'RI debounce — oldingi timer'ni tozalaymiz (har harfda yangi so'rov
+    // o'rniga) + in-flight so'rovni AbortController bilan bekor qilamiz (race yo'q).
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortRef.current) abortRef.current.abort();
+
+    debounceRef.current = setTimeout(() => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      axios
+        .get(URL + searchUrl + text, {
+          headers: {Authorization: `Bearer ${token}`},
+          signal: controller.signal,
+        })
+        .then(res => {
+          if (res.data.data.length === 0) {
+            setIsCheck(true);
+          } else {
+            setIsCheck(false);
+          }
+          setSearchData(res.data?.data);
+        })
+        .catch(err => {
+          if (axios.isCancel(err)) return; // bekor qilingan — xato emas
+          console.log(err, 'error search');
+        });
+    }, 400);
   };
 
   return (

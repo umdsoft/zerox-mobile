@@ -1,6 +1,7 @@
 import notifee from '@notifee/react-native';
 import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
+import { SOCKET_URL } from '../screens/constants';
 import { Store } from '../store/store/Store';
 import {
   getCreditorAndDebitorData,
@@ -95,7 +96,10 @@ class SocketService {
 
     this.userId = id;
 
-    const socketUrl = 'https://app.zerox.uz';
+    // Socket REST API bilan AYNAN bir serverga ulanadi (token shu server uchun valid).
+    // Avval hardcoded 'app.zerox.uz' edi — API tb.zerox.uz bo'lsa token mos kelmas,
+    // JWT verify fail bo'lib socket disconnect bo'lardi (realtime/bildirishnoma ishlamasdi).
+    const socketUrl = SOCKET_URL;
 
     this.socket = io(socketUrl, {
       autoConnect: false,
@@ -105,8 +109,12 @@ class SocketService {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       transports: ['websocket', 'polling'],
-      secure: false,
-      rejectUnauthorized: false,
+      // TLS sertifikat tekshiruvi YOQILDI (oldin secure:false + rejectUnauthorized:false
+      // edi → MITM token o'g'irlashi mumkin edi). app.zerox.uz cert'i valid (tekshirildi).
+      secure: true,
+      // NOTE (V-004 qoldiq): token hozircha query'da. `auth:{}` ga ko'chirish PRODUCTION
+      // socket-server (app.zerox.uz) `handshake.auth` o'qishini talab qiladi — Faza 5'da
+      // backend bilan birga qilinadi (aks holda realtime buziladi).
       query: {
         token,
         id: id,
@@ -124,6 +132,13 @@ class SocketService {
 
     this.socket.on('connect_error', error => {
       // console.error('Connection error:', error.message);
+    });
+
+    // Server JWT'ni rad etsa (yaroqsiz/eskirgan token yoki noto'g'ri server) — oldin
+    // bu JIM disconnect edi (realtime nega ishlamasligi ko'rinmasdi). Endi loglaymiz.
+    this.socket.on('auth_error', (data: { message?: string }) => {
+      console.warn('Socket auth_error:', data?.message);
+      this.onConnectionChange?.(false);
     });
 
     this.socket.on('disconnect', reason => {

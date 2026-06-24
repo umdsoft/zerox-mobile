@@ -76,12 +76,10 @@ import StatisticIcon from '../images/StatisticIcon';
 import GiveIcon from '../images/GiveIcon';
 import TakeIcon from '../images/TakeIcon';
 import ChangeLocalPassword from '../screens/auth/ChangeLocalPassword';
-import TestText from '../screens/TestText';
 import ShowContract from '../screens/other/ShowContract';
 export {
   ShowContract,
   ChangePhoneNumberSmsCheck,
-  TestText,
   ChangeLocalPassword,
   StatisticDebitor,
   StatisticCreditor,

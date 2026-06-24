@@ -41,7 +41,7 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
       const { data, status } = await axios.post(
         URL + `/notification/eby/${item.id}`,
         body,
-        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (status === 200) {
@@ -81,7 +81,7 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
       const { data, status } = await axios.post(
         URL + `/notification/eby/${item.id}`,
         body,
-        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       if (status === 200) {
         Toast.show({

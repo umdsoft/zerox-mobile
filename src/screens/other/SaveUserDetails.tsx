@@ -59,7 +59,7 @@ const UserInfo = () => {
       const { data, status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
-        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       console.log('data', data);
       console.log('status', status);

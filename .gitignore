@@ -35,6 +35,10 @@ local.properties
 !debug.keystore
 .kotlin/
 
+# Signing credentials — HECH QACHON commit qilinmaydi (V-001)
+keystore.properties
+android/keystore.properties
+
 # node.js
 #
 node_modules/

@@ -22,7 +22,8 @@ import { t } from 'i18next';
 
 const UpdatePassword = () => {
   const navigation = useNavigation();
-  const { user, token } = useRoute().params;
+  // myidCode — MyID SDK'dan qaytgan disposable kod; token — askjshshir reset_token.
+  const { myidCode, token } = useRoute().params;
 
   const [value, setValue] = useState('');
   const [confirmValue, setConfirmValue] = useState('');
@@ -58,22 +59,22 @@ const UpdatePassword = () => {
   const handlePasswordUpdate = useCallback(async () => {
     setLoading(true);
     try {
+      // Yangi oqim: /askjshshir/complete — MyID kodini tekshiradi (PINFL mosligi) VA
+      // parolni o'rnatadi (eski /myidchecking + /updatePassword o'rniga, bitta chaqiruv).
       const response = await axios.post(
-        `${URL}/user/updatePassword`,
+        `${URL}/user/askjshshir/complete`,
         {
-          jshshir: user.pinfl,
-          password: value,
+          myid_code: myidCode,
+          new_password: value,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            Connection: 'close',
           },
+          timeout: 20000,
         },
       );
-
-      console.log(response, 'asdsad');
 
       if (response.data.success) {
         Toast.show({
@@ -110,22 +111,28 @@ const UpdatePassword = () => {
         });
         setLoading(false);
       }
-    } catch (error) {
-      console.log(error, 'error');
+    } catch (error: any) {
+      // /askjshshir/complete xatoni 4xx + {error} bilan qaytaradi (axios throw qiladi).
+      const errCode = error?.response?.data?.error;
+      let desc;
+      if (errCode === 'pinfl-mismatch') {
+        desc = t('Yuz hisobga mos kelmadi.');
+      } else if (errCode === 'invalid-myid-code') {
+        desc = t("MyID kodi yaroqsiz. Qaytadan urinib ko'ring.");
+      } else {
+        desc = t('Parolni tiklashda xatolik yuz berdi');
+      }
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {
-          desc: t('Parolni tiklashda xatolik yuz berdi'),
-        },
+        props: { desc },
       });
-      setLoading(false);
     } finally {
       setLoading(false);
     }
-  }, [user.pinfl, value, navigation, token]);
+  }, [myidCode, value, navigation, token]);
 
   const renderValidation = useMemo(
     () => (

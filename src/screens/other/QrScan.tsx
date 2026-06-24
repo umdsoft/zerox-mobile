@@ -61,7 +61,6 @@ const QrScan = () => {
         axios
           .get(URL + `/user/candidate-search/${id}`, {
             headers: {
-              Connection: 'close',
               Authorization: `Bearer ${token}`,
             },
           })

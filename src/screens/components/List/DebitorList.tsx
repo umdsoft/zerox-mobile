@@ -16,8 +16,6 @@ const DebitorList = ({ isHave, item, type, status, person }) => {
   const navigation = useNavigation();
   const qarzmiqdori = String(t('330')).split(" ");
 
-  console.log(item, ' item in debitor list');
-
   return (
     <View style={styles.aboutUsContainer}>
       <View style={styles.header}>

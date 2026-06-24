@@ -41,7 +41,7 @@ const CharityDebt = () => {
     try {
       setLoading(true);
       const {data, status} = await axios.get(URL + `/contract/by/${item.id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+        headers: {Authorization: `Bearer ${token}`},
       });
 
       if (status === 200) {
@@ -73,7 +73,7 @@ const CharityDebt = () => {
           old_amount: Number(info.residual_amount),
         },
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: {Authorization: `Bearer ${token}`},
         },
       );
 

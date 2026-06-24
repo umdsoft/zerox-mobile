@@ -72,7 +72,7 @@ const DebtTakePart = () => {
       };
 
       const { data, status } = await axios.post(URL + '/contract/act', dd, {
-        headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       console.log(data, 'data in debt take part');

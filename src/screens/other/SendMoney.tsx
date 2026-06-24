@@ -83,7 +83,6 @@ const SendMoney = () => {
             {
               headers: {
                 Authorization: `Bearer ${token}`,
-                Connection: 'close',
               },
             },
           );
@@ -166,7 +165,6 @@ const SendMoney = () => {
         {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         },
       );

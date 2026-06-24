@@ -52,7 +52,7 @@ const DebtTakeFull = () => {
           res: item.debitor,
         },
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 

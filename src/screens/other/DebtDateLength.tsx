@@ -61,7 +61,7 @@ const DebtDateLength = () => {
       const { data, status } = await axios.get(
         URL + `/contract/by/${item.id}`,
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
       console.log('datadata', data);
@@ -96,7 +96,7 @@ const DebtDateLength = () => {
           res: info.debitor,
         },
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 

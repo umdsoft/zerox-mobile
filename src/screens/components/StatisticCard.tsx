@@ -7,6 +7,18 @@ import MainText from './MainText';
 import { font, fontSize } from '../../theme/font';
 import { t } from 'i18next';
 
+// C-006/007: separator modul-darajasida (har render'da yangi komponent yaratilmasin → remount yo'q).
+const StatisticSeparator = () => (
+  <View
+    style={{
+      backgroundColor: style.blue,
+      width: '100%',
+      height: 1.5,
+      opacity: 0.2,
+    }}
+  />
+);
+
 const StatisticCard = ({
   title,
   type,
@@ -54,7 +66,6 @@ const StatisticCard = ({
 
   // eslint-disable-next-line react/no-unstable-nested-components
   const ListRender = ({ item, index }) => {
-    console.log(item?.creditor_name.toLocaleUpperCase(), 'asdsad');
     return (
       <TouchableOpacity
         key={index}
@@ -163,16 +174,7 @@ const StatisticCard = ({
             borderRadius: 10,
           }}
           data={data}
-          ItemSeparatorComponent={() => (
-            <View
-              style={{
-                backgroundColor: style.blue,
-                width: '100%',
-                height: 1.5,
-                opacity: 0.2,
-              }}
-            />
-          )}
+          ItemSeparatorComponent={StatisticSeparator}
           ListEmptyComponent={() => {
             return (
               <View style={{ alignSelf: 'center', marginTop: normalize(50) }}>
@@ -187,7 +189,7 @@ const StatisticCard = ({
               </View>
             );
           }}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item, index) => item?.id?.toString() ?? index.toString()}
           renderItem={({ item, index }) => {
             return <ListRender item={item} index={index} />;
           }}

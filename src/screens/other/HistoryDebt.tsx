@@ -37,7 +37,7 @@ const HistoryDebt = () => {
     const token = storage.getString('token');
     try {
       const { data, status } = await axios.get(URL + '/contract/oldi-bardi', {
-        headers: { Authorization: 'Bearer ' + token, Connection: 'close' },
+        headers: { Authorization: 'Bearer ' + token },
         signal,
       });
       console.log('data', data);

@@ -53,19 +53,16 @@ const UserInformationOfDebt = () => {
         axios.get(URL + `/user/candidate-search/${item.duid}`, {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + `/home/by/${item.debitor}?type=creditor`, {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         }),
         axios.get(URL + `/home/by/${item.debitor}?type=debitor`, {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         }),
       ]);
@@ -73,7 +70,6 @@ const UserInformationOfDebt = () => {
         .get(URL + `/user/me`, {
           headers: {
             Authorization: `Bearer ${storage.getString('token')}`,
-            Connection: 'close',
           },
         })
         .then(res => {

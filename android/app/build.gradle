@@ -59,8 +59,11 @@ react {
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ * V-011: R8 yoqildi (obfuscation + shrinking). keep-rules -> proguard-rules.pro.
+ * DIQQAT: release APK'ni BARCHA funksiyalar bo'yicha sinab ko'ring (keep-rule yetishmasa
+ * release'da crash bo'ladi). Muammo bo'lsa proguard-rules.pro'ga keep qo'shing.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -87,9 +90,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 13
         versionName "1.6"
-        missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
+        missingDimensionStrategy "react-native-capture-protection", "base"
         ndk {
-            abiFilters 'arm64-v8a', 'armeabi-v7a'
+            // x86_64 emulyator testi uchun qo'shildi. Production release uchun
+            // (kichikroq APK) x86_64'ni olib tashlasangiz bo'ladi — real qurilmalar ARM.
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
         }
     }
     signingConfigs {
@@ -100,7 +105,17 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+            // Signing creds gitignored `android/keystore.properties` dan o'qiladi (V-001).
+            // Tracked gradle.properties'da endi parol yo'q. CI'da env/~/.gradle fallback.
+            def keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                def keystoreProperties = new Properties()
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+                storeFile file(keystoreProperties['MYAPP_UPLOAD_STORE_FILE'])
+                storePassword keystoreProperties['MYAPP_UPLOAD_STORE_PASSWORD']
+                keyAlias keystoreProperties['MYAPP_UPLOAD_KEY_ALIAS']
+                keyPassword keystoreProperties['MYAPP_UPLOAD_KEY_PASSWORD']
+            } else if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
@@ -119,8 +134,10 @@ android {
                 nativeSymbolUploadEnabled true
                 unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
             }
-            signingConfig signingConfigs.release
-//            signingConfig signingConfigs.debug
+            // VAQTINCHA: test telefon uchun debug-imzo (zerox.keystore bu mashinada yo'q).
+            // Production release uchun qaytaring: signingConfig signingConfigs.release
+//            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

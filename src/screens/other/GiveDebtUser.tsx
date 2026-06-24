@@ -14,14 +14,14 @@ import { BackGroundIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
-import RadioIconFill from '.././../images/radioButtonFill';
+import RadioIconFill from '../../images/radioButtonFill';
 import MeetInfoGiveDebtModal from '../../modal/MeetInfoGiveDebtModal';
 
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import Loading from '../components/Loading';
 import { storage } from '../../store/api/token/getToken';
-import { URL } from '../../screens/constants';
+import { URL } from '../constants';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../components/ToastConfig';
 import CheckBox from '@react-native-community/checkbox';
@@ -81,7 +81,6 @@ const GiveDebtUser = () => {
         'https://cbu.uz/oz/arkhiv-kursov-valyut/json/',
         {
           headers: {
-            Connection: 'close',
           },
         },
       );
@@ -202,7 +201,6 @@ const GiveDebtUser = () => {
           {
             headers: {
               Authorization: 'Bearer ' + storage.getString('token'),
-              Connection: 'close',
             },
           },
         );
@@ -254,7 +252,6 @@ const GiveDebtUser = () => {
           {
             headers: {
               Authorization: 'Bearer ' + storage.getString('token'),
-              Connection: 'close',
             },
           },
         );

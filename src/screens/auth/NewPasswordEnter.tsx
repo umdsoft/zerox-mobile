@@ -53,7 +53,6 @@ const NewPasswordEnter = () => {
         {
           headers: {
             Authorization: 'Bearer ' + storage.getString('token'),
-            Connection: 'close',
           },
         },
       );

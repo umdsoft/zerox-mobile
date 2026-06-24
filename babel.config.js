@@ -22,4 +22,11 @@ module.exports = {
       },
     ],
   ],
+  env: {
+    // Production build'da console.log/info/debug olib tashlanadi (error/warn qoladi).
+    // Bridge orqali sinxron log overhead'i + token/PII oqishini yo'qotadi.
+    production: {
+      plugins: [['transform-remove-console', { exclude: ['error', 'warn'] }]],
+    },
+  },
 };

@@ -34,7 +34,7 @@ const ShowUserDetails = () => {
     try {
       setLoading(true);
       const {data} = await axios.get(URL + `/user/candidate/${id}`, {
-        headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+        headers: {Authorization: `Bearer ${token}`},
       });
       console.log(data, 'data in show user details');
 

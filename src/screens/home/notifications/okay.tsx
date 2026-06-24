@@ -12,7 +12,7 @@ export const okay = idx => {
         URL + `/notification/ok/${idx}`,
         {},
         {
-          headers: {Authorization: `Bearer ${token}`, Connection: 'close'},
+          headers: {Authorization: `Bearer ${token}`},
         },
       );
       resolve(data.success);

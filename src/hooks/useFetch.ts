@@ -7,32 +7,43 @@ export const useFetch = ({url, method}) => {
   const [data, setData] = useState([]);
   const [error, setError] = useState(false);
   const [shouldRefresh, onRefresh] = useState({});
-  const ApiFetch = useCallback(async () => {
-    const token = storage.getString('token');
+  const ApiFetch = useCallback(
+    async (signal?: AbortSignal) => {
+      const token = storage.getString('token');
 
-    const headers = {
-      'Content-Type': 'application/json',
-      Connection: 'close',
-      Authorization: `Bearer ${token}`,
-    };
-    try {
-      setLoading(true);
-      const {data, status} = await axios({
-        headers: headers,
-        url: url,
-        method: `${method}`,
-      });
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
+      try {
+        setLoading(true);
+        setError(false);
+        const {data, status} = await axios({
+          headers: headers,
+          url: url,
+          method: `${method}`,
+          signal,
+        });
 
-      if (status === 200) {
-        setData(data);
+        if (status === 200) {
+          setData(data);
+        }
+      } catch (err) {
+        // Bekor qilingan so'rov (yangi qidiruv boshlandi) — bu xato EMAS, e'tiborsiz.
+        if (axios.isCancel(err)) return;
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(true);
-    }
-    setLoading(false);
-  }, [method, url]);
+    },
+    [method, url],
+  );
   useEffect(() => {
-    ApiFetch();
+    // C-008: url/method o'zgarganda (har harfda) OLDINGI so'rovni bekor qilamiz —
+    // eski (sekin) javob yangisining ustiga yozib qo'ymasin (race) + keraksiz yuk yo'q.
+    const controller = new AbortController();
+    ApiFetch(controller.signal);
+    return () => controller.abort();
   }, [url, method, shouldRefresh, ApiFetch]);
   return {loading, error, data, onRefresh};
 };

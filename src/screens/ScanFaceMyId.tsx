@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { CaptureProtection } from 'react-native-capture-protection';
 
 import LottieView from 'lottie-react-native';
 import { normalize, style } from '../theme/style';
@@ -27,6 +28,7 @@ import { t } from 'i18next';
 import { URL } from './constants';
 import {
   MyIdCameraShape,
+  MyIdEntryType,
   MyIdEnvironment,
   MyIdLocale,
   useMyId,
@@ -34,7 +36,9 @@ import {
 } from 'react-native-nitro-myid';
 
 const returnMessage = response => {
-  switch (response.data.code) {
+  // response network-error/timeout'da undefined bo'lishi mumkin (P-003 timeout buni
+  // ko'paytirdi) — guardsiz `response.data.code` crash berardi. Undefined → default toast.
+  switch (response?.data?.code) {
     case 0:
       Toast.show({
         autoHide: true,
@@ -156,36 +160,73 @@ const ScanFaceMyId = () => {
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
 
-  const getSessionId = useCallback(async () => {
-    let token = storage.getString('token');
-    console.log(token, 'asdsa');
-    try {
-      setLoading2(true);
-      const response = await axios.post(
-        URL + '/user/myid/session',
-        {
-          method: 'face',
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            Connection: 'close',
-          },
-        },
-      );
+  // V-012: MyID (yuz/passport) ekranida screenshot/record himoyasi — faqat shu ekranda
+  // (chiqishda qaytariladi, QrCode ViewShot va boshqa ekranlar buzilmaydi).
+  useFocusEffect(
+    useCallback(() => {
+      CaptureProtection.prevent().catch(() => {});
+      return () => {
+        CaptureProtection.allow().catch(() => {});
+      };
+    }, []),
+  );
 
-      if (response.data.success) {
-        return response.data.sessionId;
-      } else {
-        console.log(response.data.msg, 'response');
+  // P-002: MyID sessiyasini OLDINDAN olib qo'yamiz (tugma bosilganda kamera kutmasin).
+  // pinflBound — backend sessiyani PINFL'ga bog'lay oldimi (entryType tanlovi uchun).
+  const sessionRef = useRef<{
+    id: string;
+    pinflBound: boolean;
+    ts: number;
+  } | null>(null);
+  const SESSION_FRESH_MS = 90000; // 90s freshness oynasi (eskirsa qaytadan olamiz)
+
+  // Sessiyani olish — UI-state'siz (prefetch + tugma uchun). timeout (P-003) + silent rejim.
+  const fetchSession = useCallback(
+    async (
+      silent: boolean,
+    ): Promise<{ sessionId: string; pinflBound: boolean } | undefined> => {
+      const token = storage.getString('token');
+      try {
+        const response = await axios.post(
+          URL + '/user/myid/session',
+          { method: 'face' },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 15000, // P-003: backend osilsa abadiy kutmaymiz
+          },
+        );
+        if (response.data.success) {
+          return {
+            sessionId: response.data.sessionId,
+            pinflBound: !!response.data.pinflBound,
+          };
+        }
+        if (!silent) console.log(response.data.msg, 'response');
+      } catch (err: any) {
+        // Prefetch'da jim; tugma bosilganda aniq xatoni ko'rsatamiz (eski UX).
+        if (!silent) returnMessage(err?.response);
+        else console.log('prefetch session error:', err?.message);
       }
-    } catch (err) {
-      returnMessage(err.response);
-    } finally {
-      setLoading2(false);
-    }
-  }, []);
+      return undefined;
+    },
+    [],
+  );
+
+  // Ekran ochilganda sessiyani oldindan olamiz (P-002).
+  useEffect(() => {
+    fetchSession(true).then(res => {
+      if (res) {
+        sessionRef.current = {
+          id: res.sessionId,
+          pinflBound: res.pinflBound,
+          ts: Date.now(),
+        };
+      }
+    });
+  }, [fetchSession]);
 
   const Indentificator = useCallback(
     async data => {
@@ -199,8 +240,8 @@ const ScanFaceMyId = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              Connection: 'close',
             },
+            timeout: 15000, // P-003: backend osilsa abadiy kutmaymiz
           },
         );
 
@@ -253,31 +294,45 @@ const ScanFaceMyId = () => {
   );
 
   const onHandlePostData = useCallback(async () => {
-    const resp = await getSessionId();
-    console.log(resp, 'session id');
+    // P-002: prefetch'dan tayyor sessiya bo'lsa DARHOL ishlatamiz (kutish yo'q);
+    // eskirgan/yo'q bo'lsa yangisini olamiz (xato ko'rsatib). setLoading2 — tugma spinneri.
+    setLoading2(true);
+    let sessionId: string | undefined;
+    let pinflBound = false;
+    try {
+      const cached = sessionRef.current;
+      if (cached && Date.now() - cached.ts < SESSION_FRESH_MS) {
+        sessionId = cached.id;
+        pinflBound = cached.pinflBound;
+      } else {
+        const res = await fetchSession(false);
+        sessionId = res?.sessionId;
+        pinflBound = res?.pinflBound ?? false;
+      }
+      sessionRef.current = null; // sessiya bir martalik
+    } finally {
+      setLoading2(false);
+    }
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
     const prod = {
-      sessionId: resp,
+      // sessionId string|undefined; prod faqat `if (sessionId)` ichida start()'ga beriladi.
+      sessionId: sessionId as string,
       clientHash:
         'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
       clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
       environment: MyIdEnvironment.PRODUCTION,
+      // Sessiya PINFL'ga bog'langan bo'lsa (pinflBound) — 1:1 yuz mosligi → FACE_DETECTION TEZ
+      // (hujjat sahifasi yo'q). Bog'lanmagan bo'lsa (bo'sh sessiyaga fallback) —
+      // IDENTIFICATION (hujjat orqali PINFL topiladi): sekinroq lekin ishlaydi.
+      entryType: pinflBound
+        ? MyIdEntryType.FACE_DETECTION
+        : MyIdEntryType.IDENTIFICATION,
       cameraShape: MyIdCameraShape.CIRCLE,
       locale: lang,
     };
-    const test = {
-      sessionId: resp,
-      clientHash:
-        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZVrqQt5Py76zh2cdkrizznvuRaFzW66mzzmgOvG7va92Nqk5AhstNCDJCYU+NzPtTCDxJF4qo3MSDOU+U2utyx6tuLoqxZS3vt833GOJmXGd9c77b1n9aazo9WMjk+i6GGpVrb28sKJNbzQWriTJhYfxz42EP5iKMnSXUyEZMFN6LZddJ4YpO7TnFSEYKBECOW0+NxRH+I3D2B+l+w231Jb3zJjSQyNd6tDoRKu4CcqEqTDHRFg3OQvQJschMDKnpPOERtQoksbRyysIufufz8r5yIBtPaA8rZqy1VFTa2tGCOoC4ZNPMv5kLFZstTVNp4hnfw7djdfWNUGJP12AQIDAQAB',
-      clientHashId: '97496c4e-e979-4697-8a38-98848872cfc2',
-      environment: MyIdEnvironment.SANDBOX,
-      cameraShape: MyIdCameraShape.CIRCLE,
-      locale: lang,
-    };
-
-    if (resp) {
+    if (sessionId) {
       try {
         start(prod, {
           onSuccess: async data => {
@@ -315,7 +370,7 @@ const ScanFaceMyId = () => {
         console.log(error, 'face error');
       }
     }
-  }, [Indentificator, getSessionId, i18n.language, start]);
+  }, [Indentificator, fetchSession, i18n.language, start]);
 
   if (loading) {
     return <Loading />;

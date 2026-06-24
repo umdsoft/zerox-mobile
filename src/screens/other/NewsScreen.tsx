@@ -74,10 +74,12 @@ const NewsScreen = () => {
           <View style={{marginTop: 5}}>
             <WebView
               source={{html: params?.data?.description}}
-          // height is to be full Screen
+              // height is to be full Screen
               style={{height: 1000, width: '100%', transform: [{scaleY: 1}]}}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
+              // V-006: server HTML sanitize'siz keladi → JS'ni O'CHIRAMIZ (stored XSS himoyasi).
+              // Yangilik kontenti statik HTML (matn/rasm/media) — JavaScript talab qilmaydi.
+              javaScriptEnabled={false}
+              domStorageEnabled={false}
               allowsInlineMediaPlayback={true}
               mediaPlaybackRequiresUserAction={false}
             />

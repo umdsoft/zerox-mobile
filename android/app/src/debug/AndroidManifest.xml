@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      FAQAT DEBUG build uchun: Metro dev-server (http://localhost:8081 / 10.0.2.2)
+      bilan ishlash uchun cleartext traffic'ni qayta yoqamiz.
+      RELEASE (production) build esa main/AndroidManifest.xml dagi
+      android:usesCleartextTraffic="false" ni ishlatadi → MITM/HTTP downgrade himoyasi.
+    -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:replace="android:usesCleartextTraffic" />
+</manifest>

@@ -90,7 +90,6 @@ const SearchUserScreen = () => {
           {
             headers: {
               Authorization: `Bearer ${storage.getString('token')}`,
-              Connection: 'close',
             },
           },
         );
@@ -366,7 +365,7 @@ const UserInfo = ({ user, navigation, type }) => {
       const { data, status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
-        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       console.log(data, 'asdasd');
 

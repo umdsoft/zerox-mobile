@@ -14,8 +14,6 @@ import {t} from 'i18next';
 const StatisticDebitor = ({isHave, item}) => {
   const navigation = useNavigation();
 
-  console.log(item, 'created_at in statistic debitor');
-
   return (
     <View style={styles.aboutUsContainer}>
       <View style={styles.header}>

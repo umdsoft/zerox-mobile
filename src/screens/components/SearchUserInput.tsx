@@ -14,7 +14,6 @@ const SearchUserInput = ({onChangeText, value}) => {
       })
       ?.join('');
     a = a + text;
-    console.log(a);
     return a;
   };
   return (

@@ -12,7 +12,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalize, style } from '../../theme/style';
 
 import SetCode from '../../images/SetCode';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
 import ArrowLeft from '../../images/ArrowLeft';
@@ -45,6 +46,17 @@ const SetLocalPassword = () => {
   const [count, setCount] = useState(3);
 
   const navigation = useNavigation();
+
+  // V-012: PIN ekranida screenshot/record himoyasi (faqat shu ekranda — chiqishda
+  // qaytariladi, shunda QrCode ViewShot va boshqa ekranlar buzilmaydi).
+  useFocusEffect(
+    useCallback(() => {
+      CaptureProtection.prevent().catch(() => {});
+      return () => {
+        CaptureProtection.allow().catch(() => {});
+      };
+    }, []),
+  );
 
   const onFingerScan = useCallback(async () => {
     try {

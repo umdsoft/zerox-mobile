@@ -15,6 +15,7 @@ import { t } from 'i18next';
 import LottieView from 'lottie-react-native';
 import {
   MyIdCameraShape,
+  MyIdEntryType,
   MyIdEnvironment,
   MyIdLocale,
   useMyId,
@@ -46,13 +47,17 @@ const MyIdScreen = () => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            Connection: 'close',
           },
+          timeout: 15000, // backend osilsa abadiy kutmaymiz (spinner cheksiz qolmasin)
         },
       );
 
       if (response.data.success) {
-        return response.data.sessionId;
+        // pinflBound — backend sessiyani PINFL'ga bog'lay oldimi (entryType tanlovi uchun).
+        return {
+          sessionId: response.data.sessionId,
+          pinflBound: !!response.data.pinflBound,
+        };
       } else {
         console.log(response.data.msg, 'response');
       }
@@ -63,107 +68,58 @@ const MyIdScreen = () => {
     }
   }, []);
 
-  const Indentificator = useCallback(
-    async data => {
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          URL + '/user/myidchecking',
-          {
-            code: data.code,
-            jshshir: jshshir,
-          },
-          {
-            headers: {
-              Connection: 'close',
-            },
-          },
-        );
-
-        if (response.data.success && response.data.code == 1) {
-          storage.clearAll();
-          navigation.navigate('UpdatePassword', {
-            user: response.data.data,
-            token: token,
-          });
-        }
-
-        if (
-          response.data.success == false &&
-          response.data.msg === 'user not equal'
-        ) {
-          Toast.show({
-            autoHide: true,
-            visibilityTime: 3000,
-            position: 'bottom',
-            type: 'error2',
-            props: {
-              title: 'Xatolik',
-              desc: t('Identifikatsiya amalga oshmadi.'),
-            },
-          });
-        }
-
-        if (response.data.success === false || response.data.code == 3) {
-          Toast.show({
-            autoHide: true,
-            visibilityTime: 3000,
-            position: 'bottom',
-            type: 'error2',
-            props: {
-              title: 'Xatolik',
-              desc: t('Identifikatsiya amalga oshmadi.'),
-            },
-          });
-        }
-      } catch (error) {
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            title: 'Xatolik',
-            desc: t('Identifikatsiya amalga oshmadi.'),
-          },
-        });
-        throw new Error(error as string);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [navigation, jshshir],
-  );
+  // Eski /user/myidchecking olib tashlandi — shaxs tekshiruvi (PINFL) endi parol
+  // o'rnatish bilan birga /askjshshir/complete'da (UpdatePassword) bajariladi.
 
   const onHandlePostData = useCallback(async () => {
     const resp = await getSessionId();
-    console.log(resp, 'resp');
+    const sessionId = resp?.sessionId;
+    const pinflBound = resp?.pinflBound;
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
     const prod = {
-      sessionId: resp,
+      sessionId,
       clientHash:
         'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
       clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
       environment: MyIdEnvironment.PRODUCTION,
+      // Sessiya PINFL'ga bog'langan bo'lsa (pinflBound) — MyID 1:1 yuz mosligini qiladi
+      // (hujjat sahifasi YO'Q) → FACE_DETECTION TEZ va PINFL'ni qaytaradi. Bog'lanmagan bo'lsa
+      // (backend bo'sh sessiyaga qaytgan) — IDENTIFICATION (hujjat orqali PINFL topiladi):
+      // sekinroq lekin ishlaydi. Shunday qilib HAR DOIM to'g'ri + imkon qadar TEZ.
+      entryType: pinflBound
+        ? MyIdEntryType.FACE_DETECTION
+        : MyIdEntryType.IDENTIFICATION,
       cameraShape: MyIdCameraShape.CIRCLE,
       locale: lang,
     };
-    const test = {
-      sessionId: resp,
-      clientHash:
-        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzZVrqQt5Py76zh2cdkrizznvuRaFzW66mzzmgOvG7va92Nqk5AhstNCDJCYU+NzPtTCDxJF4qo3MSDOU+U2utyx6tuLoqxZS3vt833GOJmXGd9c77b1n9aazo9WMjk+i6GGpVrb28sKJNbzQWriTJhYfxz42EP5iKMnSXUyEZMFN6LZddJ4YpO7TnFSEYKBECOW0+NxRH+I3D2B+l+w231Jb3zJjSQyNd6tDoRKu4CcqEqTDHRFg3OQvQJschMDKnpPOERtQoksbRyysIufufz8r5yIBtPaA8rZqy1VFTa2tGCOoC4ZNPMv5kLFZstTVNp4hnfw7djdfWNUGJP12AQIDAQAB',
-      clientHashId: '97496c4e-e979-4697-8a38-98848872cfc2',
-      environment: MyIdEnvironment.SANDBOX,
-      cameraShape: MyIdCameraShape.CIRCLE,
-      locale: lang,
-    };
-    if (resp) {
+    if (sessionId) {
       try {
         start(prod, {
-          onSuccess: async data => {
-            await Indentificator(data);
+          onSuccess: data => {
+            // Kutilmagan holat: scan o'tdi-yu kod bo'sh — UpdatePassword'da /complete baribir
+            // rad etardi. Foydalanuvchini parol ekranida qotirmasdan, aniq xato + qayta urinish.
+            if (!data?.code) {
+              Toast.show({
+                autoHide: true,
+                visibilityTime: 3000,
+                position: 'bottom',
+                type: 'error2',
+                props: {
+                  title: 'Xatolik',
+                  desc: t('Identifikatsiya amalga oshmadi.'),
+                },
+              });
+              return;
+            }
+            // MyID muvaffaqiyatli — disposable kodni UpdatePassword'ga uzatamiz. Shaxs
+            // tekshiruvi (PINFL mosligi) + parol o'rnatish /askjshshir/complete'da BIRGA
+            // bajariladi (eski /myidchecking + /updatePassword o'rniga).
+            navigation.navigate('UpdatePassword', {
+              myidCode: data.code,
+              token,
+            });
           },
           onError: _ => {
             Toast.show({
@@ -185,7 +141,7 @@ const MyIdScreen = () => {
         console.log(error, 'face error');
       }
     }
-  }, [Indentificator, getSessionId, start]);
+  }, [getSessionId, start, navigation, token]);
 
   if (loading) {
     return <Loading />;

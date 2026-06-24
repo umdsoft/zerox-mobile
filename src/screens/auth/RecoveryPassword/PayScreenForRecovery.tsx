@@ -63,7 +63,6 @@ const PayScreenForRecovery = () => {
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );

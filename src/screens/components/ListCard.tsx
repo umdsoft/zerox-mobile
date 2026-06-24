@@ -62,7 +62,6 @@ const ListCard = ({
       }&page=1&limit=500&search=`,
     });
   };
-  console.log(JSON.stringify(data, null, 2), 'data');
   return (
     <View style={[styles.containerrr, { width: width }]}>
       <View>
@@ -339,7 +338,6 @@ const CheckDate = date => {
   const getMonth = new Date(date).getMonth();
   const dd1 = new Date(date).getDate();
   const dd2 = new Date(Date.now()).getDate();
-  console.log(dd1, dd2, 'dd1, dd2');
   if (nowMonth - getMonth === 0) {
     return pp(dd1 - dd2);
   }
@@ -365,7 +363,6 @@ const CheckDate = date => {
 };
 
 const pp = (day: number) => {
-  console.log(day, 'day');
   switch (Math.abs(day)) {
     case 1:
       return t('423', { count: 1 });

@@ -31,7 +31,7 @@ const DebtTakeSelect = () => {
       const { data, status } = await axios.get(
         URL + `/contract/by/${item?.id}`,
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
       if (status === 200) {

@@ -42,7 +42,6 @@ const ChangePhoneNumber = () => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            Connection: 'close',
           },
         },
       );

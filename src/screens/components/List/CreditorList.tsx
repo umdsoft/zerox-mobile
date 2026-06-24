@@ -15,7 +15,6 @@ const CreditorList = ({type, item, status}) => {
   const navigation = useNavigation();
 
   const qarzmiqdori = String(t('330')).split(' ');
-  console.log('item', item);
   return (
     <View style={styles.aboutUsContainer}>
       <View style={styles.header}>

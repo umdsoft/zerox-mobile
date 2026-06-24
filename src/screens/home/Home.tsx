@@ -50,8 +50,9 @@ const { width } = Dimensions.get('window');
 const Home = () => {
   const scrollRef = useRef(null);
   const scrollRef1 = useRef(null);
-  const scrollX = new Animated.Value(0);
-  let position = Animated.divide(scrollX, normalize(width));
+  // useRef — har render'da yangi Animated.Value yaratilmasin (animatsiya reset bo'lmaydi).
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const position = useRef(Animated.divide(scrollX, normalize(width))).current;
   const navigation = useNavigation();
   const { loading, error, home, user } = useSelector(
     state => state.HomeReducer,
@@ -261,12 +262,16 @@ const Home = () => {
             <RefreshControl
               tintColor="#fff"
               refreshing={refreshing}
-              onRefresh={() => {
+              onRefresh={async () => {
+                // Haqiqiy so'rovni KUTAMIZ (oldin 2s fixed timer edi — so'rov tugamasdan
+                // spinner o'chishi yoki ortiqcha kutish mumkin edi).
                 setRefreshing(true);
-                dispatch(HomeApi({ page: 1 }));
-                setTimeout(() => {
+                try {
+                  await (dispatch(HomeApi({ page: 1 })) as any).unwrap();
+                } catch (e) {
+                } finally {
                   setRefreshing(false);
-                }, 2000);
+                }
               }}
             />
           }

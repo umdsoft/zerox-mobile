@@ -10,9 +10,9 @@ import { useTranslation } from 'react-i18next';
 import MainText from '../components/MainText';
 import { colors } from '../../theme/colors';
 import { font } from '../../theme/font';
-import RadioIcon from './../../images/auth/Radio';
-import RadioFillIcon from './../../images/auth/RadioFill';
-import { storage } from '../../store/api/token/getToken';
+import RadioIcon from '../../images/auth/Radio';
+import RadioFillIcon from '../../images/auth/RadioFill';
+import { storage, prefsStorage } from '../../store/api/token/getToken';
 
 import { heightPercentageToDP } from 'react-native-responsive-screen';
 
@@ -37,8 +37,7 @@ const SelectLanguageScreen = () => {
   };
 
   useEffect(() => {
-    const l = storage.getString('lang');
-    console.log(storage.getString('lang'), 'tokennn');
+    const l = prefsStorage.getString('lang');
 
     if (l) {
       switch (l) {
@@ -162,7 +161,9 @@ const SelectLanguageScreen = () => {
 
           <TouchableOpacity
             onPress={() => {
-              console.log(i18n.language, 'langggg');
+              // `lang` ni ikkalasiga: prefsStorage (i18n modul-yuklanishda sinxron o'qiydi)
+              // + storage (boshqa ekran o'quvchilari uchun moslik).
+              prefsStorage.set('lang', i18n.language);
               storage.set('lang', i18n.language);
               navigation.navigate('LoginWithPhone');
             }}

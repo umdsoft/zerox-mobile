@@ -53,7 +53,6 @@ const SearchJuridicUser = () => {
         },
         {
           headers: {
-            Connection: 'close',
           },
         },
       );

@@ -222,7 +222,9 @@ const Bildrishnoma = () => {
         });
       }
     },
-    [dispatch],
+    // C-020: `user` qo'shildi — oldin `[dispatch]` edi, lekin user?.data?.id o'qiladi.
+    // user yangilansa (login/meee) stale qiymat socketga yuborilardi.
+    [user, dispatch],
   );
   const onSuccess = useCallback(async (item, status, type) => {
     const token = storage.getString('token');
@@ -263,7 +265,7 @@ const Bildrishnoma = () => {
           URL + `/notification/success/${item.id}`,
           obj,
           {
-            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 
@@ -320,7 +322,9 @@ const Bildrishnoma = () => {
         visibilityTime: 3000,
       });
     }
-  }, []);
+    // C-020: `user` qo'shildi — oldin `[]` edi, lekin onAsk ichida user?.data?.id
+    // `sender`/`res` (moliyaviy) uchun o'qiladi. Stale user → noto'g'ri qarz amali.
+  }, [user, dispatch]);
   const onReject = useCallback(
     async (item, status, type) => {
       const token = storage.getString('token');
@@ -366,7 +370,7 @@ const Bildrishnoma = () => {
           //   // res: user?.data?.id,
           // },
           {
-            headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
         if (data.success) {
@@ -409,7 +413,7 @@ const Bildrishnoma = () => {
           stype: status,
         },
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
       if (data.success) {
@@ -453,7 +457,7 @@ const Bildrishnoma = () => {
           stype: status,
         },
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
@@ -499,7 +503,7 @@ const Bildrishnoma = () => {
           reciver: item.reciver !== item.debitor ? item.debitor : item.creditor,
         },
         {
-          headers: { Authorization: `Bearer ${token}`, Connection: 'close' },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
@@ -545,7 +549,10 @@ const Bildrishnoma = () => {
     }
   };
 
-  const renderItems = useCallback((item, index) => {
+  // C-020: avval useCallback([]) edi — render-1 dagi okay/onSuccess/onReject/user ni
+  // ushlab qolardi (stale). Inline chaqiriladi (memoized prop emas), shuning uchun plain
+  // funksiya: har render'da yangi (to'g'ri) handler/user bilan ishlaydi.
+  const renderItems = (item, index) => {
     switch (item?.type) {
       //buldi bi batafsil qoldi
       case 0:
@@ -789,7 +796,7 @@ const Bildrishnoma = () => {
       default:
         return <Text key={id}>{t('Xatolik sodir bo‘ldi')}</Text>;
     }
-  }, []);
+  };
 
   const EmptyListComponent = () => (
     <View style={styles.emptyListContainer}>

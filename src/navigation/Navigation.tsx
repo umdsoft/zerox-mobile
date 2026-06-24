@@ -69,7 +69,6 @@ import {
   UserInfo,
   ChangeLocalPassword,
   ScanFaceMyId,
-  TestText,
   ShowContract,
 } from './Index';
 
@@ -233,7 +232,6 @@ const AllNavigators = [
   { name: 'InfoForUser', component: InfoForUser },
   { name: 'UpdatePassword', component: UpdatePassword },
   { name: 'Inforamation', component: Inforamation },
-  { name: 'TestText', component: TestText },
   { name: 'Types', component: Types },
   { name: 'NewsScreen', component: NewsScreen },
   {

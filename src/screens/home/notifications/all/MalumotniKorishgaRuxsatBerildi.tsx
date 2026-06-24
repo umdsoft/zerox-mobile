@@ -22,7 +22,6 @@ const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
     const data = await axios.get(URL + `/user/candidate/${item.ctok}`, {
       headers: {
         Authorization: `Bearer ${storage.getString('token')}`,
-        Connection: 'close',
       },
     });
 
@@ -44,7 +43,7 @@ const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
       const info = await axios.put(
         URL + `/notification/ok/${item.id}`,
         {},
-        { headers: { Authorization: `Bearer ${token}`, Connection: 'close' } },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       if (info?.status === 200) {
         // socketService.emit('notification', user?.data?.id);
