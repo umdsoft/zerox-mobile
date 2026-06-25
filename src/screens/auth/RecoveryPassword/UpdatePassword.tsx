@@ -1,18 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Text, View, TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import ResetPasswordIcon from '../../../images/RecoveryPassword';
 import CheckIcon from '../../../images/CheckIcon';
-import OtherHeader from '../../components/OtherHeader';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 import Loading from '../../components/Loading';
 
 import MainText from '../../components/MainText';
@@ -176,15 +170,14 @@ const UpdatePassword = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <OtherHeader
-        title={t('729')}
-        titleColor="#000"
-        iconColor="#fff"
-        backgroundColor={style.blue}
-      />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.contentContainer}>
+    <ScreenLayout
+      title={t('729')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+    >
+      <View style={styles.contentContainer}>
           <View style={styles.iconContainer}>
             <ResetPasswordIcon />
           </View>
@@ -231,33 +224,17 @@ const UpdatePassword = () => {
 
           {renderValidation}
 
-          <TouchableOpacity
-            disabled={!isFormValid}
+          <Button
+            title={t('45')}
             onPress={handlePasswordUpdate}
-            style={[
-              styles.updateButton,
-              {
-                backgroundColor: isFormValid
-                  ? style.blue
-                  : style.disabledButtonColor,
-              },
-            ]}
-          >
-            <Text style={styles.updateButtonText} allowFontScaling={false}>
-              {t('45')}
-            </Text>
-          </TouchableOpacity>
+            disabled={!isFormValid}
+          />
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   TextInput: {
     width: '100%',
     height: style.textInputHeight,
@@ -320,17 +297,6 @@ const styles = StyleSheet.create({
   validationText: {
     marginLeft: 10,
     fontSize: fontSize[12],
-    fontFamily: style.fontFamilyMedium,
-  },
-  updateButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 55,
-    borderRadius: 8,
-  },
-  updateButtonText: {
-    color: '#fff',
-    fontSize: fontSize[16],
     fontFamily: style.fontFamilyMedium,
   },
 });
