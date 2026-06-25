@@ -1,7 +1,6 @@
 import {
   Keyboard,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -22,14 +21,14 @@ import { useDispatch, useSelector } from 'react-redux';
 
 // Components
 import Loading from '../components/Loading';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import MainText from '../components/MainText';
 import CheckSms from '../../images/changeNumber';
 
 // Utils
 import { normalize, style } from '../../theme/style';
 import { secToMin } from '../other/SaveUserDetails';
-import { colors } from '../../theme/colors';
 import { fontSize } from '../../theme/font';
 
 // API
@@ -245,16 +244,15 @@ const CheckSmsPassword = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <OtherHeader
-        title={t('36')}
-        backgroundColor={style.blue}
-        iconColor="#fff"
-        titleColor="#000"
-      />
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
+    <ScreenLayout
+      title={t('36')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+      contentStyle={styles.scrollContent}
+    >
+      <View style={styles.content}>
           <View style={styles.illustrationContainer}>
             <CheckSms />
           </View>
@@ -312,23 +310,12 @@ const CheckSmsPassword = () => {
               />
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                {
-                  backgroundColor:
-                    code.length === CODE_LENGTH
-                      ? style.blue
-                      : style.disabledButtonColor,
-                },
-              ]}
-              disabled={code.length !== CODE_LENGTH}
+            <Button
+              title={t('45')}
               onPress={handleSubmitCode}
-            >
-              <MainText color={colors.white} size={fontSize[16]}>
-                {t('45')}
-              </MainText>
-            </TouchableOpacity>
+              disabled={code.length !== CODE_LENGTH}
+              style={{ marginTop: 20 }}
+            />
 
             <View style={styles.footer}>
               <TouchableOpacity
@@ -348,16 +335,11 @@ const CheckSmsPassword = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -392,14 +374,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderWidth: 1,
     borderColor: style.blue,
-  },
-  submitButton: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
   },
   footer: {
     flexDirection: 'row',

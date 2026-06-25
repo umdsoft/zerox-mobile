@@ -1,10 +1,8 @@
 import {
   Keyboard,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -19,7 +17,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { normalize, style } from '../../theme/style';
 import CheckSms from '../../images/changeNumber';
 import Loading from '../components/Loading';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import { storage } from '../../store/api/token/getToken';
 import axios from 'axios';
 import { URL } from '../constants';
@@ -263,19 +262,17 @@ const ChangePhoneNumberSmsCheck = () => {
     return <Loading />;
   }
   return (
-    <View style={styles.container}>
-      <OtherHeader
-        title={t('702')}
-        backgroundColor={style.blue}
-        iconColor="#fff"
-        titleColor="#000"
-      />
-      <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{ marginTop: normalize(90) }}>
-            <View style={{ alignItems: 'center' }}>
-              <CheckSms />
-            </View>
+    <ScreenLayout
+      title={t('702')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+    >
+      <View style={{ marginTop: normalize(90) }}>
+        <View style={{ alignItems: 'center' }}>
+          <CheckSms />
+        </View>
 
             <View style={styles.main}>
               <View>
@@ -337,28 +334,14 @@ const ChangePhoneNumberSmsCheck = () => {
             </View>
 
             <View style={styles.enterButtonContainer}>
-              <TouchableOpacity
-                disabled={disabled}
-                activeOpacity={0.8}
+              <Button
+                title={t('45')}
                 onPress={() => {
                   SendSmsCode();
                 }}
-                style={[
-                  styles.enterButton,
-                  {
-                    backgroundColor: disabled
-                      ? style.disabledButtonColor
-                      : style.blue,
-                  },
-                ]}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.enterText, { color: '#fff' }]}
-                >
-                  {t('45')}
-                </Text>
-              </TouchableOpacity>
+                disabled={disabled}
+                style={{ width: '90%' }}
+              />
             </View>
             <View style={styles.footerContainer}>
               <View style={styles.footerInside}>
@@ -395,21 +378,15 @@ const ChangePhoneNumberSmsCheck = () => {
                 </View>
               </View>
             </View> */}
-          </View>
-        </ScrollView>
       </View>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default ChangePhoneNumberSmsCheck;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   error: {
     color: 'red',
     fontFamily: style.fontFamilyMedium,
@@ -503,19 +480,5 @@ const styles = StyleSheet.create({
   main: {
     alignItems: 'center',
     marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
   },
 });
