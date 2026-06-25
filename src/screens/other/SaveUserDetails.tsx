@@ -220,13 +220,12 @@ const UserInfo = () => {
                 >
                   <AskPermissionNearby />
 
-                  <View style={{ marginLeft: 4 }}>
+                  <View style={{ marginLeft: 4, flex: 1 }}>
                     <Text
                       style={[
                         styles.textButton,
                         {
                           fontSize: style.fontSize.small - 1,
-                          flexWrap: 'wrap',
                           textAlign: 'center',
                         },
                       ]}
