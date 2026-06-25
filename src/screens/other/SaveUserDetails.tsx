@@ -90,7 +90,7 @@ const UserInfo = () => {
   }, []);
 
   return (
-    <ScreenLayout title={t('Ma’lumot')} scroll={false}>
+    <ScreenLayout title={t('Ma’lumot')} scroll>
       <View style={styles.main}>
         <View style={styles.aboutUsContainer}>
           <View

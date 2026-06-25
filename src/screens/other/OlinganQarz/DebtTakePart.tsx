@@ -210,7 +210,7 @@ const DebtTakePart = () => {
     return <Loading />;
   }
   return (
-    <ScreenLayout title={t('450')} scroll={false}>
+    <ScreenLayout title={t('450')} scroll>
         <View style={styles.aboutUsContainer}>
           <View
             style={{

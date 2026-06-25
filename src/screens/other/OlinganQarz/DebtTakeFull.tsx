@@ -142,7 +142,7 @@ const DebtTakeFull = () => {
 
   console.log(item, 'item');
   return (
-    <ScreenLayout title={t('441')} scroll={false}>
+    <ScreenLayout title={t('441')} scroll>
         <View style={styles.aboutUsContainer}>
           <View
             style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}

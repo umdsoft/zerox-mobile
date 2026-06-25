@@ -19,7 +19,7 @@ const FullDebtBack = () => {
   const [check, setCheck] = useState(false);
   const navigation = useNavigation();
   return (
-    <ScreenLayout title={' Qarzni to’liq qaytarishni talab qilish'} scroll={false}>
+    <ScreenLayout title={' Qarzni to’liq qaytarishni talab qilish'} scroll>
       <View>
         <View style={{marginTop: 10}}>
           <BackButton

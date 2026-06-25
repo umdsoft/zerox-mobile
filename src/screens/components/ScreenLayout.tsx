@@ -70,7 +70,8 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({
       {scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={contentStyle}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.scrollContent, contentStyle]}
         >
           {body}
         </ScrollView>
@@ -87,6 +88,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   flex: { flex: 1 },
+  // Responsive: flexGrow=1 -> kontent baland ekranda to'ldiradi, past ekranda scroll
+  // bo'ladi (tugma har doim yetib boriladi). paddingBottom -> oxirgi element kesilmaydi.
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: tokens.spacing.xl,
+  },
   bg: {
     height: '40%',
     position: 'absolute',

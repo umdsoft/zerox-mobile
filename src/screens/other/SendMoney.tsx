@@ -269,7 +269,7 @@ const SendMoney = () => {
   }, [sum]);
 
   return (
-    <ScreenLayout title={t('822')} scroll={false}>
+    <ScreenLayout title={t('822')} scroll>
       <View>
         <View
           style={{

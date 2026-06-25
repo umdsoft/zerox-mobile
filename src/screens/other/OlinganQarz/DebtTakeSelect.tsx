@@ -44,7 +44,7 @@ const DebtTakeSelect = () => {
   };
 
   return (
-    <ScreenLayout title={t('438')} scroll={false}>
+    <ScreenLayout title={t('438')} scroll>
         {loading ? (
           <View
             style={{

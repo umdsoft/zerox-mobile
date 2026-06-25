@@ -255,7 +255,7 @@ const ChangePassportData = () => {
       headerColor={style.blue}
       headerIconColor="#fff"
       headerTitleColor={style.backgroundColorDark}
-      scroll={false}
+      scroll
       background={false}
     >
       <View style={styles.container}>

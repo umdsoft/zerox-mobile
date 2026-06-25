@@ -211,8 +211,9 @@ const CreatePassword = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 20, marginBottom: 30 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={{ flex: 1 }}>
             <View

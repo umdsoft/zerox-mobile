@@ -115,7 +115,7 @@ const FullDebtSelect = () => {
     }
   };
   return (
-    <ScreenLayout title={dotHelper(t('351'))} scroll={false}>
+    <ScreenLayout title={dotHelper(t('351'))} scroll>
       <View style={{ flex: 1 }}>
         {loading ? (
           <View

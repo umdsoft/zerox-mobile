@@ -20,7 +20,7 @@ const UserMoneyResult = () => {
   const {user} = useSelector(state => state.HomeReducer);
 
   return (
-    <ScreenLayout title={t('135')} scroll={false}>
+    <ScreenLayout title={t('135')} scroll>
       <View style={styles.aboutUsContainer}>
           <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
             <View>

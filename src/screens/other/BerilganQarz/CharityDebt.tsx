@@ -126,7 +126,7 @@ const CharityDebt = () => {
   };
 
   return (
-    <ScreenLayout title={t('378')} scroll={false}>
+    <ScreenLayout title={t('378')} scroll>
         <View style={styles.aboutUsContainer}>
           {loading ? (
             <Loading />

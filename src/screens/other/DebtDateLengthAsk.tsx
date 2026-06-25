@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -40,7 +41,7 @@ const DebtDateLengthAsk = () => {
   const [date, setDate] = useState(new Date());
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.HomeReducer);
-  const [info, setInfo] = useState({});
+  const [info, setInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const getData = useCallback(async () => {
@@ -213,9 +214,14 @@ const DebtDateLengthAsk = () => {
               <Loading />
             </View>
           ) : (
-            <View
-              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ flexGrow: 1 }}
             >
+              <View
+                style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+              >
               <View>
                 <View style={[styles.card]}>
                   <View style={styles.insideMoney}>
@@ -319,7 +325,8 @@ const DebtDateLengthAsk = () => {
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
+              </View>
+            </ScrollView>
           )}
         </View>
       </View>
@@ -342,11 +349,11 @@ const DebtDateLengthAsk = () => {
           minimumDate={new Date(minimumDate(info?.end_date))}
           maximumDate={
             new Date(
-              new Date(plus_day(item?.end_date)).setFullYear(
-                new Date(plus_day(item?.end_date)).getFullYear() + 2,
+              new Date(info?.created_at).setFullYear(
+                new Date(info?.created_at).getFullYear() + 2,
               ),
             )
-          }
+          } // 2 yil — qarz BERILGAN sanadan (info.created_at), qaytarish sanasidan emas
           onCancel={() => {
             setOpen(false);
           }}
@@ -460,7 +467,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dateText: {
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx - 3,
     fontFamily: style.fontFamilyMedium,
     color: '#000',
   },
@@ -471,7 +478,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     paddingLeft: 10,
     justifyContent: 'center',
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx - 3,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,
   },
@@ -496,7 +503,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textButton: {
-    fontSize: style.fontSize.xx,
+    fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: '#fff',
   },

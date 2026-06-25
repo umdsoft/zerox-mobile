@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -43,7 +44,7 @@ const DebtDateLength = () => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.HomeReducer);
   const navigation = useNavigation();
-  const [info, setInfo] = useState({});
+  const [info, setInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
@@ -166,9 +167,14 @@ const DebtDateLength = () => {
           {loading ? (
             <Loading />
           ) : (
-            <View
-              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ flexGrow: 1 }}
             >
+              <View
+                style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
+              >
               <View>
                 <View style={[styles.card]}>
                   <View style={styles.insideMoney}>
@@ -300,7 +306,8 @@ const DebtDateLength = () => {
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
+              </View>
+            </ScrollView>
           )}
         </View>
       </View>
@@ -352,16 +359,16 @@ const DebtDateLength = () => {
         title={t('801')}
         maximumDate={
           new Date(
-            new Date(plus_day(item?.end_date)).setFullYear(
-              new Date(plus_day(item?.end_date)).getFullYear() + 2,
+            new Date(info?.created_at).setFullYear(
+              new Date(info?.created_at).getFullYear() + 2,
             ),
           )
-        } // from now to two years
+        } // 2 yil — qarz BERILGAN sanadan (created_at), qaytarish sanasidan emas
         onConfirm={date => {
           setDate(date);
           setOpen(false);
         }}
-        minimumDate={new Date(plus_day(item?.end_date))}
+        minimumDate={new Date(plus_day(info?.end_date))}
       />
 
       {/* <DateModal
@@ -427,7 +434,7 @@ const styles = StyleSheet.create({
     paddingRight: 5,
   },
   dateText: {
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx - 3,
     fontFamily: style.fontFamilyMedium,
     color: '#000',
   },
@@ -438,7 +445,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     paddingLeft: 10,
     justifyContent: 'center',
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx - 3,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,
   },
@@ -453,7 +460,7 @@ const styles = StyleSheet.create({
   },
   phoneText: {
     fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 3.5,
+    fontSize: style.fontSize.xx - 4.5,
     color: style.textColor,
   },
   hisob: {
@@ -463,7 +470,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textButton: {
-    fontSize: style.fontSize.xx,
+    fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: '#fff',
   },
