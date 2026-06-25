@@ -2,8 +2,6 @@ import {
   StyleSheet,
   View,
   TextInput,
-  ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -11,7 +9,8 @@ import {normalize, style} from '../../theme/style';
 import NewPasspord from '../../images/NewPassword';
 import Check from '../../images/CheckIcon';
 import PasswordInput from '../components/PasswordInput';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import axios from 'axios';
 import {URL} from '../constants';
 import {storage} from '../../store/api/token/getToken';
@@ -139,19 +138,17 @@ const NewPasswordEnter = () => {
   }
 
   return (
-    <View style={[styles.container]}>
-      <OtherHeader
-        title={'Yangi parol kiriting'}
-        titleColor="#000"
-        iconColor={'#fff'}
-        backgroundColor={style.blue}
-      />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <View
-            style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
-            <NewPasspord width={normalize(200)} height={normalize(200)} />
-          </View>
+    <ScreenLayout
+      title={'Yangi parol kiriting'}
+      headerTitleColor="#000"
+      headerIconColor={'#fff'}
+      headerColor={style.blue}
+      background={false}>
+      <View>
+        <View
+          style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
+          <NewPasspord width={normalize(200)} height={normalize(200)} />
+        </View>
 
           <View style={styles.main}>
             <View style={{width: '90%'}}>
@@ -188,37 +185,21 @@ const NewPasswordEnter = () => {
             {renderValidation}
           </View>
           <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
-              disabled={disabled}
-              activeOpacity={0.8}
+            <Button
+              title={'Tasdiqlash'}
               onPress={changePasswordHandle}
-              style={[
-                styles.enterButton,
-                {
-                  backgroundColor: disabled
-                    ? style.disabledButtonColor
-                    : style.blue,
-                },
-              ]}>
-              <MainText color={colors.white} size={fontSize[16]}>
-                Tasdiqlash
-              </MainText>
-            </TouchableOpacity>
+              disabled={disabled}
+            />
           </View>
         </View>
-      </ScrollView>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default NewPasswordEnter;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   title: {
     position: 'absolute',
     marginLeft: 15,

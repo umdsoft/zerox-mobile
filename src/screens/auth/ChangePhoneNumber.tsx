@@ -1,17 +1,15 @@
-import {ScrollView, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {normalize, style} from '../../theme/style';
 import ChangeNumber from '../../images/changeNumber';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import axios from 'axios';
 import {URL} from '../constants';
 import Loading from '../components/Loading';
 import {storage} from '../../store/api/token/getToken';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import MainText from '../components/MainText';
-import {fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
 import {t} from 'i18next';
 import {useTranslation} from 'react-i18next';
 import {useSelector} from 'react-redux';
@@ -94,20 +92,11 @@ const ChangePhoneNumber = () => {
 
   const renderButton = useMemo(() => {
     return (
-      <TouchableOpacity
-        disabled={phone.replace(/\s/g, '').length !== 9}
-        activeOpacity={0.8}
+      <Button
+        title={t('45')}
         onPress={onPress}
-        style={[
-          styles.enterButton,
-          {
-            backgroundColor: checkLength(phone),
-          },
-        ]}>
-        <MainText color={colors.white} size={fontSize[16]}>
-          {t('45')}
-        </MainText>
-      </TouchableOpacity>
+        disabled={phone.replace(/\s/g, '').length !== 9}
+      />
     );
   }, [onPress, phone]);
 
@@ -116,39 +105,31 @@ const ChangePhoneNumber = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <OtherHeader
-        title={t('702')}
-        backgroundColor={style.blue}
-        iconColor="#fff"
-        titleColor="#000"
-      />
-      <View
-        style={{
-          flex: 1,
-        }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{marginTop: normalize(90)}}>
-            <View style={{alignItems: 'center', justifyContent: 'center'}}>
-              <ChangeNumber />
-            </View>
-            <View style={styles.main}>
-              <View style={{alignItems: 'center'}}>
-                {/* <View
+    <ScreenLayout
+      title={t('702')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+    >
+      <View style={{marginTop: normalize(90)}}>
+        <View style={{alignItems: 'center', justifyContent: 'center'}}>
+          <ChangeNumber />
+        </View>
+        <View style={styles.main}>
+          <View style={{alignItems: 'center'}}>
+            {/* <View
                   style={[styles.TextInputLabelContainer, {marginBottom: 25}]}>
                   <View style={styles.retryPassword}>
                     <MainText size={fontSize[12]}>{t('705')}</MainText>
                   </View> */}
-                <View>{renderPhone}</View>
-                {/* </View> */}
-              </View>
-              <View style={styles.enterButtonContainer}>{renderButton}</View>
-            </View>
+            <View>{renderPhone}</View>
+            {/* </View> */}
           </View>
-        </ScrollView>
+          <View style={styles.enterButtonContainer}>{renderButton}</View>
+        </View>
       </View>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -168,17 +149,7 @@ const checkingPhone = value => {
   return val;
 };
 
-const checkLength = text => {
-  return text.replace(/\s/g, '').length === 9
-    ? style.blue
-    : style.disabledButtonColor;
-};
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   time: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,
@@ -262,15 +233,6 @@ const styles = StyleSheet.create({
   main: {
     alignItems: 'center',
     marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    paddingVertical: 18,
-    alignSelf: 'center',
   },
   enterText: {
     fontFamily: style.fontFamilyMedium,
