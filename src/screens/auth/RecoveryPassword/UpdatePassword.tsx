@@ -113,6 +113,13 @@ const UpdatePassword = () => {
         desc = t('Yuz hisobga mos kelmadi.');
       } else if (errCode === 'invalid-myid-code') {
         desc = t("MyID kodi yaroqsiz. Qaytadan urinib ko'ring.");
+      } else if (
+        errCode === 'invalid-or-expired-token' ||
+        errCode === 'myid-not-initiated'
+      ) {
+        desc = t("Sessiya muddati tugadi. Parol tiklashni qaytadan boshlang.");
+      } else if (errCode === 'myid-verify-failed') {
+        desc = t("MyID tekshiruvi muvaffaqiyatsiz. Qayta urinib ko'ring.");
       } else {
         desc = t('Parolni tiklashda xatolik yuz berdi');
       }
