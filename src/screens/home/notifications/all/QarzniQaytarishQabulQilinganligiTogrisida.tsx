@@ -53,7 +53,7 @@ const QarzniQaytarishQabulQilinganligiTogrisida = ({
       }
     : {
         start: item.created_at,
-        number: item.number,
+        id: item.number,
         name:
           item.ctypes === 2
             ? ReturnName.returnCreditorName(item)
@@ -72,7 +72,7 @@ const QarzniQaytarishQabulQilinganligiTogrisida = ({
       }
     : {
         start: <TextBold />,
-        number: numberComp,
+        id: numberComp,
         name: <TextBold />,
         sum: <TextBold />,
       };

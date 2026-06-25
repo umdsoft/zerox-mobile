@@ -68,7 +68,7 @@ const CreditorDetail = ({type, item, status}) => {
                 type: 1,
               });
             }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
+            <MainText color={colors.green} size={fontSize[12]}>
               {item?.debitor_name}
             </MainText>
           </TouchableOpacity>
@@ -231,7 +231,7 @@ const DebitorDetail = ({isHave, item, type, status, person}) => {
                 type: 0,
               });
             }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
+            <MainText color={colors.red} size={fontSize[12]}>
               {item?.creditor_name}{' '}
             </MainText>
           </TouchableOpacity>
@@ -382,7 +382,7 @@ const CreditorStatistic = ({type, item, status}) => {
                 type: 1,
               });
             }}>
-            <MainText color={style.blue} size={fontSize[12]}>
+            <MainText color={colors.green} size={fontSize[12]}>
               {item?.debitor_name}
             </MainText>
           </TouchableOpacity>
@@ -518,7 +518,7 @@ const DebitorStatistic = ({isHave, item}) => {
                 type: 0,
               });
             }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
+            <MainText color={colors.red} size={fontSize[12]}>
               {item?.creditor_name}
             </MainText>
           </TouchableOpacity>
