@@ -1,26 +1,15 @@
 import {StyleSheet, View} from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
 import {style} from '../../theme/style';
 
 import {ScrollView} from 'react-native-gesture-handler';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import MainText from '../components/MainText';
 import {font, fontSize} from '../../theme/font';
 const AboutUs = () => {
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          height: '40%',
-          position: 'absolute',
-          width: '100%',
-        }}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={'Biz haqimizda'} />
-      <View style={[styles.main]}>
-        <View>
+    <ScreenLayout title={'Biz haqimizda'} scroll={false}>
+      <View>
           <View style={styles.aboutUsContainer}>
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -91,18 +80,13 @@ const AboutUs = () => {
             </ScrollView>
           </View>
         </View>
-      </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default AboutUs;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   paginationButton: {
     width: 40,
     height: 40,
@@ -116,14 +100,8 @@ const styles = StyleSheet.create({
     fontSize: style.fontSize.small,
     color: style.textColor,
   },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-  },
   aboutUsContainer: {
     backgroundColor: '#fff',
-    marginTop: 20,
     borderRadius: 15,
 
     height: style.height / 1.3,

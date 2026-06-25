@@ -1,12 +1,10 @@
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
 import {style} from '../../theme/style';
 
 import Uzbekistan from '../../images/Uzbekistan';
@@ -14,7 +12,7 @@ import Russian from '../../images/Russian';
 import CheckIcon from '../../images/Check';
 
 import {useTranslation} from 'react-i18next';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import {storage} from '../../store/api/token/getToken';
 import {t} from 'i18next';
 import {onPostDefaultLang} from '../../store/api/home';
@@ -36,20 +34,8 @@ const Language = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          height: '40%',
-          position: 'absolute',
-          width: style.width,
-        }}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('til')} />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <View style={styles.main}>
-            <View style={styles.aboutUsContainer}>
+    <ScreenLayout title={t('til')}>
+      <View style={styles.aboutUsContainer}>
               <TouchableOpacity
                 onPress={() => {
                   onChangeLanguage('uz');
@@ -95,21 +81,14 @@ const Language = () => {
                   </View>
                 )}
               </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </View>
+      </View>
+    </ScreenLayout>
   );
 };
 
 export default Language;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   check: {
     marginRight: 10,
   },
@@ -150,12 +129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 20,
-  },
   aboutUsContainer: {
     backgroundColor: '#EAF2FB',
 

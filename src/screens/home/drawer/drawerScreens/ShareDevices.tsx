@@ -1,15 +1,13 @@
 import {
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../../../helper/homeIcon';
 import {style} from '../../../../theme/style';
 
-import OtherHeader from '../../../components/OtherHeader';
+import ScreenLayout from '../../../components/ScreenLayout';
 import MainText from '../../../components/MainText';
 import {font, fontSize} from '../../../../theme/font';
 
@@ -59,19 +57,8 @@ const ShareDevices = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 2.5,
-          width: '100%',
-        }}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={'Ulangan qurilmalar'} />
-      <View style={styles.main}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.aboutUsContainer}>
+    <ScreenLayout title={'Ulangan qurilmalar'}>
+      <View style={styles.aboutUsContainer}>
             <View
               style={{
                 flexDirection: 'row',
@@ -161,10 +148,8 @@ const ShareDevices = () => {
                 </View>
               </View>
             )}
-          </View>
-        </ScrollView>
       </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -195,10 +180,6 @@ const renderText = item => {
 export default ShareDevices;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   btn: {
     alignItems: 'center',
     marginTop: 10,
@@ -222,14 +203,8 @@ const styles = StyleSheet.create({
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,
   },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-  },
   aboutUsContainer: {
     backgroundColor: '#fff',
-    marginTop: 20,
     borderRadius: 15,
 
     shadowColor: '#000',

@@ -6,10 +6,8 @@ import {
   Platform,
   Button,
   Image,
-  ScrollView,
 } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackGroundIcon } from '../../../../helper/homeIcon';
 import { style } from '../../../../theme/style';
 
 import QRCode from 'react-native-qrcode-svg';
@@ -20,8 +18,7 @@ import { generatePDF } from 'react-native-html-to-pdf';
 
 import Share from 'react-native-share';
 import FileViewer from 'react-native-file-viewer';
-import universalStyle from '../../../../theme/universalStyle';
-import OtherHeader from '../../../components/OtherHeader';
+import ScreenLayout from '../../../components/ScreenLayout';
 
 import MainText from '../../../components/MainText';
 
@@ -275,14 +272,8 @@ const QrCode = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={universalStyle.backimage}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('qrcode')} />
-      <View style={styles.main}>
-        <ScrollView>
-          <View style={styles.aboutUsContainer}>
+    <ScreenLayout title={t('qrcode')}>
+      <View style={styles.aboutUsContainer}>
             <ViewShot
               ref={viewShootRef}
               // captureMode="mount"
@@ -379,10 +370,8 @@ const QrCode = () => {
                 </MainText>
               </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
       </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -410,10 +399,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
 
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   buttons: {
     marginTop: 20,
     marginBottom: 20,
@@ -453,11 +438,6 @@ const styles = StyleSheet.create({
     fontSize: style.fontSize.small,
     fontFamily: style.fontFamilyMedium,
   },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    flex: 1,
-  },
   darkBg: {
     width: '70%',
     paddingLeft: '10%',
@@ -469,7 +449,6 @@ const styles = StyleSheet.create({
   },
   aboutUsContainer: {
     backgroundColor: '#fff',
-    marginTop: 20,
     borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: {
