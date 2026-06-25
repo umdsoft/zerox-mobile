@@ -1,4 +1,5 @@
-import {colors} from './colors';
-import {style} from './style';
-import {fontSize} from './font';
-export {colors, style, fontSize};
+import { colors } from './colors';
+import { style, normalize } from './style';
+import { fontSize, font } from './font';
+import { tokens } from './tokens';
+export { colors, style, fontSize, font, tokens, normalize };

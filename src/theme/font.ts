@@ -1,3 +1,9 @@
+/**
+ * font.ts — LEGACY `font` + `fontSize` (53 ekran ishlatadi).
+ * Shrift nomlari tokens.ts'dan keladi. `fontSize` raqamli shkala o'zgarmagan.
+ */
+import { tokens } from './tokens';
+
 export const fontSize = {
   10: 12,
   11: 13,
@@ -14,10 +20,11 @@ export const fontSize = {
   22: 24,
   23: 25,
 };
+
 export const font = {
-  bold: 'Montserrat-Bold',
-  light: 'Montserrat-Light',
-  medium: 'Montserrat-Medium',
-  regular: 'Montserrat-Regular',
-  thin: 'Montserrat-Thin',
+  bold: tokens.font.bold,
+  light: tokens.font.light,
+  medium: tokens.font.medium,
+  regular: tokens.font.regular,
+  thin: tokens.font.thin,
 };
