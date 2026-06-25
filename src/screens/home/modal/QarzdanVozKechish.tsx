@@ -1,42 +1,19 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {normalize, style} from '../../../theme/style';
+import {style} from '../../../theme/style';
 import {useSelector} from 'react-redux';
 
 import TextBold from '../../components/TextBold';
 import {sortText} from '../../components/StatisticCard';
 import {settingDate} from '../../../helper';
+import DalolatnomaLayout from '../../components/DalolatnomaLayout';
 
 const QarzdanVozKechish = ({data}) => {
   const {user} = useSelector(state => state.HomeReducer);
 
   return (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: normalize(10),
-        alignSelf: 'center',
-        paddingHorizontal: 10,
-      }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'center',
-          marginTop: 10,
-        }}>
-        <Text
-          style={{
-            fontFamily: style.fontFamilyBold,
-            color: '#000',
-            fontSize: style.fontSize.xs,
-          }}
-          allowFontScaling={false}>
-          D А L O L А T N O M А
-        </Text>
-      </View>
-      <View style={{marginTop: 10, marginBottom: 10}}>
+    <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
           ( <TextBold>{data?.number}</TextBold> -sonli qarz shartnomasi bo‘yicha
           qarzdan voz kechish to‘g‘risida) {'\n'}
@@ -88,8 +65,7 @@ const QarzdanVozKechish = ({data}) => {
             </TextBold>
           </Text>
         </Text>
-      </View>
-    </View>
+    </DalolatnomaLayout>
   );
 };
 

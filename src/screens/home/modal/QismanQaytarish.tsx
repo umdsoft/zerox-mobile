@@ -1,41 +1,18 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React, {useEffect} from 'react';
 
-import {normalize, style} from '../../../theme/style';
+import {style} from '../../../theme/style';
 
 import {sortText} from '../../components/StatisticCard';
 import {settingDate} from '../../../helper';
+import DalolatnomaLayout from '../../components/DalolatnomaLayout';
 
 const QismanQaytarish = ({hide, onHide, data, sum}) => {
   useEffect(() => {
     console.log('QismanQaytarish', data);
   }, []);
   return (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: normalize(10),
-        alignSelf: 'center',
-        width: '100%',
-      }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'center',
-          marginTop: 10,
-        }}>
-        <Text
-          style={{
-            fontFamily: style.fontFamilyBold,
-            color: '#000',
-            fontSize: style.fontSize.xs,
-          }}
-          allowFontScaling={false}>
-          D А L O L А T N O M А
-        </Text>
-      </View>
-      <View style={{marginTop: 10, marginBottom: 10, paddingHorizontal: 10}}>
+    <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
           <Text style={{textAlign: 'center'}} allowFontScaling={false}>
             (<Text style={styles.mainText} allowFontScaling={false}>{data?.number}</Text> - sonli qarz
@@ -118,8 +95,7 @@ const QismanQaytarish = ({hide, onHide, data, sum}) => {
             Sana: {settingDate(new Date())} yil
           </Text>
         </Text>
-      </View>
-    </View>
+    </DalolatnomaLayout>
   );
 };
 

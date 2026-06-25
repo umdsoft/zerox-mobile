@@ -1,42 +1,18 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {normalize, style} from '../../../theme/style';
+import {style} from '../../../theme/style';
 import {useSelector} from 'react-redux';
 
 import TextBold from '../../components/TextBold';
 import {settingDate} from '../../../helper';
 import {cyrillicToLatin} from 'lotin-kirill';
+import DalolatnomaLayout from '../../components/DalolatnomaLayout';
 const QarzMuddatUzaytirish = ({data, date}) => {
   const {user} = useSelector(state => state.HomeReducer);
   console.log(data, 'daadadad');
   return (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: normalize(10),
-        alignSelf: 'center',
-        width: '100%',
-        height: style.height,
-      }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'center',
-          marginTop: 10,
-        }}>
-        <Text
-          style={{
-            fontFamily: style.fontFamilyBold,
-            color: '#000',
-            fontSize: style.fontSize.xs,
-          }}
-          allowFontScaling={false}>
-          D А L O L А T N O M А
-        </Text>
-      </View>
-      <View style={{marginTop: 10, marginBottom: 10, paddingHorizontal: 10}}>
+    <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
           ( <TextBold>{data?.number} </TextBold>- sonli qarz shartnomasining
           muddati uzaytirilganligi to‘g‘risida ) {'\n'} {'\n'}
@@ -80,8 +56,7 @@ const QarzMuddatUzaytirish = ({data, date}) => {
             Sana: {settingDate(new Date())} yil
           </TextBold>
         </Text>
-      </View>
-    </View>
+    </DalolatnomaLayout>
   );
 };
 

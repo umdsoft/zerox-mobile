@@ -1,11 +1,12 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import React, {useCallback} from 'react';
-import {Modal} from 'react-native-paper';
 import {normalize, style} from '../../../theme/style';
 import {useDispatch, useSelector} from 'react-redux';
 import {showModal} from '../../../store/reducers/HomeReducer';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import AppModal from '../../components/AppModal';
+import Button from '../../components/Button';
 
 const FaceIdModal = () => {
   const dispatch = useDispatch();
@@ -17,43 +18,41 @@ const FaceIdModal = () => {
     dispatch(showModal({show: false}));
   }, [dispatch]);
   return (
-    <Modal visible={isActive} onDismiss={onClose}>
-      <View style={styles.main}>
-        <View style={{marginTop: 8, maxWidth: '90%'}}>
-          <Text
-            style={[styles.text, {fontFamily: style.fontFamilyMedium}]}
-            allowFontScaling={false}>
-            {t('Identifikatsiya')}
-          </Text>
-        </View>
-        <View style={styles.mainInside}>
-          {/* <Text
-            style={{
-              fontFamily: style.fontFamilyMedium,
-              color: '#000',
-              fontSize: style.fontSize.xs,
-            }}
-          >
-            Bugun soat 22:30
-          </Text> */}
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ScanFaceMyId');
-              dispatch(showModal({show: false}));
-            }}
-            activeOpacity={0.8}
-            style={styles.enterButton}>
-            <Text style={styles.btnText} allowFontScaling={false}>{t('otish')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onClose}
-            activeOpacity={0.8}
-            style={styles.enterButton}>
-            <Text style={styles.btnText} allowFontScaling={false}>{t('750')}</Text>
-          </TouchableOpacity>
-        </View>
+    <AppModal visible={isActive} onDismiss={onClose}>
+      <View style={{marginTop: 8, maxWidth: '90%'}}>
+        <Text
+          style={[styles.text, {fontFamily: style.fontFamilyMedium}]}
+          allowFontScaling={false}>
+          {t('Identifikatsiya')}
+        </Text>
       </View>
-    </Modal>
+      <View style={styles.mainInside}>
+        {/* <Text
+          style={{
+            fontFamily: style.fontFamilyMedium,
+            color: '#000',
+            fontSize: style.fontSize.xs,
+          }}
+        >
+          Bugun soat 22:30
+        </Text> */}
+        <Button
+          title={t('otish')}
+          onPress={() => {
+            navigation.navigate('ScanFaceMyId');
+            dispatch(showModal({show: false}));
+          }}
+          fullWidth={false}
+          style={styles.enterButton}
+        />
+        <Button
+          title={t('750')}
+          onPress={onClose}
+          fullWidth={false}
+          style={styles.enterButton}
+        />
+      </View>
+    </AppModal>
   );
 };
 
@@ -69,17 +68,6 @@ const styles = StyleSheet.create({
     height: normalize(35),
     paddingHorizontal: 10,
   },
-  main: {
-    backgroundColor: '#fff',
-    borderRadius: normalize(10),
-    alignSelf: 'center',
-    padding: 10,
-  },
-  rw: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   text: {
     fontFamily: style.fontFamilyBold,
     color: '#000',
@@ -90,11 +78,5 @@ const styles = StyleSheet.create({
     marginTop: normalize(15),
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  btnText: {
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    textAlign: 'center',
   },
 });

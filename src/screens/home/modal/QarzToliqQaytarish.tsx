@@ -1,48 +1,15 @@
-import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
-import {Modal} from 'react-native-paper';
-import {normalize, style} from '../../../theme/style';
+import {style} from '../../../theme/style';
 import {useSelector} from 'react-redux';
 import {settingDate} from '../../../helper';
+import DalolatnomaLayout from '../../components/DalolatnomaLayout';
 
 const QarzToliqQaytarish = ({hide, onHide, data}) => {
   const {user} = useSelector(state => state.HomeReducer);
 
   return (
-    <View
-      style={{
-        backgroundColor: '#fff',
-        borderRadius: normalize(10),
-        alignSelf: 'center',
-        paddingHorizontal: 10,
-        width: '100%',
-      }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            alignSelf: 'center',
-            marginTop: 10,
-          }}>
-          <Text
-            style={{
-              fontFamily: style.fontFamilyBold,
-              color: '#000',
-              fontSize: style.fontSize.xs,
-            }}
-            allowFontScaling={false}>
-            D А L O L А T N O M А
-          </Text>
-        </View>
-        <View style={{marginTop: 10, marginBottom: 10, paddingHorizontal: 10}}>
+    <DalolatnomaLayout>
           <Text style={styles.text} allowFontScaling={false}>
             ( {data?.number} - sonli qarz shartnomasining muddati
             uzaytirilganligi to‘g‘risida ) {'\n'} {'\n'}Men,{' '}
@@ -84,9 +51,7 @@ const QarzToliqQaytarish = ({hide, onHide, data}) => {
               Sana: {settingDate(new Date())} yil
             </Text>
           </Text>
-        </View>
-      </ScrollView>
-    </View>
+    </DalolatnomaLayout>
   );
 };
 
