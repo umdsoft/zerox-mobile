@@ -28,9 +28,17 @@ const KEYCHAIN_USERNAME = 'mmkv-encryption-key';
 // "yangi/qayta o'rnatish (toza)" holatlarini ajratish uchun ishlatiladi.
 const SECURE_FLAG = 'secureStoreEncrypted';
 
-/** 256-bit (64 hex) tasodifiy kalit — CSPRNG. */
+/**
+ * MMKV shifrlash kaliti — STRING bayt uzunligi <= 16 bo'lishi SHART (MMKV AES-128
+ * limiti: 16 baytdan uzun kalit native tomonda throw/truncate qiladi). Oldin 64 hex
+ * (64 bayt) yaratilardi -> recrypt/ochishda nomuvofiqlik -> migration buzilib k2/PIN
+ * yo'qolardi -> update'dan keyin majburiy full login. Endi 8 bayt CSPRNG -> 16 hex
+ * belgi = aniq 16 bayt (barchasi ASCII), MMKV bilan to'liq mos.
+ * Mavjud qurilmalar Keychain'dagi ESKI kalitni o'zgartirmasdan qayta ishlatadi
+ * (1-shox `existing.password`) — bu o'zgarish faqat yangi/recrypt yo'liga ta'sir qiladi.
+ */
 function generateEncryptionKey(): string {
-  const bytes = new Uint8Array(32);
+  const bytes = new Uint8Array(8); // 8 bayt -> 16 hex belgi = 16-baytli string
   // react-native-get-random-values global.crypto ni polyfill qiladi.
   (globalThis as any).crypto.getRandomValues(bytes);
   let hex = '';
