@@ -1,6 +1,5 @@
-import {ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
 import {normalize, style} from '../../theme/style';
 
 import {useRoute} from '@react-navigation/native';
@@ -13,7 +12,7 @@ import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 import {URL} from '../constants';
 import {useSelector} from 'react-redux';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import Famale from '../../images/Famale';
 import {settingDate} from '../../helper';
 import {t} from 'i18next';
@@ -50,17 +49,7 @@ const ShowUserDetails = () => {
     return <Loading />;
   }
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          height: '40%',
-          position: 'absolute',
-          width: style.width,
-        }}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={type ? t('273') : t('270')} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <ScreenLayout title={type ? t('273') : t('270')}>
         <View>
           <View style={styles.main}>
             <View style={styles.aboutUsContainer}>
@@ -156,18 +145,13 @@ const ShowUserDetails = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default ShowUserDetails;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   textColor: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,

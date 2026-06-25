@@ -1,14 +1,12 @@
 import {
   ActivityIndicator,
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { normalize, style } from '../../theme/style';
 
 import { useNavigation } from '@react-navigation/native';
@@ -17,7 +15,7 @@ import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 import { useSelector } from 'react-redux';
 import Edit from '../../images/Edit';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import Famale from '../../images/Famale';
 import { t } from 'i18next';
 import { URL } from '../constants';
@@ -28,22 +26,10 @@ const UserDetails = () => {
   const { user } = useSelector(state => state.HomeReducer);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          height: '40%',
-          width: '100%',
-          position: 'absolute',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('810')} />
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <View style={styles.main}>
-            <View style={styles.aboutUsContainer}>
+    <ScreenLayout title={t('810')}>
+      <View>
+        <View style={styles.main}>
+          <View style={styles.aboutUsContainer}>
               <View style={{ flexDirection: 'row' }}>
                 {/* {user.data.image === null ? ( */}
                 <View style={styles.userImageContainer}>
@@ -275,8 +261,7 @@ const UserDetails = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -311,10 +296,6 @@ export const phoneSort = text => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   TouchableOpacity: {
     backgroundColor: '#fff',
     paddingVertical: 15,

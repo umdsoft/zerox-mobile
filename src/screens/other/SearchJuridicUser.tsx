@@ -1,6 +1,5 @@
 import {
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -8,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 
 import { useNavigation } from '@react-navigation/native';
@@ -19,7 +17,8 @@ import { toastConfig } from '../components/ToastConfig';
 import axios from 'axios';
 import DatePicker from 'react-native-date-picker';
 import { URL } from '../constants';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import { t } from 'i18next';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
 import DateModal from '../home/modal/DateModal';
@@ -70,18 +69,7 @@ const SearchJuridicUser = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          width: style.width,
-          position: 'absolute',
-          height: style.height / 3,
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('210')} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <ScreenLayout title={t('210')}>
         <View>
           <View style={styles.main}>
             <View style={styles.aboutUsContainer}>
@@ -149,21 +137,13 @@ const SearchJuridicUser = () => {
                     marginTop: 20,
                   }}
                 >
-                  <TouchableOpacity
-                    disabled={disabled}
+                  <Button
+                    title="Izlash"
                     onPress={SearchUser}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.registerButton,
-                      {
-                        backgroundColor: disabled
-                          ? style.disabledButtonColor
-                          : style.blue,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.textButton}>Izlash</Text>
-                  </TouchableOpacity>
+                    disabled={disabled}
+                    fullWidth={false}
+                    style={{ width: '90%' }}
+                  />
                 </View>
               </View>
             </View>
@@ -172,7 +152,6 @@ const SearchJuridicUser = () => {
             <UserInfo user={data?.user} navigation={navigation} />
           )}
         </View>
-      </ScrollView>
       {/* {Platform.OS === 'android' && open && (
         <DatePicker
           value={date}
@@ -232,7 +211,7 @@ const SearchJuridicUser = () => {
         setDate={setDate}
         title={`Tug'ulgan sanangizni \nkiriting`}
       /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -319,10 +298,6 @@ const UserInfo = ({ user, navigation }) => {
 export default SearchJuridicUser;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   dateText: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,
@@ -333,14 +308,6 @@ const styles = StyleSheet.create({
     fontFamily: style.fontFamilyMedium,
     color: '#fff',
     textAlign: 'center',
-  },
-  registerButton: {
-    width: '90%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   TextInput: {
     width: '100%',

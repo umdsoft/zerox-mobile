@@ -6,7 +6,6 @@ import {
   FlatList,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { normalize, style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -15,7 +14,7 @@ import { storage } from '../../store/api/token/getToken';
 import { URL } from '../constants';
 import axios from 'axios';
 import Loading from '../components/Loading';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 
@@ -65,17 +64,7 @@ const HistoryDebt = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          width: style.width,
-          position: 'absolute',
-          height: style.height / 3,
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('207')} />
+    <ScreenLayout title={t('207')} scroll={false}>
       <View style={[styles.main]}>
         <View style={styles.aboutUsContainer}>
           <View
@@ -196,18 +185,13 @@ const HistoryDebt = () => {
           </View>
         </View>
       </View>
-      {/* </ScrollView> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default HistoryDebt;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   username: {
     fontSize: style.fontSize.small,
     color: style.textColor,

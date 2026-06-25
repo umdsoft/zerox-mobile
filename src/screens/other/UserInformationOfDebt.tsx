@@ -1,13 +1,11 @@
 import {
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { normalize, style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,7 +23,7 @@ import Loading from '../components/Loading';
 import PersonIcon from '../../images/home/person';
 import JuridicIcon from '../../images/home/juridic';
 import { settingDate } from './UserDetails';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import ListCardShowDetails from '../components/ListCardShowDetails';
 import Famale from '../../images/Famale';
 import { useTranslation } from 'react-i18next';
@@ -106,18 +104,7 @@ const UserInformationOfDebt = () => {
   console.log(data.creditor, 'creditor');
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          width: style.width,
-          position: 'absolute',
-          height: style.height / 3,
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={type === 1 ? '' : t('qidiruv')} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <ScreenLayout title={type === 1 ? '' : t('qidiruv')}>
         <View style={styles.main}>
           <View style={styles.aboutUsContainer}>
             <View>
@@ -399,18 +386,13 @@ const UserInformationOfDebt = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default UserInformationOfDebt;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   qarzberish: {
     alignItems: 'center',
     justifyContent: 'center',

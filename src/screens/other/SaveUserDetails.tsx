@@ -8,8 +8,7 @@ import {
   View,
 } from 'react-native';
 import { style } from '../../theme/style';
-import { BackGroundIcon } from '../../helper/homeIcon';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import axios from 'axios';
 import { URL } from '../constants';
 import { useDispatch, useSelector } from 'react-redux';
@@ -91,17 +90,7 @@ const UserInfo = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
-      <View
-        style={{
-          width: style.width,
-          position: 'absolute',
-          height: style.height / 3,
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('Ma’lumot')} />
+    <ScreenLayout title={t('Ma’lumot')} scroll={false}>
       <View style={styles.main}>
         <View style={styles.aboutUsContainer}>
           <View
@@ -253,7 +242,7 @@ const UserInfo = () => {
         </View>
       </View>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -267,10 +256,6 @@ export const secToMin = sec => {
 
 export default UserInfo;
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   dateText: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,

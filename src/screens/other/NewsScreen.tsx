@@ -1,15 +1,12 @@
 import {
   Image,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import React, {useMemo} from 'react';
-import {style} from '../../theme';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import {t} from 'i18next';
 import {useRoute} from '@react-navigation/native';
 import {mylog} from '../../log';
@@ -28,19 +25,14 @@ const NewsScreen = () => {
   const {params} = useRoute();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headers}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader
-        title={
-          params?.data?.title.length <= 30
-            ? params?.data?.title
-            : params?.data?.title.slice(0, 30) + '...'
-        }
-      />
-      <ScrollView>
-        <View style={{paddingHorizontal: 15, paddingVertical: 15}}>
+    <ScreenLayout
+      title={
+        params?.data?.title.length <= 30
+          ? params?.data?.title
+          : params?.data?.title.slice(0, 30) + '...'
+      }
+    >
+      <View style={{paddingHorizontal: 15, paddingVertical: 15}}>
           {/* {params?.data?.img && (
             <View>
               <Image
@@ -94,8 +86,7 @@ const NewsScreen = () => {
             </Text> */}
           </View>
         </View>
-      </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -191,11 +182,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     flex: 1,
-  },
-  headers: {
-    height: style.height / 3,
-    position: 'absolute',
-    width: style.width,
   },
   webview: {
     flex: 1,
