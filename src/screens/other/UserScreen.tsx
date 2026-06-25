@@ -2,13 +2,11 @@ import {
   ActivityIndicator,
   Image,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
 import {normalize, style} from '../../theme/style';
 import messaging from '@react-native-firebase/messaging';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -20,7 +18,7 @@ import LanguageIcon from '../../images/Language';
 import ExitIcon from '../../images/Exit';
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import {useDispatch} from 'react-redux';
 import {
   checkUpdate,
@@ -127,21 +125,9 @@ const UserScreen = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          height: '40%',
-          width: '100%',
-          position: 'absolute',
-        }}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('807')} />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <View style={styles.Main}>
-            <View style={styles.aboutUsContainer}>
-              <View style={{flexDirection: 'row'}}>
+    <ScreenLayout title={t('807')}>
+      <View style={styles.aboutUsContainer}>
+        <View style={{flexDirection: 'row'}}>
                 {/* {user.data.image === null ? ( */}
                   <View style={styles.userImageContainer}>
                     {user?.data?.type === 2 ? (
@@ -301,16 +287,13 @@ const UserScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        </View>
-      </ScrollView>
       <ExitModal
         hide={hide}
         setHide={setHide}
         navigation={navigation}
         deleteToken={deleteToken}
       />
-    </View>
+    </ScreenLayout>
   );
 };
 
@@ -398,10 +381,6 @@ const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
 export default UserScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   btn: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -474,12 +453,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  Main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 20,
-  },
   aboutUsContainer: {
     backgroundColor: '#EAF2FB',
 
