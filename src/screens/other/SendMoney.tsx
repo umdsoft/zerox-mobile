@@ -2,11 +2,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackGroundIcon, PurseIcon } from '../../helper/homeIcon';
+import { PurseIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -17,7 +16,8 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { toastConfig } from '../components/ToastConfig';
 import axios from 'axios';
 import { storage } from '../../store/api/token/getToken';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 import { textInputPlace } from '../../helper/index';
 import MainText from '../components/MainText';
 import { fontSize } from '../../theme/font';
@@ -269,18 +269,8 @@ const SendMoney = () => {
   }, [sum]);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('822')} />
-      <View style={styles.main}>
+    <ScreenLayout title={t('822')} scroll={false}>
+      <View>
         <View
           style={{
             flexDirection: 'row',
@@ -365,7 +355,10 @@ const SendMoney = () => {
               {renderSum}
             </View>
             <View style={{ marginTop: 20 }}>
-              <TouchableOpacity
+              <Button
+                title={t('624')}
+                onPress={_sendMoney}
+                loading={loading}
                 disabled={
                   sum.length === 0 ||
                   id.length === 0 ||
@@ -374,42 +367,20 @@ const SendMoney = () => {
                     ? true
                     : false
                 }
-                activeOpacity={0.8}
-                onPress={_sendMoney}
-                style={[
-                  styles.registerButton,
-                  { marginTop: 20 },
-                  {
-                    backgroundColor:
-                      sum.length === 0 ||
-                      id.length === 0 ||
-                      client.id.length === 0 ||
-                      loading
-                        ? style.disabledButtonColor
-                        : style.blue,
-                  },
-                ]}
-              >
-                <MainText color={colors.white} size={fontSize[14]}>
-                  {t('624')}
-                </MainText>
-              </TouchableOpacity>
+                style={{ marginTop: 20 }}
+              />
             </View>
           </View>
         </View>
       </View>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default SendMoney;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   clientText: {
     fontFamily: style.fontFamilyMedium,
     fontSize: style.fontSize.xx - 1,
@@ -463,14 +434,6 @@ const styles = StyleSheet.create({
     fontFamily: style.fontFamilyMedium,
     color: '#fff',
   },
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   insideMoney: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -505,11 +468,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

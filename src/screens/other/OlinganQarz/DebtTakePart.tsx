@@ -1,13 +1,10 @@
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { BackGroundIcon } from '../../../helper/homeIcon';
 import { style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -21,7 +18,6 @@ import CheckBox from '@react-native-community/checkbox';
 
 import axios from 'axios';
 import { storage } from '../../../store/api/token/getToken';
-import OtherHeader from '../../components/OtherHeader';
 import { settingDate } from '../../../helper';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -31,6 +27,8 @@ import TextBold from '../../components/TextBold';
 
 import { onGetContract } from '../../../store/api/home';
 import Loading from '../../components/Loading';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 
 const DebtTakePart = () => {
   const navigation = useNavigation();
@@ -212,18 +210,7 @@ const DebtTakePart = () => {
     return <Loading />;
   }
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('450')} />
-      <View style={[styles.main]}>
+    <ScreenLayout title={t('450')} scroll={false}>
         <View style={styles.aboutUsContainer}>
           <View
             style={{
@@ -319,45 +306,24 @@ const DebtTakePart = () => {
               </View>
             </View>
             <View>
-              <TouchableOpacity
+              <Button
+                title={t('357')}
                 onPress={onPress}
+                loading={loading}
                 disabled={!checked && sum.length < 0 && !loading}
-                activeOpacity={0.8}
-                style={[
-                  styles.registerButton,
-                  {
-                    marginTop: 20,
-                    backgroundColor:
-                      sum.length > 0 && checked && !loading
-                        ? style.blue
-                        : style.disabledButtonColor,
-                  },
-                ]}
-              >
-                {loading ? (
-                  <ActivityIndicator size={'small'} color={'#fff'} />
-                ) : (
-                  <Text style={[styles.textButton]} allowFontScaling={false}>
-                    {t('357')}
-                  </Text>
-                )}
-              </TouchableOpacity>
+                style={{ marginTop: 20 }}
+              />
             </View>
           </View>
         </View>
-      </View>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default DebtTakePart;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   mainText: {
     fontFamily: style.fontFamilyBold,
   },
@@ -448,11 +414,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

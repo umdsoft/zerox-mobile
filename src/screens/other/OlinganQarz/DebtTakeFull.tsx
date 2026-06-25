@@ -1,6 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react';
-import { BackGroundIcon } from '../../../helper/homeIcon';
 import { normalize, style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,8 +13,9 @@ import CheckBox from '@react-native-community/checkbox';
 import TextBold from '../../components/TextBold';
 import axios from 'axios';
 import { storage } from '../../../store/api/token/getToken';
-import OtherHeader from '../../components/OtherHeader';
 import { settingDate } from '../../../helper';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 
 import { setNotification } from '../../../store/reducers/HomeReducer';
 import { useDispatch, useSelector } from 'react-redux';
@@ -142,18 +142,7 @@ const DebtTakeFull = () => {
 
   console.log(item, 'item');
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('441')} />
-      <View style={[styles.main]}>
+    <ScreenLayout title={t('441')} scroll={false}>
         <View style={styles.aboutUsContainer}>
           <View
             style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
@@ -242,41 +231,24 @@ const DebtTakeFull = () => {
               </View>
             </View>
             <View>
-              <TouchableOpacity
-                disabled={!checked}
-                activeOpacity={0.8}
+              <Button
+                title={t('357')}
                 onPress={onPress}
-                style={[
-                  styles.registerButton,
-                  {
-                    marginTop: 20,
-                    backgroundColor: !checked
-                      ? style.disabledButtonColor
-                      : style.blue,
-                  },
-                ]}
-              >
-                <Text allowFontScaling={false} style={[styles.textButton]}>
-                  {t('357')}
-                </Text>
-              </TouchableOpacity>
+                disabled={!checked}
+                style={{ marginTop: 20 }}
+              />
             </View>
           </View>
         </View>
-      </View>
 
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default DebtTakeFull;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   mainText: {
     fontFamily: style.fontFamilyBold,
   },
@@ -367,11 +339,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

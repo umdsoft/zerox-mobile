@@ -1,7 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { BackGroundIcon } from '../../../helper/homeIcon';
-import { normalize, style } from '../../../theme/style';
+import { style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -9,11 +8,12 @@ import Loading from '../../components/Loading';
 import axios from 'axios';
 import { storage } from '../../../store/api/token/getToken';
 import { URL } from '../../constants';
-import OtherHeader from '../../components/OtherHeader';
 import QismanIcon from '../../../images/qismanqaytarish';
 import FullIcon from '../../../images/toliqqay';
 import { t } from 'i18next';
 import { fontSize } from '../../../theme';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 
 const DebtTakeSelect = () => {
   const navigation = useNavigation();
@@ -44,19 +44,7 @@ const DebtTakeSelect = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: normalize(250),
-
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('438')} />
-      <View style={[styles.main]}>
+    <ScreenLayout title={t('438')} scroll={false}>
         {loading ? (
           <View
             style={{
@@ -73,54 +61,41 @@ const DebtTakeSelect = () => {
               style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
             >
               <View>
-                <TouchableOpacity
+                <Button
+                  title={t('441')}
                   onPress={() => {
                     navigation.navigate('DebtTakeFull', {
                       item: info.data,
                       id: item?.id,
                     });
                   }}
-                  activeOpacity={0.8}
-                  style={[styles.registerButton, { marginTop: 20 }]}
-                >
-                  <FullIcon />
-                  <Text style={[styles.textButton]} allowFontScaling={false}>
-                    {t('441')}
-                  </Text>
-                </TouchableOpacity>
+                  leftIcon={<FullIcon />}
+                  style={{ marginTop: 20 }}
+                />
               </View>
               <View>
-                <TouchableOpacity
+                <Button
+                  title={t('450')}
                   onPress={() => {
                     navigation.navigate('DebtTakePart', {
                       item: info.data,
                       id: item?.id,
                     });
                   }}
-                  activeOpacity={0.8}
-                  style={[styles.registerButton, { marginTop: 20 }]}
-                >
-                  <QismanIcon />
-                  <Text style={[styles.textButton]} allowFontScaling={false}>
-                    {t('450')}
-                  </Text>
-                </TouchableOpacity>
+                  leftIcon={<QismanIcon />}
+                  style={{ marginTop: 20 }}
+                />
               </View>
             </View>
           </View>
         )}
-      </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default DebtTakeSelect;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   inputTitle: {
     position: 'absolute',
     marginLeft: 15,
@@ -213,11 +188,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

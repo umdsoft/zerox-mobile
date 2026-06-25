@@ -1,6 +1,5 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
 import {style} from '../../../theme/style';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {sortText} from '../../components/StatisticCard';
@@ -13,8 +12,9 @@ import TextBold from '../../components/TextBold';
 import axios from 'axios';
 import {storage} from '../../../store/api/token/getToken';
 import {URL} from '../../constants';
-import OtherHeader from '../../components/OtherHeader';
 import {settingDate} from '../../../helper';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 
 import {useDispatch, useSelector} from 'react-redux';
 import {setNotification} from '../../../store/reducers/HomeReducer';
@@ -126,13 +126,7 @@ const CharityDebt = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('378')} />
-      <View style={[styles.main]}>
+    <ScreenLayout title={t('378')} scroll={false}>
         <View style={styles.aboutUsContainer}>
           {loading ? (
             <Loading />
@@ -211,39 +205,25 @@ const CharityDebt = () => {
                 </Text>
               </View>
               <View>
-                <TouchableOpacity
-                  disabled={!check}
+                <Button
+                  title={t('93')}
                   onPress={onPress}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.registerButton,
-                    {
-                      marginTop: 20,
-                      backgroundColor: !check
-                        ? style.disabledButtonColor
-                        : style.blue,
-                    },
-                  ]}>
-                  <Text allowFontScaling={false} style={[styles.textButton]}>{t('93')}</Text>
-                </TouchableOpacity>
+                  disabled={!check}
+                  style={{marginTop: 20}}
+                />
               </View>
             </View>
           )}
         </View>
-      </View>
 
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default CharityDebt;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   inputTitle: {
     position: 'absolute',
     marginLeft: 15,
@@ -332,11 +312,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

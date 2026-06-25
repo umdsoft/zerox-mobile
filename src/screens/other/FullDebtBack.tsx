@@ -3,30 +3,24 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
-import {BackGroundIcon, PurseIcon} from '../../helper/homeIcon';
+import {PurseIcon} from '../../helper/homeIcon';
 import {normalize, style} from '../../theme/style';
 import BackButton from '../components/BackButton';
 import {useNavigation} from '@react-navigation/native';
 
 import CheckBox from '@react-native-community/checkbox';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 
 const FullDebtBack = () => {
   const [check, setCheck] = useState(false);
   const navigation = useNavigation();
   return (
-    <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={' Qarzni to’liq qaytarishni talab qilish'} />
-      <View style={[styles.main]}>
+    <ScreenLayout title={' Qarzni to’liq qaytarishni talab qilish'} scroll={false}>
+      <View>
         <View style={{marginTop: 10}}>
           <BackButton
             navigation={navigation}
@@ -73,27 +67,18 @@ const FullDebtBack = () => {
               </View>
             </View>
             <View>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.registerButton, {marginTop: 20}]}
-              >
-                <Text style={[styles.textButton]} allowFontScaling={false}>Tasdiqlash</Text>
-              </TouchableOpacity>
+              <Button title={'Tasdiqlash'} style={{marginTop: 20}} />
             </View>
           </View>
         </View>
       </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default FullDebtBack;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   inputTitle: {
     position: 'absolute',
     marginLeft: 15,
@@ -134,19 +119,6 @@ const styles = StyleSheet.create({
     color: style.textColor,
     textAlign: 'center',
   },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-  },
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   insideMoney: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -181,11 +153,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
   },
   aboutUsContainer: {
     backgroundColor: '#fff',
