@@ -1,111 +1,74 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import TextBold from '../../../components/TextBold';
 
 import { style } from '../../../../theme/style';
 import { t } from 'i18next';
 
 import { navigate } from '../../../../navigation/NavigationRef';
+import NotificationShell from '../../../components/NotificationShell';
 const ExpirePassport = ({ item, okay }) => {
   const onOkay = async () => {
     okay(item?.id);
   };
   return (
-    <View style={styles.container}>
-      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
-        <View>
-          <TextBold>{t('title_expire') as string}</TextBold>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Text allowFontScaling={false} style={styles.notification}>
-            {t('id_expire') as string}
-          </Text>
-        </View>
-        <View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: 10,
+    <NotificationShell
+      title={t('title_expire') as string}
+      date={item?.created}
+      time={item?.time}
+      actions={
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            onPress={() => {
+              // i need to call api to get creditor and debitor
+              // /contract/near-notification?type=creditor&page=${this.page + 1}&limit=${this.limit}
+              navigate('ScanFaceMyId');
             }}
+            activeOpacity={0.8}
+            style={styles.button}
           >
-            <View style={{ flexDirection: 'row' }}>
-              <Text allowFontScaling={false} style={styles.notificationTitle}>
-                <Text allowFontScaling={false}>{item?.created} </Text>
-              </Text>
-              <Text allowFontScaling={false} style={styles.notificationTitle}>
-                {' '}
-                {item?.time?.slice(0, 5)}
-              </Text>
-            </View>
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              marginTop: 10,
-            }}
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.notification,
+                { color: '#fff', fontSize: style.fontSize.xx - 2 },
+              ]}
+            >
+              {t('747') as string}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onOkay}
+            activeOpacity={0.8}
+            style={[styles.button, { marginLeft: 10 }]}
           >
-            <TouchableOpacity
-              onPress={() => {
-                // i need to call api to get creditor and debitor
-                // /contract/near-notification?type=creditor&page=${this.page + 1}&limit=${this.limit}
-                navigate('ScanFaceMyId');
-              }}
-              activeOpacity={0.8}
-              style={styles.button}
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.notification,
+                { color: '#fff', fontSize: style.fontSize.xx - 2 },
+              ]}
             >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                {t('747') as string}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={onOkay}
-              activeOpacity={0.8}
-              style={[styles.button, { marginLeft: 10 }]}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                Ok
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Ok
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </View>
+      }
+    >
+      <Text allowFontScaling={false} style={styles.notification}>
+        {t('id_expire') as string}
+      </Text>
+    </NotificationShell>
   );
 };
 
 export default ExpirePassport;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    width: '95%',
-    alignSelf: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    borderRadius: 10,
-    elevation: 7,
+  actionsRow: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   button: {
     backgroundColor: style.blue,
@@ -118,11 +81,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  notificationTitle: {
     fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,

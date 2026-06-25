@@ -1,7 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import React, { memo, useCallback } from 'react';
 import { style } from '../../../../theme/style';
-import { settingDate } from '../../../../helper';
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
 import { t } from 'i18next';
@@ -11,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { filter_notification } from '../../../../store/reducers/HomeReducer';
 import { storage } from '../../../../store/api/token/getToken';
 import { URL } from '../../../constants';
+import NotificationShell from '../../../components/NotificationShell';
 
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
@@ -54,282 +54,162 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
   if (item.creditor === item.reciver) {
     console.log('item', item);
     return (
-      <View style={styles.container}>
-        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          />
-          <View>
-            <TextBold>{t('522') as string}</TextBold>
-          </View>
-          <View style={{ marginTop: 10 }}>
-            <TransText
-              tKey={525}
-              values={{
-                name:
-                  item.dtypes === 2
-                    ? ReturnName.returnDebitorName(item)
-                    : item.dtypes === 1
-                    ? item.dcompany
-                    : null,
-                start: item.created_at,
-                id: item.number,
-                sum: sortText(item.residual_amount) + ' ' + item.currency,
-              }}
-              components={{
-                name: <TextBold />,
-                start: <TextBold />,
-                id: (
-                  <Text
-                    allowFontScaling={false}
-                    onPress={() => {
-                      navigation.navigate('DownloadStatistic', {
-                        item,
-                        id: item.contract,
-                      });
-                    }}
-                    style={[styles.notification, { color: style.blue }]}
-                  >
-                    {item.number}
-                  </Text>
-                ),
-                sum: <TextBold />,
-              }}
-            />
-            {/* <Text style={styles.notification}>
+      <NotificationShell
+        title={t('522') as string}
+        date={item?.created}
+        time={item.time}
+        actions={
+          <>
+            <TouchableOpacity
+              onPress={onNavigateBack}
+              activeOpacity={0.8}
+              style={styles.button}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {fontFamily: style.fontFamilyBold},
-                ]}>
-                {item.dtypes === 2 ? ReturnName.returnDebitorName(item) : null}
-                {item.dtypes === 1 ? item.dcompany : null}
-              </Text>{' '}
-              Sizdan{' '}
+                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
+                ]}
+              >
+                {t('438') as string}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onOkay}
+              activeOpacity={0.8}
+              style={styles.button}
+            >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {fontFamily: style.fontFamilyBold},
-                ]}>
-                {settingDate(item.created_at)}
-              </Text>{' '}
-              yildagi{' '}
+                  {
+                    color: '#fff',
+                    fontSize: style.fontSize.xx - 2,
+                    paddingHorizontal: 10,
+                  },
+                ]}
+              >
+                Ok
+              </Text>
+            </TouchableOpacity>
+          </>
+        }
+      >
+        <TransText
+          tKey={525}
+          values={{
+            name:
+              item.dtypes === 2
+                ? ReturnName.returnDebitorName(item)
+                : item.dtypes === 1
+                ? item.dcompany
+                : null,
+            start: item.created_at,
+            id: item.number,
+            sum: sortText(item.residual_amount) + ' ' + item.currency,
+          }}
+          components={{
+            name: <TextBold />,
+            start: <TextBold />,
+            id: (
               <Text
+                allowFontScaling={false}
                 onPress={() => {
                   navigation.navigate('DownloadStatistic', {
                     item,
                     id: item.contract,
                   });
                 }}
-                style={(styles.notification, {color: style.blue})}>
+                style={[styles.notification, { color: style.blue }]}
+              >
                 {item.number}
               </Text>
-              -sonli qarz shartnomasiga asosan berilgan{' '}
-              <Text
-                style={
-                  (styles.notification, {fontFamily: style.fontFamilyBold})
-                }>
-                {sortText(item.amount)} {item.currency}
-              </Text>{' '}
-              qarzni qaytarishingizni talab qilmoqda.
-              {'\n'}
-            </Text> */}
-            <View style={{ flexDirection: 'row', marginTop: 10 }}>
-              <Text allowFontScaling={false} style={styles.notification}>
-                <Text allowFontScaling={false}>{item?.created} </Text>
-              </Text>
-              <Text allowFontScaling={false} style={styles.notification}>
-                {' '}
-                {item.time.slice(0, 5)}
-              </Text>
-            </View>
-          </View>
-          <View>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: 5,
-              }}
-            >
-              <TouchableOpacity
-                onPress={onNavigateBack}
-                activeOpacity={0.8}
-                style={styles.button}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.notification,
-                    { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                  ]}
-                >
-                  {t('438') as string}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={onOkay}
-                activeOpacity={0.8}
-                style={styles.button}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.notification,
-                    {
-                      color: '#fff',
-                      fontSize: style.fontSize.xx - 2,
-                      paddingHorizontal: 10,
-                    },
-                  ]}
-                >
-                  Ok
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </View>
+            ),
+            sum: <TextBold />,
+          }}
+        />
+      </NotificationShell>
     );
   }
   if (item.debitor === item.reciver) {
     return (
-      <View style={styles.container}>
-        <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
-          <View>
-            <TextBold>{t('522') as string}</TextBold>
-          </View>
-          <View style={{ marginTop: 10 }}>
-            <TransText
-              tKey={525}
-              values={{
-                name:
-                  item.ctypes === 2
-                    ? ReturnName.returnCreditorName(item)
-                    : item.ctypes === 1
-                    ? item.ccompany
-                    : null,
-                start: item.created_at,
-                id: item.number,
-                sum: sortText(item.amount) + ' ' + item.currency,
+      <NotificationShell
+        title={t('522') as string}
+        date={item?.created}
+        time={item.time}
+        actions={
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('DebtTakeSelect', {
+                  item: { id: item.contract },
+                });
               }}
-              components={{
-                name: <TextBold />,
-                start: <TextBold />,
-                id: (
-                  <Text
-                    allowFontScaling={false}
-                    onPress={() => {
-                      navigation.navigate('DownloadStatistic', {
-                        item,
-                        id: item.contract,
-                      });
-                    }}
-                    style={[styles.notification, { color: style.blue }]}
-                  >
-                    {item.number}
-                  </Text>
-                ),
-                sum: <TextBold />,
-              }}
-            />
-            {/* <Text style={styles.notification}>
+              activeOpacity={0.8}
+              style={styles.button}
+            >
               <Text
+                allowFontScaling={false}
+                style={[styles.notification, { color: '#fff' }]}
+              >
+                Qarzni qaytarish
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onOkay}
+              activeOpacity={0.8}
+              style={styles.button}
+            >
+              <Text
+                allowFontScaling={false}
                 style={[
                   styles.notification,
-                  {fontFamily: style.fontFamilyBold},
-                ]}>
-                {item.ctypes === 2 ? ReturnName.returnCreditorName(item) : null}
-                {item.ctypes === 1 ? item.ccopmany : null}
-              </Text>{' '}
-              Sizdan{' '}
+                  { color: '#fff', paddingHorizontal: 20 },
+                ]}
+              >
+                Ok
+              </Text>
+            </TouchableOpacity>
+          </>
+        }
+      >
+        <TransText
+          tKey={525}
+          values={{
+            name:
+              item.ctypes === 2
+                ? ReturnName.returnCreditorName(item)
+                : item.ctypes === 1
+                ? item.ccompany
+                : null,
+            start: item.created_at,
+            id: item.number,
+            sum: sortText(item.amount) + ' ' + item.currency,
+          }}
+          components={{
+            name: <TextBold />,
+            start: <TextBold />,
+            id: (
               <Text
-                style={[
-                  styles.notification,
-                  {fontFamily: style.fontFamilyBold},
-                ]}>
-                {settingDate(item.created_at)}
-              </Text>{' '}
-              yildagi{' '}
-              <Text
+                allowFontScaling={false}
                 onPress={() => {
                   navigation.navigate('DownloadStatistic', {
                     item,
                     id: item.contract,
                   });
                 }}
-                style={(styles.notification, {color: style.blue})}>
+                style={[styles.notification, { color: style.blue }]}
+              >
                 {item.number}
               </Text>
-              -sonli qarz shartnomasiga asosan berilgan{' '}
-              <Text
-                style={
-                  (styles.notification, {fontFamily: style.fontFamilyBold})
-                }>
-                {sortText(item.amount)} {item.currency}
-              </Text>{' '}
-              qarzni qaytarishingizni talab qilmoqda.
-              {'\n'}
-            </Text> */}
-            <View style={{ marginTop: 10, flexDirection: 'row' }}>
-              <Text allowFontScaling={false} style={styles.notification}>
-                <Text allowFontScaling={false}>{item?.created} </Text>
-              </Text>
-              <Text allowFontScaling={false} style={styles.notification}>
-                {' '}
-                {item.time.slice(0, 5)}
-              </Text>
-            </View>
-          </View>
-          <View>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => {
-                  navigation.navigate('DebtTakeSelect', {
-                    item: { id: item.contract },
-                  });
-                }}
-                activeOpacity={0.8}
-                style={styles.button}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.notification, { color: '#fff' }]}
-                >
-                  Qarzni qaytarish
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={onOkay}
-                activeOpacity={0.8}
-                style={styles.button}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.notification,
-                    { color: '#fff', paddingHorizontal: 20 },
-                  ]}
-                >
-                  Ok
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </View>
+            ),
+            sum: <TextBold />,
+          }}
+        />
+      </NotificationShell>
     );
   }
 };
@@ -337,21 +217,6 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
 export default memo(Qarzniqaytarishtalabqilinganligitogrisida);
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    width: '95%',
-    alignSelf: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    borderRadius: 10,
-    elevation: 7,
-  },
   button: {
     backgroundColor: style.blue,
     paddingHorizontal: 10,
@@ -362,11 +227,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  notificationTitle: {
     fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,

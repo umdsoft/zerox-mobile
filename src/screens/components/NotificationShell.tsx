@@ -38,6 +38,7 @@ interface NotificationShellProps {
   onAccept?: () => void | Promise<any>;
   onReject?: () => void | Promise<any>;
   okLabel?: string;
+  actions?: React.ReactNode; // custom tugma(lar) — standart ok/accept/reject o'rniga (edge'lar uchun)
 }
 
 const SmallButton = ({
@@ -78,6 +79,7 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
   onAccept,
   onReject,
   okLabel = 'Ok',
+  actions,
 }) => {
   const [busy, setBusy] = useState<Busy>(null);
   const hasChoice = !!(onAccept || onReject);
@@ -116,7 +118,12 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
         <View style={styles.body}>
           {children}
 
-          {hasChoice ? (
+          {actions ? (
+            <>
+              <View style={styles.dateWrap}>{dateRow}</View>
+              <View style={styles.choiceRow}>{actions}</View>
+            </>
+          ) : hasChoice ? (
             <>
               <View style={styles.dateWrap}>{dateRow}</View>
               <View style={styles.choiceRow}>

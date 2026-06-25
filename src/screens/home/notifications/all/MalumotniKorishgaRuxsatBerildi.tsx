@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
 import { filter_notification } from '../../../../store/reducers/HomeReducer';
+import NotificationShell from '../../../components/NotificationShell';
 
 const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
   const { user } = useSelector(state => state.HomeReducer);
@@ -59,95 +60,67 @@ const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{ marginVertical: 15, marginHorizontal: 15 }}>
-        <View>
-          <TextBold>{t('864') as string}</TextBold>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Text allowFontScaling={false} style={styles.notification}>
-            <TextBold>
-              {item.dtypes === 2 ? ReturnName.returnDebitorName(item) : null}
-              {item.dtypes === 1 ? item.dcompany : null}
-            </TextBold>{' '}
-            {t('867') as string}
-          </Text>
-          <View style={{ marginTop: 10, flexDirection: 'row' }}>
-            <Text allowFontScaling={false} style={styles.notificationTitle}>
-              <Text allowFontScaling={false}>{item?.created} </Text>
-            </Text>
-            <Text allowFontScaling={false} style={styles.notificationTitle}>
-              {' '}
-              {item.time?.slice(0, 5)}
-            </Text>
-          </View>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-            }}
+    <NotificationShell
+      title={t('864') as string}
+      date={item?.created}
+      time={item?.time}
+      actions={
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            onPress={SeeNotification}
+            activeOpacity={0.8}
+            style={[
+              styles.button,
+              { backgroundColor: '#4e91d2', marginRight: 10 },
+            ]}
           >
-            <TouchableOpacity
-              onPress={SeeNotification}
-              activeOpacity={0.8}
+            <Text
+              allowFontScaling={false}
               style={[
-                styles.button,
-                { backgroundColor: '#4e91d2', marginRight: 10 },
+                styles.notification,
+                { color: '#fff', fontSize: style.fontSize.xx - 2 },
               ]}
             >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                {t('950')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={RemoveNotification}
-              activeOpacity={0.8}
-              style={[styles.button, { backgroundColor: '#4e91d2' }]}
+              {t('950')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={RemoveNotification}
+            activeOpacity={0.8}
+            style={[styles.button, { backgroundColor: '#4e91d2' }]}
+          >
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.notification,
+                { color: '#fff', fontSize: style.fontSize.xx - 2 },
+              ]}
             >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                Ok
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Ok
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-      {/* <Toast config={toastConfig} /> */}
-    </View>
+      }
+    >
+      <Text allowFontScaling={false} style={styles.notification}>
+        <TextBold>
+          {item.dtypes === 2 ? ReturnName.returnDebitorName(item) : null}
+          {item.dtypes === 1 ? item.dcompany : null}
+        </TextBold>{' '}
+        {t('867') as string}
+      </Text>
+    </NotificationShell>
   );
 };
 
 export default memo(MalumotniKorishgaRuxsatBerildi);
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    width: '95%',
-    alignSelf: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    borderRadius: 10,
-    elevation: 7,
+  actionsRow: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   button: {
     backgroundColor: style.blue,
@@ -160,11 +133,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  notificationTitle: {
     fontSize: style.fontSize.xx - 2,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,
