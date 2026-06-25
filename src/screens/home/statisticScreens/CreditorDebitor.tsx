@@ -1,15 +1,13 @@
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import OtherHeader from '../../components/OtherHeader';
-import {normalize, style} from '../../../theme/style';
+import ScreenLayout from '../../components/ScreenLayout';
+import {style} from '../../../theme/style';
 import CreditorList from '../../components/List/CreditorList';
 import StatisticCreditor from '../../components/List/StatisticCreditor';
 import Dollar from '../../../images/givedebt';
@@ -26,70 +24,56 @@ const CreditorDebitor = () => {
   console.log(item, 'item in creditor debitor');
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: normalize(250), width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('156')} backgroundColor={'#fff'} />
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.main}>
-          {type === 3 ? (
-            <StatisticCreditor {...route.params} />
-          ) : (
-            <CreditorList {...route.params} />
-          )}
-          {type != 2 ? null : (
-            <View style={styles.buttonContainer}>
-              <View style={styles.buttonInsideContainer}>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('DebtDateLengthAsk', {item: item});
-                  }}
-                  activeOpacity={0.8}
-                  style={styles.registerButton}>
-                  <AskTime />
-                  <MainText
-                    color={colors.white}
-                    mrLeft={4}
-                    textAlign="center"
-                    size={style.fontSize.small - 1}>
-                    {t('459')}
-                  </MainText>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.buttonInsideContainer}>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('DebtTakeSelect', {item: item});
-                  }}
-                  activeOpacity={0.8}
-                  style={styles.registerButton}>
-                  <Dollar />
-                  <MainText
-                    color={colors.white}
-                    mrLeft={4}
-                    size={style.fontSize.small - 1}>
-                    {t('438')}
-                  </MainText>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+    <ScreenLayout title={t('156')} headerColor={'#fff'}>
+      {type === 3 ? (
+        <StatisticCreditor {...route.params} />
+      ) : (
+        <CreditorList {...route.params} />
+      )}
+      {type != 2 ? null : (
+        <View style={styles.buttonContainer}>
+          <View style={styles.buttonInsideContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('DebtDateLengthAsk', {item: item});
+              }}
+              activeOpacity={0.8}
+              style={styles.registerButton}>
+              <AskTime />
+              <MainText
+                color={colors.white}
+                mrLeft={4}
+                textAlign="center"
+                size={style.fontSize.small - 1}>
+                {t('459')}
+              </MainText>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.buttonInsideContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('DebtTakeSelect', {item: item});
+              }}
+              activeOpacity={0.8}
+              style={styles.registerButton}>
+              <Dollar />
+              <MainText
+                color={colors.white}
+                mrLeft={4}
+                size={style.fontSize.small - 1}>
+                {t('438')}
+              </MainText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </ScrollView>
-    </View>
+      )}
+    </ScreenLayout>
   );
 };
 
 export default CreditorDebitor;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   buttonInsideContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -129,13 +113,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    zIndex: 1,
-    paddingBottom: 5,
-    marginTop: 20,
   },
   aboutUsContainer: {
     backgroundColor: '#fff',

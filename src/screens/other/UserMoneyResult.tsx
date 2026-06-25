@@ -1,11 +1,11 @@
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {BackGroundIcon, PurseIcon} from '../../helper/homeIcon';
+import {PurseIcon} from '../../helper/homeIcon';
 import {normalize, style} from '../../theme/style';
 
 import {useNavigation} from '@react-navigation/native';
 import {sortText} from '../components/StatisticCard';
-import OtherHeader from '../components/OtherHeader';
+import ScreenLayout from '../components/ScreenLayout';
 import MainText from '../components/MainText';
 import {font, fontSize} from '../../theme/font';
 import {colors} from '../../theme/colors';
@@ -20,14 +20,8 @@ const UserMoneyResult = () => {
   const {user} = useSelector(state => state.HomeReducer);
 
   return (
-    <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('135')} />
-      <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
+    <ScreenLayout title={t('135')} scroll={false}>
+      <View style={styles.aboutUsContainer}>
           <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
             <View>
               <View style={styles.registerButton}>
@@ -164,18 +158,13 @@ const UserMoneyResult = () => {
             </View>
           </View>
         </View>
-      </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default UserMoneyResult;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
-  },
   cnt: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyBold,
@@ -257,11 +246,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-  },
   aboutUsContainer: {
     backgroundColor: '#fff',
     marginTop: 20,
