@@ -3,20 +3,19 @@ import {
   Text,
   View,
   TextInput,
-  ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {style} from '../../theme/style';
 import ResetPassword from '../../images/RecoveryPassword';
 import axios from 'axios';
-import OtherHeader from '../components/OtherHeader';
 import {URL} from '../constants';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from '../components/ToastConfig';
 import {storage} from '../../store/api/token/getToken';
 import Loading from '../components/Loading';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 const NewRecoveryPassword = () => {
   // 1 type parolni uzgartirish
   // 2 parolni tiklash
@@ -33,15 +32,14 @@ const NewRecoveryPassword = () => {
   console.log('red');
 
   return (
-    <View style={[styles.container]}>
-      <OtherHeader
-        title={type === 2 ? 'Parolni tiklash' : "Parolni o'zgartirish"}
-        titleColor={'#000'}
-        iconColor="#fff"
-        backgroundColor={style.blue}
-      />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
+    <ScreenLayout
+      title={type === 2 ? 'Parolni tiklash' : "Parolni o'zgartirish"}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+    >
+      <View>
           <View style={{alignSelf: 'center', marginTop: 20, marginBottom: 20}}>
             <ResetPassword />
           </View>
@@ -109,9 +107,9 @@ const NewRecoveryPassword = () => {
           </View>
 
           <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
+            <Button
+              title="Davom etish"
               disabled={value.length >= 0 ? false : true}
-              activeOpacity={0.8}
               onPress={() => {
                 if (type === 1) {
                   changePasswordHandle();
@@ -119,33 +117,17 @@ const NewRecoveryPassword = () => {
                   navigation.navigate('NewPasswordEnter');
                 }
               }}
-              style={[
-                styles.enterButton,
-                {
-                  backgroundColor:
-                    value.length >= 0 ? style.blue : style.disabledButtonColor,
-                },
-              ]}
-            >
-              <Text style={[styles.enterText, {color: '#fff'}]} allowFontScaling={false}>
-                Davom etish
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
-      </ScrollView>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default NewRecoveryPassword;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   forgotPasswordText: {
     color: '#fff',
     fontSize: style.fontSize.xx,
@@ -179,15 +161,6 @@ const styles = StyleSheet.create({
   },
   main: {
     alignItems: 'center',
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.textInputHeight,
-    alignSelf: 'center',
   },
   enterText: {
     fontFamily: style.fontFamilyMedium,

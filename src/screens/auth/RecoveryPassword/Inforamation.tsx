@@ -3,19 +3,18 @@ import {
   Text,
   View,
   TextInput,
-  ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { style } from '../../../theme/style';
 import ResetPassword from '../../../images/RecoveryPassword';
 import axios from 'axios';
-import OtherHeader from '../../components/OtherHeader';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../../components/ToastConfig';
 import TextBold from '../../components/TextBold';
 import { t } from 'i18next';
+import ScreenLayout from '../../components/ScreenLayout';
+import Button from '../../components/Button';
 
 const Inforamation = () => {
   const navigation = useNavigation();
@@ -25,10 +24,14 @@ const Inforamation = () => {
   }, [navigation, jshshir]);
 
   return (
-    <View style={[styles.container]}>
-      <OtherHeader title={t('720')} titleColor={'#000'} iconColor="#fff" backgroundColor={style.blue} />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
+    <ScreenLayout
+      title={t('720')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+    >
+      <View>
           <View style={{ alignSelf: 'center', marginTop: 20, marginBottom: 20 }}>
             <ResetPassword />
           </View>
@@ -44,26 +47,17 @@ const Inforamation = () => {
           </View>
 
           <View style={styles.enterButtonContainer}>
-            <TouchableOpacity activeOpacity={0.8} onPress={onHandle} style={[styles.enterButton, { backgroundColor: style.blue, },]}>
-              <Text style={[styles.enterText, { color: '#fff' }]} allowFontScaling={false}>
-                {t('42')}
-              </Text>
-            </TouchableOpacity>
+            <Button title={t('42')} onPress={onHandle} />
           </View>
         </View>
-      </ScrollView>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default Inforamation;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   bbb: {
     position: 'absolute',
     marginLeft: 15,
@@ -109,15 +103,6 @@ const styles = StyleSheet.create({
   main: {
     alignItems: 'center',
     width: '80%',
-    alignSelf: 'center',
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.textInputHeight,
     alignSelf: 'center',
   },
   enterText: {

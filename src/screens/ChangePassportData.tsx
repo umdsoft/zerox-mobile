@@ -5,7 +5,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
@@ -15,7 +14,6 @@ import {useNavigation} from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import {normalize, style} from '../theme/style';
 import {androidFace, iosFace} from '../nativemodule/android.event';
-import OtherHeader from './components/OtherHeader';
 import {storage} from '../store/api/token/getToken';
 import axios from 'axios';
 
@@ -27,6 +25,8 @@ import {useTranslation} from 'react-i18next';
 import Loading from './components/Loading';
 import {t} from 'i18next';
 import {URL} from './constants';
+import ScreenLayout from './components/ScreenLayout';
+import Button from './components/Button';
 
 const returnMessage = response => {
   switch (response.data.code) {
@@ -250,17 +250,14 @@ const ChangePassportData = () => {
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: '#fff',
-      }}>
-      <OtherHeader
-        title={t('otish')}
-        backgroundColor={style.blue}
-        iconColor="#fff"
-        titleColor={style.backgroundColorDark}
-      />
+    <ScreenLayout
+      title={t('otish')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor={style.backgroundColorDark}
+      scroll={false}
+      background={false}
+    >
       <View style={styles.container}>
         <LottieView
           source={require('../images/scan.json')}
@@ -276,8 +273,8 @@ const ChangePassportData = () => {
 
         <Text allowFontScaling={false} style={styles.text}>{t('753')}</Text>
       </View>
-      <TouchableOpacity
-        activeOpacity={0.8}
+      <Button
+        title={t('45')}
         onPress={() => {
           Platform.OS === 'android'
             ? androidFace(
@@ -288,17 +285,9 @@ const ChangePassportData = () => {
               )
             : iosFace();
         }}
-        style={[styles.enterButton]}>
-        <Text
-          allowFontScaling={false}
-          style={[
-            styles.enterText,
-            {color: '#fff', fontFamily: style.fontFamilyMedium},
-          ]}>
-          {t('45')}
-        </Text>
-      </TouchableOpacity>
-    </View>
+        style={styles.buttonSpacing}
+      />
+    </ScreenLayout>
   );
 };
 
@@ -318,19 +307,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'center',
   },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.buttonHeight,
-    alignSelf: 'center',
+  buttonSpacing: {
     marginTop: normalize(20),
-  },
-  enterText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
   },
 });

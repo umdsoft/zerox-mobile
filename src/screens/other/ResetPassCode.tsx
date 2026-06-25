@@ -1,7 +1,5 @@
 import {
-  ActivityIndicator,
   Platform,
-  ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -9,13 +7,11 @@ import {
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 
-import OtherHeader from '../components/OtherHeader';
 import {t} from 'i18next';
 import {normalize, style} from '../../theme/style';
 import {font, fontSize} from '../../theme/font';
 import ResetPassword from '../../images/RecoveryPassword';
 import MainText from '../components/MainText';
-import {colors} from '../../theme/colors';
 import {storage} from '../../store/api/token/getToken';
 import {LoginWithPhoneSendPasswordApi} from '../../store/api/auth';
 import Toast from 'react-native-toast-message';
@@ -24,6 +20,8 @@ import {useDispatch} from 'react-redux';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import {toastConfig} from '../components/ToastConfig';
+import ScreenLayout from '../components/ScreenLayout';
+import Button from '../components/Button';
 
 const ResetPassCode = () => {
   const {params} = useRoute();
@@ -81,15 +79,14 @@ const ResetPassCode = () => {
     }
   }, [dispatch, navigation, value]);
   return (
-    <View style={styles.flex}>
-      <OtherHeader
-        title={t('PIN-kodni tiklash')}
-        titleColor={'#000'}
-        iconColor="#fff"
-        backgroundColor={style.blue}
-      />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
+    <ScreenLayout
+      title={t('PIN-kodni tiklash')}
+      headerColor={style.blue}
+      headerIconColor="#fff"
+      headerTitleColor="#000"
+      background={false}
+    >
+      <View>
           <View style={{alignSelf: 'center', marginTop: 20, marginBottom: 20}}>
             <ResetPassword />
           </View>
@@ -129,25 +126,12 @@ const ResetPassCode = () => {
           </View>
 
           <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
+            <Button
+              title={t('45')}
               disabled={value.length >= 6 ? false : true}
-              activeOpacity={0.8}
+              loading={loading}
               onPress={onHandle}
-              style={[
-                styles.enterButton,
-                {
-                  backgroundColor:
-                    value.length >= 6 ? style.blue : style.disabledButtonColor,
-                },
-              ]}>
-              {loading ? (
-                <ActivityIndicator color={colors.white} size={'small'} />
-              ) : (
-                <MainText size={fontSize[16]} color={colors.white}>
-                  {t('45')}
-                </MainText>
-              )}
-            </TouchableOpacity>
+            />
             <View
               style={{
                 alignItems: 'flex-end',
@@ -169,20 +153,14 @@ const ResetPassCode = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
       {/* <Toast config={toastConfig} /> */}
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default ResetPassCode;
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-
   eye: {
     position: 'absolute',
     alignSelf: 'flex-end',
@@ -254,15 +232,6 @@ const styles = StyleSheet.create({
   },
   main: {
     alignItems: 'center',
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.textInputHeight,
-    alignSelf: 'center',
   },
   enterText: {
     fontFamily: style.fontFamilyMedium,
