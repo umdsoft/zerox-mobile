@@ -222,9 +222,11 @@ const Main = () => {
       await onGetLocalToken();
       handleNotificationEvents();
 
-      // Initialize touch ID setting if not exists
+      // Biometrik (Touch/Face ID) DEFAULT O'CHIQ — fresh install'da avtomatik
+      // yoqilmaydi (oldin oferta tasdiqlashda kutilmagan biometrik so'rardi).
+      // Foydalanuvchi o'zi Xavfsizlik bo'limidan yoqadi (opt-in).
       if (storage.getBoolean('touch') === undefined) {
-        storage.set('touch', true);
+        storage.set('touch', false);
       }
 
       // Fetch USD exchange rate
