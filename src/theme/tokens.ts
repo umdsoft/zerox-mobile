@@ -34,6 +34,7 @@ const palette = {
   greyLight: '#A9ABAD', // placeholder / border
   bg: '#F7FAFC', // ekran foni
   surfaceAlt: '#f0f3f7', // ikkilamchi yuza (karta toggle va h.k.)
+  surfaceTint: '#EAF2FB', // ko'k tusli karta foni (settings va h.k.)
 };
 
 // --- SEMANTIK tokenlar (yangi komponentlar SHULARNI ishlatsin) ---
@@ -46,6 +47,7 @@ export const tokens = {
     danger: palette.red,
     surface: palette.white,
     surfaceAlt: palette.surfaceAlt,
+    surfaceTint: palette.surfaceTint,
     background: palette.bg,
     onSurface: palette.black,
     onPrimary: palette.white,
@@ -95,6 +97,16 @@ export const tokens = {
     textInputHeight: normalize(45),
     codeButtonSize: normalize(45),
     buttonHeight: height / 13,
+  },
+  // YANGI: karta soyasi (ilgari ~50 ekranda copy-paste edi)
+  shadow: {
+    card: {
+      shadowColor: palette.black,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 1.41,
+      elevation: 2,
+    },
   },
 };
 
