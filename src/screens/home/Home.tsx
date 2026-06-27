@@ -66,9 +66,17 @@ const Home = () => {
     try {
       dispatch(HomeApi({ page: 1 }))
         .then(res => {
+          // HomeApi REJECTED (tarmoq/server xato) -> TRANSIENT bo'lishi mumkin. Sessiyani
+          // SAQLAYMIZ, logout/clearAll QILMAYMIZ (oldin har qanday xato -> clearAll+login ->
+          // update'dan keyin / vaqtinchalik uzilishda MAJBURIY LOGIN bug'i edi).
+          if (res?.error || res?.meta?.requestStatus === 'rejected') {
+            return;
+          }
           const us = res?.payload?.user;
-          storage.set('uid', us.data.uid);
-          if (us === undefined) {
+          // us.data'ga FAQAT undefined tekshiruvidan KEYIN murojaat qilamiz (oldin
+          // us.data.uid undefined'da throw qilib catch->clearAll'ga tushardi).
+          if (us === undefined || !us?.data) {
+            // API muvaffaqiyatli, lekin user yo'q -> token yaroqsiz -> login (PIN saqlanadi).
             if (Platform.OS === 'ios') {
               notifee.setBadgeCount(0).then(() => {
                 console.log('Badge count set successfully');
@@ -82,6 +90,7 @@ const Home = () => {
             });
             return;
           }
+          storage.set('uid', us.data.uid);
           if (us?.data?.is_active === 2) {
             dispatch(showModal({ show: true }));
           } else {
@@ -128,24 +137,19 @@ const Home = () => {
             });
           }
         })
-        .catch(() => {
-          if (Platform.OS === 'ios') {
-            notifee.setBadgeCount(0).then(() => {});
-          } else {
-            NotificationBadgeModule.setBadgeOnlyNumber(0);
+        .catch(err => {
+          // KUTILMAGAN xato (transient bo'lishi mumkin) -> sessiyani SAQLAYMIZ.
+          // clearAll YO'Q (oldin har xatoda PIN/token o'chardi -> majburiy login).
+          // Foydalanuvchi pull-to-refresh orqali qayta urinadi.
+          if (__DEV__) {
+            console.warn('getHome catch (sessiya saqlandi):', err);
           }
-          storage.clearAll();
-          navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
         });
     } catch (errorr) {
-      if (Platform.OS === 'ios') {
-        notifee.setBadgeCount(0).then(() => {});
-      } else {
-        NotificationBadgeModule.setBadgeOnlyNumber(0);
+      // Setup xatosi (transient bo'lishi mumkin) -> sessiyani SAQLAYMIZ, clearAll YO'Q.
+      if (__DEV__) {
+        console.warn('getHome setup catch (sessiya saqlandi):', errorr);
       }
-      storage.clearAll();
-      navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
-      throw errorr;
     }
   }, [navigation]);
 

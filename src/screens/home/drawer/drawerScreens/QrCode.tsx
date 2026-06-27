@@ -388,13 +388,15 @@ const styles = StyleSheet.create({
   },
 
   logoBoxA: {
-    fontFamily: 'Cambria',
+    // Cambria olib tashlandi: ba'zi OEM'larda ViewShot off-screen capture
+    // paytida render bo'lmasdi -> 'Zero' ko'rinmasdi. Default shrift bilan
+    // capture barcha qurilmalarda ishonchli, rang (#2D62B6) saqlanadi.
     fontSize: 40,
     color: '#2D62B6',
   },
 
   logoBoxB: {
-    fontFamily: 'Cambria',
+    // Cambria olib tashlandi (yuqoridagi sabab) — 'X' rangi (#EF4444) saqlanadi.
     fontSize: 40,
     color: '#EF4444',
   },

@@ -1,4 +1,5 @@
 import {
+  Alert,
   Image,
   Linking,
   Platform,
@@ -113,6 +114,45 @@ const SetLocalPassword = () => {
     }
   }, [navigation]);
 
+  // Biometrik OPT-IN: PIN o'rnatilgach (ro'yxatdan o'tish) foydalanuvchidan Touch/Face
+  // ID ni yoqishni SO'RAYMIZ (avtomatik yoqmaymiz — oldin oferta tasdiqlashda kutilmagan
+  // biometrik so'rardi). "Ha" -> touch=true; "Yo'q"/mavjud emas -> touch=false.
+  const askForBiometric = useCallback(async (onDone: () => void) => {
+    try {
+      const { available } = await rnBiometrics.isSensorAvailable();
+      if (!available) {
+        storage.set('touch', false);
+        onDone();
+        return;
+      }
+      Alert.alert(
+        t('Biometrik kirish'),
+        t('Keyingi kirishlarda Touch ID / Face ID dan foydalanasizmi?'),
+        [
+          {
+            text: t("Yo'q"),
+            style: 'cancel',
+            onPress: () => {
+              storage.set('touch', false);
+              onDone();
+            },
+          },
+          {
+            text: t('Ha'),
+            onPress: () => {
+              storage.set('touch', true);
+              onDone();
+            },
+          },
+        ],
+        { cancelable: false },
+      );
+    } catch {
+      storage.set('touch', false);
+      onDone();
+    }
+  }, []);
+
   const onSetCode = val => {
     if (isLocal) {
       if (step === 1) {
@@ -131,22 +171,25 @@ const SetLocalPassword = () => {
         if ((password + val).length === 4) {
           const k1 = storage.getString('k1');
           if (password + val === k1) {
-            // askForBiometric();
             const token = storage.getString('token');
             storage.set('k2', password + val);
             storage.delete('isLoginScreen');
             storage.set('appLocked', false);
-            if (storage.getString('pendingNavigation') !== undefined) {
-              navigation.navigate('Notification');
-              storage.delete('pendingNavigation');
-              return;
-            }
-            navigation.reset({
-              routes: [
-                { name: 'BottomTabNavigator', params: { token: token } },
-              ],
-              index: 0,
-            });
+            const goNext = () => {
+              if (storage.getString('pendingNavigation') !== undefined) {
+                navigation.navigate('Notification');
+                storage.delete('pendingNavigation');
+                return;
+              }
+              navigation.reset({
+                routes: [
+                  { name: 'BottomTabNavigator', params: { token: token } },
+                ],
+                index: 0,
+              });
+            };
+            // PIN o'rnatildi -> biometrik OPT-IN so'raymiz, javobdan keyin davom etamiz.
+            askForBiometric(goNext);
           } else {
             setStep(1);
             setPassword('');

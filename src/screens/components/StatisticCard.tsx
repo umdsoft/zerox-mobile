@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import MainText from './MainText';
 import { font, fontSize } from '../../theme/font';
+import { colors } from '../../theme/colors';
 import { t } from 'i18next';
 
 // C-006/007: separator modul-darajasida (har render'da yangi komponent yaratilmasin → remount yo'q).
@@ -110,7 +111,10 @@ const StatisticCard = ({
               paddingVertical: 3,
             }}
           >
-            <MainText size={fontSize[12]}>
+            <MainText
+              size={fontSize[12]}
+              color={person === 'debitor' ? colors.red : colors.green}
+            >
               {person === 'debitor'
                 ? renderName(item?.creditor_name)
                 : renderName(item?.debitor_name)}
