@@ -2,6 +2,7 @@ import {StyleSheet, View} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {normalize, style} from '../../theme/style';
+import {fontSize} from '../../theme/font';
 import ChangeNumber from '../../images/changeNumber';
 import ScreenLayout from '../components/ScreenLayout';
 import Button from '../components/Button';
