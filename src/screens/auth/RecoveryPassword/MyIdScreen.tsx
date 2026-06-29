@@ -72,9 +72,41 @@ const MyIdScreen = () => {
   // o'rnatish bilan birga /askjshshir/complete'da (UpdatePassword) bajariladi.
 
   const onHandlePostData = useCallback(async () => {
-    const resp = await getSessionId();
+    let resp: any;
+    try {
+      resp = await getSessionId();
+    } catch (err) {
+      if (__DEV__) console.warn('myid-session error', err);
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: {
+          title: 'Xatolik',
+          desc: t("Sessiya ochilmadi. Qaytadan urinib ko'ring."),
+        },
+      });
+      return;
+    }
     const sessionId = resp?.sessionId;
     const pinflBound = resp?.pinflBound;
+
+    // Session ochilmadi (backend success:false yoki bo'sh javob) — foydalanuvchini
+    // tugma ustida jim qotirmasdan, aniq xato + qayta urinish imkonini beramiz.
+    if (!sessionId) {
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: {
+          title: 'Xatolik',
+          desc: t("Sessiya ochilmadi. Qaytadan urinib ko'ring."),
+        },
+      });
+      return;
+    }
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
@@ -82,6 +114,13 @@ const MyIdScreen = () => {
     if (__DEV__ && !pinflBound) {
       console.log('MyID(recovery): sessiya pinfl-bound EMAS — FACE_DETECTION baribir majburlandi');
     }
+
+    // ===== TEMP DEBUG (diagnostika — keyin olib tashlanadi) =====
+    Alert.alert(
+      'DEBUG: session',
+      `sessionId: ${sessionId ? 'BOR' : "YO'Q"}\npinflBound: ${pinflBound}`,
+    );
+    // ===========================================================
 
     const prod = {
       sessionId,
@@ -100,6 +139,12 @@ const MyIdScreen = () => {
       try {
         start(prod, {
           onSuccess: data => {
+            // ===== TEMP DEBUG =====
+            Alert.alert(
+              'DEBUG: onSuccess',
+              `code: ${data?.code ? String(data.code).slice(0, 10) + '…' : "BO'SH"}\nkeys: ${Object.keys(data || {}).join(', ')}`,
+            );
+            // ======================
             // Kutilmagan holat: scan o'tdi-yu kod bo'sh — UpdatePassword'da /complete baribir
             // rad etardi. Foydalanuvchini parol ekranida qotirmasdan, aniq xato + qayta urinish.
             if (!data?.code) {
@@ -123,7 +168,10 @@ const MyIdScreen = () => {
               token,
             });
           },
-          onError: _ => {
+          onError: err => {
+            // ===== TEMP DEBUG =====
+            Alert.alert('DEBUG: onError', JSON.stringify(err));
+            // ======================
             Toast.show({
               autoHide: true,
               visibilityTime: 3000,
@@ -136,6 +184,9 @@ const MyIdScreen = () => {
             });
           },
           onUserExited: () => {
+            // ===== TEMP DEBUG =====
+            Alert.alert('DEBUG: onUserExited', 'MyID flow bekor qilindi / chiqildi');
+            // ======================
             console.warn('errere');
           },
         });
