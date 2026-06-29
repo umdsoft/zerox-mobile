@@ -9,6 +9,7 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
+import com.margelo.nitro.nitromyid.NitroMyid
 
 class MainApplication : Application(), ReactApplication {
 
@@ -36,5 +37,9 @@ class MainApplication : Application(), ReactApplication {
     override fun onCreate() {
         super.onCreate()
         loadReactNative(this)
+        // MyID Android SDK uchun Activity tracking — start() currentActivity'ga muhtoj
+        // (startActivityForResult). Bo'lmasa "No activity available" xato yoki sekin/qotgan
+        // oqim. iOS'da kerak emas (SDK view controller'ni o'zi topadi).
+        NitroMyid.init(this)
     }
 }

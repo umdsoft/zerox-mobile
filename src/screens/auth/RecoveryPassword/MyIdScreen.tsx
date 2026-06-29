@@ -115,7 +115,9 @@ const MyIdScreen = () => {
     // IDENTIFICATION foydalanuvchini tekshiradi va `code` qaytaradi (FACE_DETECTION faqat
     // selfi oladi, code bermaydi → backend tasdiqlay olmaydi). pinflBound: true bo'lsa MyID
     // hujjat so'ramaydi → 1:1 yuz mosligi → TEZ.
-    setStatus(t('Kamera ochilmoqda…') + ` (pinflBound: ${pinflBound})`);
+    // pinflBound: false bo'lsa MyID hujjat so'raydi (sekin) — bog'lash backend tomonda.
+    if (__DEV__) console.log('MyID(recovery) pinflBound:', pinflBound);
+    setStatus(t('Kamera ochilmoqda…'));
 
     const locale = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
     const config = {
