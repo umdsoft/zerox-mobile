@@ -111,8 +111,10 @@ const MyIdScreen = () => {
       return;
     }
 
-    // ---- 2) MyID FACE_DETECTION ----
-    // pinflBound muhim: false bo'lsa sessiya yuzni PINFL'ga moslay olmaydi.
+    // ---- 2) MyID IDENTIFICATION ----
+    // IDENTIFICATION foydalanuvchini tekshiradi va `code` qaytaradi (FACE_DETECTION faqat
+    // selfi oladi, code bermaydi → backend tasdiqlay olmaydi). pinflBound: true bo'lsa MyID
+    // hujjat so'ramaydi → 1:1 yuz mosligi → TEZ.
     setStatus(t('Kamera ochilmoqda…') + ` (pinflBound: ${pinflBound})`);
 
     const locale = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
@@ -122,7 +124,7 @@ const MyIdScreen = () => {
       clientHash: CLIENT_HASH,
       clientHashId: CLIENT_HASH_ID,
       environment: MyIdEnvironment.PRODUCTION,
-      entryType: MyIdEntryType.FACE_DETECTION,
+      entryType: MyIdEntryType.IDENTIFICATION,
       cameraShape: MyIdCameraShape.CIRCLE,
       locale,
     };

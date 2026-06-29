@@ -316,10 +316,9 @@ const ScanFaceMyId = () => {
 
     const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
 
-    // Diagnostika: sessiya PINFL'ga bog'lanmagan bo'lsa FACE_DETECTION baribir majburlanadi
-    // (release'da console.log strip qilinadi). pinflBound shu yerda ishlatilib qoladi.
+    // Diagnostika: sessiya PINFL'ga bog'lanmagan bo'lsa IDENTIFICATION hujjat so'rashi mumkin.
     if (__DEV__ && !pinflBound) {
-      console.log('MyID: sessiya pinfl-bound EMAS — FACE_DETECTION baribir majburlandi');
+      console.log('MyID: sessiya pinfl-bound EMAS — IDENTIFICATION hujjat so\'rashi mumkin');
     }
 
     const prod = {
@@ -329,10 +328,10 @@ const ScanFaceMyId = () => {
         'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
       clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
       environment: MyIdEnvironment.PRODUCTION,
-      // HAR DOIM FACE_DETECTION (tez, hujjat sahifasi YO'Q). Eslatma: bu MyID sessiyasi
-      // PINFL'ga bog'langan bo'lishini talab qiladi (backend {pinfl, birth_date} yuboradi).
-      // Bog'lanmagan sessiyada MyID xato berishi mumkin — backend bog'lashни ta'minlasin.
-      entryType: MyIdEntryType.FACE_DETECTION,
+      // IDENTIFICATION — foydalanuvchini MyID orqali TEKSHIRADI va `code` qaytaradi (backend shuni
+      // /sdk/data?code= bilan tasdiqlaydi). Sessiya PINFL'ga bog'langani uchun (pinflBound) MyID
+      // hujjat so'ramaydi → 1:1 yuz mosligi → TEZ. FACE_DETECTION faqat selfi oladi, code BERMAYDI.
+      entryType: MyIdEntryType.IDENTIFICATION,
       cameraShape: MyIdCameraShape.CIRCLE,
       locale: lang,
     };

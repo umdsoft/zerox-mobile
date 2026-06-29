@@ -90,19 +90,23 @@ const UpdatePasswordWithJshir = () => {
         }),
       ).unwrap();
 
-      if (response.code === 2) {
+      // PAROL TIKLASH — FAQAT MyID/JSHSHIR orqali, SMS YO'Q.
+      // code 2 (pinfl bor) va code 1 (pinfl yo'q) → ro'yxatda bor → EnterJsh (JSHSHIR → MyID).
+      if (response.code === 2 || response.code === 1) {
         navigation.navigate('EnterJsh', { phone: phone.replace(/\s/g, '') });
       }
 
-      if (response.code === 1) {
-        navigation.navigate('CheckSmsPassword', {
-          phone: phone.replace(/\s/g, ''),
-        });
-      }
-
+      // code 0 → raqam ro'yxatdan o'tmagan → SMS/registratsiya YO'Q, aniq xato beramiz.
       if (response.code === 0) {
-        navigation.navigate('CheckSmsPassword', {
-          phone: phone.replace(/\s/g, ''),
+        Toast.show({
+          type: 'error2',
+          position: 'bottom',
+          props: {
+            title: 'Xatolik!',
+            desc: t("Bu telefon raqami ro'yxatdan o'tmagan."),
+          },
+          visibilityTime: 3000,
+          autoHide: true,
         });
       }
       if (response.code === 3) {
