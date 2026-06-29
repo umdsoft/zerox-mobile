@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BackButton from '../components/BackButton';
 import { normalize, style } from '../../theme/style';
-import RegisterWithPeopleIcon from '../../images/auth/illustrationregisterwithpeople.svg';
+import ResetPassword from '../../images/RecoveryPassword';
 import Loading from '../components/Loading';
 
 import PhoneInput from '../components/PhoneInput';
@@ -167,10 +167,18 @@ const UpdatePasswordWithJshir = () => {
                 justifyContent: 'center',
               }}
             >
-              <RegisterWithPeopleIcon width="70%" height="70%" />
+              <ResetPassword />
             </View>
-            <View style={{ alignItems: 'center' }}>
+            <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
               <MainText size={fontSize[16]} ft={font.bold} color={colors.black}>
+                {t('729')}
+              </MainText>
+              <MainText
+                size={fontSize[12]}
+                color={colors.disabledButtonColor}
+                textAlign="center"
+                style={{ marginTop: 6 }}
+              >
                 {t('42')}
               </MainText>
             </View>

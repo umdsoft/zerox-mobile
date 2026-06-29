@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,231 +20,190 @@ import {
   useMyId,
 } from 'react-native-nitro-myid';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { storage } from '../../../store/api/token/getToken';
 import { normalize, style } from '../../../theme/style';
-import Loading from '../../components/Loading';
 import OtherHeader from '../../components/OtherHeader';
 import { URL } from '../../constants';
+
+/**
+ * Recovery — MyID FACE_DETECTION ekrani (TOZA QAYTA YOZILDI).
+ *
+ * Asosiy prinsip: HECH QACHON jim ishdan chiqmaslik. Har bosqich (sessiya olish,
+ * MyID'ning har bir callback'i, bo'sh kod) ekranda ANIQ holat/xato ko'rsatadi —
+ * shunda foydalanuvchi VA biz nima bo'lganini bilamiz. (Oldin onUserExited jim
+ * `console.warn` qilib qaytardi → sabab ko'rinmasdi, parol ekraniga o'tmasdi.)
+ *
+ * Oqim: POST /askjshshir/myid-session (PINFL-bound sessiya) → MyID FACE_DETECTION
+ *       → onSuccess(code) → UpdatePassword ekraniga o'tish.
+ */
+
+const CLIENT_HASH =
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB';
+const CLIENT_HASH_ID = '7b4507ca-9b70-4e92-8bfe-767db25a0be2';
+
+const showError = (desc: string) => {
+  Toast.show({
+    autoHide: true,
+    visibilityTime: 4000,
+    position: 'bottom',
+    type: 'error2',
+    props: { title: t('Xatolik'), desc },
+  });
+};
 
 const MyIdScreen = () => {
   const { start } = useMyId();
   const navigation = useNavigation();
-  const { jshshir, token } = useRoute().params;
+  const { token } = (useRoute().params || {}) as { token?: string };
 
-  const [loading, setLoading] = useState(false);
-  const [loading2, setLoading2] = useState(false);
+  const [busy, setBusy] = useState(false);
+  // Ekranda ko'rinadigan holat — har bosqichni ko'rsatadi (UX + diagnostika).
+  const [status, setStatus] = useState('');
 
-  const getSessionId = useCallback(async () => {
+  const startFlow = useCallback(async () => {
+    if (!token) {
+      setStatus(t('Sessiya topilmadi'));
+      showError(t('Sessiya muddati tugadi. Parol tiklashni qaytadan boshlang.'));
+      return;
+    }
+    setBusy(true);
+    setStatus(t('Sessiya tayyorlanmoqda…'));
+
+    // ---- 1) PINFL-bound MyID sessiya olish ----
+    let sessionId: string | undefined;
+    let pinflBound = false;
     try {
-      setLoading2(true);
-      const response = await axios.post(
+      const { data } = await axios.post(
         URL + '/user/askjshshir/myid-session',
-        {
-          method: 'face',
-        },
+        { method: 'face' },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          timeout: 15000, // backend osilsa abadiy kutmaymiz (spinner cheksiz qolmasin)
+          timeout: 15000,
         },
       );
-
-      if (response.data.success) {
-        // pinflBound — backend sessiyani PINFL'ga bog'lay oldimi (entryType tanlovi uchun).
-        return {
-          sessionId: response.data.sessionId,
-          pinflBound: !!response.data.pinflBound,
-        };
+      if (data?.success && data?.sessionId) {
+        sessionId = data.sessionId;
+        pinflBound = !!data.pinflBound;
       } else {
-        console.log(response.data.msg, 'response');
+        setBusy(false);
+        setStatus(t('Sessiya ochilmadi') + ': ' + (data?.error || 'unknown'));
+        showError(t("Sessiya ochilmadi. Qaytadan urinib ko'ring."));
+        return;
       }
-    } catch (err) {
-      throw err;
-    } finally {
-      setLoading2(false);
-    }
-  }, []);
-
-  // Eski /user/myidchecking olib tashlandi — shaxs tekshiruvi (PINFL) endi parol
-  // o'rnatish bilan birga /askjshshir/complete'da (UpdatePassword) bajariladi.
-
-  const onHandlePostData = useCallback(async () => {
-    let resp: any;
-    try {
-      resp = await getSessionId();
-    } catch (err) {
-      if (__DEV__) console.warn('myid-session error', err);
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          title: 'Xatolik',
-          desc: t("Sessiya ochilmadi. Qaytadan urinib ko'ring."),
-        },
-      });
-      return;
-    }
-    const sessionId = resp?.sessionId;
-    const pinflBound = resp?.pinflBound;
-
-    // Session ochilmadi (backend success:false yoki bo'sh javob) — foydalanuvchini
-    // tugma ustida jim qotirmasdan, aniq xato + qayta urinish imkonini beramiz.
-    if (!sessionId) {
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          title: 'Xatolik',
-          desc: t("Sessiya ochilmadi. Qaytadan urinib ko'ring."),
-        },
-      });
+    } catch (err: any) {
+      setBusy(false);
+      const httpStatus = err?.response?.status;
+      const e = err?.response?.data?.error || err?.message || 'network';
+      setStatus(t('Sessiya xatosi') + ': ' + e);
+      if (httpStatus === 401 || e === 'invalid-or-expired-token') {
+        showError(
+          t('Sessiya muddati tugadi. Parol tiklashni qaytadan boshlang.'),
+        );
+      } else if (e === 'myid-bind-failed') {
+        showError(
+          t("MyID sessiyasi tayyorlanmadi (PINFL). Birozdan so'ng qayta urining."),
+        );
+      } else {
+        showError(t("Sessiya ochilmadi. Qaytadan urinib ko'ring."));
+      }
       return;
     }
 
-    const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
+    // ---- 2) MyID FACE_DETECTION ----
+    // pinflBound muhim: false bo'lsa sessiya yuzni PINFL'ga moslay olmaydi.
+    setStatus(t('Kamera ochilmoqda…') + ` (pinflBound: ${pinflBound})`);
 
-    // Diagnostika: sessiya PINFL'ga bog'lanmagan bo'lsa FACE_DETECTION baribir majburlanadi.
-    if (__DEV__ && !pinflBound) {
-      console.log('MyID(recovery): sessiya pinfl-bound EMAS — FACE_DETECTION baribir majburlandi');
-    }
-
-    // ===== TEMP DEBUG (diagnostika — keyin olib tashlanadi) =====
-    Alert.alert(
-      'DEBUG: session',
-      `sessionId: ${sessionId ? 'BOR' : "YO'Q"}\npinflBound: ${pinflBound}`,
-    );
-    // ===========================================================
-
-    const prod = {
-      sessionId,
-      clientHash:
-        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
-      clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
+    const locale = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
+    const config = {
+      // sessionId yuqorida tekshirilgan (yo'q bo'lsa return qilingan) — bu yerda string.
+      sessionId: sessionId as string,
+      clientHash: CLIENT_HASH,
+      clientHashId: CLIENT_HASH_ID,
       environment: MyIdEnvironment.PRODUCTION,
-      // HAR DOIM FACE_DETECTION (tez, hujjat sahifasi YO'Q). Eslatma: bu MyID sessiyasi
-      // PINFL'ga bog'langan bo'lishini talab qiladi (backend {pinfl, birth_date} yuboradi).
-      // Bog'lanmagan sessiyada MyID xato berishi mumkin — backend bog'lashни ta'minlasin.
       entryType: MyIdEntryType.FACE_DETECTION,
       cameraShape: MyIdCameraShape.CIRCLE,
-      locale: lang,
+      locale,
     };
-    if (sessionId) {
-      try {
-        start(prod, {
-          onSuccess: data => {
-            // ===== TEMP DEBUG =====
-            Alert.alert(
-              'DEBUG: onSuccess',
-              `code: ${data?.code ? String(data.code).slice(0, 10) + '…' : "BO'SH"}\nkeys: ${Object.keys(data || {}).join(', ')}`,
-            );
-            // ======================
-            // Kutilmagan holat: scan o'tdi-yu kod bo'sh — UpdatePassword'da /complete baribir
-            // rad etardi. Foydalanuvchini parol ekranida qotirmasdan, aniq xato + qayta urinish.
-            if (!data?.code) {
-              Toast.show({
-                autoHide: true,
-                visibilityTime: 3000,
-                position: 'bottom',
-                type: 'error2',
-                props: {
-                  title: 'Xatolik',
-                  desc: t('Identifikatsiya amalga oshmadi.'),
-                },
-              });
-              return;
-            }
-            // MyID muvaffaqiyatli — disposable kodni UpdatePassword'ga uzatamiz. Shaxs
-            // tekshiruvi (PINFL mosligi) + parol o'rnatish /askjshshir/complete'da BIRGA
-            // bajariladi (eski /myidchecking + /updatePassword o'rniga).
-            navigation.navigate('UpdatePassword', {
-              myidCode: data.code,
-              token,
-            });
-          },
-          onError: err => {
-            // ===== TEMP DEBUG =====
-            Alert.alert('DEBUG: onError', JSON.stringify(err));
-            // ======================
-            Toast.show({
-              autoHide: true,
-              visibilityTime: 3000,
-              position: 'bottom',
-              type: 'error2',
-              props: {
-                title: 'Xatolik',
-                desc: t('Identifikatsiya amalga oshmadi.'),
-              },
-            });
-          },
-          onUserExited: () => {
-            // ===== TEMP DEBUG =====
-            Alert.alert('DEBUG: onUserExited', 'MyID flow bekor qilindi / chiqildi');
-            // ======================
-            console.warn('errere');
-          },
-        });
-      } catch (error) {
-        console.log(error, 'face error');
-      }
-    }
-  }, [getSessionId, start, navigation, token]);
 
-  if (loading) {
-    return <Loading />;
-  }
+    try {
+      start(config, {
+        onSuccess: data => {
+          setBusy(false);
+          if (!data?.code) {
+            // Yuz o'tdi-yu kod bo'sh — bu holatni ANIQ ko'rsatamiz (jim qoldirmaymiz).
+            setStatus(
+              t('MyID javobi kodsiz') +
+                ` (keys: ${Object.keys(data || {}).join(',')})`,
+            );
+            showError(t("Identifikatsiya kodi olinmadi. Qaytadan urinib ko'ring."));
+            return;
+          }
+          // MUVAFFAQIYAT → parol o'rnatish ekraniga o'tamiz.
+          setStatus('');
+          navigation.navigate('UpdatePassword', {
+            myidCode: data.code,
+            token,
+          });
+        },
+        onError: err => {
+          setBusy(false);
+          const m =
+            err?.message || (err?.code != null ? String(err.code) : 'unknown');
+          setStatus(t('MyID xatosi') + ': ' + m);
+          showError(t('Identifikatsiya amalga oshmadi') + ' — ' + m);
+        },
+        onUserExited: () => {
+          // Oldin bu jim `console.warn` edi → foydalanuvchi shu ekranga qaytib,
+          // sababini bilmasdi. Endi ANIQ ko'rsatamiz.
+          setBusy(false);
+          setStatus(t('Identifikatsiya bekor qilindi'));
+          showError(t("Identifikatsiya bekor qilindi. Qaytadan urinib ko'ring."));
+        },
+      });
+    } catch (error: any) {
+      setBusy(false);
+      setStatus(t('Boshlab bo\'lmadi') + ': ' + (error?.message || 'unknown'));
+      showError(t("Identifikatsiyani boshlab bo'lmadi. Qaytadan urinib ko'ring."));
+    }
+  }, [token, start, navigation]);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: '#fff',
-      }}
-    >
+    <View style={styles.root}>
       <OtherHeader
         title={t('747')}
         backgroundColor={style.blue}
         iconColor="#fff"
-        titleColor={style.backgroundColorDark}
+        titleColor="#000"
       />
-      <View style={styles.container}>
+      <View style={styles.body}>
         <LottieView
           source={require('../../../images/scan.json')}
-          autoPlay={true}
+          autoPlay
           renderMode="AUTOMATIC"
           resizeMode="cover"
-          style={{
-            width: normalize(150),
-            height: normalize(150),
-            marginBottom: normalize(50),
-          }}
+          style={styles.lottie}
         />
-
         <Text allowFontScaling={false} style={styles.text}>
           {t('744')}
         </Text>
+        {status ? (
+          <Text allowFontScaling={false} style={styles.status}>
+            {status}
+          </Text>
+        ) : null}
       </View>
       <TouchableOpacity
         activeOpacity={0.8}
-        disabled={loading2}
-        onPress={onHandlePostData}
-        style={[styles.enterButton]}
+        disabled={busy}
+        onPress={startFlow}
+        style={styles.button}
       >
-        {loading2 ? (
-          <ActivityIndicator color={'white'} size={'small'} />
+        {busy ? (
+          <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.enterText,
-              { color: '#fff', fontFamily: style.fontFamilyMedium },
-            ]}
-          >
+          <Text allowFontScaling={false} style={styles.buttonText}>
             {t('45')}
           </Text>
         )}
@@ -257,20 +215,35 @@ const MyIdScreen = () => {
 export default MyIdScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  root: { flex: 1, backgroundColor: '#fff' },
+  body: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: normalize(50),
+    paddingHorizontal: 20,
+  },
+  lottie: {
+    width: normalize(150),
+    height: normalize(150),
+    marginBottom: normalize(40),
   },
   text: {
     fontSize: style.fontSize.xx,
     fontFamily: style.fontFamilyMedium,
     color: '#000',
-    marginTop: 20,
+    marginTop: 10,
     textAlign: 'center',
-    maxWidth: '80%',
+    maxWidth: '85%',
   },
-  enterButton: {
+  status: {
+    marginTop: 18,
+    fontSize: style.fontSize.small,
+    fontFamily: style.fontFamilyMedium,
+    color: style.blue,
+    textAlign: 'center',
+    maxWidth: '90%',
+  },
+  button: {
     width: '90%',
     backgroundColor: style.blue,
     alignItems: 'center',
@@ -278,11 +251,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: style.buttonHeight,
     alignSelf: 'center',
-    marginTop: normalize(20),
+    position: 'absolute',
+    bottom: normalize(40),
   },
-  enterText: {
+  buttonText: {
     fontFamily: style.fontFamilyBold,
     fontSize: style.fontSize.xs,
-    color: style.textColor,
+    color: '#fff',
   },
 });
