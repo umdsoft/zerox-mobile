@@ -94,6 +94,9 @@ const EnterJsh = () => {
           //   navigation.navigate('PayFor', {user: data.data});
           // }
         }
+      } else {
+        // checkPhoneTime() false (qurilma soati noto'g'ri / server xato) — loading'da qotmasin.
+        setLoading(false);
       }
     } catch (error: any) {
       // Backend xatoni {success:false, error:'...'} + HTTP 4xx bilan qaytaradi

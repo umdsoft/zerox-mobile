@@ -72,6 +72,19 @@
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
 
+# ---- MyID Capture SDK (uz.myid.sdk.capture) + Nitro ko'prik ----
+# MUAMMO: keep-rule'siz R8 SDK klass/model'larini obfuscate qiladi -> SDK MyID
+# server javoblarini (reflection/serialization) parse qila olmay QAYTA-QAYTA
+# urinadi/timeout -> Android RELEASE'da MyID 10-12s KECHIKIB ochiladi. iOS'da
+# R8 yo'q -> darhol ochiladi. Keep -> Android'da ham darhol ochiladi.
+-keep class uz.myid.** { *; }
+-keep interface uz.myid.** { *; }
+-keepclassmembers class uz.myid.** { *; }
+-dontwarn uz.myid.**
+-keep class com.margelo.nitro.nitromyid.** { *; }
+-keep class com.margelo.nitro.** { *; }
+-dontwarn com.margelo.nitro.**
+
 # ---- R8: kutubxonalardagi ixtiyoriy / Android'da-YO'Q sinflar (missing class xatosi) ----
 # Desktop-JVM yoki optional kod yo'llari (pdfbox -> JP2 kodek, ktor -> java.lang.management).
 # R8 missing class'ni XATO deb to'xtatadi; -dontwarn uni e'tiborsiz qoldiradi (xavfsiz).

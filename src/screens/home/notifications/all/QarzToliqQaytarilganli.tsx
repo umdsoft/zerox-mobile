@@ -29,7 +29,7 @@ const Qarzqaytarilganligitogrisida = ({
       date={item?.created}
       time={item.time}
       onAccept={() =>
-        item.residual_amount === 0
+        Number(item.residual_amount) === 0
           ? onToliqQaytgan(item, 1)
           : onQismanQaytarilgan(item, 1)
       }

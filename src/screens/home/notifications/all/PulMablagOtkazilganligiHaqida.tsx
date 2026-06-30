@@ -33,7 +33,7 @@ const PulMablagOtkazilganligiHaqida = ({ item, okay, navigation }) => {
             item.ctypes === 2
               ? ReturnName.returnCreditorName(item)
               : item.ctypes === 1
-              ? item.ccopmany
+              ? item.ccompany
               : null,
           sum: item.token
             .toString()

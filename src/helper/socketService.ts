@@ -549,7 +549,7 @@ class SocketService {
             item.ctypes === 2
               ? ReturnName.returnCreditorName(item)
               : item.ctypes === 1
-              ? item.ccopmany
+              ? item.ccompany
               : null,
           sum: item.token.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '),
           id: item.cuid.slice(0, 6) + '/' + item.cuid.slice(-2),
@@ -574,7 +574,7 @@ class SocketService {
           name:
             item.ctypes === 2
               ? ReturnName.returnCreditorName(item)
-              : item.ccopmany,
+              : item.ccompany,
           start: item.created,
           id: item.number,
           end: item.created,
@@ -855,7 +855,7 @@ class SocketService {
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
                 : item.ctypes === 1
-                ? item.ccopmany
+                ? item.ccompany
                 : null,
             start: item.created_at,
             id: item.number,
@@ -933,7 +933,7 @@ class SocketService {
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
                 : item.ctypes === 1
-                ? item.ccopmany
+                ? item.ccompany
                 : null,
             sum: sortText(item.residual_amount) + ' ' + item.currency,
           });
@@ -945,7 +945,7 @@ class SocketService {
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
                 : item.ctypes === 1
-                ? item.ccopmany
+                ? item.ccompany
                 : null,
             sum: sortText(item.residual_amount) + ' ' + item.currency,
           });
@@ -984,7 +984,7 @@ class SocketService {
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
                 : item.ctypes === 1
-                ? item.ccopmany
+                ? item.ccompany
                 : null,
             id: item.number,
             sum: sortText(item.amount) + ' ' + item.currency,
@@ -999,7 +999,7 @@ class SocketService {
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
                 : item.ctypes === 1
-                ? item.ccopmany
+                ? item.ccompany
                 : null,
             start: item.created_at,
             id: item.number,

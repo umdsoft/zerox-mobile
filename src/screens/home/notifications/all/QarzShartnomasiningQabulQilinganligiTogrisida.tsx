@@ -107,7 +107,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
           item.ctypes === 2
             ? ReturnName.returnCreditorName(item)
             : item.ctypes === 1
-            ? item.ccopmany
+            ? item.ccompany
             : null,
         id: item.number,
         sum: sortText(item.amount) + ' ' + item.currency,

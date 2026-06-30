@@ -25,26 +25,16 @@ const Card = ({
 }) => {
   const navigation = useNavigation();
 
-  const usz = data => {
-    let allSum = 0;
-
-    data.forEach((item, index) => {
-      if (item?.currency === 'USD') {
-        allSum += item.residual_amount;
-      }
-    });
-    return allSum.toString();
-  };
-  const usd = data => {
-    let allSum = 0;
-
-    data.forEach((item, index) => {
-      if (item?.currency === 'UZS') {
-        allSum += item.residual_amount;
-      }
-    });
-    return allSum.toString();
-  };
+  // DECIMAL maydonlar mysql2'dan STRING keladi → '+' birlashtiradi (qo'shmaydi).
+  // Number() bilan to'g'ri yig'amiz va format qilamiz (.slice(1,20) hack endi shart emas;
+  // bir valyutada bir nechta qator bo'lsa ham to'g'ri ishlaydi).
+  const sumByCurrency = (rows, cur) =>
+    (rows || []).reduce(
+      (acc, item) =>
+        item?.currency === cur ? acc + Number(item.residual_amount || 0) : acc,
+      0,
+    );
+  const formatMoney = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   return (
     <TouchableOpacity
       disabled={disabled ? true : false}
@@ -87,22 +77,10 @@ const Card = ({
       </View>
       <View style={{marginTop: 20}}>
         <MainText color={colors.green} size={style.fontSize.small}>
-          {usd(data).slice(1, 20).length === 0
-            ? '0' + ' ' + t('som')
-            : usd(data)
-                .slice(1, 20)
-                .replace(/\B(?=(\d{3})+(?!\d))/g, ' ') +
-              ' ' +
-              t('som')}
+          {formatMoney(sumByCurrency(data, 'UZS')) + ' ' + t('som')}
         </MainText>
         <MainText color={colors.green} size={style.fontSize.small}>
-          {usz(data).slice(1, 20).length === 0
-            ? '0 $'
-            : usz(data)
-                .slice(1, 20)
-                .replace(/\B(?=(\d{3})+(?!\d))/g, ' ') +
-              ' ' +
-              '$'}
+          {formatMoney(sumByCurrency(data, 'USD')) + ' $'}
         </MainText>
       </View>
     </TouchableOpacity>

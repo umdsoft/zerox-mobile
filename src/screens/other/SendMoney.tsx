@@ -171,9 +171,9 @@ const SendMoney = () => {
 
       if (data.success && data.data) {
         setClient({
-          first_name: data?.data?.first_name.slice(0, 1),
-          last_name: data?.data?.last_name,
-          middle_name: data?.data?.middle_name.slice(0, 1),
+          first_name: data?.data?.first_name?.slice(0, 1) ?? '',
+          last_name: data?.data?.last_name ?? '',
+          middle_name: data?.data?.middle_name?.slice(0, 1) ?? '',
           id: data?.data?.id,
         });
       } else {

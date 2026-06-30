@@ -65,7 +65,7 @@ const Qarzniqaytarishqabulqilinmaganligitogrisida = ({
           item.ctypes === 2
             ? ReturnName.returnCreditorName(item)
             : item.ctypes === 1
-            ? item.ccopmany
+            ? item.ccompany
             : null,
         sum: sortText(item.residual_amount) + ' ' + item.currency,
       };

@@ -310,7 +310,7 @@ const DebtTakePart = () => {
                 title={t('357')}
                 onPress={onPress}
                 loading={loading}
-                disabled={!checked && sum.length < 0 && !loading}
+                disabled={!checked || Number(sum.replace(/\s/g, '')) <= 0}
                 style={{ marginTop: 20 }}
               />
             </View>

@@ -47,6 +47,14 @@ const ListCard = ({
   }, []);
 
   const onPress = item => {
+    // mysql2 DATE ustunni TZ-siljishli ISO qaytaradi (masalan 2026-07-15 ->
+    // "2026-07-14T19:00:00.000Z"). Backend /contract/near `day`ni 'YYYY-MM-DD' kutadi —
+    // shuning uchun mahalliy (UTC+5) sanaga keltiramiz. Backend TEGILMAYDI (web ham shu
+    // endpointni ishlatadi); faqat mobil to'g'ri formatda yuboradi.
+    const ed = new Date(item.end_date);
+    const day = isNaN(ed.getTime())
+      ? item.end_date
+      : new Date(ed.getTime() + 5 * 3600 * 1000).toISOString().slice(0, 10);
     navigation.navigate('SearchDebitor', {
       iconType: 1,
       title: title,
@@ -55,9 +63,9 @@ const ListCard = ({
       person: userType === 1 ? 'debitor' : 'creditor',
       url: `/contract/near?type=${
         userType === 1 ? 'debitor' : 'creditor'
-      }&day=${item.end_date}&page=1&limit=500&currency=${item.currency}`,
+      }&day=${day}&page=1&limit=500&currency=${item.currency}`,
       isHave,
-      searchUrl: `/contract/near/search?type=${
+      searchUrl: `/contract/near?type=${
         userType === 1 ? 'debitor' : 'creditor'
       }&page=1&limit=500&search=`,
     });
@@ -332,17 +340,14 @@ const ListCard = ({
   );
 };
 const CheckDate = date => {
-  // console.log(date, 'date');
-  // const restTimeMillisec = new Date(date);
-  const nowMonth = new Date().getMonth();
-  const getMonth = new Date(date).getMonth();
-  const dd1 = new Date(date).getDate();
-  const dd2 = new Date(Date.now()).getDate();
-  if (nowMonth - getMonth === 0) {
-    return pp(dd1 - dd2);
-  }
-
-  return pp(getMonth - nowMonth);
+  // Haqiqiy kun farqini hisoblaymiz. Oldin oy chegarasida oy-farqini kun deb olardi
+  // (masalan 30-iyul → 2-avgust = 3 kun, lekin "1 kun" ko'rsatardi).
+  const d = new Date(date);
+  const now = new Date();
+  d.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((d.getTime() - now.getTime()) / 86400000);
+  return pp(diffDays);
 
   // if (restTimeMillisec < 0) {
   //   return t('843');

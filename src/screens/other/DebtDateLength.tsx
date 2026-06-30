@@ -138,6 +138,17 @@ const DebtDateLength = () => {
         // });
         return;
       }
+
+      // Yuqoridagi shartlarga tushmagan holat (masalan status=200, msg='end') — jim
+      // qolmasdan loading'ni to'xtatib, xato ko'rsatamiz (oldin ekran qotib qolardi).
+      setLoading1(false);
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: { title: 'Xatolik', desc: t('Xatolik!') },
+      });
     } catch (error) {
       console.warn(error);
       Toast.show({

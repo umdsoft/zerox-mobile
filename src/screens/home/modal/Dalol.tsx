@@ -72,23 +72,30 @@ const Dalol = () => {
 };
 
 const returnURL = (type, data, lang, date, sum) => {
-  console.log(
-    `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=1&amount=${data.amount}&refundable_amount=${sum}&residual_amount=${data.residual_amount}&end_date=${data.end_date}&uid=${data.uid}&lang=${lang}`,
-  );
+  // mysql2 DATE → TZ-siljishli ISO ("2026-07-14T19:00:00.000Z" = mahalliy 2026-07-15).
+  // PDF generatori 'YYYY-MM-DD' kutadi → mahalliy (UTC+5) sanaga keltiramiz.
+  const fmt = v => {
+    const d = new Date(v);
+    return isNaN(d.getTime())
+      ? ''
+      : new Date(d.getTime() + 5 * 3600 * 1000).toISOString().slice(0, 10);
+  };
   switch (type) {
     case 2:
       return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=4&vos_summa=${data.residual_amount}&uid=${data.uid}&lang=${lang}`;
     case 3:
       const dd = new Date(date);
-      // format date to yyyy-mm-dd
       const date2 = dd.toISOString().slice(0, 10);
       return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=6&refundable_amount=0&residual_amount=${data.residual_amount}&end_date=${date2}&uid=${data.uid}&lang=${lang}`;
     case 4:
-      //https://pdf.zerox.uz/act.php?debitor=100008AA&creditor=100024AA&act_type=2&amount=200000&residual_amount=0&refundable_amount=200000&end_date=undefined&uid=b8bbb9f822197aa234f4c4651994801ca30fd8b2fc72841656d9cb5b1d1c7e84&lang=uz
-      return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=2&amount=${data.amount}&residual_amount=0&refundable_amount=${data.residual_amount}&end_date=${data.end_date}&uid=${data.uid}&lang=${lang}`;
+      return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=2&amount=${data.amount}&residual_amount=0&refundable_amount=${data.residual_amount}&end_date=${fmt(
+        data.end_date,
+      )}&uid=${data.uid}&lang=${lang}`;
     case 5:
-      //https://pdf.zerox.uz/act.php?debitor=100008AA&creditor=100024AA&act_type=1&amount=200000&refundable_amount=9999&residual_amount=200000&end_date=undefined&uid=b8bbb9f822197aa234f4c4651994801ca30fd8b2fc72841656d9cb5b1d1c7e84&lang=uz
-      return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=1&amount=${data.amount}&refundable_amount=${sum}&residual_amount=${data.residual_amount}&end_date=${data.end_date}&uid=${data.uid}&lang=${lang}`;
+      // Qisman qaytarish: qolgan qoldiq = joriy residual - to'langan summa (sum). Sana → fmt.
+      return `https://pdf.zerox.uz/act.php?debitor=${data.duid}&creditor=${data.cuid}&act_type=1&amount=${data.amount}&refundable_amount=${sum}&residual_amount=${
+        Number(data.residual_amount) - Number(sum)
+      }&end_date=${fmt(data.end_date)}&uid=${data.uid}&lang=${lang}`;
     default:
       return '';
   }

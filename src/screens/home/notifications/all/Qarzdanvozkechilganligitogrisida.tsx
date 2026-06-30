@@ -56,7 +56,7 @@ const Qarzdanvozkechilganligitogrisida = ({ item, okay, navigation }) => {
           item.ctypes === 2
             ? ReturnName.returnCreditorName(item)
             : item.ctypes === 1
-            ? item.ccopmany
+            ? item.ccompany
             : null,
         start: item.created_at,
         id: item.number,

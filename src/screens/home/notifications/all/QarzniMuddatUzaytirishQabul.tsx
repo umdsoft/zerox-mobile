@@ -61,7 +61,7 @@ const QarzniMuddatUzaytirishQabul = ({ item, okay, navigation }) => {
             name:
               item.ctypes === 2
                 ? ReturnName.returnCreditorName(item)
-                : item.ccopmany,
+                : item.ccompany,
             start: item.created,
             id: item.number,
             end: item.created,

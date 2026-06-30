@@ -35,7 +35,7 @@ import { checkExpire } from '../../store/reducers/HomeReducer';
 
 const UserInformationOfDebt = () => {
   const navigation = useNavigation();
-  const { user, type, ctok, dtok, item } = useRoute().params;
+  const { user, type, ctok, dtok, item } = useRoute().params ?? {};
   const { t } = useTranslation();
   const userInfo = useSelector(state => state.HomeReducer);
   const [me, setMe] = useState({});
@@ -45,6 +45,10 @@ const UserInformationOfDebt = () => {
   const dispatch = useDispatch();
 
   const FetchData = async () => {
+    // Params yo'q/to'liq emas bo'lsa (masalan paramsiz navigatsiya) — crash bo'lmasin.
+    if (!item?.duid || !item?.debitor) {
+      return;
+    }
     setLoading(true);
     try {
       const [profile, creditor, debitor] = await axios.all([

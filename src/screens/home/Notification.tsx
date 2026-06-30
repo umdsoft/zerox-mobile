@@ -167,23 +167,15 @@ const Bildrishnoma = () => {
   const [loading, setLoading] = useState(false);
 
   const onRefresh = useCallback(() => {
-    if (page <= pagination?.totalPage) {
-      setLoading(true);
-      try {
-        dispatch(getNotificationWithPage({ page: 1 }));
-        // socketService.on('notification', data => {
-        //   dispatch(setNotification({notification: data.not}));
-        // });
-      } catch (error) {
-        setLoading(false);
-        navigation.reset({ routes: [{ name: 'LoginWithPhone' }], index: 0 });
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      console.log('page', page);
-    }
-  }, [dispatch, navigation, page, pagination?.totalPage]);
+    // Oldin `page <= pagination?.totalPage` gate'i bor edi; backend /me javobida
+    // pagination yo'q → totalPage 0 → `1 <= 0` false → refresh HECH QACHON ishlamasdi.
+    // Gate olib tashlandi; async thunk reject'ini to'g'ri ushlash uchun .unwrap().
+    setLoading(true);
+    dispatch(getNotificationWithPage({ page: 1 }))
+      .unwrap()
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [dispatch]);
 
   // Notoficationni o'chirish
   const okay = useCallback(

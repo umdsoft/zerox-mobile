@@ -31,7 +31,7 @@ export interface CompanyUser extends BaseUser {
   dtypes: 1;
   dcompany: string;
   ctypes?: 1;
-  ccopmany?: string;
+  ccompany?: string;
 }
 
 /**
@@ -88,7 +88,7 @@ export interface DebtItem {
   debitor?: User;
   ctypes?: UserType;
   dtypes?: UserType;
-  ccopmany?: string;
+  ccompany?: string;
   dcompany?: string;
   cfirstName?: string;
   clastName?: string;

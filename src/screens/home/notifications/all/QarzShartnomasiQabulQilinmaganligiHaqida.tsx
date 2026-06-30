@@ -121,7 +121,7 @@ const QarzShartnomasiQabulQilinmaganligiHaqida = ({
                 ]}
               >
                 {item.ctypes === 2 ? ReturnName.returnCreditorName(item) : null}
-                {item.ctypes === 1 ? item.ccopmany : null}
+                {item.ctypes === 1 ? item.ccompany : null}
               </Text>{' '}
               ga{'\n'}{' '}
               <TextBold>

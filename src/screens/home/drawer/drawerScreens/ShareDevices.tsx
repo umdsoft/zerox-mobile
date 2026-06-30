@@ -32,7 +32,7 @@ const ShareDevices = () => {
 
     setData(b);
     setCurrent(a[0]);
-  }, []);
+  }, [devices]);
 
   const onDeleteDevice = useCallback(async () => {
     let c = [];
@@ -52,9 +52,14 @@ const ShareDevices = () => {
       });
   }, []);
 
+  // Ekran ochilganda qurilmalar ro'yxatini olamiz (oldin faqat o'chirishdan keyin olinardi → bo'sh edi).
+  useEffect(() => {
+    dispatch(getDevicesAction());
+  }, [dispatch]);
+
   useEffect(() => {
     checking();
-  }, []);
+  }, [checking]);
 
   return (
     <ScreenLayout title={'Ulangan qurilmalar'}>
