@@ -37,3 +37,16 @@ index ac4245bd056ad825e5990da0b76b4a80d400fe03..4c99a52b13ef44a898fc4a1083c83423
      // Build SDK config
      val sdkConfigBuilder =
              SdkConfig.Builder(config.sessionId)
+diff --git a/android/build.gradle b/android/build.gradle
+index 5217909..add31e9 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -124,6 +124,6 @@ dependencies {
+   implementation project(":react-native-nitro-modules")
+   
+   // MyID SDK
+-  debugImplementation("uz.myid.sdk.capture:myid-capture-sdk-debug:3.1.5")
+-  releaseImplementation("uz.myid.sdk.capture:myid-capture-sdk:3.1.5")
++  debugImplementation("uz.myid.sdk.capture:myid-capture-sdk-debug:3.1.7")
++  releaseImplementation("uz.myid.sdk.capture:myid-capture-sdk:3.1.7")
+ }
