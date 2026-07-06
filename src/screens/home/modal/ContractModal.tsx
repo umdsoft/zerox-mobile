@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { Modal } from 'react-native-paper';
-import { style } from '../../../theme/style';
+import { rd, rs } from '../../../theme/rd';
 import { useDispatch, useSelector } from 'react-redux';
 import { contractModalShow } from '../../../store/reducers/HomeReducer';
 
@@ -20,7 +20,6 @@ import { storage } from '../../../store/api/token/getToken';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Loading from '../../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
-import { fontSize } from '../../../theme/font';
 import { useTranslation } from 'react-i18next';
 const { width, height } = Dimensions.get('screen');
 
@@ -96,8 +95,8 @@ const ContractModal = () => {
               renderActivityIndicator={() => (
                 <ActivityIndicator
                   size="small"
-                  color={style.blue}
-                  style={{ flex: 1, justifyContent: 'center' }}
+                  color={rd.color.primary}
+                  style={styles.indicator}
                 />
               )}
               source={{
@@ -117,7 +116,7 @@ const ContractModal = () => {
               }}
               style={styles.pdf}
             />
-            <View style={{ backgroundColor: '#fff' }}>
+            <View style={styles.footer}>
               <TouchableWithoutFeedback
                 onPress={() => {
                   if (page !== allPage) {
@@ -133,23 +132,17 @@ const ContractModal = () => {
                   }
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 10,
-                  }}
-                >
+                <View style={styles.checkRow}>
                   <CheckBox
                     value={check}
-                    tintColor={'#DBDBDB'}
-                    onTintColor={style.blue}
+                    tintColor={rd.color.border}
+                    onTintColor={rd.color.primary}
                     tintColors={{
-                      true: style.blue,
-                      false: style.disabledButtonColor,
+                      true: rd.color.primary,
+                      false: rd.color.textTertiary,
                     }}
                     boxType="square"
-                    style={{ height: 20, width: 20 }}
+                    style={styles.checkbox}
                     disabled={page !== allPage ? true : false}
                     onValueChange={() => {
                       if (page === allPage) {
@@ -157,7 +150,7 @@ const ContractModal = () => {
                       }
                     }}
                   />
-                  <Text style={styles.teext} allowFontScaling={false}>
+                  <Text style={styles.checkText} allowFontScaling={false}>
                     {t('ofertaaa')}
                   </Text>
                 </View>
@@ -165,22 +158,18 @@ const ContractModal = () => {
               <TouchableOpacity
                 disabled={check ? false : true}
                 onPress={onClose}
+                activeOpacity={0.85}
                 style={[
                   styles.btn,
                   {
                     backgroundColor: check
-                      ? style.blue
-                      : style.disabledButtonColor,
+                      ? rd.color.primary
+                      : rd.color.textTertiary,
                   },
+                  check ? styles.btnActiveShadow : null,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.teext,
-                    { color: 'white', paddingHorizontal: 10, marginLeft: 0 },
-                  ]}
-                  allowFontScaling={false}
-                >
+                <Text style={styles.btnText} allowFontScaling={false}>
                   {t('93')}
                 </Text>
               </TouchableOpacity>
@@ -196,33 +185,59 @@ export default ContractModal;
 
 const styles = StyleSheet.create({
   main: {
-    backgroundColor: '#fff',
+    backgroundColor: rd.color.surface,
     width: width,
     height: height,
     alignSelf: 'center',
-    padding: 10,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(8),
+  },
+  indicator: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  footer: {
+    backgroundColor: rd.color.surface,
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+    paddingTop: rs(8),
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: rs(10),
+  },
+  checkbox: {
+    height: rs(20),
+    width: rs(20),
+  },
+  checkText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginLeft: rs(10),
+    maxWidth: '90%',
   },
   btn: {
-    // position: 'absolute',
-    padding: 15,
+    height: rs(52),
+    paddingHorizontal: rs(16),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 12,
-    bottom: 0,
+    borderRadius: rd.radius.lg,
     alignSelf: 'center',
-    marginBottom: 50,
-  },
-  pdf: {
-    flex: 1,
     width: '100%',
-    height: '100%',
+    marginBottom: rs(40),
   },
-  teext: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: fontSize[13],
-    color: style.blue,
-    marginLeft: 10,
-    maxWidth: '90%',
+  btnActiveShadow: {
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  btnText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
   },
 });

@@ -20,6 +20,8 @@ import {
 import {useTranslation} from 'react-i18next';
 import {heightPercentageToDP} from 'react-native-responsive-screen';
 import {storage} from '../../store/api/token/getToken';
+import {rd, rs} from '../../theme/rd';
+import {ChevronLeft, SunSettingsIcon, WifiOffIcon} from '../home/redesign/icons';
 
 const QrScan = () => {
   let scannedRef = useRef(false); // lock
@@ -100,70 +102,139 @@ const QrScan = () => {
     [navigation, type, user.data.uid],
   );
 
-  if (!device || !hasPermission) return <View />;
+  if (!hasPermission || !device) {
+    return (
+      <View style={styles.permContainer}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.goBack()}
+          style={styles.permBack}>
+          <ChevronLeft size={rs(24)} color={rd.color.text} />
+        </TouchableOpacity>
+        <View style={styles.permIcon}>
+          <WifiOffIcon size={rs(30)} color={rd.color.primary} />
+        </View>
+        <Text allowFontScaling={false} style={styles.permTitle}>
+          {t('798')}
+        </Text>
+      </View>
+    );
+  }
+
+  const FRAME = rs(240);
+  const CORNER = rs(34);
+  const CORNER_W = rs(4);
+
   return (
     <View style={styles.flex}>
+      <Camera
+        device={device}
+        isActive={true}
+        codeScanner={codeScanner}
+        torch={flash ? 'on' : 'off'}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Dark translucent surround with a transparent centered frame */}
+      <View style={styles.overlay} pointerEvents="box-none">
+        <View style={styles.dim} />
+        <View style={styles.middleRow}>
+          <View style={styles.dim} />
+          <View style={{width: FRAME, height: FRAME}}>
+            <View
+              style={[
+                styles.corner,
+                {
+                  top: 0,
+                  left: 0,
+                  borderTopWidth: CORNER_W,
+                  borderLeftWidth: CORNER_W,
+                  borderTopLeftRadius: rd.radius.xl,
+                  width: CORNER,
+                  height: CORNER,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                {
+                  top: 0,
+                  right: 0,
+                  borderTopWidth: CORNER_W,
+                  borderRightWidth: CORNER_W,
+                  borderTopRightRadius: rd.radius.xl,
+                  width: CORNER,
+                  height: CORNER,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                {
+                  bottom: 0,
+                  left: 0,
+                  borderBottomWidth: CORNER_W,
+                  borderLeftWidth: CORNER_W,
+                  borderBottomLeftRadius: rd.radius.xl,
+                  width: CORNER,
+                  height: CORNER,
+                },
+              ]}
+            />
+            <View
+              style={[
+                styles.corner,
+                {
+                  bottom: 0,
+                  right: 0,
+                  borderBottomWidth: CORNER_W,
+                  borderRightWidth: CORNER_W,
+                  borderBottomRightRadius: rd.radius.xl,
+                  width: CORNER,
+                  height: CORNER,
+                },
+              ]}
+            />
+          </View>
+          <View style={styles.dim} />
+        </View>
+        <View style={styles.dim} />
+      </View>
+
+      {/* Top-left back button */}
       <View style={styles.back}>
-        <BackButton
-          navigation={navigation}
-          backgroundColor={'#fff'}
-          IconColor={style.blue}
-        />
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}>
+          <ChevronLeft size={rs(24)} color={rd.color.onPrimary} />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={() => setFlash(!flash)} style={styles.flash}>
-        <Flash color={style.blue} />
-        <Text allowFontScaling={false} style={styles.flashText}>{t('chiroq')}</Text>
-      </TouchableOpacity>
-      <View style={styles.logo}>
-        <Logo
-          width={normalize(80)}
-          height={normalize(30)}
-          color={'red'}
-          fill={style.blue}
-        />
-      </View>
-
-      <View style={styles.title}>
-        <Text allowFontScaling={false} style={[styles.text, {fontSize: style.fontSize.xs}]}>
+      {/* Instruction text */}
+      <View style={styles.title} pointerEvents="none">
+        <Text allowFontScaling={false} style={styles.text}>
           {t('798')}
         </Text>
       </View>
 
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <View style={styles.border} />
-        <View style={{borderRadius: 20, overflow: 'hidden'}}>
-          <Camera
-            device={device}
-            isActive={true}
-            codeScanner={codeScanner}
-            torch={flash ? 'on' : 'off'}
-            style={{
-              width: heightPercentageToDP(35),
-              height: heightPercentageToDP(35),
-              alignSelf: 'center',
-              borderRadius: 50,
-            }}
+      {/* Flash toggle */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => setFlash(!flash)}
+        style={styles.flash}>
+        <View style={[styles.flashBtn, flash && styles.flashBtnOn]}>
+          <SunSettingsIcon
+            size={rs(22)}
+            color={flash ? rd.color.primary : rd.color.onPrimary}
           />
         </View>
-      </View>
-
-      {/* <QRCodeScanner
-        reactivate={true}
-        containerStyle={styles.flex}
-        onRead={OnRead}
-        fadeIn={true}
-        cameraStyle={{height}}
-        checkAndroid6Permissions={true}
-        vibrate={false}
-        flashMode={flash ? 'torch' : 'off'}
-      /> */}
-      {/* <Toast config={toastConfig} /> */}
+        <Text allowFontScaling={false} style={styles.flashText}>
+          {t('chiroq')}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -171,75 +242,127 @@ const QrScan = () => {
 export default QrScan;
 
 const styles = StyleSheet.create({
-  centerText: {
+  flex: {flex: 1, backgroundColor: '#000'},
+
+  // Overlay
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  dim: {
     flex: 1,
-    fontSize: 18,
-    padding: 32,
-    color: '#777',
-    marginTop: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  flex: {flex: 1},
-  flashText: {color: style.blue, fontSize: style.fontSize.xs},
-  flash: {
+  middleRow: {
+    flexDirection: 'row',
+  },
+  corner: {
     position: 'absolute',
-    zIndex: 1,
-    alignSelf: 'center',
-    marginTop: heightPercentageToDP(75),
-    alignItems: 'center',
+    borderColor: rd.color.onPrimary,
   },
-  text: {
-    color: style.blue,
-    fontSize: style.fontSize.xs + 15,
-    fontFamily: style.fontFamilyMedium,
-    textAlign: 'center',
-  },
-  logo: {
+
+  // Back button (top-left)
+  back: {
     position: 'absolute',
-    alignSelf: 'center',
-    marginTop:
+    top:
       Platform.OS === 'ios'
-        ? heightPercentageToDP(20)
-        : heightPercentageToDP(25),
-    zIndex: 1,
+        ? heightPercentageToDP(2)
+        : heightPercentageToDP(2.5),
+    left: rs(16),
+    zIndex: 2,
   },
+  backBtn: {
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Instruction text (top)
   title: {
     position: 'absolute',
-    zIndex: 1,
-    marginTop:
+    zIndex: 2,
+    top:
       Platform.OS === 'ios'
-        ? heightPercentageToDP('70%')
-        : heightPercentageToDP('70%'),
+        ? heightPercentageToDP(12)
+        : heightPercentageToDP(10),
     alignSelf: 'center',
+    paddingHorizontal: rs(32),
   },
-  border: {
+  text: {
+    color: rd.color.onPrimary,
+    fontSize: rs(16),
+    fontFamily: rd.font.medium,
+    textAlign: 'center',
+    lineHeight: rs(22),
+  },
+
+  // Flash toggle (bottom)
+  flash: {
     position: 'absolute',
-    zIndex: 1,
-    borderWidth: 2,
-    borderColor: style.blue,
-    width: heightPercentageToDP(35),
-    height: heightPercentageToDP(35),
-    // marginTop: heightPercentageToDP('30%'),
+    zIndex: 2,
     alignSelf: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-  },
-  back: {
-    marginTop: 10,
-    position: 'absolute',
-    marginLeft: 15,
-    zIndex: 1,
-    flexDirection: 'row',
+    bottom: heightPercentageToDP(10),
     alignItems: 'center',
   },
-  textBold: {
-    fontWeight: '500',
-    color: '#fff',
+  flashBtn: {
+    width: rs(56),
+    height: rs(56),
+    borderRadius: rs(28),
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: {
-    fontSize: 21,
-    color: 'rgb(0,122,255)',
+  flashBtnOn: {
+    backgroundColor: rd.color.onPrimary,
   },
-  buttonTouchable: {
-    padding: 16,
+  flashText: {
+    color: rd.color.onPrimary,
+    fontSize: rs(13),
+    fontFamily: rd.font.medium,
+    marginTop: rs(8),
+  },
+
+  // Permission-denied state
+  permContainer: {
+    flex: 1,
+    backgroundColor: rd.color.page,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(32),
+  },
+  permBack: {
+    position: 'absolute',
+    top:
+      Platform.OS === 'ios'
+        ? heightPercentageToDP(2)
+        : heightPercentageToDP(2.5),
+    left: rs(16),
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  permIcon: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(20),
+  },
+  permTitle: {
+    color: rd.color.text,
+    fontSize: rs(16),
+    fontFamily: rd.font.medium,
+    textAlign: 'center',
+    lineHeight: rs(23),
   },
 });

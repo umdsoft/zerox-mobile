@@ -24,6 +24,8 @@ import MainText from '../../../components/MainText';
 
 import { colors } from '../../../../theme/colors';
 import { t } from 'i18next';
+import { rd, rs } from '../../../../theme/rd';
+import { ArrowDown, ArrowUpRight } from '../../../home/redesign/icons';
 
 import RNBlobUtil from 'react-native-blob-util';
 
@@ -271,105 +273,86 @@ const QrCode = () => {
     });
   };
 
+  const fullName = `${user?.data?.last_name ?? ''} ${
+    user?.data?.first_name ?? ''
+  } ${user?.data?.middle_name ?? ''}`.trim();
+  const initials = `${user?.data?.last_name?.[0] ?? ''}${
+    user?.data?.first_name?.[0] ?? ''
+  }`.toUpperCase();
+
   return (
     <ScreenLayout title={t('qrcode')}>
-      <View style={styles.aboutUsContainer}>
-            <ViewShot
-              ref={viewShootRef}
-              // captureMode="mount"
-              // onCapture={onCapture}
-              options={{
-                format: 'png',
-                quality: 1,
-                result: 'base64',
-              }}
-            >
-              <View style={styles.darkBg}>
-                <View style={[styles.row]}>
-                  <View style={styles.logoBox}>
-                    <Text allowFontScaling={false} style={styles.logoBoxA}>
-                      Zero
-                    </Text>
-                    <Text allowFontScaling={false} style={styles.logoBoxB}>
-                      X
-                    </Text>
-                  </View>
-                  <View style={{ alignSelf: 'center' }}>
-                    <QRCode
-                      // ref={qrRef}
-                      getRef={c => setProductQRref(c)}
-                      // style={{marginBottom: 20}}
-                      ecl="M"
-                      color={'#0063b6'}
-                      backgroundColor="#fff"
-                      size={170}
-                      logoBorderRadius={5}
-                      logo={require('../../../../images/iconapp.jpg')}
-                      value={item}
-                    />
-                  </View>
-                  <Text
-                    allowFontScaling={false}
-                    style={{
-                      color: 'black',
-                      fontFamily: 'Montserrat-Medium',
-                      marginTop: 15,
-                      fontSize: 14,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {t('idNumber')}: {user?.data.uid}
-                  </Text>
-                </View>
-
-                <View style={styles.max}>
-                  <MainText
-                    textAlign={'center'}
-                    color={colors.white}
-                    style={styles.userName}
-                    size={fontSize[14]}
-                  >
-                    {user?.data?.last_name +
-                      ' ' +
-                      user?.data?.first_name +
-                      ' ' +
-                      user.data.middle_name}
-                  </MainText>
-                </View>
+      <View style={styles.page}>
+        <ViewShot
+          ref={viewShootRef}
+          options={{
+            format: 'png',
+            quality: 1,
+            result: 'base64',
+          }}
+        >
+          <View style={styles.qrCard}>
+            <View style={styles.identityRow}>
+              <View style={styles.avatar}>
+                <Text allowFontScaling={false} style={styles.avatarText}>
+                  {initials}
+                </Text>
               </View>
-            </ViewShot>
-            <Text
-              allowFontScaling={false}
-              style={{
-                color: 'black',
-                fontFamily: 'Montserrat-Medium',
-                textAlign: 'center',
-                marginTop: 15,
-                fontSize: 14,
-              }}
-            >
-              {t('123')}
-            </Text>
-            <View style={styles.buttons}>
-              <TouchableOpacity
-                onPress={() => onDownload()}
-                style={styles.download}
-              >
-                <DownloadIcon width="20%" height="100%" />
-                <MainText color={colors.white} size={fontSize[12]}>
-                  {t('126')}
-                </MainText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => onShare()}
-                style={styles.download}
-              >
-                <ShareIcon width="20%" height="100%" />
-                <MainText color={colors.white} size={fontSize[12]}>
-                  {t('129')}
-                </MainText>
-              </TouchableOpacity>
+              <View style={styles.identityInfo}>
+                <Text
+                  allowFontScaling={false}
+                  style={styles.nameText}
+                  numberOfLines={2}
+                >
+                  {fullName}
+                </Text>
+                <Text allowFontScaling={false} style={styles.uidText}>
+                  {t('idNumber')}: {user?.data?.uid}
+                </Text>
+              </View>
             </View>
+
+            <View style={styles.qrWrap}>
+              <QRCode
+                getRef={c => setProductQRref(c)}
+                ecl="M"
+                color={rd.color.text}
+                backgroundColor={rd.color.surface}
+                size={rs(200)}
+                logoBorderRadius={5}
+                logo={require('../../../../images/iconapp.jpg')}
+                value={item}
+              />
+            </View>
+          </View>
+        </ViewShot>
+
+        <Text allowFontScaling={false} style={styles.helperText}>
+          {t('123')}
+        </Text>
+
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => onShare()}
+            style={styles.primaryBtn}
+          >
+            <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
+            <Text allowFontScaling={false} style={styles.primaryBtnText}>
+              {t('129')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => onDownload()}
+            style={styles.secondaryBtn}
+          >
+            <ArrowDown size={rs(18)} color={rd.color.textSecondary} />
+            <Text allowFontScaling={false} style={styles.secondaryBtnText}>
+              {t('126')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScreenLayout>
   );
@@ -378,95 +361,109 @@ const QrCode = () => {
 export default QrCode;
 
 const styles = StyleSheet.create({
-  logoBox: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
+  page: {
+    flex: 1,
+    backgroundColor: rd.color.page,
     alignItems: 'center',
-    marginBottom: 10,
+    paddingTop: rs(12),
+  },
+  qrCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.huge,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(24),
+    alignItems: 'center',
+    alignSelf: 'center',
+    shadowColor: '#0f1b3d',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    marginBottom: rs(20),
+  },
+  avatar: {
+    width: rs(56),
+    height: rs(56),
+    borderRadius: rs(28),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(14),
+  },
+  avatarText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(18),
+    color: rd.color.primary,
+  },
+  identityInfo: {
+    flex: 1,
+  },
+  nameText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+  },
+  uidText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(2),
+  },
+  qrWrap: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    padding: rs(8),
     alignSelf: 'center',
   },
-
-  logoBoxA: {
-    // Cambria olib tashlandi: ba'zi OEM'larda ViewShot off-screen capture
-    // paytida render bo'lmasdi -> 'Zero' ko'rinmasdi. Default shrift bilan
-    // capture barcha qurilmalarda ishonchli, rang (#2D62B6) saqlanadi.
-    fontSize: 40,
-    color: '#2D62B6',
+  helperText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textTertiary,
+    textAlign: 'center',
+    marginTop: rs(18),
+    marginHorizontal: rs(24),
+    lineHeight: rs(19),
   },
-
-  logoBoxB: {
-    // Cambria olib tashlandi (yuqoridagi sabab) — 'X' rangi (#EF4444) saqlanadi.
-    fontSize: 40,
-    color: '#EF4444',
-  },
-
   buttons: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: rs(24),
+    alignSelf: 'stretch',
+    paddingHorizontal: rs(16),
+    gap: rs(12),
+  },
+  primaryBtn: {
+    height: rs(52),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-  },
-  max: {
-    alignSelf: 'center',
-    marginBottom: 15,
-    maxWidth: '95%',
-  },
-  userName: {
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-  },
-  row: {
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 20,
-    backgroundColor: 'white',
-    padding: '14%',
-    borderRadius: 20,
-  },
-  download: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    maxWidth: style.width / 3,
+    gap: rs(8),
+  },
+  primaryBtnText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
+  },
+  secondaryBtn: {
+    height: rs(52),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.surfaceAlt,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
   },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-  },
-  darkBg: {
-    width: '70%',
-    paddingLeft: '10%',
-    paddingRight: '10%',
-    marginTop: 20,
-    borderRadius: 20,
-    backgroundColor: '#394052',
-    alignSelf: 'center',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 0,
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+  secondaryBtnText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.textSecondary,
   },
 });

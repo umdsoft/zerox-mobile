@@ -1,7 +1,7 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React, {useEffect} from 'react';
 
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 
 import {sortText} from '../../components/StatisticCard';
 import {settingDate} from '../../../helper';
@@ -102,21 +102,15 @@ const QismanQaytarish = ({hide, onHide, data, sum}) => {
 export default QismanQaytarish;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    width: 100,
-  },
   text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: 'black',
-    lineHeight: 17,
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.text,
+    lineHeight: rs(22),
   },
   mainText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xx,
+    fontFamily: rd.font.bold,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
 });

@@ -13,6 +13,7 @@ import MainText from '../../../components/MainText';
 import { expire_passport_check } from '../../../../helper/timeChecker';
 import { checkExpire } from '../../../../store/reducers/HomeReducer';
 import NotificationShell from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
   ({ item, okay, navigation, onSuccess, onReject }) => {
@@ -108,7 +109,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                       id: item.id,
                     });
                   }}
-                  style={[styles.notification, { color: style.blue }]}
+                  style={[styles.notification, { color: rd.color.primary }]}
                 >
                   {item.number}
                 </Text>
@@ -171,7 +172,7 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
                       id: item.id,
                     });
                   }}
-                  style={[styles.notification, { color: style.blue }]}
+                  style={[styles.notification, { color: rd.color.primary }]}
                   allowFontScaling={false}
                 >
                   {item.number}

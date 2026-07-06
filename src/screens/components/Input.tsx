@@ -1,10 +1,11 @@
 /**
- * Input — yagona, moslashuvchan matn maydoni (token-based).
+ * Input — yagona, moslashuvchan matn maydoni (REDIZAYN: `rd` dizayn tizimi).
  *
  * Ilgari 4 ta alohida input bor edi (InputMask, PhoneInput, PasswordInput,
  * SearchUserInput) — har xil API, dublikat stil. Endi bitta <Input>:
- *   label (suzuvchi), secure (parol), leftIcon/rightIcon, error.
- * Telefon/parol/qidiruv — shu Input ustiga preset sifatida quriladi.
+ *   label (ustki), secure (parol), leftIcon/rightIcon, error.
+ * Prop interfeysi SAQLANGAN — faqat vizual qatlam yangi Inter + #2f6fed palitraga
+ * ko'chdi (yumaloq 14px burchak, och fon, fokus/xato holatlari).
  */
 import React from 'react';
 import {
@@ -15,7 +16,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { tokens } from '../../theme/tokens';
+import { rd, rs } from '../../theme/rd';
 
 interface InputProps
   extends Pick<
@@ -24,7 +25,7 @@ interface InputProps
   > {
   value: string;
   onChangeText: (text: string) => void;
-  label?: string; // suzuvchi label (ixtiyoriy)
+  label?: string; // ustki label (ixtiyoriy)
   secure?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -41,27 +42,43 @@ const Input: React.FC<InputProps> = ({
   rightIcon,
   error,
   containerStyle,
+  editable = true,
   ...rest
 }) => {
+  const [focused, setFocused] = React.useState(false);
   return (
     <View style={containerStyle}>
-      <View style={[styles.box, !!error && styles.boxError]}>
-        {label ? (
-          <View style={styles.labelWrap}>
-            <Text allowFontScaling={false} style={styles.label}>
-              {label}
-            </Text>
-          </View>
-        ) : null}
+      {label ? (
+        <Text allowFontScaling={false} style={styles.label}>
+          {label}
+        </Text>
+      ) : null}
+      <View
+        style={[
+          styles.box,
+          focused && styles.boxFocused,
+          !!error && styles.boxError,
+          editable === false && styles.boxDisabled,
+        ]}
+      >
         {leftIcon ? <View style={styles.iconLeft}>{leftIcon}</View> : null}
         <TextInput
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secure}
-          placeholderTextColor={tokens.color.placeholder}
+          placeholderTextColor={rd.color.textTertiary}
           allowFontScaling={false}
+          editable={editable}
           style={styles.input}
           {...rest}
+          onFocus={e => {
+            setFocused(true);
+            rest.onFocus?.(e);
+          }}
+          onBlur={e => {
+            setFocused(false);
+            rest.onBlur?.(e);
+          }}
         />
         {rightIcon ? <View style={styles.iconRight}>{rightIcon}</View> : null}
       </View>
@@ -75,44 +92,41 @@ const Input: React.FC<InputProps> = ({
 };
 
 const styles = StyleSheet.create({
+  label: {
+    color: rd.color.textSecondary,
+    fontSize: rs(13),
+    fontFamily: rd.font.medium,
+    marginBottom: rs(7),
+    marginLeft: rs(2),
+  },
   box: {
-    borderColor: tokens.color.onSurface,
-    borderWidth: 0.5,
-    borderRadius: tokens.radius.sm,
+    backgroundColor: rd.color.surface,
+    borderColor: rd.color.border,
+    borderWidth: 1.5,
+    borderRadius: rs(14),
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
   },
-  boxError: { borderColor: tokens.color.danger },
-  labelWrap: {
-    position: 'absolute',
-    marginLeft: tokens.spacing.md,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: tokens.color.surface,
-    paddingHorizontal: tokens.spacing.xs,
-  },
-  label: {
-    color: tokens.color.onSurface,
-    fontSize: tokens.fontSize.xa,
-    fontFamily: tokens.font.medium,
-  },
-  iconLeft: { paddingLeft: tokens.spacing.sm },
-  iconRight: { paddingRight: tokens.spacing.sm },
+  boxFocused: { borderColor: rd.color.primary },
+  boxError: { borderColor: rd.color.error },
+  boxDisabled: { backgroundColor: rd.color.page },
+  iconLeft: { paddingLeft: rs(12) },
+  iconRight: { paddingRight: rs(12) },
   input: {
     flex: 1,
-    height: tokens.size.textInputHeight,
-    paddingLeft: tokens.spacing.md,
-    fontSize: tokens.fontSize.small,
-    fontFamily: tokens.font.medium,
-    color: tokens.color.onSurface,
+    height: rs(52),
+    paddingHorizontal: rs(14),
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
   },
   error: {
-    color: tokens.color.danger,
-    fontSize: tokens.fontSize.xa,
-    fontFamily: tokens.font.regular,
-    marginTop: tokens.spacing.xs,
-    marginLeft: tokens.spacing.sm,
+    color: rd.color.error,
+    fontSize: rs(12),
+    fontFamily: rd.font.regular,
+    marginTop: rs(6),
+    marginLeft: rs(4),
   },
 });
 

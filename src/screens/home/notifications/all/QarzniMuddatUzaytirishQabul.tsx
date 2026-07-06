@@ -10,6 +10,7 @@ import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const QarzniMuddatUzaytirishQabul = ({ item, okay, navigation }) => {
   const { user } = useSelector(state => state.HomeReducer);
@@ -83,6 +84,6 @@ export default memo(QarzniMuddatUzaytirishQabul);
 const styles = StyleSheet.create({
   number: {
     fontFamily: style.fontFamilyMedium,
-    color: style.blue,
+    color: rd.color.primary,
   },
 });

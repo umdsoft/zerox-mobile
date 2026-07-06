@@ -1,17 +1,16 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Linking,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import RegisterWithPeopleIcon from '../../images/auth/illustrationregisterwithpeople.svg';
-import { normalize, style } from '../../theme/style';
-import BackButton from '../components/BackButton';
 import Loading from '../components/Loading';
 
 import { t } from 'i18next';
@@ -19,10 +18,11 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { URL } from '../constants';
 import { storage } from '../../store/api/token/getToken';
-import { colors } from '../../theme/colors';
-import { font, fontSize } from '../../theme/font';
+import { normalize } from '../../theme/style';
+import { rd, rs } from '../../theme/rd';
 import InputMask from '../components/InputMask';
-import MainText from '../components/MainText';
+import { ChevronLeft } from '../home/redesign/icons';
+import BrandLockup from '../components/BrandLockup';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -116,7 +116,6 @@ const RegisterWithPeople = () => {
           },
         });
         const data = await res.json();
-        console.log('RegisterWithPeople data', data);
 
         setError(false);
 
@@ -202,95 +201,72 @@ const RegisterWithPeople = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView>
-          <View
-            style={[
-              styles.BackButton,
-              { marginTop: Platform.OS === 'android' ? 10 : normalize(10) },
-            ]}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
           >
-            <BackButton
-              navigation={navigation}
-              IconColor="#fff"
-              backgroundColor={style.blue}
-            />
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Brend hero */}
+          <View style={styles.hero}>
+            <BrandLockup />
+            <Text style={styles.title}>{t('42')}</Text>
           </View>
-          <View style={{ width: style.width, height: style.height }}>
-            <View
-              style={{
-                alignItems: 'center',
-                flex: 0.5,
-                justifyContent: 'center',
+
+          {/* Forma kartasi */}
+          <View style={styles.card}>
+            <Text style={styles.label}>Telefon raqam</Text>
+            <InputMask
+              onChangeText={(formatted, extracted) => {
+                setPhone(extracted);
               }}
+              value={phone}
+              icon={true}
+            />
+
+            {/* Ro'yxatdan o'tish */}
+            <TouchableOpacity
+              disabled={disabled}
+              activeOpacity={0.85}
+              onPress={() => {
+                PostData();
+              }}
+              style={[styles.enterButton, disabled && styles.enterButtonDisabled]}
             >
-              <RegisterWithPeopleIcon width="70%" height="70%" />
-            </View>
-            <View style={{ alignItems: 'center' }}>
-              <MainText size={fontSize[16]} ft={font.bold} color={colors.black}>
-                {t('42')}
-              </MainText>
-            </View>
-            <View style={styles.main}>
-              <View>
-                <InputMask
-                  onChangeText={(formatted, extracted) => {
-                    setPhone(extracted);
-                  }}
-                  value={phone}
-                  icon={true}
-                />
-              </View>
-            </View>
-            {/* {error && (
-              <View
-                style={{
-                  alignSelf: 'center',
-                  alignItems: 'center',
-                  marginTop: 20,
-                  width: '90%',
-                }}>
-                <MainText color={colors.red} size={fontSize[12]}>
-                  {t('48')}
-                </MainText>
-              </View>
-            )} */}
-            <View style={styles.enterButtonContainer}>
-              <TouchableOpacity
-                disabled={disabled}
-                onPress={() => {
-                  PostData();
-                }}
+              <Text
                 style={[
-                  styles.enterButton,
-                  {
-                    backgroundColor: disabled
-                      ? style.disabledButtonColor
-                      : style.blue,
-                  },
+                  styles.enterText,
+                  disabled && { color: rd.color.textTertiary },
                 ]}
               >
-                <MainText color={colors.white} size={fontSize[16]}>
-                  {t('45')}
-                </MainText>
-              </TouchableOpacity>
-            </View>
-            <View style={{ alignSelf: 'flex-end', marginRight: 20 }}>
-              <TouchableOpacity
-                onPress={() => {
-                  Linking.openURL('https://t.me/zeroxuz_bot');
-                }}
-                activeOpacity={0.6}
-              >
-                <MainText color={style.blue} size={fontSize[12]} mTop={20}>
-                  {t('support')}
-                </MainText>
-              </TouchableOpacity>
-            </View>
+                {t('45')}
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {/* Yordam */}
+          <TouchableOpacity
+            style={styles.supportBtn}
+            onPress={() => {
+              Linking.openURL('https://t.me/zeroxuz_bot');
+            }}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.supportText}>{t('support')}</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -300,72 +276,76 @@ const RegisterWithPeople = () => {
 export default RegisterWithPeople;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  retryPassword: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    marginTop: Platform.OS === 'android' ? 10 : 0,
-    zIndex: 1,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-  },
-  main: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
+    marginTop: rs(8),
   },
 
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(30) },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(23),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(16),
+    paddingHorizontal: rs(16),
+  },
+
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(20),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+
+  enterButton: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(24),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  enterButtonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  enterText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
+  },
+
+  supportBtn: { alignSelf: 'flex-end', marginTop: rs(20) },
+  supportText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.primary,
   },
 });

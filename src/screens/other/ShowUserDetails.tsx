@@ -1,27 +1,55 @@
-import {StyleSheet, Text, TextInput, View} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
-import {normalize, style} from '../../theme/style';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import {useRoute} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
 import Loading from '../components/Loading';
 
-import {storage} from '../../store/api/token/getToken';
+import { storage } from '../../store/api/token/getToken';
 import axios from 'axios';
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
-import {URL} from '../constants';
-import {useSelector} from 'react-redux';
+import { URL } from '../constants';
+import { useSelector } from 'react-redux';
 import ScreenLayout from '../components/ScreenLayout';
 import Famale from '../../images/Famale';
-import {settingDate} from '../../helper';
-import {t} from 'i18next';
+import { settingDate } from '../../helper';
+import { t } from 'i18next';
+import { rd, rs } from '../../theme/rd';
+import { ClockIcon, IconProps, PhoneIcon, ShieldIcon } from '../home/redesign/icons';
+
+const InfoRow = ({
+  Icon,
+  label,
+  value,
+  divider,
+}: {
+  Icon: (p: IconProps) => JSX.Element;
+  label: string;
+  value?: string;
+  divider?: boolean;
+}) => (
+  <View style={[styles.infoRow, divider && styles.infoDivider]}>
+    <View style={styles.infoIcon}>
+      <Icon size={rs(18)} color={rd.color.primary} />
+    </View>
+    <View style={styles.infoTextWrap}>
+      <Text allowFontScaling={false} style={styles.infoLabel}>
+        {label}
+      </Text>
+      <Text allowFontScaling={false} style={styles.infoValue}>
+        {value}
+      </Text>
+    </View>
+  </View>
+);
+
 const ShowUserDetails = () => {
   const route = useRoute();
-  const {id, type} = route.params;
+  const { id, type } = route.params;
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
-  const {user} = useSelector(state => state.HomeReducer);
+  const { user } = useSelector(state => state.HomeReducer);
 
   useEffect(() => {
     getUserData();
@@ -32,8 +60,8 @@ const ShowUserDetails = () => {
     console.log(token, 'token in show user details');
     try {
       setLoading(true);
-      const {data} = await axios.get(URL + `/user/candidate/${id}`, {
-        headers: {Authorization: `Bearer ${token}`},
+      const { data } = await axios.get(URL + `/user/candidate/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       console.log(data, 'data in show user details');
 
@@ -50,101 +78,42 @@ const ShowUserDetails = () => {
   }
   return (
     <ScreenLayout title={type ? t('273') : t('270')}>
-        <View>
-          <View style={styles.main}>
-            <View style={styles.aboutUsContainer}>
-              <View style={styles.userImageContainer}>
-                {user?.data?.type === 2 ? (
-                  user?.data?.gender === 2 ? (
-                    <Famale
-                      width={normalize(100)}
-                      height={normalize(normalize(100))}
-                      color={style.blue}
-                    />
-                  ) : (
-                    <Person
-                      width={normalize(normalize(100))}
-                      height={normalize(100)}
-                      color={style.blue}
-                    />
-                  )
-                ) : (
-                  <Juridic width={100} height={100} color={style.blue} />
-                )}
-              </View>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-              <View style={{alignSelf: 'center'}}>
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.textColor,
-                    {textAlign: 'center', maxWidth: '90%', marginTop: 10},
-                  ]}>
-                  {data?.last_name +
-                    ' ' +
-                    data?.first_name +
-                    ' ' +
-                    data?.middle_name}
-                </Text>
-              </View>
-
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text allowFontScaling={false} style={styles.phoneText}>{t('684')}</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text allowFontScaling={false} style={styles.textColor}>{data?.brithday}</Text>
-                </View>
-              </View>
-
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text allowFontScaling={false} style={styles.phoneText}>{t('786')}</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text allowFontScaling={false} style={styles.textColor}>
-                    {data?.region} {data?.district}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text allowFontScaling={false} style={styles.phoneText}>{t('255')}</Text>
-                </View>
-                <View style={{flex: 1, justifyContent: 'center'}}>
-                  <TextInput
-                    editable={false}
-                    value={settingDate(data?.created_at)}
-                    keyboardType="default"
-                    style={styles.TextInput}
-                    allowFontScaling={false} />
-                </View>
-              </View>
-
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text allowFontScaling={false} style={styles.phoneText}>{t('120')}</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text allowFontScaling={false} style={styles.textColor}>{data?.uid}</Text>
-                </View>
-              </View>
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text allowFontScaling={false} style={styles.phoneText}> {t('27')}</Text>
-                </View>
-                <View style={{flex: 1, justifyContent: 'center'}}>
-                  <TextInput
-                    editable={false}
-                    value={data?.phone}
-                    keyboardType="default"
-                    style={styles.TextInput}
-                    allowFontScaling={false} />
-                </View>
-              </View>
-            </View>
-          </View>
+      <View style={styles.profileCard}>
+        <View style={styles.avatar}>
+          {user?.data?.type === 2 ? (
+            user?.data?.gender === 2 ? (
+              <Famale width={rs(56)} height={rs(56)} color={rd.color.primary} />
+            ) : (
+              <Person width={rs(56)} height={rs(56)} color={rd.color.primary} />
+            )
+          ) : (
+            <Juridic width={rs(56)} height={rs(56)} color={rd.color.primary} />
+          )}
         </View>
+        <Text allowFontScaling={false} style={styles.name}>
+          {data?.last_name + ' ' + data?.first_name + ' ' + data?.middle_name}
+        </Text>
+      </View>
+
+      <View style={styles.infoCard}>
+        <InfoRow Icon={ClockIcon} label={t('684')} value={data?.brithday} />
+        <InfoRow
+          Icon={ShieldIcon}
+          label={t('786')}
+          value={`${data?.region ?? ''} ${data?.district ?? ''}`.trim()}
+          divider
+        />
+        <InfoRow
+          Icon={ClockIcon}
+          label={t('255')}
+          value={settingDate(data?.created_at)}
+          divider
+        />
+        <InfoRow Icon={ShieldIcon} label={t('120')} value={data?.uid} divider />
+        <InfoRow Icon={PhoneIcon} label={t('27')} value={data?.phone} divider />
+      </View>
     </ScreenLayout>
   );
 };
@@ -152,119 +121,69 @@ const ShowUserDetails = () => {
 export default ShowUserDetails;
 
 const styles = StyleSheet.create({
-  textColor: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
+  profileCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    paddingVertical: rs(22),
+    paddingHorizontal: rs(16),
+    marginTop: rs(8),
   },
-  selectLanguageText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-  },
-  languageButton: {
+  avatar: {
+    width: rs(96),
+    height: rs(96),
+    borderRadius: rs(48),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    padding: 20,
-    width: '100%',
   },
-  inputContainer: {
-    flex: 1,
-    paddingVertical: 15,
-    justifyContent: 'center',
-    marginLeft: 15,
+  name: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(14),
+    maxWidth: '90%',
   },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#EAF2FB',
-    paddingLeft: 5,
-    paddingRight: 5,
+
+  infoCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    marginTop: rs(16),
+    paddingHorizontal: rs(14),
   },
-  TextInput: {
-    width: '100%',
-    borderRadius: 10,
-    paddingLeft: 15,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    height: style.textInputHeight,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
+  infoRow: {
     flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
+    alignItems: 'center',
+    gap: rs(12),
+    paddingVertical: rs(14),
   },
-  phoneText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
+  infoDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
   },
-  userImage: {
-    width: style.width / 3,
-    height: style.width / 3,
-    borderRadius: style.width / 6,
-  },
-  userImageContainer: {
+  infoIcon: {
+    width: rs(38),
+    height: rs(38),
+    borderRadius: rs(19),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: 20,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 50,
   },
-
-  download: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    flexDirection: 'row',
+  infoTextWrap: { flex: 1 },
+  infoLabel: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
   },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-  },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    flex: 1,
-
-    marginTop: 20,
-  },
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-    borderRadius: 15,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    paddingBottom: 20,
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+  infoValue: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.text,
+    marginTop: 3,
   },
 });

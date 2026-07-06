@@ -1,14 +1,9 @@
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {normalize, style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 import {sortText} from '../StatisticCard';
-
-import Border from '../Border';
-import MainText from '../MainText';
-import {fontSize} from '../../../theme/font';
-import {colors} from '../../../theme/colors';
-import {tokens} from '../../../theme/tokens';
+import {ChevronRight} from '../../home/redesign/icons';
 import {checkDate, settingDate} from '../../../helper';
 // StatisticDebitor historically imported settingDate from UserDetails. Both
 // implementations are byte-for-byte equivalent (DD.MM.YYYY), so the shared
@@ -24,9 +19,11 @@ import {t} from 'i18next';
  *   StatisticCreditor=> role="creditor" variant="statistic"
  *   StatisticDebitor => role="debitor"  variant="statistic"
  *
- * Har bir qator (field, t() kaliti, navigatsiya, shartli ko'rinish) eski
- * fayldagidek aynan saqlangan. StatisticCreditor'dagi xom <Text> -> <MainText>
- * ga normallashtirilgan (boshqalarga moslash uchun).
+ * REDIZAYN: eski ko'k-chiziqli spreadsheet-jadval (colors/style/MainText/Border)
+ * o'rniga zamonaviy oq `rd.color.surface` karta — har qator "belgi chapda, qiymat
+ * o'ngda", yengil `rd.color.border` ajratgich, summalar `rd.font.bold` va yo'nalish
+ * bo'yicha rangli (debitor=qizil, creditor=yashil). Har bir qator (field, t() kaliti,
+ * navigatsiya, shartli ko'rinish, hisob-kitob) eski fayldagidek AYNAN saqlangan.
  */
 
 const DebtDetailList = ({role = 'creditor', variant = 'detail', ...props}: any) => {
@@ -48,165 +45,152 @@ const DebtDetailList = ({role = 'creditor', variant = 'detail', ...props}: any) 
 export default DebtDetailList;
 
 /* =========================================================================
+ * Umumiy REDIZAYN qatlami — faqat vizual (belgi/qiymat qatori, ajratgich, karta).
+ * ===================================================================== */
+const Divider = () => <View style={styles.divider} />;
+
+const Row = ({
+  label,
+  value,
+  valueColor,
+  bold,
+  onPress,
+  link,
+}: {
+  label: string;
+  value: React.ReactNode;
+  valueColor?: string;
+  bold?: boolean;
+  onPress?: () => void;
+  link?: boolean;
+}) => {
+  const valueStyle = [
+    styles.value,
+    bold && styles.valueBold,
+    valueColor ? {color: valueColor} : null,
+  ];
+
+  const valueNode =
+    typeof value === 'string' || typeof value === 'number' ? (
+      <Text allowFontScaling={false} style={valueStyle} numberOfLines={2}>
+        {value}
+      </Text>
+    ) : (
+      value
+    );
+
+  return (
+    <View style={styles.row}>
+      <Text allowFontScaling={false} style={styles.label}>
+        {label}
+      </Text>
+      {onPress ? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onPress}
+          style={styles.valueTouch}>
+          {valueNode}
+          {link ? (
+            <ChevronRight size={rs(15)} color={rd.color.primary} />
+          ) : null}
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.valueTouch}>{valueNode}</View>
+      )}
+    </View>
+  );
+};
+
+const StatusValue = ({ok, okLabel, noLabel}: {ok: boolean; okLabel: string; noLabel: string}) => (
+  <Text
+    allowFontScaling={false}
+    style={[styles.value, {color: ok ? rd.color.success : rd.color.error}]}>
+    {ok ? okLabel : noLabel}
+  </Text>
+);
+
+const Card = ({children, gap}: {children: React.ReactNode; gap?: boolean}) => (
+  <View style={[styles.card, gap && styles.cardGap]}>{children}</View>
+);
+
+/* =========================================================================
  * role="creditor" variant="detail"  (eski CreditorList)
  * ===================================================================== */
 const CreditorDetail = ({type, item, status}) => {
   const navigation = useNavigation();
-  const qarzmiqdori = String(t('330')).split(' ');
 
   return (
-    <View style={styles.aboutUsContainer}>
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>{t('273')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ShowUserDetails', {
-                id: item.duid,
-                type: 1,
-              });
-            }}>
-            <MainText color={colors.green} size={fontSize[12]}>
-              {item?.debitor_name}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>{t('327')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.amount)} {item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>
-            {qarzmiqdori[0]} {qarzmiqdori[1]} {'\n'}
-            {qarzmiqdori[2]}
-          </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.inc == null ? 0 : item?.inc)}{' '}
-            {item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
+    <Card>
+      <Row
+        label={t('273')}
+        value={item?.debitor_name}
+        valueColor={rd.color.success}
+        onPress={() => {
+          navigation.navigate('ShowUserDetails', {id: item.duid, type: 1});
+        }}
+      />
+      <Divider />
+      <Row
+        label={t('327')}
+        value={`${sortText(item?.amount)} ${item?.currency}`}
+        valueColor={rd.color.success}
+        bold
+      />
+      <Divider />
+      <Row
+        label={t('330')}
+        value={`${sortText(item?.inc == null ? 0 : item?.inc)} ${item?.currency}`}
+      />
       {item?.residual_amount == null ? null : (
-        <View style={styles.header}>
-          <View style={[styles.item, {left: 30}]}>
-            <MainText size={fontSize[12]}>{t('420')} </MainText>
-          </View>
-          <View style={[styles.item, {alignItems: 'center'}]}>
-            <MainText size={fontSize[12]}>
-              {sortText(item?.residual_amount)} {item?.currency}
-            </MainText>
-          </View>
-        </View>
+        <>
+          <Divider />
+          <Row
+            label={t('420')}
+            value={`${sortText(item?.residual_amount)} ${item?.currency}`}
+          />
+        </>
       )}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>{t('390')} </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {settingDate(item?.created_at)}
-          </MainText>
-        </View>
-      </View>
-
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>{t('396')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>{settingDate(item?.end_date)}</MainText>
-        </View>
-      </View>
+      <Divider />
+      <Row label={t('390')} value={settingDate(item?.created_at)} />
+      <Divider />
+      <Row label={t('396')} value={settingDate(item?.end_date)} />
 
       {item?.vos_summa == null && item.status == null ? null : (
         <>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
+          <Divider />
+          <Row
+            label={t('333')}
+            value={`${item?.vos_summa !== null ? sortText(item?.vos_summa) : 0} ${item?.currency}`}
           />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 30}]}>
-              <MainText size={fontSize[12]}>{t('333')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {item?.vos_summa !== null ? sortText(item?.vos_summa) : 0}{' '}
-                {item?.currency}
-              </MainText>
-            </View>
-          </View>
         </>
       )}
 
       {item?.status == null ? null : (
         <>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
+          <Divider />
+          <Row
+            label={t('339')}
+            value={
+              <StatusValue
+                ok={item?.status === 2}
+                okLabel={t('198')}
+                noLabel={t('201')}
+              />
+            }
           />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 30}]}>
-              <MainText size={fontSize[12]}>{t('339')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {item?.status === 2 ? (
-                  <MainText size={fontSize[12]} color={colors.green}>
-                    {t('198')}
-                  </MainText>
-                ) : (
-                  <MainText size={fontSize[12]} color={colors.red}>
-                    {t('201')}
-                  </MainText>
-                )}
-              </MainText>
-            </View>
-          </View>
         </>
       )}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 30}]}>
-          <MainText size={fontSize[12]}>{t('324')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('DownloadStatistic', {
-                item: item,
-                id: item.uid,
-              });
-            }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
-              {item?.number}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <Divider />
+      <Row
+        label={t('324')}
+        value={item?.number}
+        valueColor={rd.color.primary}
+        link
+        onPress={() => {
+          navigation.navigate('DownloadStatistic', {item: item, id: item.uid});
+        }}
+      />
+    </Card>
   );
 };
 
@@ -215,286 +199,154 @@ const CreditorDetail = ({type, item, status}) => {
  * ===================================================================== */
 const DebitorDetail = ({isHave, item, type, status, person}) => {
   const navigation = useNavigation();
-  const qarzmiqdori = String(t('330')).split(' ');
 
   return (
-    <View style={[styles.aboutUsContainer, {marginTop: 20}]}>
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>{t('270')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ShowUserDetails', {
-                id: item.cuid,
-                type: 0,
-              });
-            }}>
-            <MainText color={colors.red} size={fontSize[12]}>
-              {item?.creditor_name}{' '}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>{t('327')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.amount)} {item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>
-            {qarzmiqdori[0]} {qarzmiqdori[1]} {'\n'}
-            {qarzmiqdori[2]}
-          </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.inc)} {item?.currency}
-          </MainText>
-        </View>
-      </View>
+    <Card gap>
+      <Row
+        label={t('270')}
+        value={item?.creditor_name}
+        valueColor={rd.color.error}
+        onPress={() => {
+          navigation.navigate('ShowUserDetails', {id: item.cuid, type: 0});
+        }}
+      />
+      <Divider />
+      <Row
+        label={t('327')}
+        value={`${sortText(item?.amount)} ${item?.currency}`}
+        valueColor={rd.color.error}
+        bold
+      />
+      <Divider />
+      <Row
+        label={t('330')}
+        value={`${sortText(item?.inc)} ${item?.currency}`}
+      />
       {isHave ? (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: normalize(20)}]}>
-              <MainText size={fontSize[12]}>{t('420')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {sortText(item?.residual_amount)} {item?.currency}
-              </MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row
+            label={t('420')}
+            value={`${sortText(item?.residual_amount)} ${item?.currency}`}
+          />
         </>
       ) : null}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>{t('303')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {settingDate(item?.created_at)}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>{t('396')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>{checkDate(item?.end_date)}</MainText>
-        </View>
-      </View>
+      <Divider />
+      <Row label={t('303')} value={settingDate(item?.created_at)} />
+      <Divider />
+      <Row label={t('396')} value={checkDate(item?.end_date)} />
 
       {item?.vos_summa == null ? null : (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 40}]}>
-              <MainText size={fontSize[12]}>{t('333')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>{item?.vos_summa}</MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row label={t('333')} value={item?.vos_summa} />
         </>
       )}
       {item?.status && (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 40}]}>
-              <MainText size={fontSize[12]}>{t('339')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {item?.status === 2 ? (
-                  <MainText color={colors.green} size={fontSize[12]}>
-                    {t('198')}
-                  </MainText>
-                ) : (
-                  <MainText color={colors.red} size={fontSize[12]}>
-                    {t('261')}
-                  </MainText>
-                )}
-              </MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row
+            label={t('339')}
+            value={
+              <StatusValue
+                ok={item?.status === 2}
+                okLabel={t('198')}
+                noLabel={t('261')}
+              />
+            }
+          />
         </>
       )}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(20)}]}>
-          <MainText size={fontSize[12]}>{t('306')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('DownloadStatistic', {
-                item: item,
-                id: item.id,
-              });
-            }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
-              {item?.number}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <Divider />
+      <Row
+        label={t('306')}
+        value={item?.number}
+        valueColor={rd.color.primary}
+        link
+        onPress={() => {
+          navigation.navigate('DownloadStatistic', {item: item, id: item.id});
+        }}
+      />
+    </Card>
   );
 };
 
 /* =========================================================================
  * role="creditor" variant="statistic"  (eski StatisticCreditor)
- * Xom <Text> -> <MainText> ga normallashtirildi (boshqa fayllarga moslash).
  * ===================================================================== */
 const CreditorStatistic = ({type, item, status}) => {
   const navigation = useNavigation();
 
   return (
-    <View style={styles.aboutUsContainer}>
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText color={colors.blue} size={fontSize[12]}>
-            {t('273')}
-          </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          {/* Asl xom <Text onPress> normallashtirildi: MainText.onPress
-              o'chirilgan, shuning uchun TouchableOpacity (siblinglardek). */}
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ShowUserDetails', {
-                id: item.duid,
-                type: 1,
-              });
-            }}>
-            <MainText color={colors.green} size={fontSize[12]}>
-              {item?.debitor_name}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText size={fontSize[12]}>{t('327')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.amount)} {item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText size={fontSize[12]}>{t('330')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {item?.inc == null
-              ? '-'
-              : sortText(item?.inc) + ' ' + item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
+    <Card>
+      <Row
+        label={t('273')}
+        value={item?.debitor_name}
+        valueColor={rd.color.success}
+        onPress={() => {
+          navigation.navigate('ShowUserDetails', {id: item.duid, type: 1});
+        }}
+      />
+      <Divider />
+      <Row
+        label={t('327')}
+        value={`${sortText(item?.amount)} ${item?.currency}`}
+        valueColor={rd.color.success}
+        bold
+      />
+      <Divider />
+      <Row
+        label={t('330')}
+        value={
+          item?.inc == null ? '-' : sortText(item?.inc) + ' ' + item?.currency
+        }
+      />
       {item?.vos_summa == null && item.status == null ? null : (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 25}]}>
-              <MainText size={fontSize[12]}>{t('333')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {item?.vos_summa !== null
-                  ? sortText(item?.vos_summa) + ' ' + item?.currency
-                  : ' - '}{' '}
-              </MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row
+            label={t('333')}
+            value={
+              item?.vos_summa !== null
+                ? sortText(item?.vos_summa) + ' ' + item?.currency
+                : ' - '
+            }
+          />
         </>
       )}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText size={fontSize[12]}>
-            {item.status === 2 ? t('390') : t('336')}
-          </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {settingDate(item?.created_at)}
-          </MainText>
-        </View>
-      </View>
+      <Divider />
+      <Row
+        label={item.status === 2 ? t('390') : t('336')}
+        value={settingDate(item?.created_at)}
+      />
       {item.status === 2 ? (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 25}]}>
-              <MainText size={fontSize[12]}>{t('321')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>{settingDate(item?.sana)}</MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row label={t('321')} value={settingDate(item?.sana)} />
         </>
       ) : null}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText size={fontSize[12]}>{t('339')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {item?.status === 2 ? (
-              <MainText color={'green'} size={fontSize[12]}>
-                {t('198')}
-              </MainText>
-            ) : (
-              <MainText color={'red'} size={fontSize[12]}>
-                {t('201')}
-              </MainText>
-            )}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: 25}]}>
-          <MainText size={fontSize[12]}>{t('324')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('DownloadStatistic', {
-                item: item,
-                id: item.uid,
-              });
-            }}>
-            <MainText color={style.blue} size={fontSize[12]}>
-              {item?.number}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <Divider />
+      <Row
+        label={t('339')}
+        value={
+          <StatusValue
+            ok={item?.status === 2}
+            okLabel={t('198')}
+            noLabel={t('201')}
+          />
+        }
+      />
+      <Divider />
+      <Row
+        label={t('324')}
+        value={item?.number}
+        valueColor={rd.color.primary}
+        link
+        onPress={() => {
+          navigation.navigate('DownloadStatistic', {item: item, id: item.uid});
+        }}
+      />
+    </Card>
   );
 };
 
@@ -505,194 +357,123 @@ const DebitorStatistic = ({isHave, item}) => {
   const navigation = useNavigation();
 
   return (
-    <View style={[styles.aboutUsContainer, {marginTop: 20}]}>
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>{t('270')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ShowUserDetails', {
-                id: item.cuid,
-                type: 0,
-              });
-            }}>
-            <MainText color={colors.red} size={fontSize[12]}>
-              {item?.creditor_name}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>{t('327')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {sortText(item?.amount) + ' ' + item?.currency}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>{t('330')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {item.inc === null
-              ? '-'
-              : sortText(item?.inc) + ' ' + `${item?.currency}`}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>{t('333')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {item.vos_summa === null
-              ? '-'
-              : sortText(item?.vos_summa) + ' ' + `${item?.currency}`}
-          </MainText>
-        </View>
-      </View>
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>
-            {item.status === 2 ? t('303') : t('336')}
-          </MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <MainText size={fontSize[12]}>
-            {settingDate(item?.created_at)}
-          </MainText>
-        </View>
-      </View>
+    <Card gap>
+      <Row
+        label={t('270')}
+        value={item?.creditor_name}
+        valueColor={rd.color.error}
+        onPress={() => {
+          navigation.navigate('ShowUserDetails', {id: item.cuid, type: 0});
+        }}
+      />
+      <Divider />
+      <Row
+        label={t('327')}
+        value={sortText(item?.amount) + ' ' + item?.currency}
+        valueColor={rd.color.error}
+        bold
+      />
+      <Divider />
+      <Row
+        label={t('330')}
+        value={
+          item.inc === null
+            ? '-'
+            : sortText(item?.inc) + ' ' + `${item?.currency}`
+        }
+      />
+      <Divider />
+      <Row
+        label={t('333')}
+        value={
+          item.vos_summa === null
+            ? '-'
+            : sortText(item?.vos_summa) + ' ' + `${item?.currency}`
+        }
+      />
+      <Divider />
+      <Row
+        label={item.status === 2 ? t('303') : t('336')}
+        value={settingDate(item?.created_at)}
+      />
       {item.status === 2 ? (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: normalize(30)}]}>
-              <MainText size={fontSize[12]}>{t('321')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>{settingDate(item?.sana)}</MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row label={t('321')} value={settingDate(item?.sana)} />
         </>
       ) : null}
-      <Border />
       {item?.status && (
         <>
-          <Border />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 40}]}>
-              <MainText size={fontSize[12]}>{t('339')}</MainText>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <MainText size={fontSize[12]}>
-                {item?.status === 2 ? (
-                  <MainText size={fontSize[12]} color={colors.green}>
-                    {t('198')}
-                  </MainText>
-                ) : (
-                  <MainText color={colors.red} size={fontSize[12]}>
-                    {t('201')}
-                  </MainText>
-                )}
-              </MainText>
-            </View>
-          </View>
+          <Divider />
+          <Row
+            label={t('339')}
+            value={
+              <StatusValue
+                ok={item?.status === 2}
+                okLabel={t('198')}
+                noLabel={t('201')}
+              />
+            }
+          />
         </>
       )}
-      <Border />
-      <View style={styles.header}>
-        <View style={[styles.item, {left: normalize(30)}]}>
-          <MainText size={fontSize[12]}>{t('306')}</MainText>
-        </View>
-        <View style={[styles.item, {alignItems: 'center'}]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('DownloadStatistic', {
-                item: item,
-                id: item.id,
-              });
-            }}>
-            <MainText color={colors.blue} size={fontSize[12]}>
-              {item?.number}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <Divider />
+      <Row
+        label={t('306')}
+        value={item?.number}
+        valueColor={rd.color.primary}
+        link
+        onPress={() => {
+          navigation.navigate('DownloadStatistic', {item: item, id: item.id});
+        }}
+      />
+    </Card>
   );
 };
 
-// Eslatma: ranglar tokens.ts'dan olinadi (style/colors literallari o'rniga),
-// ammo masofa/o'lcham SON qiymatlari (paddingVertical: 20, marginTop: 20 va h.k.)
-// AYNAN saqlanadi — vizual layout o'zgarmasligi uchun (tokens.spacing scale != bu sonlar).
-// aboutUsContainer'da `marginTop: 20` qoldirildi: bu Debitor variantlarining
-// asl ko'rinishi; har bir wrapper ekrani allaqachon `styles.main` ichida joylashgan.
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: tokens.color.background,
-    flex: 1,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    overflow: 'hidden',
+    paddingHorizontal: rs(4),
   },
-  buttonInsideContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  item: {
-    flex: 1,
-  },
-  textButton: {
-    fontSize: tokens.fontSize.xx,
-    fontFamily: tokens.font.medium,
-    color: tokens.color.white,
-  },
-  registerButton: {
-    width: '85%',
-    height: tokens.size.buttonHeight,
-    backgroundColor: tokens.color.primary,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonContainer: {
-    justifyContent: 'center',
-  },
-  info: {
-    color: tokens.color.onSurface,
-    fontFamily: tokens.font.medium,
-    fontSize: tokens.fontSize.xx - 1,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: tokens.color.surface,
-    paddingVertical: 20,
-    justifyContent: 'space-evenly',
+  cardGap: {marginTop: rs(16)},
+
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: rs(13),
+    paddingHorizontal: rs(12),
+    gap: rs(12),
   },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    zIndex: 1,
-    paddingBottom: 5,
-    marginTop: 20,
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    flexShrink: 0,
   },
-  aboutUsContainer: {
-    backgroundColor: tokens.color.surface,
-    borderRadius: 10,
+  valueTouch: {
     flex: 1,
-    ...tokens.shadow.card,
-    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: rs(4),
+  },
+  value: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.text,
+    textAlign: 'right',
+  },
+  valueBold: {fontFamily: rd.font.bold},
+
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginHorizontal: rs(12),
   },
 });

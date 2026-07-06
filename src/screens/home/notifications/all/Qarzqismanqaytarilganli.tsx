@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Text } from 'react-native';
 import { style } from '../../../../theme/style';
+import { rd } from '../../../../theme/rd';
 import { font } from '../../../../theme/font';
 
 import { sortText } from '../../../components/StatisticCard';
@@ -24,7 +25,7 @@ const Qarzqaytarilganligitogrisida = ({ item, navigation, onToliqQaytgan }) => {
       onPress={() => {
         navigation.navigate('DownloadStatistic', { item, id: item.contract });
       }}
-      style={{ color: style.blue }}
+      style={{ color: rd.color.primary }}
     />
   );
 

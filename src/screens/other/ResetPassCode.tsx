@@ -1,6 +1,7 @@
 import {
   Platform,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -8,10 +9,7 @@ import {
 import React, {useCallback, useState} from 'react';
 
 import {t} from 'i18next';
-import {normalize, style} from '../../theme/style';
-import {font, fontSize} from '../../theme/font';
-import ResetPassword from '../../images/RecoveryPassword';
-import MainText from '../components/MainText';
+import {normalize} from '../../theme/style';
 import {storage} from '../../store/api/token/getToken';
 import {LoginWithPhoneSendPasswordApi} from '../../store/api/auth';
 import Toast from 'react-native-toast-message';
@@ -19,9 +17,10 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
-import {toastConfig} from '../components/ToastConfig';
 import ScreenLayout from '../components/ScreenLayout';
 import Button from '../components/Button';
+import {LockIcon} from '../home/redesign/icons';
+import {rd, rs} from '../../theme/rd';
 
 const ResetPassCode = () => {
   const {params} = useRoute();
@@ -29,6 +28,7 @@ const ResetPassCode = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [eye, setEye] = useState(true);
+  const [focused, setFocused] = useState(false);
   const navigation = useNavigation();
   const onHandle = useCallback(async () => {
     const phoneNumber = storage.getString('phoneNumber');
@@ -78,82 +78,79 @@ const ResetPassCode = () => {
       });
     }
   }, [dispatch, navigation, value]);
+
   return (
-    <ScreenLayout
-      title={t('PIN-kodni tiklash')}
-      headerColor={style.blue}
-      headerIconColor="#fff"
-      headerTitleColor="#000"
-      background={false}
-    >
-      <View>
-          <View style={{alignSelf: 'center', marginTop: 20, marginBottom: 20}}>
-            <ResetPassword />
+    <ScreenLayout title={t('PIN-kodni tiklash')}>
+      <View style={styles.wrap}>
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View style={styles.heroCircle}>
+            <LockIcon size={rs(34)} color={rd.color.primary} />
           </View>
-
-          <View style={styles.TextInputLabelContainer}>
-            <View
-              style={{
-                flex: 1,
-              }}>
-              <TextInput
-                secureTextEntry={eye}
-                placeholderTextColor={style.placeHolderColor}
-                placeholder={t('69')}
-                value={value}
-                onChangeText={text => {
-                  setValue(text);
-                }}
-                keyboardType="default"
-                style={[styles.TextInput, {paddingLeft: 15}]}
-                allowFontScaling={false} />
-
-              <View style={styles.eye}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setEye(!eye);
-                  }}
-                  // style={styles.eye}
-                >
-                  {eye ? (
-                    <Eye color={style.blue} width={22} height={22} />
-                  ) : (
-                    <EyeClose color={style.blue} width={22} height={22} />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.enterButtonContainer}>
-            <Button
-              title={t('45')}
-              disabled={value.length >= 6 ? false : true}
-              loading={loading}
-              onPress={onHandle}
-            />
-            <View
-              style={{
-                alignItems: 'flex-end',
-                paddingHorizontal: 15,
-                paddingTop: 10,
-              }}>
-              {params?.isLocal && (
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('UpdatePasswordWithJshir');
-                    // const phoneNumber = storage.getString('phoneNumber');
-                    // navigation.navigate('EnterJsh', {phone: phoneNumber});
-                  }}>
-                  <MainText color={style.blue} size={fontSize[12]}>
-                    {t('33')}
-                  </MainText>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+          <Text style={styles.title}>{t('PIN-kodni tiklash')}</Text>
+          <Text style={styles.subtitle}>
+            Hisobingiz parolini kiriting — PIN-kod qayta tiklanadi
+          </Text>
         </View>
-      {/* <Toast config={toastConfig} /> */}
+
+        {/* Parol maydoni */}
+        <View style={[styles.field, focused && styles.fieldFocused]}>
+          <View style={styles.leadIcon}>
+            <LockIcon size={rs(20)} color={rd.color.textTertiary} />
+          </View>
+          <TextInput
+            secureTextEntry={eye}
+            placeholderTextColor={rd.color.textTertiary}
+            placeholder={t('69')}
+            value={value}
+            onChangeText={text => {
+              setValue(text);
+            }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            keyboardType="default"
+            style={styles.input}
+            allowFontScaling={false}
+          />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setEye(!eye);
+            }}
+            style={styles.eyeBtn}>
+            {eye ? (
+              <Eye color={rd.color.textSecondary} width={rs(22)} height={rs(22)} />
+            ) : (
+              <EyeClose
+                color={rd.color.textSecondary}
+                width={rs(22)}
+                height={rs(22)}
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Tasdiqlash */}
+        <View style={styles.submit}>
+          <Button
+            title={t('45')}
+            disabled={value.length >= 6 ? false : true}
+            loading={loading}
+            onPress={onHandle}
+          />
+        </View>
+
+        {params?.isLocal && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.altLink}
+            onPress={() => {
+              navigation.navigate('UpdatePasswordWithJshir');
+            }}>
+            <Text style={styles.altLinkText}>{t('33')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </ScreenLayout>
   );
 };
@@ -161,102 +158,66 @@ const ResetPassCode = () => {
 export default ResetPassCode;
 
 const styles = StyleSheet.create({
-  eye: {
-    position: 'absolute',
-    alignSelf: 'flex-end',
-    justifyContent: 'center',
-    height: '100%',
-    paddingRight: 10,
-  },
-  image: {
-    width: '90%',
-    height: normalize(270),
-    padding: 10,
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-  modalView: {
-    width: '90%',
-    height: normalize(350),
-    backgroundColor: 'white',
-    alignSelf: 'center',
-    borderRadius: 12,
-  },
-  jshshir: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.blue,
-  },
-  bbb: {
-    position: 'absolute',
-    marginLeft: 15,
+  wrap: {
     flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
+    paddingHorizontal: rs(8),
+    paddingTop: rs(12),
   },
-  forgotPasswordText: {
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
+  hero: {
+    alignItems: 'center',
+    marginTop: rs(12),
+    marginBottom: rs(28),
   },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-    marginTop: 20,
-    alignSelf: 'center',
-  },
-  registerButton: {
-    paddingLeft: 10,
-    paddingRight: 10,
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingBottom: 10,
-    paddingTop: 10,
+    marginBottom: rs(18),
   },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    marginTop: 15,
-    zIndex: 1,
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(22),
+    color: rd.color.text,
+    textAlign: 'center',
   },
-  enterButtonContainer: {
-    marginTop: 20,
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(20),
   },
-  main: {
+  field: {
+    height: rs(56),
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(14),
   },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
+  fieldFocused: { borderColor: rd.color.primary },
+  leadIcon: { marginRight: rs(10) },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
   },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  phoneNumberText: {
-    marginLeft: 5,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  eyeBtn: { paddingLeft: rs(8), height: '100%', justifyContent: 'center' },
+  submit: { marginTop: rs(24) },
+  altLink: { alignSelf: 'center', marginTop: rs(18) },
+  altLinkText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.primary,
   },
 });

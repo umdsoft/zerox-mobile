@@ -1,39 +1,38 @@
 import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 import {useSelector} from 'react-redux';
 
-import TextBold from '../../components/TextBold';
 import {settingDate} from '../../../helper';
-import {cyrillicToLatin} from 'lotin-kirill';
 import DalolatnomaLayout from '../../components/DalolatnomaLayout';
+
 const QarzMuddatUzaytirish = ({data, date}) => {
   const {user} = useSelector(state => state.HomeReducer);
-  console.log(data, 'daadadad');
+
   return (
     <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
-          ( <TextBold>{data?.number} </TextBold>- sonli qarz shartnomasining
+          ( <Text style={styles.mainText} allowFontScaling={false}>{data?.number} </Text>- sonli qarz shartnomasining
           muddati uzaytirilganligi to‘g‘risida ) {'\n'} {'\n'}
-          {'   '}Men, <TextBold>{data.debitor_name}</TextBold> (pasport:{' '}
+          {'   '}Men, <Text style={styles.mainText} allowFontScaling={false}>{data.debitor_name}</Text> (pasport:{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_passport}</Text>.{' '}
-          <TextBold>{settingDate(data?.debitor_issued_date)}</TextBold> yilda{' '}
-          <TextBold>{data?.debitor_issued}</TextBold> tomonidan berilgan) (qarz
+          <Text style={styles.mainText} allowFontScaling={false}>{settingDate(data?.debitor_issued_date)}</Text> yilda{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_issued}</Text> tomonidan berilgan) (qarz
           beruvchi) tomonidan ushbu dalolatnoma quyidagilar haqida tuzildi:{' '}
           {'\n'} {'\n'}
           {'   '}Men va fuqaro{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> (pasport:{' '}
-          <TextBold>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {data.creditor_passport} {settingDate(data.creditor_issued_date)}
-          </TextBold>{' '}
-          <TextBold>{data.creditor_issued}</TextBold> tomonidan berilgan) (qarz
-          oluvchi) o‘rtamizda tuzilgan <TextBold>{data.number}</TextBold>
+          </Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data.creditor_issued}</Text> tomonidan berilgan) (qarz
+          oluvchi) o‘rtamizda tuzilgan <Text style={styles.mainText} allowFontScaling={false}>{data.number}</Text>
           -sonli qarz shartnomasining muddati o‘z tashabbusimga ko‘ra{' '}
-          <TextBold>{date == null ? '' : settingDate(date)}</TextBold> gacha
-          uzaytirildi. <TextBold>{data.number}</TextBold>-sonli qarz
+          <Text style={styles.mainText} allowFontScaling={false}>{date == null ? '' : settingDate(date)}</Text> gacha
+          uzaytirildi. <Text style={styles.mainText} allowFontScaling={false}>{data.number}</Text>-sonli qarz
           shartnomasining yangi muddati sifatida{' '}
-          <TextBold>{date == null ? '' : settingDate(date)}</TextBold> yil
+          <Text style={styles.mainText} allowFontScaling={false}>{date == null ? '' : settingDate(date)}</Text> yil
           belgilandi. Mazkur dalolatnoma QR-kod orqali tasdiqlangan holda
           elektron tarzda tuzildi. {'\n'}
           {'   '} Dalolatnoma qarz beruvchi va qarz oluvchining{' '}
@@ -41,7 +40,7 @@ const QarzMuddatUzaytirish = ({data, date}) => {
           kabinetida saqlanadi. QR-kod orqali tasdiqlangan Dalolatnomaning
           saqlanishini Jamiyat o‘z zimmasiga oladi.{'\n'}
           {'\n'}
-          <TextBold styles={{textAlign: 'center'}}>
+          <Text style={[styles.mainText, styles.center]} allowFontScaling={false}>
             Qarz beruvchi:
             {'\n'}FISH :{' '}
             <Text style={styles.mainText} allowFontScaling={false}>
@@ -54,7 +53,7 @@ const QarzMuddatUzaytirish = ({data, date}) => {
             {'\n'}
             {/* Maxsus elektron imzo: _______ {'\n'} */}
             Sana: {settingDate(new Date())} yil
-          </TextBold>
+          </Text>
         </Text>
     </DalolatnomaLayout>
   );
@@ -63,20 +62,17 @@ const QarzMuddatUzaytirish = ({data, date}) => {
 export default QarzMuddatUzaytirish;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    width: 100,
-  },
   text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: 'black',
-    lineHeight: 17,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.text,
+    lineHeight: rs(20),
   },
   mainText: {
-    fontFamily: style.fontFamilyBold,
+    fontFamily: rd.font.bold,
+    color: rd.color.text,
+  },
+  center: {
+    textAlign: 'center',
   },
 });

@@ -24,12 +24,10 @@ import CheckSmsPassword from '../screens/auth/CheckSmsPassword';
 import Agree from '../screens/auth/Agree';
 import SetLocalPassword from '../screens/auth/SetLocalPassword';
 import CreateSecretWord from '../screens/auth/CreateSecretWord';
-import Home from '../screens/home/Home';
 import TakeDebt from '../screens/home/TakeDebt';
 import GiveDebt from '../screens/home/GiveDebt';
 import Statistic from '../screens/home/Statistic';
 
-import DrawerScreen from '../screens/home/drawer/DrawerScreen';
 import AboutUs from '../screens/other/AboutUs';
 import QrCode from '../screens/home/drawer/drawerScreens/QrCode';
 import ShareDevices from '../screens/home/drawer/drawerScreens/ShareDevices';
@@ -107,8 +105,6 @@ export {
   FullDebtBack,
   FullDebtSelect,
   SendMoney,
-  DrawerScreen,
-  Home,
   CharityDebt,
   HomeIcon,
   GiveIcon,

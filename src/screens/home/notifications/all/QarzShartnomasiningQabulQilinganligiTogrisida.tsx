@@ -2,6 +2,7 @@ import { Text } from 'react-native';
 import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
+import { rd } from '../../../../theme/rd';
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
 import { useSelector } from 'react-redux';
@@ -77,7 +78,7 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         },
-        { color: style.blue },
+        { color: rd.color.primary },
       ]}
     />
   );

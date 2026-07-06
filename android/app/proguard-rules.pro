@@ -98,5 +98,9 @@
 -dontwarn com.tom_roush.pdfbox.**
 -dontwarn org.apache.**
 
+# ---- Coil3 (rasm yuklovchi): OkHttp fetcher desktop-only PlatformContext'ga havola ----
+# Android'da coil3.PlatformContext yo'q -> R8 "missing class" xatosi. -dontwarn xavfsiz.
+-dontwarn coil3.**
+
 # Eslatma: aksariyat RN kutubxonalari o'z `consumer-proguard-rules.pro` bilan keladi
 # (R8 ularni avtomatik qo'llaydi). Yuqoridagilar — qo'shimcha xavfsizlik qatlami.

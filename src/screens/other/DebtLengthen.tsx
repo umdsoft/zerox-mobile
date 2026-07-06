@@ -1,133 +1,67 @@
-import {
-  Platform,
-  //   ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import BackButton from '../components/BackButton';
 import {useNavigation} from '@react-navigation/native';
+import {rd, rs} from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
+import {ClockIcon} from '../home/redesign/icons';
+
+type RowProps = {
+  label: string;
+  value: string;
+  date?: boolean;
+  link?: boolean;
+  onPress?: () => void;
+  last?: boolean;
+};
+
+const InfoRow = ({label, value, date, link, onPress, last}: RowProps) => (
+  <View>
+    <View style={styles.row}>
+      <Text style={styles.label} allowFontScaling={false}>
+        {label}
+      </Text>
+      <View style={styles.valueWrap}>
+        {date ? (
+          <ClockIcon size={rs(15)} color={rd.color.textTertiary} />
+        ) : null}
+        <Text
+          onPress={onPress}
+          style={[styles.value, link && styles.link]}
+          allowFontScaling={false}>
+          {value}
+        </Text>
+      </View>
+    </View>
+    {last ? null : <View style={styles.divider} />}
+  </View>
+);
 
 const DebtLengthen = () => {
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <View
-        style={[
-          styles.main,
-          {marginTop: Platform.OS === 'ios' ? normalize(35) : 10},
-        ]}>
-        <View style={{marginTop: 10}}>
-          <BackButton
-            navigation={navigation}
-            backgroundColor={'#fff'}
-            IconColor={style.blue}
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title="Qarz ma’lumotlari" />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <InfoRow label="Qarzdor nomi" value="Abdullayev Abdulla" />
+          <InfoRow label="Qarz summasi" value="1,0 mln so’m" />
+          <InfoRow label="Qarz olingan sana " value="22.10.2021" date />
+          <InfoRow label="Qarz qaytarilgan sana" value="22.10.2022" date />
+          <InfoRow label="Qaytarilgan summa " value="1.0 mln so’m" />
+          <InfoRow
+            label="Hujjatla"
+            value="22/10/2021/000001"
+            link
+            last
+            onPress={() => {
+              navigation.navigate('DownloadStatistic');
+            }}
           />
         </View>
-        <View style={styles.aboutUsContainer}>
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Qarzdor nomi</Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info} allowFontScaling={false}>Abdullayev Abdulla</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
-          />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Qarz summasi</Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info} allowFontScaling={false}>1,0 mln so’m</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
-          />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Qarz olingan sana </Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info} allowFontScaling={false}>22.10.2021</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
-          />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Qarz qaytarilgan sana</Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info} allowFontScaling={false}>22.10.2022</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
-          />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Qaytarilgan summa </Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text style={styles.info} allowFontScaling={false}>1.0 mln so’m</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              backgroundColor: style.backgroundColor,
-              width: '100%',
-              height: 2,
-            }}
-          />
-          <View style={styles.header}>
-            <View style={[styles.item, {left: 60}]}>
-              <Text style={styles.info} allowFontScaling={false}>Hujjatla</Text>
-            </View>
-            <View style={[styles.item, {alignItems: 'center'}]}>
-              <Text
-                onPress={() => {
-                  navigation.navigate('DownloadStatistic');
-                }}
-                style={[
-                  styles.info,
-                  {color: style.blue, textDecorationLine: 'underline'},
-                ]}
-                allowFontScaling={false}>
-                22/10/2021/000001
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -136,43 +70,55 @@ export default DebtLengthen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
     flex: 1,
+    backgroundColor: rd.color.page,
   },
-  item: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(8),
+    paddingBottom: rs(24),
   },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(16),
+    paddingVertical: rs(6),
   },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
+  row: {
+    minHeight: rs(52),
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: rs(10),
   },
-  main: {
-    position: 'absolute',
-    width: '90%',
-    alignSelf: 'center',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
+  label: {
     flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+    fontFamily: rd.font.medium,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+  },
+  valueWrap: {
+    flexShrink: 1,
+    marginLeft: rs(12),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+  },
+  value: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
+    textAlign: 'right',
+  },
+  link: {
+    color: rd.color.primary,
+    textDecorationLine: 'underline',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
   },
 });

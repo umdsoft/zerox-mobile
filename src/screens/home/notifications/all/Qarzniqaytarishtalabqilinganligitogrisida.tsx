@@ -1,16 +1,19 @@
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import React, { memo, useCallback } from 'react';
-import { style } from '../../../../theme/style';
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
 import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
 import { filter_notification } from '../../../../store/reducers/HomeReducer';
 import { storage } from '../../../../store/api/token/getToken';
 import { URL } from '../../../constants';
-import NotificationShell from '../../../components/NotificationShell';
+import NotificationShell, {
+  NotifButton,
+} from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
@@ -25,13 +28,17 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
     const token = storage.getString('token');
     try {
       dispatch(filter_notification(item.id));
-      const info = await fetch(URL + `/notification/ok/${item.id}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      // axios (fetch emas) — token eskirsa authInterceptor avto-refresh qiladi.
+      const info = await axios.put(
+        URL + `/notification/ok/${item.id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       navigation.navigate('DebtTakeSelect', {
         item: { id: item.contract },
@@ -60,41 +67,8 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
         time={item.time}
         actions={
           <>
-            <TouchableOpacity
-              onPress={onNavigateBack}
-              activeOpacity={0.8}
-              style={styles.button}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                {t('438') as string}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={onOkay}
-              activeOpacity={0.8}
-              style={styles.button}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  {
-                    color: '#fff',
-                    fontSize: style.fontSize.xx - 2,
-                    paddingHorizontal: 10,
-                  },
-                ]}
-              >
-                Ok
-              </Text>
-            </TouchableOpacity>
+            <NotifButton label={t('438') as string} onPress={onNavigateBack} />
+            <NotifButton label="Ok" variant="ghost" onPress={onOkay} />
           </>
         }
       >
@@ -123,7 +97,7 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
                     id: item.contract,
                   });
                 }}
-                style={[styles.notification, { color: style.blue }]}
+                style={[styles.notification, { color: rd.color.primary }]}
               >
                 {item.number}
               </Text>
@@ -142,37 +116,15 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
         time={item.time}
         actions={
           <>
-            <TouchableOpacity
+            <NotifButton
+              label="Qarzni qaytarish"
               onPress={() => {
                 navigation.navigate('DebtTakeSelect', {
                   item: { id: item.contract },
                 });
               }}
-              activeOpacity={0.8}
-              style={styles.button}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[styles.notification, { color: '#fff' }]}
-              >
-                Qarzni qaytarish
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={onOkay}
-              activeOpacity={0.8}
-              style={styles.button}
-            >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', paddingHorizontal: 20 },
-                ]}
-              >
-                Ok
-              </Text>
-            </TouchableOpacity>
+            />
+            <NotifButton label="Ok" variant="ghost" onPress={onOkay} />
           </>
         }
       >
@@ -201,7 +153,7 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
                     id: item.contract,
                   });
                 }}
-                style={[styles.notification, { color: style.blue }]}
+                style={[styles.notification, { color: rd.color.primary }]}
               >
                 {item.number}
               </Text>
@@ -217,18 +169,10 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
 export default memo(Qarzniqaytarishtalabqilinganligitogrisida);
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: style.blue,
-    paddingHorizontal: 10,
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(20),
   },
 });

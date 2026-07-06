@@ -1,24 +1,16 @@
-import {
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
-import {style} from '../../../../theme/style';
 
 import ScreenLayout from '../../../components/ScreenLayout';
-import MainText from '../../../components/MainText';
-import {font, fontSize} from '../../../../theme/font';
 
 import {useDispatch, useSelector} from 'react-redux';
 import IosIcon from '../../../../images/ios';
 import AndroidIcon from '../../../../images/android';
 import LaptopIcon from '../../../../images/laptop';
 
-import {colors} from '../../../../theme/colors';
 import {getUniqueId} from 'react-native-device-info';
 import {getDevicesAction, onDeleteDevices} from '../../../../store/api/home';
+import {rd, rs} from '../../../../theme/rd';
 
 const ShareDevices = () => {
   const {user, devices} = useSelector(state => state.HomeReducer);
@@ -63,112 +55,89 @@ const ShareDevices = () => {
 
   return (
     <ScreenLayout title={'Ulangan qurilmalar'}>
-      <View style={styles.aboutUsContainer}>
-            <View
-              style={{
-                flexDirection: 'row',
-              }}>
-              <MainText size={fontSize[12]}>Hozirgi seans</MainText>
-            </View>
-            <View style={{marginTop: 10}}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: colors.blue,
-                    borderRadius: 50,
-                  }}>
-                  {renderImage(currect)}
-                </View>
-                <View style={{marginLeft: 10}}>
-                  <MainText size={14} ft={font.bold}>
-                    {currect?.device_name}
-                  </MainText>
-                  <MainText size={13}>
-                    ZeroX{' '}
-                    {Platform.OS === 'ios'
-                      ? `IOS ${currect?.system_version}`
-                      : `Android ${currect?.system_version}`}
-                  </MainText>
-                  <MainText size={12} color="gray">
-                    {currect?.location}
-                  </MainText>
-                </View>
-              </View>
-              {data.length === 0 ? null : (
-                <TouchableOpacity onPress={onDeleteDevice} style={styles.btn}>
-                  <MainText color="red" size={fontSize[12]}>
-                    Barcha seanslarni o'chirish
-                  </MainText>
-                </TouchableOpacity>
-              )}
-            </View>
-            {data.length === 0 ? (
-              <View style={{marginTop: 20, alignItems: 'center'}}>
-                <MainText size={fontSize[12]}>
-                  Sizda boshqa seanslar mavjud emas
-                </MainText>
-              </View>
-            ) : (
-              <View style={{marginTop: 10}}>
-                <MainText size={fontSize[12]}>Active seanslar</MainText>
-                <View>
-                  {data.map((item, index) => {
-                    return (
-                      <View
-                        key={index.toString()}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          marginTop: 10,
-                        }}>
-                        <View
-                          style={{
-                            width: 40,
-                            height: 40,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: colors.blue,
-                            borderRadius: 50,
-                          }}>
-                          {renderImage(item)}
-                        </View>
-                        <View style={{marginLeft: 10}}>
-                          <MainText size={14} ft={font.bold}>
-                            {item.device_name}
-                          </MainText>
-                          <MainText size={13}>
-                            ZeroX {renderText(item)}
-                          </MainText>
-                          <MainText size={12} color="gray">
-                            {item?.location}
-                          </MainText>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
+      <Text style={styles.sectionLabel} allowFontScaling={false}>
+        Hozirgi seans
+      </Text>
+      <View style={styles.card}>
+        <View style={styles.deviceRow}>
+          <View style={styles.iconCircle}>{renderImage(currect)}</View>
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName} allowFontScaling={false}>
+              {currect?.device_name}
+            </Text>
+            <Text style={styles.deviceMeta} allowFontScaling={false}>
+              ZeroX{' '}
+              {Platform.OS === 'ios'
+                ? `IOS ${currect?.system_version}`
+                : `Android ${currect?.system_version}`}
+            </Text>
+            <Text style={styles.deviceLocation} allowFontScaling={false}>
+              {currect?.location}
+            </Text>
+          </View>
+        </View>
       </View>
+
+      {data.length === 0 ? null : (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onDeleteDevice}
+          style={styles.deleteBtn}>
+          <Text style={styles.deleteText} allowFontScaling={false}>
+            Barcha seanslarni o'chirish
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {data.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyText} allowFontScaling={false}>
+            Sizda boshqa seanslar mavjud emas
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel} allowFontScaling={false}>
+            Active seanslar
+          </Text>
+          <View style={styles.card}>
+            {data.map((item, index) => {
+              return (
+                <View
+                  key={index.toString()}
+                  style={[styles.deviceRow, index > 0 && styles.rowDivider]}>
+                  <View style={styles.iconCircle}>{renderImage(item)}</View>
+                  <View style={styles.deviceInfo}>
+                    <Text style={styles.deviceName} allowFontScaling={false}>
+                      {item.device_name}
+                    </Text>
+                    <Text style={styles.deviceMeta} allowFontScaling={false}>
+                      ZeroX {renderText(item)}
+                    </Text>
+                    <Text style={styles.deviceLocation} allowFontScaling={false}>
+                      {item?.location}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
     </ScreenLayout>
   );
 };
 
 const renderImage = item => {
-  console.log(item);
   switch (item?.os_type) {
     case 'Destop':
-      return <LaptopIcon width={24} height={24} color="white" />;
+      return <LaptopIcon width={rs(22)} height={rs(22)} color="white" />;
     case 'Apple':
-      return <IosIcon width={24} height={24} color="white" />;
+      return <IosIcon width={rs(22)} height={rs(22)} color="white" />;
     case 'google':
-      return <AndroidIcon width={24} height={24} color="white" />;
+      return <AndroidIcon width={rs(22)} height={rs(22)} color="white" />;
     default:
-      return <AndroidIcon width={24} height={24} color="white" />;
+      return <AndroidIcon width={rs(22)} height={rs(22)} color="white" />;
   }
 };
 
@@ -185,48 +154,78 @@ const renderText = item => {
 export default ShareDevices;
 
 const styles = StyleSheet.create({
-  btn: {
+  sectionLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  section: {
+    marginTop: rs(20),
+  },
+  card: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    overflow: 'hidden',
+  },
+  deviceRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
   },
-  userName: {
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
   },
-  download: {
+  iconCircle: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    flexDirection: 'row',
+    marginRight: rs(12),
   },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
+  deviceInfo: {
+    flex: 1,
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
+  deviceName: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+  deviceMeta: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(2),
+  },
+  deviceLocation: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
+    marginTop: rs(2),
+  },
+  deleteBtn: {
+    alignItems: 'center',
+    marginTop: rs(14),
+    paddingVertical: rs(6),
+  },
+  deleteText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.error,
+  },
+  emptyWrap: {
+    marginTop: rs(20),
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textTertiary,
   },
 });

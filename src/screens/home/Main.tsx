@@ -276,17 +276,8 @@ const Main = () => {
     <View style={styles.container}>
       <Provider>
         <Portal>
-          <StatusBar backgroundColor={style.blue} />
-          <View style={styles.background}>
-            <BackGroundIcon width="100%" height="100%" />
-          </View>
-
-          <Header
-            user={user?.data}
-            data={notification}
-            show={hasUnreadNotifications}
-            count={notification.bild?.length}
-          />
+          {/* Eski ko'k header + fon olib tashlandi — redizayn ekranlari o'z header'iga ega. */}
+          <StatusBar barStyle="dark-content" backgroundColor={'#f5f7fb'} />
           {renderBotomTabNavigator}
         </Portal>
       </Provider>

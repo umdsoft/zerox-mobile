@@ -41,8 +41,6 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- ATS yoqilgan: ixtiyoriy HTTP (cleartext) endi ruxsat etilmaydi (MITM himoyasi).
-		     NSAllowsLocalNetworking=true faqat Metro dev-server (localhost) uchun qoladi. -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
@@ -66,6 +64,10 @@
 		<string>Montserrat-Medium.ttf</string>
 		<string>Montserrat-Regular.ttf</string>
 		<string>Montserrat-Thin.ttf</string>
+		<string>Inter-Medium.ttf</string>
+		<string>Inter-Bold.ttf</string>
+		<string>Inter-Regular.ttf</string>
+		<string>Inter-SemiBold.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

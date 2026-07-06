@@ -5,23 +5,23 @@ import { t } from 'i18next';
 import React, { useCallback, useState } from 'react';
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Modal } from 'react-native-paper';
-import Toast from 'react-native-toast-message';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { checkPhoneTime } from '../../../helper/timeChecker';
-import ResetPassword from '../../../images/RecoveryPassword';
-import { colors } from '../../../theme/colors';
-import { fontSize } from '../../../theme/font';
-import { normalize, style } from '../../../theme/style';
 import Loading from '../../components/Loading';
-import MainText from '../../components/MainText';
-import OtherHeader from '../../components/OtherHeader';
 import { URL } from '../../constants';
+import { rd, rs } from '../../../theme/rd';
+import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
@@ -29,6 +29,7 @@ const EnterJsh = () => {
   const [value, setValue] = useState(''); // 33008943120050
   const [loading, setLoading] = useState(false);
   const [hide, setHide] = useState(false);
+  const [focused, setFocused] = useState(false);
   const onHandle = useCallback(async () => {
     setLoading(true);
     try {
@@ -45,26 +46,14 @@ const EnterJsh = () => {
             },
           },
         );
-        console.log('data', data);
 
-        if (data.code === 2) {
-          Toast.show({
-            autoHide: true,
-            visibilityTime: 3000,
-            position: 'bottom',
-            type: 'error2',
-            props: {
-              title: 'Xatolik',
-              desc: t('JShShIR noto‘g‘ri kiritilgan'),
-            },
-          });
-          setLoading(false);
-          return;
-        }
-
-        if (data.success) {
-          // navigation.navigate('Inforamation', { jshshir: value }); // 2500 tolash haqida ogohlantirsh chiqishi uchun
-          // navigation.navigate('ScanFaceMyId');
+        // Backend init MUVAFFAQIYATDA {success:true, reset_token} qaytaradi; XATOLARDA esa
+        // HTTP 4xx + {success:false, error:'...'} (invalid-credentials, too-many-attempts) →
+        // axios throw qiladi va catch bloki ANIQ xabar beradi. Shuning uchun bu yerda faqat
+        // muvaffaqiyatni tekshiramiz. (Ilgari `data.code === 2/0` tekshirilardi — backend
+        // raqamli code qaytarmaydi, o'sha shoxlar o'lik edi.)
+        if (data?.success && data?.reset_token) {
+          // JShShIR + telefon tasdiqlandi → MyID sessiyasi uchun reset_token bilan o'tamiz.
           navigation.navigate('MyIdScreen', {
             jshshir: value,
             token: data.reset_token,
@@ -73,27 +62,20 @@ const EnterJsh = () => {
             setLoading(false);
           }, 500);
           return;
-        } else {
-          if (data.code === 0) {
-            Toast.show({
-              autoHide: true,
-              visibilityTime: 3000,
-              position: 'bottom',
-              type: 'error2',
-              props: {
-                title: 'Xatolik',
-                desc: t('765'),
-              },
-            });
-            setLoading(false);
-            return;
-            // navigation.navigate('RegisterWithPeople', {type: 1});
-          }
-          // if (data.code === 1) {
-          //   setLoading(false);
-          //   navigation.navigate('PayFor', {user: data.data});
-          // }
         }
+        // 200 lekin success emas (kutilmagan) — umumiy xato.
+        Toast.show({
+          autoHide: true,
+          visibilityTime: 3000,
+          position: 'bottom',
+          type: 'error2',
+          props: {
+            title: 'Xatolik',
+            desc: t('JShShIR noto‘g‘ri kiritilgan'),
+          },
+        });
+        setLoading(false);
+        return;
       } else {
         // checkPhoneTime() false (qurilma soati noto'g'ri / server xato) — loading'da qotmasin.
         setLoading(false);
@@ -131,87 +113,87 @@ const EnterJsh = () => {
     setHide(!hide);
   }, [hide]);
 
+  const disabled = value.length >= 14 ? false : true;
+
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <View style={[styles.container]}>
-      <OtherHeader
-        title={t('729')}
-        titleColor={'#000'}
-        iconColor="#fff"
-        backgroundColor={style.blue}
-      />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          <View
-            style={{ alignSelf: 'center', marginTop: 20, marginBottom: 20 }}
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
           >
-            <ResetPassword />
-          </View>
-          <View style={styles.main}>
-            <View>
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.bbb}>
-                  <MainText size={fontSize[12]} style={styles.phoneText}>
-                    {t('732').slice(0, -1)}
-                  </MainText>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    allowFontScaling={false}
-                    maxLength={14}
-                    value={value}
-                    onChangeText={text => {
-                      setValue(text);
-                    }}
-                    keyboardType="numeric"
-                    style={styles.TextInput}
-                  />
-                </View>
-              </View>
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <UserIcon size={rs(34)} color={rd.color.primary} />
             </View>
+            <Text style={styles.title}>{t('729')}</Text>
           </View>
-          <View
-            style={{
-              width: '90%',
-              alignSelf: 'center',
-              marginTop: 10,
-              alignItems: 'flex-end',
-            }}
+
+          {/* JSHSHIR */}
+          <Text style={styles.label}>{t('732').slice(0, -1)}</Text>
+          <View style={[styles.field, focused && styles.fieldFocused]}>
+            <View style={styles.leadIcon}>
+              <UserIcon size={rs(20)} color={rd.color.textTertiary} />
+            </View>
+            <TextInput
+              allowFontScaling={false}
+              maxLength={14}
+              value={value}
+              onChangeText={text => {
+                setValue(text);
+              }}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              keyboardType="numeric"
+              placeholderTextColor={rd.color.textTertiary}
+              style={styles.input}
+            />
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.helpBtn}
+            onPress={onModal}
           >
-            <TouchableOpacity onPress={onModal}>
-              <MainText
-                color={colors.blue}
-                size={fontSize[14]}
-                style={styles.jshshir}
-              >
-                {t('735')}
-              </MainText>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
-              disabled={value.length >= 14 ? false : true}
-              activeOpacity={0.8}
-              onPress={onHandle}
+            <Text style={styles.helpText}>{t('735')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={disabled}
+            activeOpacity={0.85}
+            onPress={onHandle}
+            style={[styles.button, disabled && styles.buttonDisabled]}
+          >
+            <Text
               style={[
-                styles.enterButton,
-                {
-                  backgroundColor:
-                    value.length >= 14 ? style.blue : style.disabledButtonColor,
-                },
+                styles.buttonText,
+                disabled && { color: rd.color.textTertiary },
               ]}
             >
-              <MainText size={fontSize[16]} color={colors.white}>
-                {t('45')}
-              </MainText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-      {/* <Toast config={toastConfig} /> */}
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <ModalView hide={hide} setHide={setHide} />
     </View>
   );
@@ -233,11 +215,10 @@ const ModalView = ({ hide, setHide }) => {
         />
         <TouchableOpacity
           onPress={onClose}
-          style={[styles.enterButton, { marginTop: 10 }]}
+          activeOpacity={0.85}
+          style={styles.modalButton}
         >
-          <MainText color={colors.white} size={fontSize[16]}>
-            {t('741')}
-          </MainText>
+          <Text style={styles.buttonText}>{t('741')}</Text>
         </TouchableOpacity>
       </View>
     </Modal>
@@ -245,107 +226,120 @@ const ModalView = ({ hide, setHide }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(8),
+  },
+
+  hero: { alignItems: 'center', marginTop: rs(20), marginBottom: rs(28) },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
+  },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(24),
+    color: rd.color.text,
+    textAlign: 'center',
+  },
+
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  field: {
+    height: rs(56),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(14),
+  },
+  fieldFocused: { borderColor: rd.color.primary },
+  leadIcon: { marginRight: rs(10) },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
+  },
+
+  helpBtn: { alignSelf: 'flex-end', marginTop: rs(12) },
+  helpText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.primary,
+  },
+
+  button: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(24),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  buttonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
+  },
+
   image: {
     width: '90%',
-    height: normalize(270),
-    padding: 10,
+    height: rs(270),
+    padding: rs(10),
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: rs(10),
   },
   modalView: {
     width: '90%',
-    height: normalize(350),
-    backgroundColor: 'white',
+    backgroundColor: rd.color.surface,
     alignSelf: 'center',
-    borderRadius: 12,
+    borderRadius: rd.radius.huge,
+    paddingVertical: rs(16),
+    paddingHorizontal: rs(14),
   },
-  jshshir: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.blue,
-  },
-  bbb: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  forgotPasswordText: {
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  registerButton: {
-    paddingLeft: 10,
-    paddingRight: 10,
+  modalButton: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingBottom: 10,
-    paddingTop: 10,
-  },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    marginTop: 15,
-    zIndex: 1,
-  },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  main: {
-    alignItems: 'center',
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  phoneNumberText: {
-    marginLeft: 5,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.small + 1,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    marginTop: rs(16),
   },
 });

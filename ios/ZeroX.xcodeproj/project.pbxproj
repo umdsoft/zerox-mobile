@@ -19,6 +19,10 @@
 		C1438038FD3C428F8067E426 /* Montserrat-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 27B78797B3CA4874A2285C26 /* Montserrat-Bold.ttf */; };
 		E7F1B4A547C34C8A9000B98F /* Montserrat-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 78DB2CCA484D4D5F831C6BC1 /* Montserrat-Regular.ttf */; };
 		FE48864269484D87925777B9 /* Montserrat-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7A470944DACC43A3920AF0EB /* Montserrat-Light.ttf */; };
+		144D376C45154DF6AC2B45D7 /* Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 49FEC47A36354C1799F20991 /* Inter-Medium.ttf */; };
+		921C7C4668E14714B6118ED7 /* Inter-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9BE4522260194B57AC8F49C4 /* Inter-Bold.ttf */; };
+		CE7E3FB990804127AC2D23D8 /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 79EA2B52D1DF4703B38B10B1 /* Inter-Regular.ttf */; };
+		68D7CBED12F24A338334CAD9 /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BE45CA8EC61469CB1297B7D /* Inter-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +44,10 @@
 		CC00726A6A154AFD9897AF72 /* Cambria.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Cambria.ttf; path = ../assets/fonts/Cambria.ttf; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F8F7111740764FD2AF3F6D3E /* Montserrat-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Medium.ttf"; path = "../assets/fonts/Montserrat-Medium.ttf"; sourceTree = "<group>"; };
+		49FEC47A36354C1799F20991 /* Inter-Medium.ttf */ = {isa = PBXFileReference; name = "Inter-Medium.ttf"; path = "../assets/fonts/Inter-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		9BE4522260194B57AC8F49C4 /* Inter-Bold.ttf */ = {isa = PBXFileReference; name = "Inter-Bold.ttf"; path = "../assets/fonts/Inter-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		79EA2B52D1DF4703B38B10B1 /* Inter-Regular.ttf */ = {isa = PBXFileReference; name = "Inter-Regular.ttf"; path = "../assets/fonts/Inter-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		4BE45CA8EC61469CB1297B7D /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; name = "Inter-SemiBold.ttf"; path = "../assets/fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +124,10 @@
 				F8F7111740764FD2AF3F6D3E /* Montserrat-Medium.ttf */,
 				78DB2CCA484D4D5F831C6BC1 /* Montserrat-Regular.ttf */,
 				4F88F1B4B4CC4B74BE02C0C3 /* Montserrat-Thin.ttf */,
+				49FEC47A36354C1799F20991 /* Inter-Medium.ttf */,
+				9BE4522260194B57AC8F49C4 /* Inter-Bold.ttf */,
+				79EA2B52D1DF4703B38B10B1 /* Inter-Regular.ttf */,
+				4BE45CA8EC61469CB1297B7D /* Inter-SemiBold.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -201,6 +213,10 @@
 				74737B7F74B44C0F9FE0B6A7 /* Montserrat-Medium.ttf in Resources */,
 				E7F1B4A547C34C8A9000B98F /* Montserrat-Regular.ttf in Resources */,
 				4FD37AA7E18D4057985A9331 /* Montserrat-Thin.ttf in Resources */,
+				144D376C45154DF6AC2B45D7 /* Inter-Medium.ttf in Resources */,
+				921C7C4668E14714B6118ED7 /* Inter-Bold.ttf in Resources */,
+				CE7E3FB990804127AC2D23D8 /* Inter-Regular.ttf in Resources */,
+				68D7CBED12F24A338334CAD9 /* Inter-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

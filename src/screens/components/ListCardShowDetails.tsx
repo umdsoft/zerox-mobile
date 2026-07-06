@@ -6,11 +6,15 @@ import {
   View,
 } from 'react-native';
 import React, { memo, useCallback, useState } from 'react';
-import { style } from '../../theme/style';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { fontSize } from '../../theme/font';
 import { t as tt } from 'i18next';
+import { rd, rs } from '../../theme/rd';
+import { sortText } from './StatisticCard';
+import { ClockIcon } from '../home/redesign/icons';
+
+// REDIZAYN: eski jadval o'rniga zamonaviy detail karta — oq surface, yumaloq, valyuta
+// segment-toggle, muddat holati rangli. Navigatsiya va valyuta filtrlash O'ZGARMAGAN.
 
 const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
   const { t } = useTranslation();
@@ -43,224 +47,98 @@ const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
     });
   };
 
+  const list = blue ? uz : usd;
+  const isEmpty = data?.length === 0 || list.length === 0;
+
   return (
-    <View style={[styles.containerrr, { width: width }]}>
-      <View>
-        <View style={{ paddingVertical: 10, paddingHorizontal: 10 }}>
+    <View style={[styles.card, { width: width }]}>
+      <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
+        {title}
+      </Text>
+
+      <View style={styles.segment}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onChangeColor(true)}
+          style={[styles.segmentBtn, blue && styles.segmentBtnActive]}
+        >
           <Text
             allowFontScaling={false}
-            style={[styles.title, { color: style.blue }]}
+            style={[styles.segmentText, blue && styles.segmentTextActive]}
           >
-            {title}
+            UZS
           </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-          }}
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onChangeColor(false)}
+          style={[styles.segmentBtn, !blue && styles.segmentBtnActive]}
         >
-          <TouchableOpacity
-            onPress={() => {
-              onChangeColor(true);
-            }}
-            style={[
-              styles.valyut,
-              { backgroundColor: blue ? style.blue : '#fff' },
-            ]}
+          <Text
+            allowFontScaling={false}
+            style={[styles.segmentText, !blue && styles.segmentTextActive]}
           >
-            <Text
-              allowFontScaling={false}
-              style={[
-                styles.valyutText,
-                { color: blue ? '#fff' : style.textColor },
-              ]}
-            >
-              UZS
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              onChangeColor(false);
-            }}
-            style={[
-              styles.valyut,
-              { backgroundColor: blue ? '#fff' : style.blue },
-            ]}
-          >
-            <Text
-              allowFontScaling={false}
-              style={[
-                styles.valyutText,
-                { color: blue ? style.textColor : '#fff' },
-              ]}
-            >
-              USD
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View
-          style={{
-            backgroundColor: style.backgroundColor,
-            justifyContent: 'center',
-            // height: 40,
-            width: width,
-            paddingVertical: 5,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 5,
-              width: width,
-            }}
-          >
-            <Text
-              allowFontScaling={false}
-              style={[styles.text, { width: '50%', textAlign: 'center' }]}
-            >
-              {t('174').replace(' ', '\n')}
-            </Text>
-            <Text
-              allowFontScaling={false}
-              style={[styles.text, { width: '50%', textAlign: 'center' }]}
-            >
-              {t('327').replace(' ', '\n')}
-            </Text>
-          </View>
-        </View>
-        <ScrollView>
-          <View
-            style={{
-              marginVertical: 10,
-            }}
-          >
-            {blue ? (
-              data?.length === 0 ? (
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.text,
-                    { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
-                  ]}
-                >
-                  {t('mavjud')}
-                </Text>
-              ) : uz.length === 0 ? (
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.text,
-                    { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
-                  ]}
-                >
-                  {t('mavjud')}
-                </Text>
-              ) : (
-                uz?.map((item, index) => {
-                  return (
-                    <>
-                      <TouchableOpacity
-                        disabled={disabled}
-                        onPress={OnPress}
-                        key={index}
-                        style={styles.listContainer}
-                      >
-                        <Text
-                          allowFontScaling={false}
-                          style={[
-                            styles.dayText,
-                            {
-                              color: returnColor(CheckDate(item?.end_date)),
-                            },
-                          ]}
-                        >
-                          {CheckDate(item?.end_date)}
-                        </Text>
-                        <Text
-                          allowFontScaling={false}
-                          style={[styles.money, { color: '#000' }]}
-                        >
-                          {item?.residual_amount?.replace(
-                            /\B(?=(\d{3})+(?!\d))/g,
-                            ' ',
-                          )}
-                        </Text>
-                      </TouchableOpacity>
-                      <View style={styles.line} />
-                    </>
-                  );
-                })
-              )
-            ) : data?.length === 0 ? (
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.text,
-                  { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
-                ]}
-              >
-                {t('mavjud')}
-              </Text>
-            ) : usd.length === 0 ? (
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.text,
-                  { fontSize: style.fontSize.small - 2, alignSelf: 'center' },
-                ]}
-              >
-                {t('mavjud')}
-              </Text>
-            ) : (
-              usd?.map((item, index) => {
-                return (
-                  <>
-                    <TouchableOpacity
-                      onPress={OnPress}
-                      key={index}
-                      disabled={disabled}
-                      style={styles.listContainer}
-                    >
-                      <Text
-                        allowFontScaling={false}
-                        style={[
-                          styles.dayText,
-                          {
-                            color: returnColor(CheckDate(item?.end_date)),
-                          },
-                        ]}
-                      >
-                        {CheckDate(item?.end_date)}
-                      </Text>
-                      <Text
-                        allowFontScaling={false}
-                        style={[
-                          styles.money,
-                          {
-                            color: '#000',
-                          },
-                        ]}
-                      >
-                        {item?.residual_amount?.replace(
-                          /\B(?=(\d{3})+(?!\d))/g,
-                          ' ',
-                        )}
-                      </Text>
-                    </TouchableOpacity>
-                    <View style={styles.line} />
-                  </>
-                );
-              })
-            )}
-          </View>
-        </ScrollView>
+            USD
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      <View style={styles.headerRow}>
+        <Text allowFontScaling={false} style={styles.headerLabel}>
+          {t('174')}
+        </Text>
+        <Text allowFontScaling={false} style={styles.headerLabel}>
+          {t('327')}
+        </Text>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {isEmpty ? (
+          <View style={styles.empty}>
+            <Text allowFontScaling={false} style={styles.emptyText}>
+              {t('mavjud')}
+            </Text>
+          </View>
+        ) : (
+          list.map((item, index) => {
+            const dayText = CheckDate(item?.end_date);
+            const st = dayStatus(dayText);
+            return (
+              <View key={index}>
+                {index > 0 && <View style={styles.divider} />}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  disabled={disabled}
+                  onPress={OnPress}
+                  style={styles.row}
+                >
+                  <View style={[styles.dayIcon, { backgroundColor: st.bg }]}>
+                    <ClockIcon size={rs(18)} color={st.color} />
+                  </View>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.dayText, { color: st.color }]}
+                    numberOfLines={1}
+                  >
+                    {dayText}
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    style={styles.amount}
+                    numberOfLines={1}
+                  >
+                    {sortText(item?.residual_amount)}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
     </View>
   );
 };
+
 const CheckDate = date => {
   const nowMonth = new Date().getMonth();
   const getMonth = new Date(date).getMonth();
@@ -290,80 +168,108 @@ const pp = (day: number) => {
   }
 };
 
-const returnColor = type => {
+// Muddat holatiga qarab rang: bugun/1 kun/2 kun/o'tgan = error, aks holda = warning.
+const dayStatus = type => {
   switch (type) {
     case tt('843'):
-      return 'red';
     case tt('423', { count: 1 }):
-      return 'red';
     case tt('426', { count: 2 }):
-      return 'red';
+      return { color: rd.color.error, bg: rd.color.errorBg };
     default:
-      return '#000';
+      return { color: rd.color.warning, bg: rd.color.warningBg };
   }
 };
 
 export default memo(ListCardShowDetails);
 
 const styles = StyleSheet.create({
-  containerrr: {
+  card: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  line: {
-    height: 1,
-    width: '100%',
-    backgroundColor: style.blue,
-    opacity: 0.2,
-  },
-  valyutText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small - 2,
-    color: '#fff',
-  },
-  valyut: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    borderRadius: 12,
-    borderColor: '#fff',
-    borderWidth: 2,
-    paddingVertical: 6,
-  },
-  text: {
-    fontSize: style.fontSize.small - 3,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(12),
   },
   title: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
+    marginBottom: rs(10),
   },
-  dayText: {
-    color: '#718096',
-    fontSize: style.fontSize.xa,
-    fontFamily: style.fontFamilyMedium,
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.md,
+    padding: rs(4),
+    gap: rs(4),
   },
-  money: {
-    fontSize: style.fontSize.xa,
-    fontFamily: style.fontFamilyMedium,
-    color: 'red',
+  segmentBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: rs(8),
+    borderRadius: rd.radius.sm,
   },
-  listContainer: {
+  segmentBtnActive: {
+    backgroundColor: rd.color.primary,
+  },
+  segmentText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
+  },
+  segmentTextActive: {
+    color: rd.color.onPrimary,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: rs(4),
+    paddingTop: rs(12),
+    paddingBottom: rs(6),
+  },
+  headerLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: rs(9),
+    gap: rs(10),
+  },
+  dayIcon: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(17),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayText: {
+    flex: 1,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+  },
+  amount: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(13),
+    color: rd.color.text,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginLeft: rs(44),
+  },
+  empty: {
+    alignItems: 'center',
+    paddingVertical: rs(24),
+  },
+  emptyText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textTertiary,
+    textAlign: 'center',
   },
 });

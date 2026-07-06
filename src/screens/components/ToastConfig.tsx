@@ -1,114 +1,144 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {BaseToast, ErrorToast} from 'react-native-toast-message';
-import {normalize, style} from '../../theme/style';
+import { StyleSheet, Text, View } from 'react-native';
+import { BaseToast, ErrorToast } from 'react-native-toast-message';
 import CheckIcon from '../../images/CheckToast';
 import WrongIcon from '../../images/WrongToast';
+import { rd, rs } from '../../theme/rd';
+
+// Barcha toast (alert) uchun YAGONA professional karta — bir xil ko'rinish.
+const ToastCard = ({
+  variant,
+  title,
+  desc,
+}: {
+  variant: 'success' | 'error';
+  title?: string;
+  desc?: string;
+}) => {
+  const isError = variant === 'error';
+  return (
+    <View style={styles.card}>
+      <View
+        style={[
+          styles.iconCircle,
+          { backgroundColor: isError ? rd.color.errorBg : rd.color.successBg },
+        ]}
+      >
+        {isError ? (
+          <WrongIcon width={rs(20)} height={rs(20)} />
+        ) : (
+          <CheckIcon width={rs(20)} height={rs(20)} />
+        )}
+      </View>
+      <View style={styles.textWrap}>
+        {!!title && (
+          <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+        )}
+        {!!desc && (
+          <Text allowFontScaling={false} style={styles.desc} numberOfLines={3}>
+            {desc}
+          </Text>
+        )}
+      </View>
+      <View
+        style={[
+          styles.accent,
+          { backgroundColor: isError ? rd.color.error : rd.color.success },
+        ]}
+      />
+    </View>
+  );
+};
+
 export const toastConfig = {
-  success: props => (
+  omad: ({ props }: any) => (
+    <ToastCard variant="success" title={props?.title} desc={props?.desc} />
+  ),
+
+  error2: ({ props }: any) => (
+    <ToastCard variant="error" title={props?.title} desc={props?.desc} />
+  ),
+
+  // Zaxira (react-native-toast-message standart turlari) — rd ranglari bilan.
+  success: (props: any) => (
     <BaseToast
       {...props}
-      style={{borderLeftColor: style.blue, width: '90%'}}
-      contentContainerStyle={{paddingHorizontal: 15}}
-      text1Style={{
-        fontWeight: '600',
-        fontSize: style.fontSize.xx,
-        fontFamily: style.fontFamilyMedium,
-        color: style.textColor,
-      }}
+      style={{ borderLeftColor: rd.color.success, width: '92%', borderRadius: rd.radius.lg }}
+      contentContainerStyle={{ paddingHorizontal: rs(14) }}
+      text1Style={styles.baseText1}
+      text2Style={styles.baseText2}
     />
   ),
-
-  omad: ({props}) => {
-    return (
-      <View style={styles.container}>
-        <View style={styles.line} />
-        <View style={{justifyContent: 'center', paddingHorizontal: 8}}>
-          <CheckIcon width={normalize(20)} height={normalize(20)} />
-        </View>
-        <View style={styles.textContainer}>
-          {/* <Text style={styles.title}>{props?.title}</Text> */}
-          <Text allowFontScaling={false} style={styles.desc}>{props?.desc}</Text>
-        </View>
-      </View>
-    );
-  },
-
-  error2: ({props}) => (
-    <View style={[styles.container, {backgroundColor: '#f7e6e3'}]}>
-      <View style={[styles.line, {backgroundColor: 'red'}]} />
-      <View style={{justifyContent: 'center', paddingHorizontal: 8}}>
-        <WrongIcon width={normalize(20)} height={normalize(20)} />
-      </View>
-      <View style={styles.textContainer}>
-        {/* <Text style={styles.title}>{props?.title}</Text> */}
-        <Text allowFontScaling={false} style={styles.desc}>{props?.desc}</Text>
-      </View>
-    </View>
-  ),
-
-  error: props => (
+  error: (props: any) => (
     <ErrorToast
       {...props}
-      style={{borderLeftColor: 'red', borderLeftWidth: 5, width: '90%'}}
-      text1Style={{
-        fontWeight: '600',
-        fontSize: style.fontSize.xx,
-        fontFamily: style.fontFamilyMedium,
-        color: style.textColor,
-      }}
-      text2Style={{
-        fontWeight: '600',
-        fontSize: style.fontSize.xx,
-        fontFamily: style.fontFamilyMedium,
-        color: style.textColor,
-      }}
+      style={{ borderLeftColor: rd.color.error, borderLeftWidth: 4, width: '92%', borderRadius: rd.radius.lg }}
+      text1Style={styles.baseText1}
+      text2Style={styles.baseText2}
     />
-  ),
-
-  tomatoToast: ({text1, props}) => (
-    <View style={{height: 60, width: '90%', backgroundColor: 'tomato'}}>
-      <Text  allowFontScaling={false}>{text1}</Text>
-      <Text  allowFontScaling={false}>{props.uuid}</Text>
-    </View>
   ),
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '90%',
+  card: {
+    width: '92%',
     alignSelf: 'center',
-    backgroundColor: '#f1f8f4',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(12),
     flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.36,
-    shadowRadius: 6.68,
-    elevation: 11,
+    alignItems: 'center',
+    gap: rs(12),
+    overflow: 'hidden',
+    shadowColor: '#0b1220',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
   },
+  accent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: rs(4),
+    borderTopLeftRadius: rd.radius.lg,
+    borderBottomLeftRadius: rd.radius.lg,
+  },
+  iconCircle: {
+    width: rs(38),
+    height: rs(38),
+    borderRadius: rs(19),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: rs(4),
+  },
+  textWrap: { flex: 1, justifyContent: 'center' },
   title: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx + 2,
-    color: '#000',
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
+    marginBottom: 2,
   },
   desc: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 1,
-    color: '#000',
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    lineHeight: rs(18),
   },
-  line: {
-    backgroundColor: '#1fa779',
-    borderRadius: 12,
-    width: normalize(3),
+  baseText1: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
-  textContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  baseText2: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
   },
 });

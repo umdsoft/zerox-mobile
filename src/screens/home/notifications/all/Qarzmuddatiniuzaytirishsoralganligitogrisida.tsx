@@ -2,6 +2,7 @@ import { Text } from 'react-native';
 import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
+import { rd } from '../../../../theme/rd';
 import { settingDate } from '../../../../helper';
 import TextBold from '../../../components/TextBold';
 import { t } from 'i18next';
@@ -59,7 +60,7 @@ const Qarzmuddatiniuzaytirishsoralganligitogrisida = ({
                 });
               }}
               allowFontScaling={false}
-              style={{ color: style.blue }}
+              style={{ color: rd.color.primary }}
             >
               {item.number}
             </Text>

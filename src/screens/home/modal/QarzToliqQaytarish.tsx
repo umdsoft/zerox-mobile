@@ -1,6 +1,6 @@
 import {StyleSheet, Text} from 'react-native';
 import React from 'react';
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 import {useSelector} from 'react-redux';
 import {settingDate} from '../../../helper';
 import DalolatnomaLayout from '../../components/DalolatnomaLayout';
@@ -58,20 +58,14 @@ const QarzToliqQaytarish = ({hide, onHide, data}) => {
 export default QarzToliqQaytarish;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    width: 100,
-  },
   text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: 'black',
-    lineHeight: 25,
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.text,
+    lineHeight: rs(23),
   },
   mainText: {
-    fontFamily: style.fontFamilyBold,
+    fontFamily: rd.font.bold,
+    color: rd.color.text,
   },
 });

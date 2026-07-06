@@ -1,13 +1,13 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {memo} from 'react';
 
-import {style} from '../../theme/style';
 import {useNavigation} from '@react-navigation/native';
-import MainText from './MainText';
-import {fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
 import {t} from 'i18next';
+import {rd, rs} from '../../theme/rd';
 
+// REDIZAYN: eski `style`/`colors`/MainText o'rniga `rd` tizimi. Yig'ish/format
+// mantiqi va navigatsiya O'ZGARMAGAN — faqat vizual qatlam yangi (oq karta, yumaloq,
+// yengil soya, Inter).
 const Card = ({
   title,
   type,
@@ -26,8 +26,7 @@ const Card = ({
   const navigation = useNavigation();
 
   // DECIMAL maydonlar mysql2'dan STRING keladi → '+' birlashtiradi (qo'shmaydi).
-  // Number() bilan to'g'ri yig'amiz va format qilamiz (.slice(1,20) hack endi shart emas;
-  // bir valyutada bir nechta qator bo'lsa ham to'g'ri ishlaydi).
+  // Number() bilan to'g'ri yig'amiz va format qilamiz.
   const sumByCurrency = (rows, cur) =>
     (rows || []).reduce(
       (acc, item) =>
@@ -51,37 +50,25 @@ const Card = ({
         });
       }}
       activeOpacity={0.9}
-      style={[
-        styles.container,
-        {backgroundColor: type === 1 ? '#f0f3f7' : '#fff', width: width},
-      ]}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-        <MainText
-          color={color}
-          size={style.fontSize.small}
-          style={[
-            {
-              maxWidth: '80%',
-            },
-          ]}>
+      style={[styles.container, {width: width}]}>
+      <View style={styles.top}>
+        <Text
+          allowFontScaling={false}
+          numberOfLines={2}
+          style={[styles.title, {maxWidth: '80%', color: color || rd.color.text}]}>
           {title}
-        </MainText>
-        <View>
-          <Icon width={30} height={30} />
+        </Text>
+        <View style={styles.iconWrap}>
+          <Icon width={rs(22)} height={rs(22)} />
         </View>
       </View>
-      <View style={{marginTop: 20}}>
-        <MainText color={colors.green} size={style.fontSize.small}>
+      <View style={{marginTop: rs(16)}}>
+        <Text allowFontScaling={false} style={styles.sum}>
           {formatMoney(sumByCurrency(data, 'UZS')) + ' ' + t('som')}
-        </MainText>
-        <MainText color={colors.green} size={style.fontSize.small}>
+        </Text>
+        <Text allowFontScaling={false} style={styles.sumUsd}>
           {formatMoney(sumByCurrency(data, 'USD')) + ' $'}
-        </MainText>
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -92,26 +79,44 @@ export default memo(Card);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(18),
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    shadowColor: '#0b1220',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 2,
-    paddingHorizontal: 8,
-    paddingVertical: 15,
+    paddingHorizontal: rs(14),
+    paddingVertical: rs(16),
   },
-  sum: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.MoneyColor,
+  top: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  iconWrap: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(12),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(14),
+    fontFamily: rd.font.semibold,
+  },
+  sum: {
+    fontSize: rs(15),
+    fontFamily: rd.font.bold,
+    color: rd.color.success,
+  },
+  sumUsd: {
+    fontSize: rs(13),
+    fontFamily: rd.font.medium,
+    color: rd.color.textSecondary,
+    marginTop: rs(3),
   },
 });

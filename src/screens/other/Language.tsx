@@ -5,7 +5,6 @@ import {
   View,
 } from 'react-native';
 import React, {useCallback} from 'react';
-import {style} from '../../theme/style';
 
 import Uzbekistan from '../../images/Uzbekistan';
 import Russian from '../../images/Russian';
@@ -17,6 +16,7 @@ import {storage} from '../../store/api/token/getToken';
 import {t} from 'i18next';
 import {onPostDefaultLang} from '../../store/api/home';
 import {useDispatch, useSelector} from 'react-redux';
+import {rd, rs} from '../../theme/rd';
 
 const Language = () => {
   const {i18n} = useTranslation();
@@ -33,54 +33,44 @@ const Language = () => {
     [dispatch, i18n, user?.data?.id],
   );
 
+  const options = [
+    {code: 'uz', label: 'O‘zbekcha', Flag: Uzbekistan},
+    {code: 'kr', label: 'Ўзбекча', Flag: Uzbekistan},
+    {code: 'ru', label: 'Русский', Flag: Russian},
+  ];
+
   return (
     <ScreenLayout title={t('til')}>
-      <View style={styles.aboutUsContainer}>
-              <TouchableOpacity
-                onPress={() => {
-                  onChangeLanguage('uz');
-                }}
-                style={styles.TouchableOpacity}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Uzbekistan size={35} />
-                  <Text style={styles.optionTx} allowFontScaling={false}>O‘zbekcha </Text>
+      <View style={styles.card}>
+        {options.map((opt, index) => {
+          const selected = i18n.language === opt.code;
+          const {Flag} = opt;
+          return (
+            <TouchableOpacity
+              key={opt.code}
+              activeOpacity={0.7}
+              onPress={() => {
+                onChangeLanguage(opt.code);
+              }}
+              style={[
+                styles.row,
+                index > 0 && styles.rowDivider,
+                selected && styles.rowSelected,
+              ]}>
+              <View style={styles.rowLeft}>
+                <Flag size={rs(30)} />
+                <Text style={styles.optionTx} allowFontScaling={false}>
+                  {opt.label}
+                </Text>
+              </View>
+              {selected && (
+                <View style={styles.check}>
+                  <CheckIcon size={rs(20)} color={rd.color.primary} />
                 </View>
-                {i18n.language === 'uz' && (
-                  <View style={styles.check}>
-                    <CheckIcon size={22} color={style.blue} />
-                  </View>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  onChangeLanguage('kr');
-                }}
-                style={styles.TouchableOpacity}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Uzbekistan size={35} />
-                  <Text style={styles.optionTx} allowFontScaling={false}>Ўзбекча</Text>
-                </View>
-                {i18n.language === 'kr' && (
-                  <View style={styles.check}>
-                    <CheckIcon size={22} color={style.blue} />
-                  </View>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  onChangeLanguage('ru');
-                }}
-                style={styles.TouchableOpacity}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Russian size={35} />
-                  <Text style={styles.optionTx} allowFontScaling={false}>Русский </Text>
-                </View>
-                {i18n.language === 'ru' && (
-                  <View style={styles.check}>
-                    <CheckIcon size={22} color={style.blue} />
-                  </View>
-                )}
-              </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </ScreenLayout>
   );
@@ -89,60 +79,41 @@ const Language = () => {
 export default Language;
 
 const styles = StyleSheet.create({
-  check: {
-    marginRight: 10,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    overflow: 'hidden',
   },
-  TouchableOpacity: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    borderRadius: 10,
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 10,
-    marginTop: 5,
     justifyContent: 'space-between',
+    paddingVertical: rs(15),
+    paddingHorizontal: rs(14),
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  rowSelected: {
+    backgroundColor: rd.color.primaryTint,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   optionTx: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 2,
-    color: '#000',
-    marginLeft: 5,
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    marginLeft: rs(12),
   },
-  name: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 1,
-    color: '#000',
-  },
-  info: {
-    marginTop: 5,
-  },
-  title: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa,
-    color: style.blue,
-  },
-  userImageContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    aspectRatio: 1,
+  check: {
+    width: rs(22),
+    height: rs(22),
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-
-    borderRadius: 15,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    paddingBottom: 20,
   },
 });

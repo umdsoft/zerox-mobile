@@ -1,210 +1,173 @@
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import React from 'react';
-import {BackGroundIcon, PurseIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import BackButton from '../components/BackButton';
-import {useNavigation} from '@react-navigation/native';
-import {Checkbox} from 'react-native-paper';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Checkbox } from 'react-native-paper';
+import ScreenLayout from '../components/ScreenLayout';
+import { rd, rs } from '../../theme/rd';
+import { CoinIcon } from '../home/redesign/icons';
 
 const PartDebtBack = () => {
-  const navigation = useNavigation();
+  const [focused, setFocused] = useState(false);
+
   return (
-    <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <View style={styles.main}>
-        <View style={{marginTop: Platform.OS === 'ios' ? normalize(35) : 10}}>
-          <BackButton
-            navigation={navigation}
-            backgroundColor={'#fff'}
-            IconColor={style.blue}
-          />
-        </View>
-        <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-            <View>
-              <View style={styles.insideMoney}>
-                <Text
-                  style={[styles.hisob, {fontFamily: style.fontFamilyBold}]}
-                  allowFontScaling={false}>
-                  Qarzni qisman qaytarishni{'\n'}talab qilish
-                </Text>
-              </View>
-              <View style={[styles.card, {marginTop: 20}]}>
-                <View style={styles.insideMoney}>
-                  <Text
-                    style={[styles.hisob, {fontSize: style.fontSize.small}]}
-                    allowFontScaling={false}>
-                    01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz
-                    fuqaro Abdullayev Abdulladan qarzni qisman qaytarishini
-                    talab qilmoqdasiz.
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View>
-              <View style={styles.TextInputLabelContainer}>
-                <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText} allowFontScaling={false}>Summani kiriting</Text>
-                </View>
-                <View style={{flex: 1}}>
-                  <TextInput
-                    value="100 000 so'm"
-                    keyboardType="numeric"
-                    style={styles.TextInput}
-                    allowFontScaling={false} />
-                </View>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginTop: 20,
-                }}>
-                <Checkbox color={style.blue} status="checked" />
-                <Text style={styles.phoneText} allowFontScaling={false}>
-                  Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
-                  tanishdim
-                </Text>
-              </View>
-            </View>
-            <View>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.registerButton, {marginTop: 20}]}>
-                <Text style={[styles.textButton]} allowFontScaling={false}>Tasdiqlash</Text>
-              </TouchableOpacity>
-            </View>
+    <ScreenLayout title={'Qarzni qisman qaytarishni talab qilish'} scroll>
+      <View style={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.heroCircle}>
+            <CoinIcon size={rs(30)} color={rd.color.primary} />
           </View>
+          <Text style={styles.heroTitle} allowFontScaling={false}>
+            Qarzni qisman qaytarish
+          </Text>
         </View>
+
+        <View style={styles.card}>
+          <Text style={styles.hisob} allowFontScaling={false}>
+            01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz fuqaro
+            Abdullayev Abdulladan qarzni qisman qaytarishini talab qilmoqdasiz.
+          </Text>
+        </View>
+
+        <Text style={styles.label} allowFontScaling={false}>
+          Summani kiriting
+        </Text>
+        <View style={[styles.amountField, focused && styles.amountFieldFocused]}>
+          <TextInput
+            value="100 000"
+            keyboardType="numeric"
+            allowFontScaling={false}
+            placeholderTextColor={rd.color.textTertiary}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={styles.amountInput}
+          />
+          <Text style={styles.suffix} allowFontScaling={false}>
+            so'm
+          </Text>
+        </View>
+
+        <View style={styles.checkRow}>
+          <Checkbox color={rd.color.primary} status="checked" />
+          <Text style={styles.checkText} allowFontScaling={false}>
+            Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
+            tanishdim
+          </Text>
+        </View>
+
+        <TouchableOpacity activeOpacity={0.85} style={styles.primaryBtn}>
+          <Text style={styles.primaryBtnText} allowFontScaling={false}>
+            Tasdiqlash
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </ScreenLayout>
   );
 };
 
 export default PartDebtBack;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: style.backgroundColor,
-    flex: 1,
+  content: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(12),
+    paddingBottom: rs(24),
   },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
+  hero: {
+    alignItems: 'center',
+    marginBottom: rs(24),
   },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    textAlign: 'center',
-  },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-  },
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: rs(14),
   },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
+  heroTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
   },
   card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
     width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    padding: rs(16),
   },
-  item: {
-    flex: 1,
+  hisob: {
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
+    textAlign: 'center',
+    lineHeight: rs(22),
   },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(22),
+    marginBottom: rs(8),
+    marginLeft: rs(2),
   },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
+  amountField: {
+    height: rs(56),
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(16),
   },
-  main: {
-    position: 'absolute',
-    width: '90%',
-    alignSelf: 'center',
+  amountFieldFocused: {
+    borderColor: rd.color.primary,
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
+  amountInput: {
     flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+    height: '100%',
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    padding: 0,
+  },
+  suffix: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.textTertiary,
+    marginLeft: rs(8),
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: rs(20),
+  },
+  checkText: {
+    flex: 1,
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    lineHeight: rs(19),
+    marginLeft: rs(4),
+  },
+  primaryBtn: {
+    marginTop: rs(24),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  primaryBtnText: {
+    fontSize: rs(16),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
   },
 });

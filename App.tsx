@@ -6,10 +6,13 @@ import { useDispatch } from 'react-redux';
 import type { NavigationProp } from '@react-navigation/native';
 
 import Navigation from './src/navigation/Navigation';
+import GlobalBottomBar from './src/navigation/GlobalBottomBar';
+import { navigationRef } from './src/navigation/NavigationRef';
 import { style } from './src/theme/style';
 import { colors } from './src/theme';
 import { useNetInfo } from '@react-native-community/netinfo';
 import './src/store/api/token/getToken';
+import './src/store/api/authInterceptor'; // 401 token-expired -> avto refresh
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './src/i18n/index';
@@ -27,6 +30,7 @@ import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
 import WebView from 'react-native-webview';
 import { storage } from './src/store/api/token/getToken';
+import { URL } from './src/screens/constants';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { logError } from './src/log';
 import {
@@ -39,6 +43,47 @@ import {
 
 const isTablet = DeviceInfo.isTablet();
 LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
+
+// Global pastki menyu KO'RSATILMAYDIGAN ekranlar:
+//  - asosiy tablar (o'zining RdTabBar'i bor) — Home/TakeDebt/GiveDebt/Statistic
+//  - auth/onboarding oqimi (login, PIN, ro'yxatdan o'tish, parol tiklash)
+//  - kamera/MyID/QR skaner (pastki menyu mos emas)
+// Qolgan barcha detal ekranlarda global menyu ko'rinadi (qulaylik uchun).
+const HIDE_BOTTOM_BAR = new Set<string>([
+  'Home',
+  'TakeDebt',
+  'GiveDebt',
+  'Statistic',
+  'SelectLanguageScreen',
+  'LoginWithPhone',
+  'SetLocalPassword',
+  'CreatePassword',
+  'CheckSmsPassword',
+  'RegisterWithPeople',
+  'RegisterWithJuridic',
+  'Agree',
+  'CreateSecretWord',
+  'NewPasswordEnter',
+  'RecoveryPassword',
+  'NewRecoveryPassword',
+  'UpdatePasswordWithJshir',
+  'ChangePassportData',
+  'EnterJsh',
+  'MyIdScreen',
+  'PayFor',
+  'PayScreenForRecovery',
+  'InfoForUser',
+  'UpdatePassword',
+  'Inforamation',
+  'ResetPassCode',
+  'UpdateLocalPassCode',
+  'ChangeLocalPassword',
+  'ScanFaceMyId',
+  'Indentifikatsiya',
+  'FingerScanner',
+  'QrScan',
+  'QrCode',
+]);
 
 const defaultHandler = ErrorUtils.getGlobalHandler();
 
@@ -80,6 +125,19 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const dispatch = useDispatch();
   const netInfo = useNetInfo();
+  const [routeName, setRouteName] = useState<string | undefined>(undefined);
+
+  // Joriy ekran nomini kuzatamiz (global pastki menyu ko'rinishini boshqarish uchun).
+  useEffect(() => {
+    const ref: any = navigationRef.current;
+    if (!ref?.addListener) return;
+    const update = () => setRouteName(ref.getCurrentRoute?.()?.name);
+    update();
+    const unsub = ref.addListener('state', update);
+    return unsub;
+  }, [isLoading]);
+
+  const showBottomBar = !!routeName && !HIDE_BOTTOM_BAR.has(routeName);
 
   // Handle initial loading timeout
   useEffect(() => {
@@ -90,16 +148,38 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [netInfo.isConnected]);
 
-  // Handle internet connectivity changes
-  useEffect(() => {
-    const isConnected = netInfo.isConnected ?? false;
-    dispatch(checkingInternet({ internet: !isConnected }));
+  // Ulanishni MUSTAHKAM tekshirish: NetInfo iOS simulyatorda (va real qurilmada
+  // aniqlangunicha) isConnected/isInternetReachable'ni noto'g'ri `false` qaytarishi
+  // mumkin -> soxta "Internetga ulanishda xatolik" ekrani. Shu sabab NetInfo "uzilgan"
+  // desa ham, backend'ga HAQIQIY so'rov yuborib tasdiqlaymiz: server istalgan javob
+  // bersa (hatto xato status) -> ulanish BOR -> ONLAYN. Faqat so'rov umuman o'tmasa
+  // (tarmoq xatosi) -> OFLAYN.
+  const verifyConnectivity = useCallback(async () => {
+    // NetInfo aniq "ulangan" (yoki noaniq) desa — onlayn, tekshiruvsiz.
+    if (netInfo.isConnected !== false) {
+      dispatch(checkingInternet({ internet: false }));
+      return;
+    }
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      // Istalgan javob = server bilan aloqa bor. Auth kerak emas (get-time ochiq).
+      await fetch(URL + '/dashboard/get-time', { signal: controller.signal });
+      clearTimeout(timer);
+      dispatch(checkingInternet({ internet: false })); // onlayn
+    } catch {
+      dispatch(checkingInternet({ internet: true })); // haqiqatan oflayn
+    }
   }, [netInfo.isConnected, dispatch]);
 
+  // Handle internet connectivity changes
+  useEffect(() => {
+    verifyConnectivity();
+  }, [verifyConnectivity]);
+
   const onChangeIntenet = useCallback(() => {
-    const isConnected = netInfo.isConnected ?? false;
-    dispatch(checkingInternet({ internet: !isConnected }));
-  }, [netInfo.isConnected, dispatch]);
+    verifyConnectivity();
+  }, [verifyConnectivity]);
 
   // Handle deep linking
   useEffect(() => {
@@ -152,10 +232,15 @@ const App: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.blue }}
+      style={{ flex: 1, backgroundColor: '#f5f7fb' }}
       edges={['top', 'bottom']}>
       <I18nextProvider i18n={i18n}>
-        <Navigation />
+        {/* Navigation flex:1 — global menyu ko'ringanda kontent ustini yopmasdan
+            joy ajratadi (overlay emas, layout siblingi). */}
+        <View style={{ flex: 1 }}>
+          <Navigation />
+        </View>
+        {showBottomBar && <GlobalBottomBar activeTab={routeName} />}
         <FaceIdModal />
         <ContractModal />
         <NoInternet onChangeIntenet={onChangeIntenet} />

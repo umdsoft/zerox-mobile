@@ -24,8 +24,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { normalize, tokens } from '../../theme/tokens';
-import TextBold from './TextBold';
+import { rd, rs } from '../../theme/rd';
+import { BellIcon } from '../home/redesign/icons';
 
 type Busy = null | 'accept' | 'reject';
 
@@ -41,33 +41,80 @@ interface NotificationShellProps {
   actions?: React.ReactNode; // custom tugma(lar) — standart ok/accept/reject o'rniga (edge'lar uchun)
 }
 
+type Variant = 'primary' | 'danger' | 'ghost';
+
+// Barcha bildirishnoma tugmalari uchun YAGONA komponent — bir xil ko'rinish.
+// variant: primary (ko'k to'la), danger (qizil to'la), ghost (och fon, ikkilamchi).
+export const NotifButton = ({
+  label,
+  onPress,
+  variant = 'primary',
+  loading,
+  disabled,
+  wide = true,
+}: {
+  label: string;
+  onPress: () => void;
+  variant?: Variant;
+  loading?: boolean;
+  disabled?: boolean;
+  wide?: boolean;
+}) => {
+  const isGhost = variant === 'ghost';
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.85}
+      style={[
+        styles.btn,
+        wide && styles.btnWide,
+        variant === 'danger' && styles.btnDanger,
+        isGhost && styles.btnGhost,
+        (disabled || loading) && styles.btnDisabled,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator
+          color={isGhost ? rd.color.textSecondary : rd.color.onPrimary}
+          size="small"
+        />
+      ) : (
+        <Text
+          allowFontScaling={false}
+          style={[styles.btnText, isGhost && styles.btnTextGhost]}
+        >
+          {label}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+// Ichki moslik (accept/reject) uchun alias.
 const SmallButton = ({
   label,
   onPress,
   color,
   loading,
   disabled,
+  wide,
 }: {
   label: string;
   onPress: () => void;
   color?: string;
   loading?: boolean;
   disabled?: boolean;
+  wide?: boolean;
 }) => (
-  <TouchableOpacity
+  <NotifButton
+    label={label}
     onPress={onPress}
-    disabled={disabled || loading}
-    activeOpacity={0.8}
-    style={[styles.btn, color ? { backgroundColor: color } : null]}
-  >
-    {loading ? (
-      <ActivityIndicator color={tokens.color.onPrimary} size="small" />
-    ) : (
-      <Text allowFontScaling={false} style={styles.btnText}>
-        {label}
-      </Text>
-    )}
-  </TouchableOpacity>
+    variant={color === rd.color.error ? 'danger' : 'primary'}
+    loading={loading}
+    disabled={disabled}
+    wide={wide}
+  />
 );
 
 const NotificationShell: React.FC<NotificationShellProps> = ({
@@ -112,8 +159,13 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
-        <View>
-          <TextBold>{title}</TextBold>
+        <View style={styles.titleRow}>
+          <View style={styles.iconCircle}>
+            <BellIcon size={rs(18)} color={rd.color.primary} />
+          </View>
+          <Text allowFontScaling={false} style={styles.title}>
+            {title}
+          </Text>
         </View>
         <View style={styles.body}>
           {children}
@@ -129,13 +181,15 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
               <View style={styles.choiceRow}>
                 <SmallButton
                   label={t('93') as string}
+                  wide
                   onPress={() => run('accept', onAccept)}
                   loading={busy === 'accept'}
                   disabled={!onAccept || !!busy}
                 />
                 <SmallButton
                   label={t('96') as string}
-                  color={tokens.color.danger}
+                  color={rd.color.error}
+                  wide
                   onPress={() => run('reject', onReject)}
                   loading={busy === 'reject'}
                   disabled={!onReject || !!busy}
@@ -145,7 +199,9 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
           ) : (
             <View style={styles.inlineRow}>
               {dateRow}
-              {onOk ? <SmallButton label={okLabel} onPress={onOk} /> : null}
+              {onOk ? (
+                <NotifButton label={okLabel} onPress={onOk} wide={false} />
+              ) : null}
             </View>
           )}
         </View>
@@ -156,52 +212,74 @@ const NotificationShell: React.FC<NotificationShellProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokens.color.surface,
-    width: '95%',
+    backgroundColor: rd.color.surface,
+    width: '100%',
     alignSelf: 'center',
-    marginTop: tokens.spacing.lg,
-    borderRadius: normalize(10),
-    shadowColor: tokens.color.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    elevation: 7,
+    marginTop: rs(12),
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
   },
-  inner: { marginVertical: normalize(15), marginHorizontal: normalize(15) },
-  body: { marginTop: normalize(10) },
+  inner: { marginVertical: rs(14), marginHorizontal: rs(14) },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
+  iconCircle: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(17),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    flex: 1,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.text,
+    lineHeight: rs(20),
+  },
+  body: { marginTop: rs(8) },
   dateRow: { flexDirection: 'row', alignItems: 'center' },
-  dateWrap: { marginTop: normalize(10), flexDirection: 'row' },
+  dateWrap: { marginTop: rs(10), flexDirection: 'row' },
   inlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: normalize(10),
+    marginTop: rs(12),
   },
   choiceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: rs(10),
     alignItems: 'center',
-    marginTop: normalize(10),
+    marginTop: rs(12),
   },
   meta: {
-    fontSize: tokens.fontSize.xx - 2,
-    fontFamily: tokens.font.medium,
-    color: tokens.color.onSurface,
+    fontSize: rs(12),
+    fontFamily: rd.font.regular,
+    color: rd.color.textTertiary,
   },
   btn: {
-    backgroundColor: tokens.color.primary,
-    paddingHorizontal: normalize(20),
-    paddingVertical: normalize(5),
-    borderRadius: normalize(10),
+    backgroundColor: rd.color.primary,
+    paddingHorizontal: rs(22),
+    height: rs(38),
+    borderRadius: rd.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: normalize(60),
+    minWidth: rs(72),
   },
+  btnWide: { flex: 1 },
+  btnDanger: { backgroundColor: rd.color.error },
+  btnGhost: {
+    backgroundColor: rd.color.surfaceAlt,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
+  btnDisabled: { opacity: 0.5 },
   btnText: {
-    fontSize: tokens.fontSize.xx - 2,
-    fontFamily: tokens.font.medium,
-    color: tokens.color.onPrimary,
+    fontSize: rs(13.5),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
   },
+  btnTextGhost: { color: rd.color.textSecondary },
 });
 
 export default NotificationShell;

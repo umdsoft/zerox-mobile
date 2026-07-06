@@ -17,6 +17,7 @@ const initialState = {
   loading: false,
   home: [],
   user: {},
+  analytics: null as any, // /home/analytics dashboard (sog'liq ball, agregatlar, alertlar)
   appState: 'active' as AppState,
   notification: {
     bild: [],
@@ -26,7 +27,7 @@ const initialState = {
   isActive: false,
   contract: false,
   contractInfo: {},
-  internet: true,
+  internet: false, // launch'da "internet yo'q" flash bo'lmasin; verifyConnectivity aniqlaydi
   update: false,
   expire: false,
   debitor: [],
@@ -110,6 +111,10 @@ const HomeReducer = createSlice({
     builder.addCase(HomeApi.fulfilled, (state, action) => {
       state.home = action.payload?.home;
       state.user = action.payload?.user;
+      // /home/analytics — bosh sahifa dashboard'i (sog'liq ball, agregatlar, alertlar).
+      if (action.payload?.analytics) {
+        state.analytics = action.payload.analytics;
+      }
       // let a = action.payload?.notification.filter(
       //   v => v.reciver === action.payload?.user.data.id,
       // );

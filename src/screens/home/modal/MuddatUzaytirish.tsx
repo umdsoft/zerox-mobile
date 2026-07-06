@@ -1,7 +1,7 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 import {useSelector} from 'react-redux';
 import {settingDate} from '../../../helper';
 import DalolatnomaLayout from '../../components/DalolatnomaLayout';
@@ -13,9 +13,7 @@ const MuddatUzaytirish = ({data}) => {
     <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
           ({' '}
-          <Text
-            style={(styles.text, {fontFamily: style.fontFamilyBold})}
-            allowFontScaling={false}>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {data?.number}
           </Text>{' '}
           - sonli qarz shartnomasining muddati uzaytirilganligi to‘g‘risida ){' '}
@@ -46,7 +44,7 @@ const MuddatUzaytirish = ({data}) => {
           saqlanishini Jamiyat o‘z zimmasiga oladi.
           {'\n'}
           {'\n'}
-          <Text style={{textAlign: 'center'}} allowFontScaling={false}>
+          <Text style={styles.center} allowFontScaling={false}>
             Qarz beruvchi:
             {'\n'}FISH :{' '}
             <Text style={styles.mainText} allowFontScaling={false}>
@@ -68,20 +66,17 @@ const MuddatUzaytirish = ({data}) => {
 export default MuddatUzaytirish;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    width: 100,
-  },
   text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: 'black',
-    lineHeight: 17,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.text,
+    lineHeight: rs(20),
   },
   mainText: {
-    fontFamily: style.fontFamilyBold,
+    fontFamily: rd.font.bold,
+    color: rd.color.text,
+  },
+  center: {
+    textAlign: 'center',
   },
 });

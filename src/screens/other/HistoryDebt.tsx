@@ -3,31 +3,26 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Text,
   FlatList,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { normalize, style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Search from '../../images/Search';
 import { storage } from '../../store/api/token/getToken';
 import { URL } from '../constants';
 import axios from 'axios';
 import Loading from '../components/Loading';
 import ScreenLayout from '../components/ScreenLayout';
-import Person from '../../images/home/person';
-import Juridic from '../../images/home/juridic';
-
-import Famale from '../../images/Famale';
-import { fontSize } from '../../theme/font';
-import MainText from '../components/MainText';
 import { t } from 'i18next';
+import { rd, rs } from '../../theme/rd';
+import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
 
 const HistoryDebt = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [searchdata, setSearchData] = useState([]);
-  const { type } = useRoute().params;
+  const { type } = useRoute().params || {};
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -65,125 +60,64 @@ const HistoryDebt = () => {
 
   return (
     <ScreenLayout title={t('207')} scroll={false}>
-      <View style={[styles.main]}>
-        <View style={styles.aboutUsContainer}>
-          <View
-            style={{ width: '100%', alignSelf: 'center', marginVertical: 20 }}
-          >
-            <View style={[styles.max]}>
-              <View style={{ alignSelf: 'center' }}>
-                <View
-                  style={{
-                    position: 'absolute',
-                    zIndex: 1,
-                    height: style.height / 18,
-                    width: style.height / 18,
-                    justifyContent: 'center',
-                    borderTopLeftRadius: 10,
-                    borderBottomLeftRadius: 10,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Search color="black" height={20} width={20} />
-                </View>
-                <View>
-                  <TextInput
-                    placeholderTextColor={style.placeHolderColor}
-                    placeholder={t('216') + '...'}
-                    keyboardType="default"
-                    onChangeText={text => {
-                      let a = data?.filter(obj =>
-                        JSON.stringify(obj)
-                          .toLowerCase()
-                          .includes(text.toLowerCase()),
-                      );
-                      setSearchData(a);
-                      setSearch(text);
-                    }}
-                    style={[styles.TextInput]}
-                    allowFontScaling={false} />
-                </View>
-              </View>
-            </View>
-          </View>
-          <View
-            style={{
-              marginTop: 55,
-              paddingLeft: 20,
-              paddingRight: 20,
-              marginBottom: 95,
+      <View style={styles.main}>
+        <View style={styles.searchBox}>
+          <SearchIcon size={rs(20)} color={rd.color.textTertiary} />
+          <TextInput
+            placeholderTextColor={rd.color.textTertiary}
+            placeholder={t('216') + '...'}
+            keyboardType="default"
+            onChangeText={text => {
+              let a = data?.filter(obj =>
+                JSON.stringify(obj)
+                  .toLowerCase()
+                  .includes(text.toLowerCase()),
+              );
+              setSearchData(a);
+              setSearch(text);
             }}
-          >
-            <FlatList
-              data={search.length === 0 ? data : searchdata}
-              keyExtractor={(item, index) => index.toString()}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item, index }) => {
-                return (
-                  <View key={item.id} style={styles.listButtonContainer}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        navigation.navigate('UserInfo', {
-                          user: item,
-                          type: type,
-                        });
-                      }}
-                      style={styles.TouchableOpacity}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.circle}>
-                        <View style={{ margin: 5 }}>
-                          {item.type === 2 ? (
-                            item.gender === 2 ? (
-                              <Famale
-                                width={normalize(30)}
-                                height={normalize(30)}
-                                color={style.blue}
-                              />
-                            ) : (
-                              <Person
-                                width={normalize(30)}
-                                height={normalize(30)}
-                                color={style.blue}
-                              />
-                            )
-                          ) : (
-                            <Juridic
-                              width={normalize(30)}
-                              height={normalize(30)}
-                              color={style.blue}
-                            />
-                          )}
-                        </View>
-                      </View>
-                      {item.type === 2 ? (
-                        <MainText
-                          style={{ maxWidth: '70%' }}
-                          mrLeft={6}
-                          size={fontSize[12]}
-                        >
-                          {item?.last_name +
-                            ' ' +
-                            item.first_name +
-                            ' ' +
-                            item.middle_name}
-                        </MainText>
-                      ) : (
-                        <MainText
-                          style={{ maxWidth: '70%' }}
-                          mrLeft={6}
-                          size={fontSize[12]}
-                        >
-                          {item?.company}
-                        </MainText>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                );
-              }}
-            />
-          </View>
+            style={styles.searchInput}
+            allowFontScaling={false}
+          />
         </View>
+
+        <FlatList
+          style={styles.list}
+          data={search.length === 0 ? data : searchdata}
+          keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => {
+            const name =
+              item.type === 2
+                ? `${item?.last_name} ${item.first_name} ${item.middle_name}`
+                : item?.company;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => {
+                  navigation.navigate('UserInfo', {
+                    user: item,
+                    type: type,
+                  });
+                }}
+                style={styles.row}
+                activeOpacity={0.8}
+              >
+                <View style={styles.avatar}>
+                  <UserIcon size={rs(22)} color={rd.color.primary} />
+                </View>
+                <Text
+                  style={styles.name}
+                  numberOfLines={1}
+                  allowFontScaling={false}
+                >
+                  {name}
+                </Text>
+                <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+              </TouchableOpacity>
+            );
+          }}
+        />
       </View>
     </ScreenLayout>
   );
@@ -192,74 +126,55 @@ const HistoryDebt = () => {
 export default HistoryDebt;
 
 const styles = StyleSheet.create({
-  username: {
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    marginLeft: 10,
-    maxWidth: '70%',
-  },
-  circle: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 50,
-  },
-  TouchableOpacity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  listButtonContainer: {
-    width: '100%',
-    marginTop: 10,
-  },
-  max: {
-    width: '90%',
-    alignSelf: 'center',
-    flex: 1,
-    marginTop: 20,
-  },
-
-  TextInput: {
-    height: style.height / 18,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    fontSize: fontSize[12],
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    paddingLeft: 40,
-    width: style.width / 1.5,
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyBold,
-    color: style.textColor,
-    textAlign: 'center',
-  },
-
   main: {
     flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-
-    marginBottom: 20,
+    backgroundColor: rd.color.page,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(16),
   },
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 10,
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: rs(52),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingHorizontal: rs(14),
+    gap: rs(10),
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
+    padding: 0,
+  },
+  list: {
+    marginTop: rs(16),
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+    borderBottomWidth: 1,
+    borderBottomColor: rd.color.border,
+  },
+  avatar: {
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
+  },
+  name: {
+    flex: 1,
+    fontSize: rs(15),
+    fontFamily: rd.font.semibold,
+    color: rd.color.text,
   },
 });

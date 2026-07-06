@@ -1,35 +1,24 @@
 import {
+  StatusBar,
   StyleSheet,
   View,
-  TouchableOpacity,
   ActivityIndicator,
   Platform,
-  PermissionsAndroid,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Pdf from 'react-native-pdf';
-import { BackGroundIcon } from '../../../../helper/homeIcon';
-import { style } from '../../../../theme/style';
-import { fontSize } from '../../../../theme/font';
-import { colors } from '../../../../theme/colors';
-import DownloadIcon from '../../../../images/home/download.svg';
-
-import OtherHeader from '../../../components/OtherHeader';
-import MainText from '../../../components/MainText';
 import { t } from 'i18next';
 import FileViewer from 'react-native-file-viewer';
-
 import Toast from 'react-native-toast-message';
-
-// import RNFS from 'react-native-fs';
-
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
+import { rd, rs } from '../../../../theme/rd';
+import RdHeader from '../../redesign/RdHeader';
+import Button from '../../../components/Button';
+import DownloadIcon from '../../../../images/home/download.svg';
 import { storage } from '../../../../store/api/token/getToken';
 
 const UseTerm = () => {
-  // const source = require('../../../../theme/yoriqnoma.pdf')
-  // const filePath = `${RNFS.ExternalDirectoryPath}/files/yoriqnoma.pdf`;
   const [loading, setLoading] = useState(true);
   const [downloadLoading, setDownloadLoading] = useState(false);
 
@@ -125,75 +114,46 @@ const UseTerm = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 2.6,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('foydalanishyoriqnomasi')} />
-      <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              marginTop: 20,
-              marginBottom: 20,
-            }}
-          >
-            {/* ------------------------   Yuklab olish   ------------------------ */}
-            <TouchableOpacity
-              onPress={() => onDownload()}
-              activeOpacity={0.8}
-              disabled={downloadLoading}
-              style={styles.download}
-            >
-              {downloadLoading ? (
-                <ActivityIndicator size={'small'} color={'#fff'} />
-              ) : (
-                <>
-                  <DownloadIcon width="20" height="20" />
-                  <MainText color={colors.white} size={fontSize[12]}>
-                    {t('126')}
-                  </MainText>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('foydalanishyoriqnomasi')} />
 
-          <View style={{ flex: 1, backgroundColor: '#fff' }}>
-            {loading && (
-              <View style={styles.indicator}>
-                <ActivityIndicator size={'large'} color={style.blue} />
-              </View>
+      <View style={styles.content}>
+        <Button
+          title={t('126')}
+          onPress={onDownload}
+          loading={downloadLoading}
+          disabled={downloadLoading}
+          leftIcon={<DownloadIcon width={rs(18)} height={rs(18)} />}
+          style={styles.download}
+        />
+
+        <View style={styles.card}>
+          {loading && (
+            <View style={styles.indicator}>
+              <ActivityIndicator size={'large'} color={rd.color.primary} />
+            </View>
+          )}
+          <Pdf
+            trustAllCerts={false}
+            enablePaging={true}
+            renderActivityIndicator={() => (
+              <ActivityIndicator size={'small'} color={rd.color.primary} />
             )}
-            <Pdf
-              trustAllCerts={false}
-              enablePaging={true}
-              renderActivityIndicator={() => (
-                <ActivityIndicator size={'small'} color={style.blue} />
-              )}
-              source={{
-                uri: `https://pdf.zerox.uz/yoriqnoma.pdf`,
-                method: 'GET',
-              }}
-              onLoadComplete={() => {
-                setLoading(false);
-              }}
-              onError={error => {
-                console.log(error.message);
-              }}
-              onPressLink={uri => {
-                console.log(`Link pressed: ${uri}`);
-              }}
-              style={styles.pdf}
-            />
-          </View>
+            source={{
+              uri: `https://pdf.zerox.uz/yoriqnoma.pdf`,
+              method: 'GET',
+            }}
+            onLoadComplete={() => {
+              setLoading(false);
+            }}
+            onError={error => {
+              console.log(error.message);
+            }}
+            onPressLink={uri => {
+              console.log(`Link pressed: ${uri}`);
+            }}
+            style={styles.pdf}
+          />
         </View>
       </View>
     </View>
@@ -204,88 +164,36 @@ export default UseTerm;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
     flex: 1,
+    backgroundColor: rd.color.page,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(6),
+    paddingBottom: rs(16),
+  },
+  download: {
+    marginBottom: rs(14),
+  },
+  card: {
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
   },
   indicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1,
   },
-
   pdf: {
     flex: 1,
     width: '100%',
     height: '100%',
-  },
-  pdfView: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    elevation: 7,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    marginBottom: 20,
-    marginTop: 20,
-  },
-
-  userName: {
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    lineHeight: 25,
-  },
-  download: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 1.5,
-    flexDirection: 'row',
-  },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-  },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    flex: 1,
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 15,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    height: style.height / 1.3,
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    paddingHorizontal: 10,
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+    backgroundColor: rd.color.surface,
   },
 });

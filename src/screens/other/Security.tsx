@@ -1,6 +1,5 @@
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { normalize, style } from '../../theme/style';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
@@ -14,6 +13,9 @@ import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import FaceIdIcon from '../../images/faceid';
 import ScreenLayout from '../components/ScreenLayout';
+import { normalize } from '../../theme/style';
+import { rd, rs } from '../../theme/rd';
+import { ChevronRight } from '../home/redesign/icons';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
@@ -47,41 +49,27 @@ const Security = () => {
 
   const renderSwitch = useMemo(() => {
     return (
-      <View style={styles.TouchableOpacity}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            width: '100%',
-            justifyContent: 'space-between',
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={[styles.row, styles.rowDivider]}>
+        <View style={styles.rowLeft}>
+          <View style={styles.iconCircle}>
             {Platform.OS === 'ios' ? (
-              <>
-                <FaceIdIcon width={30} height={30} color={style.blue} />
-                <Text allowFontScaling={false} style={styles.optionTx}>
-                  {t('faceid') as string}
-                </Text>
-              </>
+              <FaceIdIcon width={rs(20)} height={rs(20)} color={rd.color.primary} />
             ) : (
-              <>
-                <FingerIcon size={30} color={style.blue} />
-                <Text allowFontScaling={false} style={styles.optionTx}>
-                  {t('813') as string}
-                </Text>
-              </>
+              <FingerIcon size={rs(20)} color={rd.color.primary} />
             )}
           </View>
-          <View style={{ marginRight: 10 }}>
-            <Switch
-              value={value}
-              onValueChange={setTouch}
-              thumbColor={value ? '#fff' : style.blue}
-              trackColor={{ true: style.blue }}
-            />
-          </View>
+          <Text allowFontScaling={false} style={styles.optionTx}>
+            {Platform.OS === 'ios'
+              ? (t('faceid') as string)
+              : (t('813') as string)}
+          </Text>
         </View>
+        <Switch
+          value={value}
+          onValueChange={setTouch}
+          thumbColor={'#fff'}
+          trackColor={{ true: rd.color.primary, false: rd.color.border }}
+        />
       </View>
     );
   }, [setTouch, value]);
@@ -92,32 +80,40 @@ const Security = () => {
 
   return (
     <ScreenLayout title={t('816')}>
-      <View style={styles.aboutUsContainer}>
+      <View style={styles.card}>
         <TouchableOpacity
+          activeOpacity={0.7}
           onPress={() => {
             navigation.navigate('RecoveryPassword', { type: 1 });
           }}
-          style={styles.TouchableOpacity}
+          style={styles.row}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <PasswordIcon size={30} color={style.blue} />
+          <View style={styles.rowLeft}>
+            <View style={styles.iconCircle}>
+              <PasswordIcon size={rs(20)} color={rd.color.primary} />
+            </View>
             <Text allowFontScaling={false} style={styles.optionTx}>
               {t('678')}
             </Text>
           </View>
+          <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
         </TouchableOpacity>
         <TouchableOpacity
+          activeOpacity={0.7}
           onPress={() => {
             navigation.navigate('ChangeLocalPassword');
           }}
-          style={styles.TouchableOpacity}
+          style={[styles.row, styles.rowDivider]}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <ChangePasswordIcon size={30} />
+          <View style={styles.rowLeft}>
+            <View style={styles.iconCircle}>
+              <ChangePasswordIcon size={rs(20)} color={rd.color.primary} />
+            </View>
             <Text allowFontScaling={false} style={styles.optionTx}>
               {t('774')}
             </Text>
           </View>
+          <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
         </TouchableOpacity>
         {support ? renderSwitch : null}
       </View>
@@ -135,33 +131,42 @@ const Security = () => {
 export default Security;
 
 const styles = StyleSheet.create({
-  TouchableOpacity: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    borderRadius: 10,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    overflow: 'hidden',
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 10,
-    marginTop: 5,
+    justifyContent: 'space-between',
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+  },
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconCircle: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
   },
   optionTx: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 2,
-    color: '#000',
-    marginLeft: 5,
-  },
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    paddingBottom: 10,
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    flexShrink: 1,
   },
 });

@@ -2,6 +2,7 @@ import {
   Alert,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -46,6 +47,9 @@ import TransText from '../components/TransText';
 
 import { getMe } from '../../store/api/home';
 import DateModal from '../home/modal/DateModal';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
+import { UserIcon } from '../home/redesign/icons';
 
 const GiveDebtUser = () => {
   const navigation = useNavigation();
@@ -344,47 +348,40 @@ const GiveDebtUser = () => {
   );
   const renderRadioButtons = useMemo(() => {
     return (
-      <View
-        style={{
-          flex: 1,
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-          marginTop: 20,
-        }}
-      >
+      <View style={styles.currencyRow}>
         <TouchableOpacity
+          activeOpacity={0.85}
           onPress={() => {
             setActive(true);
           }}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
+          style={[styles.currencyOption, active && styles.currencyOptionActive]}
         >
-          {active ? (
-            <RadioIconFill width={20} height={20} color={style.blue} />
-          ) : (
-            <RadioButtonIcon width={20} height={20} color={style.blue} />
-          )}
-          <MainText mrLeft={5} size={fontSize[12]}>
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.currencyText,
+              active && styles.currencyTextActive,
+            ]}
+          >
             {t('uzs')}
-          </MainText>
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
+          activeOpacity={0.85}
           onPress={() => {
             setActive(false);
           }}
-          style={{ flexDirection: 'row', alignItems: 'center' }}
+          style={[styles.currencyOption, !active && styles.currencyOptionActive]}
         >
-          {active ? (
-            <RadioButtonIcon width={20} height={20} color={style.blue} />
-          ) : (
-            <RadioIconFill width={20} height={20} color={style.blue} />
-          )}
-
-          <MainText mrLeft={5} size={fontSize[12]}>
+          <Text
+            allowFontScaling={false}
+            style={[
+              styles.currencyText,
+              !active && styles.currencyTextActive,
+            ]}
+          >
             {t('usd')}
-          </MainText>
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -396,7 +393,7 @@ const GiveDebtUser = () => {
           allowFontScaling={false}
           value={onValue(amount)}
           placeholder={active ? 'UZS' : 'USD'}
-          placeholderTextColor={style.placeHolderColor}
+          placeholderTextColor={rd.color.textTertiary}
           keyboardType="numeric"
           onChangeText={text => {
             let a = Number(text.replace(/[^0-9]/g, ''));
@@ -447,275 +444,222 @@ const GiveDebtUser = () => {
   if (loading) {
     return <Loading />;
   }
+  const isDisabled =
+    disabled || settingDate(date) === settingDate(Date.now());
+  const dateIsPlaceholder = settingDate(date) === settingDate(Date.now());
+  const debtorName =
+    type !== 1
+      ? user?.data?.last_name +
+        ' ' +
+        user?.data?.first_name +
+        ' ' +
+        user?.data?.middle_name
+      : qarzoluvchi.last_name +
+        ' ' +
+        qarzoluvchi.first_name +
+        ' ' +
+        qarzoluvchi.middle_name;
+  const creditorName =
+    type === 0
+      ? qarzoluvchi.last_name +
+        ' ' +
+        qarzoluvchi.first_name +
+        ' ' +
+        qarzoluvchi.middle_name
+      : user?.data?.last_name +
+        ' ' +
+        user?.data?.first_name +
+        ' ' +
+        user?.data?.middle_name;
+
   return (
     <View style={styles.container}>
       <Provider>
-        <View
-          style={{
-            width: style.width,
-            position: 'absolute',
-            height: style.height / 3,
-          }}
+        <StatusBar barStyle="dark-content" />
+        <RdHeader title={type === 1 ? t('147') : t('150')} />
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: rs(32) }}
+          showsVerticalScrollIndicator={false}
         >
-          <BackGroundIcon width="100%" height="100%" />
-        </View>
-        <OtherHeader title={type === 1 ? t('147') : t('150')} />
-        <ScrollView>
-          <View style={[styles.main]}>
-            <View style={styles.aboutUsContainer}>
-              <View>
-                {/* Qarz oluvchi */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginLeft: 15,
-                    alignItems: 'center',
-                  }}
-                >
-                  <View
-                    style={{
-                      backgroundColor: '#fff',
-                      padding: 10,
-                      borderRadius: 50,
-                    }}
-                  >
-                    {type !== 1 ? (
-                      user?.data?.type === 2 ? (
-                        user?.data?.gender == '1' ? (
-                          <Person width={40} height={40} color={style.blue} />
-                        ) : (
-                          <Famale width={40} height={40} color={style.blue} />
-                        )
-                      ) : (
-                        <Juridic width={40} height={40} color={style.blue} />
-                      )
-                    ) : qarzoluvchi.type === 2 ? (
-                      qarzoluvchi.gender == '1' ? (
-                        <Person width={40} height={40} color={style.blue} />
-                      ) : (
-                        <Famale width={40} height={40} color={style.blue} />
-                      )
-                    ) : (
-                      <Juridic width={40} height={40} color={style.blue} />
-                    )}
-                  </View>
-                  <View style={{ marginLeft: 10 }}>
-                    <MainText color={colors.red} size={fontSize[12]}>
-                      {t('270')}:
-                    </MainText>
-                    <MainText size={fontSize[12]} style={styles.username}>
-                      {type !== 1
-                        ? user?.data?.last_name +
-                          ' ' +
-                          user?.data?.first_name +
-                          ' ' +
-                          user?.data?.middle_name
-                        : qarzoluvchi.last_name +
-                          ' ' +
-                          qarzoluvchi.first_name +
-                          ' ' +
-                          qarzoluvchi.middle_name}
-                    </MainText>
-                  </View>
-                </View>
-
-                {/* Qarz beruvchi */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    marginLeft: 15,
-                    marginTop: 15,
-                    alignItems: 'center',
-                  }}
-                >
-                  <View
-                    style={{
-                      backgroundColor: '#fff',
-                      padding: 10,
-                      borderRadius: 50,
-                    }}
-                  >
-                    {type !== 1 ? (
-                      qarzoluvchi.type === 2 ? (
-                        qarzoluvchi.gender == '1' ? (
-                          <Person width={40} height={40} color={style.blue} />
-                        ) : (
-                          <Famale width={40} height={40} color={style.blue} />
-                        )
-                      ) : (
-                        <Juridic width={50} height={50} color={style.blue} />
-                      )
-                    ) : user?.data?.type === 2 ? (
+          <View style={styles.main}>
+            {/* Ishtirokchilar kartasi */}
+            <View style={styles.partyCard}>
+              {/* Qarz oluvchi */}
+              <View style={styles.partyRow}>
+                <View style={styles.avatar}>
+                  {type !== 1 ? (
+                    user?.data?.type === 2 ? (
                       user?.data?.gender == '1' ? (
-                        <Person width={40} height={40} color={style.blue} />
+                        <Person width={rs(28)} height={rs(28)} color={rd.color.primary} />
                       ) : (
-                        <Famale width={40} height={40} color={style.blue} />
+                        <Famale width={rs(28)} height={rs(28)} color={rd.color.primary} />
                       )
                     ) : (
-                      <Juridic width={50} height={50} color={style.blue} />
-                    )}
-                  </View>
-                  <View style={{ marginLeft: 10 }}>
-                    <MainText color={colors.green} size={fontSize[12]}>
-                      {t('273')}:
-                    </MainText>
-                    <MainText size={fontSize[12]} style={styles.username}>
-                      {type === 0
-                        ? qarzoluvchi.last_name +
-                          ' ' +
-                          qarzoluvchi.first_name +
-                          ' ' +
-                          qarzoluvchi.middle_name
-                        : user?.data?.last_name +
-                          ' ' +
-                          user?.data?.first_name +
-                          ' ' +
-                          user?.data?.middle_name}
-                    </MainText>
-                  </View>
+                      <Juridic width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    )
+                  ) : qarzoluvchi.type === 2 ? (
+                    qarzoluvchi.gender == '1' ? (
+                      <Person width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    ) : (
+                      <Famale width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    )
+                  ) : (
+                    <Juridic width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                  )}
+                </View>
+                <View style={styles.partyInfo}>
+                  <Text allowFontScaling={false} style={styles.partyRole}>
+                    {t('270')}
+                  </Text>
+                  <Text allowFontScaling={false} style={styles.partyName}>
+                    {debtorName}
+                  </Text>
                 </View>
               </View>
-              <View>
-                <View>{renderRadioButtons}</View>
-                <View style={styles.TextInputLabelContainer}>
-                  <View style={styles.inputTitle}>
-                    <MainText size={fontSize[12]}>{t('276')}</MainText>
-                  </View>
-                  {renderInput}
-                </View>
-                <View style={styles.TextInputLabelContainer}>
-                  <View style={styles.inputTitle}>
-                    <MainText size={fontSize[12]}>{t('279')}</MainText>
-                  </View>
 
-                  <View style={{ flex: 1 }}>
-                    <TouchableOpacity
-                      onPress={() => setOpen(!open)}
-                      style={styles.TextInput}
-                    >
-                      <MainText size={fontSize[14]}>
-                        {settingDate(date) === settingDate(Date.now()) ? (
-                          <MainText
-                            size={fontSize[14]}
-                            color={
-                              settingDate(date) === settingDate(Date.now())
-                                ? style.placeHolderColor
-                                : '#000'
-                            }
-                          >
-                            dd.mm.yyyy
-                          </MainText>
-                        ) : (
-                          settingDate(date)
-                        )}
-                      </MainText>
-                    </TouchableOpacity>
-                  </View>
+              <View style={styles.partyDivider} />
+
+              {/* Qarz beruvchi */}
+              <View style={styles.partyRow}>
+                <View style={styles.avatar}>
+                  {type !== 1 ? (
+                    qarzoluvchi.type === 2 ? (
+                      qarzoluvchi.gender == '1' ? (
+                        <Person width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                      ) : (
+                        <Famale width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                      )
+                    ) : (
+                      <Juridic width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    )
+                  ) : user?.data?.type === 2 ? (
+                    user?.data?.gender == '1' ? (
+                      <Person width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    ) : (
+                      <Famale width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                    )
+                  ) : (
+                    <Juridic width={rs(28)} height={rs(28)} color={rd.color.primary} />
+                  )}
                 </View>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginTop: 10,
-                    marginBottom: 10,
-                    maxWidth: '80%',
-                    alignSelf: 'center',
-                  }}
-                >
-                  <CheckBox
-                    value={checked}
-                    tintColor={'#DBDBDB'}
-                    onTintColor={style.blue}
-                    tintColors={{
-                      true: style.blue,
-                      false: style.disabledButtonColor,
-                    }}
-                    style={{ height: 20, width: 20 }}
-                    boxType="square"
-                    onValueChange={() => setChecked(!checked)}
-                  />
-                  {/* //276 */}
-                  {/* <Text
-                    style={{
-                      fontSize: fontSize[12],
-                      fontFamily: font.medium,
-                      left: 4,
-                    }}>
-                    <Trans
-                      i18nKey={'282'}
-                      values={{
-                        start: user?.data?.cnt,
-                      }}
-                      components={{
-                        start: (
-                          <Text
-                            style={{
-                              fontFamily: font.medium,
-                              fontSize: fontSize[12],
-                              color: style.blue,
-                            }}
-                            onPress={toggleModal}
-                          />
-                        ),
-                      }}
-                    />
-                  </Text> */}
+                <View style={styles.partyInfo}>
                   <Text
                     allowFontScaling={false}
-                    onPress={toggleModal}
-                    style={styles.text}
+                    style={[styles.partyRole, styles.partyRoleCreditor]}
                   >
-                    {t('282') as string}
+                    {t('273')}
                   </Text>
-                  {/* <MainText size={fontSize[12]}>bilan tanishdim</MainText> */}
-                </View>
-                {type === 0 ? (
-                  user?.data?.cnt === 0 ? null : (
-                    <View style={{ alignSelf: 'center', marginBottom: 8 }}>
-                      <Text style={{ color: 'black', fontFamily: font.medium }}>
-                        <Trans
-                          i18nKey={'717'}
-                          values={{
-                            nx: user?.data?.cnt,
-                          }}
-                          components={{
-                            nx: <Text style={{ fontFamily: font.medium }} />,
-                          }}
-                        />
-                      </Text>
-                    </View>
-                  )
-                ) : null}
-                {checked && amount.length > 0
-                  ? type === 0
-                    ? user.data.cnt === 0
-                      ? renderSum
-                      : null
-                    : null
-                  : null}
-                <View>
-                  <TouchableOpacity
-                    disabled={
-                      disabled || settingDate(date) === settingDate(Date.now())
-                    }
-                    onPress={fetchData}
-                    style={[
-                      styles.button,
-                      {
-                        backgroundColor:
-                          disabled ||
-                          settingDate(date) === settingDate(Date.now())
-                            ? style.disabledButtonColor
-                            : style.blue,
-                      },
-                    ]}
-                  >
-                    <MainText color={colors.white}>{t('93')}</MainText>
-                  </TouchableOpacity>
+                  <Text allowFontScaling={false} style={styles.partyName}>
+                    {creditorName}
+                  </Text>
                 </View>
               </View>
             </View>
+
+            {/* Valyuta tanlash */}
+            {renderRadioButtons}
+
+            {/* Summa */}
+            <View style={styles.field}>
+              <Text allowFontScaling={false} style={styles.label}>
+                {t('276')}
+              </Text>
+              <View style={styles.inputWrap}>{renderInput}</View>
+            </View>
+
+            {/* Sana */}
+            <View style={styles.field}>
+              <Text allowFontScaling={false} style={styles.label}>
+                {t('279')}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setOpen(!open)}
+                style={styles.inputWrap}
+              >
+                <Text
+                  allowFontScaling={false}
+                  style={[
+                    styles.inputText,
+                    dateIsPlaceholder && styles.inputPlaceholder,
+                  ]}
+                >
+                  {dateIsPlaceholder ? 'dd.mm.yyyy' : settingDate(date)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Shartnoma bilan tanishish */}
+            <View style={styles.agreeRow}>
+              <CheckBox
+                value={checked}
+                tintColor={'#DBDBDB'}
+                onTintColor={rd.color.primary}
+                tintColors={{
+                  true: rd.color.primary,
+                  false: rd.color.border,
+                }}
+                style={{ height: 20, width: 20 }}
+                boxType="square"
+                onValueChange={() => setChecked(!checked)}
+              />
+              <Text
+                allowFontScaling={false}
+                onPress={toggleModal}
+                style={styles.agreeText}
+              >
+                {t('282') as string}
+              </Text>
+            </View>
+
+            {type === 0 ? (
+              user?.data?.cnt === 0 ? null : (
+                <View style={styles.cntRow}>
+                  <Text
+                    allowFontScaling={false}
+                    style={styles.cntText}
+                  >
+                    <Trans
+                      i18nKey={'717'}
+                      values={{
+                        nx: user?.data?.cnt,
+                      }}
+                      components={{
+                        nx: <Text style={{ fontFamily: rd.font.semibold }} />,
+                      }}
+                    />
+                  </Text>
+                </View>
+              )
+            ) : null}
+
+            {checked && amount.length > 0
+              ? type === 0
+                ? user.data.cnt === 0
+                  ? renderSum
+                  : null
+                : null
+              : null}
+
+            <TouchableOpacity
+              disabled={isDisabled}
+              activeOpacity={0.85}
+              onPress={fetchData}
+              style={[
+                styles.button,
+                isDisabled ? styles.buttonDisabled : styles.buttonActive,
+              ]}
+            >
+              <Text
+                allowFontScaling={false}
+                style={[
+                  styles.buttonText,
+                  isDisabled && styles.buttonTextDisabled,
+                ]}
+              >
+                {t('93')}
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -804,171 +748,167 @@ export function formatDateMinus(date) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
     flex: 1,
   },
-
-  text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: 14,
-    color: style.blue,
-    marginLeft: 10,
-  },
-  count: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-  },
-  vim: {
-    flex: 1,
-    flexDirection: 'row',
-    alignSelf: 'center',
-    justifyContent: 'space-evenly',
-    marginTop: 20,
-    width: '100%',
-  },
-  dateText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-  },
-  button: {
-    width: '85%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  username: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    maxWidth: '90%',
-  },
-  titleGiveDebt: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: 'red',
-  },
-  timeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-  },
-  cardViewContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  userImageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: 20,
-  },
-  userImage: {
-    width: style.width / 6,
-    height: style.width / 6,
-    borderRadius: style.width / 6,
-  },
-  time: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-
   main: {
     flex: 1,
-    width: '90%',
-    alignSelf: 'center',
+    paddingHorizontal: rs(16),
+    paddingTop: rs(8),
   },
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-    marginTop: 20,
-    borderRadius: 10,
 
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 10,
-    paddingVertical: 20,
+  // Ishtirokchilar kartasi
+  partyCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+  },
+  partyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  partyDivider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginVertical: rs(14),
+  },
+  avatar: {
+    width: rs(48),
+    height: rs(48),
+    borderRadius: rs(24),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  partyInfo: {
+    flex: 1,
+    marginLeft: rs(12),
+  },
+  partyRole: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.error,
+    marginBottom: rs(2),
+  },
+  partyRoleCreditor: {
+    color: rd.color.success,
+  },
+  partyName: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+  },
+
+  // Valyuta segment
+  currencyRow: {
+    flexDirection: 'row',
+    marginTop: rs(20),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.lg,
+    padding: rs(4),
+  },
+  currencyOption: {
+    flex: 1,
+    height: rs(44),
+    borderRadius: rd.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  currencyOptionActive: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
+  currencyText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.textSecondary,
+  },
+  currencyTextActive: {
+    fontFamily: rd.font.semibold,
+    color: rd.color.primary,
+  },
+
+  // Maydonlar
+  field: {
+    marginTop: rs(20),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  inputWrap: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    height: rs(56),
+    paddingHorizontal: rs(16),
+    justifyContent: 'center',
+  },
+  inputText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+  },
+  inputPlaceholder: {
+    color: rd.color.textTertiary,
   },
   TextInput: {
     width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontFamily: style.fontFamilyMedium,
-    fontSize: fontSize[13],
-    color: style.textColor,
+    height: '100%',
+    padding: 0,
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
   },
-  buttontime: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
+
+  // Shartnoma bilan tanishish
+  agreeRow: {
     flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-    backgroundColor: '#EAF2FB',
+    alignItems: 'center',
+    marginTop: rs(20),
   },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
+  agreeText: {
     flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#EAF2FB',
-    paddingLeft: 5,
-    paddingRight: 5,
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.primary,
+    marginLeft: rs(12),
   },
-  containerrr: {
-    flex: 1,
-    width: style.width / 2.4,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
+  cntRow: {
+    marginTop: rs(12),
   },
-  sum: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.MoneyColor,
+  cntText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
-  title: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyBold,
-    color: style.textColor,
+
+  // Tugma
+  button: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(24),
+  },
+  buttonActive: {
+    backgroundColor: rd.color.primary,
+  },
+  buttonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  buttonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
+  },
+  buttonTextDisabled: {
+    color: rd.color.textTertiary,
   },
 });

@@ -1,12 +1,13 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React, {useCallback} from 'react';
-import {normalize, style} from '../../../theme/style';
 import {useDispatch, useSelector} from 'react-redux';
 import {showModal} from '../../../store/reducers/HomeReducer';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import AppModal from '../../components/AppModal';
 import Button from '../../components/Button';
+import {rd, rs} from '../../../theme/rd';
+import {FingerprintIcon} from '../redesign/icons';
 
 const FaceIdModal = () => {
   const dispatch = useDispatch();
@@ -19,37 +20,28 @@ const FaceIdModal = () => {
   }, [dispatch]);
   return (
     <AppModal visible={isActive} onDismiss={onClose}>
-      <View style={{marginTop: 8, maxWidth: '90%'}}>
-        <Text
-          style={[styles.text, {fontFamily: style.fontFamilyMedium}]}
-          allowFontScaling={false}>
-          {t('Identifikatsiya')}
-        </Text>
+      <View style={styles.iconCircle}>
+        <FingerprintIcon size={rs(30)} color={rd.color.primary} strokeWidth={1.8} />
       </View>
-      <View style={styles.mainInside}>
-        {/* <Text
-          style={{
-            fontFamily: style.fontFamilyMedium,
-            color: '#000',
-            fontSize: style.fontSize.xs,
-          }}
-        >
-          Bugun soat 22:30
-        </Text> */}
+
+      <Text style={styles.title} allowFontScaling={false}>
+        {t('Identifikatsiya')}
+      </Text>
+
+      <View style={styles.actions}>
         <Button
           title={t('otish')}
           onPress={() => {
             navigation.navigate('ScanFaceMyId');
             dispatch(showModal({show: false}));
           }}
-          fullWidth={false}
-          style={styles.enterButton}
+          style={styles.actionBtn}
         />
         <Button
           title={t('750')}
           onPress={onClose}
-          fullWidth={false}
-          style={styles.enterButton}
+          variant="outline"
+          style={styles.actionBtn}
         />
       </View>
     </AppModal>
@@ -59,24 +51,27 @@ const FaceIdModal = () => {
 export default FaceIdModal;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
+  iconCircle: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    alignSelf: 'center',
-    height: normalize(35),
-    paddingHorizontal: 10,
+    marginBottom: rs(18),
   },
-  text: {
-    fontFamily: style.fontFamilyBold,
-    color: '#000',
-    fontSize: style.fontSize.xx,
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    lineHeight: rs(25),
+    color: rd.color.text,
+    textAlign: 'center',
   },
-  mainInside: {
-    flexDirection: 'row',
-    marginTop: normalize(15),
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  actions: {
+    width: '100%',
+    marginTop: rs(24),
+  },
+  actionBtn: {
+    marginTop: rs(12),
   },
 });

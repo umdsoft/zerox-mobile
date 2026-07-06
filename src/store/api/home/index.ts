@@ -8,29 +8,40 @@ const HomeApi = createAsyncThunk(
     const token = storage.getString('token');
 
     try {
-      const [user_data, debitor, creditor, notification] = await axios.all([
-        axios.get(URL + '/user/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-
-          },
-        }),
-        axios.get(URL + '/home/my?type=debitor', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(URL + '/home/my?type=creditor', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        axios.get(URL + `/notification/me?page=${state.page || 1}&limit=500`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      ]);
+      const [user_data, debitor, creditor, notification, analytics] =
+        await axios.all([
+          axios.get(URL + '/user/me', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          axios.get(URL + '/home/my?type=debitor', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          axios.get(URL + '/home/my?type=creditor', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          axios.get(
+            URL + `/notification/me?page=${state.page || 1}&limit=500`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          ),
+          // /home/analytics — bosh sahifa dashboard'i (moliyaviy sog'liq ball,
+          // olingan/berilgan agregatlar, kontrakt statistikasi, ogohlantirishlar).
+          // Web bilan bir manba. Xato bo'lsa butun home buzilmasin → catch(null).
+          axios
+            .get(URL + '/home/analytics', {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            .catch(() => null),
+        ]);
 
       if (
         user_data.status === successStatus &&
@@ -46,6 +57,7 @@ const HomeApi = createAsyncThunk(
           },
           notification: notification.data?.data,
           pagination: notification.data?.pagination,
+          analytics: analytics?.data?.data ?? null,
         };
       }
     } catch (error: any) {

@@ -1,9 +1,8 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 
-import TextBold from '../../components/TextBold';
 import {sortText} from '../../components/StatisticCard';
 import {settingDate} from '../../../helper';
 import DalolatnomaLayout from '../../components/DalolatnomaLayout';
@@ -14,27 +13,27 @@ const QarzniToliqQaytarish = ({data}) => {
     <DalolatnomaLayout>
         <Text style={styles.text} allowFontScaling={false}>
           <Text style={{textAlign: 'center'}} allowFontScaling={false}>
-            <TextBold>{data?.number}</TextBold> - sonli qarz shartnomasi
+            <Text style={styles.mainText} allowFontScaling={false}>{data?.number}</Text> - sonli qarz shartnomasi
             bo‘yicha qarz mablag‘i qaytarilganligi to‘g‘risida {'\n'}
           </Text>
           {'\n'}Biz quyida imzo qo‘yuvchilar, fuqaro{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_name}</Text> (pasport:{' '}
-          <TextBold>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {data?.debitor_passport}. {settingDate(data.debitor_issued_date)}
-          </TextBold>{' '}
-          yilda <TextBold>{data.debitor_issued}</TextBold> tomonidan berilgan)
+          </Text>{' '}
+          yilda <Text style={styles.mainText} allowFontScaling={false}>{data.debitor_issued}</Text> tomonidan berilgan)
           bir tomondan va fuqaro{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> (pasport:{' '}
-          <TextBold>
+          <Text style={styles.mainText} allowFontScaling={false}>
             {data?.creditor_passport}. {settingDate(data.creditor_issued_date)}
-          </TextBold>{' '}
-          <TextBold>{data.creditor_issued} </TextBold>tomonidan berilgan)
+          </Text>{' '}
+          <Text style={styles.mainText} allowFontScaling={false}>{data.creditor_issued} </Text>tomonidan berilgan)
           ikkinchi tomondan, ushbu dalolatnoma quyidagilar haqida tuzildi:
           {'\n'}
-          {'\n'} Men <TextBold>{data?.creditor_name}</TextBold> fuqaro{' '}
+          {'\n'} Men <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> fuqaro{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.debitor_name}</Text> dan{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{settingDate(data.created_at)}</Text>{' '}
-          yildagi <TextBold>{data.number}</TextBold>-sonli qarz shartnomasiga
+          yildagi <Text style={styles.mainText} allowFontScaling={false}>{data.number}</Text>-sonli qarz shartnomasiga
           asosan{' '}
           <Text style={styles.mainText} allowFontScaling={false}>
             {sortText(data.amount)} {data.currency}
@@ -52,7 +51,7 @@ const QarzniToliqQaytarish = ({data}) => {
           </Text> fuqaro{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{data?.creditor_name}</Text> dan{' '}
           <Text style={styles.mainText} allowFontScaling={false}>{settingDate(data.created_at)}</Text>{' '}
-          yildagi <TextBold>{data.number}</TextBold>-sonli qarz shartnomasiga
+          yildagi <Text style={styles.mainText} allowFontScaling={false}>{data.number}</Text>-sonli qarz shartnomasiga
           asosan{' '}
           <Text style={styles.mainText} allowFontScaling={false}>
             {' '}
@@ -71,18 +70,18 @@ const QarzniToliqQaytarish = ({data}) => {
           kabinetida saqlanadi. {'\n'}QR-kod orqali tasdiqlangan Dalolatnomaning
           saqlanishini Jamiyat o‘z zimmasiga oladi.{'\n'}
           {'\n'}
-          <TextBold styles={{textAlign: 'center'}}>
+          <Text style={[styles.mainText, {textAlign: 'center'}]} allowFontScaling={false}>
             Tomonlarning rekvizitlari{' '}
-          </TextBold>
+          </Text>
           {'\n'}
-          <TextBold styles={{textAlign: 'center'}}>
+          <Text style={[styles.mainText, {textAlign: 'center'}]} allowFontScaling={false}>
             {'\n'}Qarz oluvchi: {'\n'}FISH : {data.creditor_name} {'\n'}
             {/* Maxsus elektron imzo: ______{'\n'} */}
             Sana: {settingDate(new Date())} yil {'\n'}
             {'\n'}Qarz beruvchi: {'\n'}FISH : {data.debitor_name} {'\n'}
             {/* Maxsus elektron imzo: ______ {'\n'} */}
             Sana: {settingDate(new Date())} yil
-          </TextBold>
+          </Text>
         </Text>
     </DalolatnomaLayout>
   );
@@ -91,20 +90,14 @@ const QarzniToliqQaytarish = ({data}) => {
 export default QarzniToliqQaytarish;
 
 const styles = StyleSheet.create({
-  enterButton: {
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    width: 100,
-  },
   text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: 'black',
-    lineHeight: 17,
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.text,
+    lineHeight: rs(22),
   },
   mainText: {
-    fontFamily: style.fontFamilyBold,
+    fontFamily: rd.font.bold,
+    color: rd.color.text,
   },
 });

@@ -1,102 +1,98 @@
 import {
-  SafeAreaView,
-  StyleSheet,
-  View,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {style} from '../../theme/style';
-import SecretWord from '../../images/sercretword.svg';
-import BackButton from '../components/BackButton';
-import MainText from '../components/MainText';
-import {font, fontSize} from '../../theme/font';
-import {colors} from '../../theme/colors';
+import {rd, rs} from '../../theme/rd';
+import {ChevronLeft, LockIcon} from '../home/redesign/icons';
+import {GradientIconBadge} from '../components/BrandLockup';
+
 const CreateSecretWord = () => {
   const navigation = useNavigation();
+  const [focused, setFocused] = useState<'question' | 'word' | null>(null);
 
   return (
-    <View style={[styles.container]}>
-      <View style={[styles.BackButton, {marginTop: 40}]}>
-        <BackButton
-          navigation={navigation}
-          IconColor="#fff"
-          backgroundColor={style.blue}
-        />
-      </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{width: style.width, height: style.height}}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}>
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}>
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <GradientIconBadge size={rs(84)}>
+              <LockIcon size={rs(34)} color={rd.color.primary} />
+            </GradientIconBadge>
+            <Text style={styles.title}>Maxfiy so’z yaratish</Text>
+            <Text style={styles.subtitle}>
+              Hisobingizni tiklashda ishlatiladigan maxfiy savol va so’zni
+              belgilang
+            </Text>
+          </View>
+
+          {/* Maxfiy savol */}
+          <Text style={styles.label}>Maxfiy so’z uchun savol yarating</Text>
           <View
-            style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
-            <SecretWord width="70%" height="70%" />
-          </View>
-          <View style={{alignItems: 'center'}}>
-            <MainText size={fontSize[14]} ft={font.bold}>
-              Maxfiy so’z yaratish
-            </MainText>
-          </View>
-
-          <View style={styles.main}>
-            <View style={{marginTop: 20}}>
-              <View style={styles.TextInputLabelContainer}>
-                <View
-                  style={{
-                    position: 'absolute',
-                    marginLeft: 15,
-                    flex: 1,
-                    zIndex: 1,
-                    top: -10,
-                    backgroundColor: '#fff',
-                    paddingLeft: 5,
-                    paddingRight: 5,
-                  }}>
-                  <MainText size={fontSize[12]}>
-                    Maxfiy so’z uchun savol yarating
-                  </MainText>
-                </View>
-                <View style={{flex: 1}}>
-                  <TextInput keyboardType="default" style={styles.TextInput} allowFontScaling={false} />
-                </View>
-              </View>
-              <View style={styles.TextInputLabelContainer}>
-                <View
-                  style={{
-                    position: 'absolute',
-                    marginLeft: 15,
-                    flex: 1,
-                    zIndex: 1,
-                    top: -10,
-                    backgroundColor: '#fff',
-                    paddingLeft: 5,
-                    paddingRight: 5,
-                  }}>
-                  <MainText size={fontSize[12]}>
-                    Maxfiy so’zni yarating
-                  </MainText>
-                </View>
-                <View style={{flex: 1}}>
-                  <TextInput keyboardType="default" style={styles.TextInput} allowFontScaling={false} />
-                </View>
-              </View>
-            </View>
+            style={[
+              styles.field,
+              focused === 'question' && styles.fieldFocused,
+            ]}>
+            <TextInput
+              keyboardType="default"
+              allowFontScaling={false}
+              placeholderTextColor={rd.color.textTertiary}
+              onFocus={() => setFocused('question')}
+              onBlur={() => setFocused(null)}
+              style={styles.input}
+            />
           </View>
 
-          <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('NewPasswordEnter');
-              }}
-              style={styles.enterButton}>
-              <MainText color={colors.white} size={fontSize[16]}>
-                Davom etish
-              </MainText>
-            </TouchableOpacity>
+          {/* Maxfiy so'z */}
+          <Text style={[styles.label, {marginTop: rs(16)}]}>
+            Maxfiy so’zni yarating
+          </Text>
+          <View
+            style={[styles.field, focused === 'word' && styles.fieldFocused]}>
+            <TextInput
+              keyboardType="default"
+              allowFontScaling={false}
+              placeholderTextColor={rd.color.textTertiary}
+              onFocus={() => setFocused('word')}
+              onBlur={() => setFocused(null)}
+              style={styles.input}
+            />
           </View>
-        </View>
-      </ScrollView>
+
+          {/* Davom etish */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              navigation.navigate('NewPasswordEnter');
+            }}
+            style={styles.submitBtn}>
+            <Text style={styles.submitText}>Davom etish</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -104,73 +100,84 @@ const CreateSecretWord = () => {
 export default CreateSecretWord;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: {flex: 1, backgroundColor: rd.color.page},
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingTop: rs(8),
+    paddingBottom: rs(28),
   },
-  forgotPasswordText: {
-    color: '#fff',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  registerButton: {
-    paddingLeft: 10,
-    paddingRight: 10,
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 6,
-    paddingBottom: 10,
-    paddingTop: 10,
-  },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    zIndex: 1,
-    marginTop: Platform.OS === 'android' ? 40 : 0,
-  },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  main: {
-    alignItems: 'center',
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
+    marginTop: rs(8),
   },
 
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  hero: {alignItems: 'center', marginTop: rs(20), marginBottom: rs(28)},
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(24),
+    color: rd.color.text,
+    marginTop: rs(18),
+  },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(20),
+  },
+
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  field: {
+    height: rs(56),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(14),
+  },
+  fieldFocused: {borderColor: rd.color.primary},
+  input: {
+    flex: 1,
+    height: '100%',
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
+  },
+
+  submitBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(28),
+    shadowColor: rd.color.primary,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

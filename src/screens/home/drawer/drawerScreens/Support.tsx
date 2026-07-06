@@ -1,55 +1,66 @@
-import {Linking, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {style} from '../../../../theme/style';
 
-import MainText from '../../../components/MainText';
-import {fontSize} from '../../../../theme/font';
-import {colors} from '../../../../theme/colors';
 import ScreenLayout from '../../../components/ScreenLayout';
-import Button from '../../../components/Button';
+import {rd, rs} from '../../../../theme/rd';
+import {
+  ChevronRight,
+  HelpIcon,
+  MessageIcon,
+  PhoneIcon,
+} from '../../redesign/icons';
 
 const Support = () => {
+  const actions = [
+    {title: 'Ko`p takrorlanadigan savollar', Icon: HelpIcon, onPress: () => {}},
+    {title: 'Mutaxassis bilan chat', Icon: MessageIcon, onPress: () => {}},
+    {title: 'Telegram orqali yozing', Icon: MessageIcon, onPress: () => {}},
+    {title: 'Bizga yozing', Icon: MessageIcon, onPress: () => {}},
+  ];
+
   return (
-    <ScreenLayout title={"Qo'llab-quvvatlash xizmati"} card>
-      <View>
-        <Button
-          title={'Ko`p takrorlanadigan savollar'}
-          onPress={() => {}}
-          fullWidth={false}
-          style={styles.enterButton}
-        />
-        <Button
-          title={'Mutaxassis bilan chat'}
-          onPress={() => {}}
-          fullWidth={false}
-          style={styles.enterButton}
-        />
-        <Button
-          title={'Telegram orqali yozing'}
-          onPress={() => {}}
-          fullWidth={false}
-          style={styles.enterButton}
-        />
-        <Button
-          title={'Bizga yozing'}
-          onPress={() => {}}
-          fullWidth={false}
-          style={styles.enterButton}
-        />
+    <ScreenLayout title={"Qo'llab-quvvatlash xizmati"}>
+      <View style={styles.card}>
+        {actions.map((item, index) => {
+          const {Icon} = item;
+          return (
+            <TouchableOpacity
+              key={index.toString()}
+              activeOpacity={0.7}
+              onPress={item.onPress}
+              style={[styles.row, index > 0 && styles.rowDivider]}>
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Icon size={rs(20)} color={rd.color.primary} />
+                </View>
+                <Text style={styles.rowLabel} allowFontScaling={false}>
+                  {item.title}
+                </Text>
+              </View>
+              <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+            </TouchableOpacity>
+          );
+        })}
       </View>
-      <View style={styles.SupportMeContainer}>
-        <TouchableOpacity
-          onPress={() => {
-            Linking.openURL('tel:+998937524411');
-          }}>
-          <MainText
-            color={colors.blue}
-            size={fontSize[12]}
-            style={{textDecorationLine: 'underline'}}>
-            +998 93 752 44 11 Qo`llab-quvvatlash telefon raqami
-          </MainText>
-        </TouchableOpacity>
-      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => {
+          Linking.openURL('tel:+998937524411');
+        }}
+        style={styles.phoneCard}>
+        <View style={styles.iconCircle}>
+          <PhoneIcon size={rs(20)} color={rd.color.primary} />
+        </View>
+        <View style={styles.phoneInfo}>
+          <Text style={styles.phoneNumber} allowFontScaling={false}>
+            +998 93 752 44 11
+          </Text>
+          <Text style={styles.phoneLabel} allowFontScaling={false}>
+            Qo`llab-quvvatlash telefon raqami
+          </Text>
+        </View>
+      </TouchableOpacity>
     </ScreenLayout>
   );
 };
@@ -57,34 +68,67 @@ const Support = () => {
 export default Support;
 
 const styles = StyleSheet.create({
-  SupportMeContainer: {
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    overflow: 'hidden',
   },
-  SupportText: {
-    fontFamily: style.fontFamilyMedium,
-    color: style.blue,
-    fontSize: style.fontSize.small,
-    textDecorationLine: 'underline',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
   },
-  enterButton: {
-    width: '90%',
-    height: style.textInputHeight,
-    borderRadius: 6,
-    marginTop: 20,
+  rowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
   },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+  iconCircle: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
+  },
+  rowLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    flexShrink: 1,
+  },
+  phoneCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+    marginTop: rs(16),
+  },
+  phoneInfo: {
+    flex: 1,
+  },
+  phoneNumber: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+  },
+  phoneLabel: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textSecondary,
+    marginTop: rs(2),
   },
 });

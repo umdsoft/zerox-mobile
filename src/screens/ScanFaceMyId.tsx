@@ -1,20 +1,24 @@
 import {
-  ActivityIndicator,
   Alert,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { CaptureProtection } from 'react-native-capture-protection';
 
 import LottieView from 'lottie-react-native';
-import { normalize, style } from '../theme/style';
+import { rd, rs } from '../theme/rd';
+import Button from './components/Button';
+import {
+  ChevronLeft,
+  ShieldIcon,
+} from './home/redesign/icons';
 
-import OtherHeader from './components/OtherHeader';
 import { storage } from '../store/api/token/getToken';
 import axios from 'axios';
 
@@ -26,10 +30,11 @@ import { useTranslation } from 'react-i18next';
 import Loading from './components/Loading';
 import { t } from 'i18next';
 import { URL } from './constants';
+import { useMyIdSession } from '../hooks/useMyIdSession';
+import { MYID } from '../config/myid';
 import {
   MyIdCameraShape,
   MyIdEntryType,
-  MyIdEnvironment,
   MyIdLocale,
   useMyId,
   startMyId,
@@ -172,61 +177,14 @@ const ScanFaceMyId = () => {
   );
 
   // P-002: MyID sessiyasini OLDINDAN olib qo'yamiz (tugma bosilganda kamera kutmasin).
+  // Endi umumiy useMyIdSession hook orqali (parol-tiklash bilan bir xil manba).
   // pinflBound — backend sessiyani PINFL'ga bog'lay oldimi (entryType tanlovi uchun).
-  const sessionRef = useRef<{
-    id: string;
-    pinflBound: boolean;
-    ts: number;
-  } | null>(null);
-  const SESSION_FRESH_MS = 90000; // 90s freshness oynasi (eskirsa qaytadan olamiz)
-
-  // Sessiyani olish — UI-state'siz (prefetch + tugma uchun). timeout (P-003) + silent rejim.
-  const fetchSession = useCallback(
-    async (
-      silent: boolean,
-    ): Promise<{ sessionId: string; pinflBound: boolean } | undefined> => {
-      const token = storage.getString('token');
-      try {
-        const response = await axios.post(
-          URL + '/user/myid/session',
-          { method: 'face' },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 15000, // P-003: backend osilsa abadiy kutmaymiz
-          },
-        );
-        if (response.data.success) {
-          return {
-            sessionId: response.data.sessionId,
-            pinflBound: !!response.data.pinflBound,
-          };
-        }
-        if (!silent) console.log(response.data.msg, 'response');
-      } catch (err: any) {
-        // Prefetch'da jim; tugma bosilganda aniq xatoni ko'rsatamiz (eski UX).
-        if (!silent) returnMessage(err?.response);
-        else console.log('prefetch session error:', err?.message);
-      }
-      return undefined;
-    },
-    [],
-  );
-
-  // Ekran ochilganda sessiyani oldindan olamiz (P-002).
-  useEffect(() => {
-    fetchSession(true).then(res => {
-      if (res) {
-        sessionRef.current = {
-          id: res.sessionId,
-          pinflBound: res.pinflBound,
-          ts: Date.now(),
-        };
-      }
-    });
-  }, [fetchSession]);
+  const { getSession } = useMyIdSession({
+    url: URL + '/user/myid/session',
+    token: storage.getString('token') || undefined,
+    // Tugma bosilganda xato — eski UX: returnMessage numeric code'ni (0-7) map qiladi.
+    onError: e => returnMessage(e.response),
+  });
 
   const Indentificator = useCallback(
     async data => {
@@ -300,16 +258,10 @@ const ScanFaceMyId = () => {
     let sessionId: string | undefined;
     let pinflBound = false;
     try {
-      const cached = sessionRef.current;
-      if (cached && Date.now() - cached.ts < SESSION_FRESH_MS) {
-        sessionId = cached.id;
-        pinflBound = cached.pinflBound;
-      } else {
-        const res = await fetchSession(false);
-        sessionId = res?.sessionId;
-        pinflBound = res?.pinflBound ?? false;
-      }
-      sessionRef.current = null; // sessiya bir martalik
+      // Prefetch'dan tayyor sessiya bo'lsa darhol; eskirgan/yo'q bo'lsa yangisini olamiz.
+      const res = await getSession();
+      sessionId = res?.sessionId;
+      pinflBound = res?.pinflBound ?? false;
     } finally {
       setLoading2(false);
     }
@@ -324,10 +276,7 @@ const ScanFaceMyId = () => {
     const prod = {
       // sessionId string|undefined; prod faqat `if (sessionId)` ichida start()'ga beriladi.
       sessionId: sessionId as string,
-      clientHash:
-        'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsw3Ad+h8EgEjt+5sdTxveshhapa+Q0anEajGtEGt6KLJgOfk54AU/RwBIvBPFJRUQqOAbngtFFS6SCWt26AtG8QtRRVL+xWF//2u/66bXVjrHlCKuBQNVoISJ+YyfVLpOhQYlrRyLP23sKrJdB2PBYlovP1HCWFP56KUn5T1dSluBy5h81ZSfmsUJO5U1lKLli2WMOPCFl9K1/6TOuRSv70U/nZX+pRLCIPzrdlf9zCLL49OShztalJOYtXibasqTrNCd0sBzTNbiQ3uGkmK5RH+L2hi4dy1vDEwH7VqMLcogJXnTEYAZ3KCAxmIUXvkhDstWK5uH8Ru0uZskcR5GwIDAQAB',
-      clientHashId: '7b4507ca-9b70-4e92-8bfe-767db25a0be2',
-      environment: MyIdEnvironment.PRODUCTION,
+      ...MYID, // clientHash + clientHashId + environment (markazlashtirilgan, backend bilan mos)
       // IDENTIFICATION — foydalanuvchini MyID orqali TEKSHIRADI va `code` qaytaradi (backend shuni
       // /sdk/data?code= bilan tasdiqlaydi). Sessiya PINFL'ga bog'langani uchun (pinflBound) MyID
       // hujjat so'ramaydi → 1:1 yuz mosligi → TEZ. FACE_DETECTION faqat selfi oladi, code BERMAYDI.
@@ -373,62 +322,57 @@ const ScanFaceMyId = () => {
         console.log(error, 'face error');
       }
     }
-  }, [Indentificator, fetchSession, i18n.language, start]);
+  }, [Indentificator, getSession, i18n.language, start]);
 
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: '#fff',
-      }}
-    >
-      <OtherHeader
-        title={t('otish')}
-        backgroundColor={style.blue}
-        iconColor="#fff"
-        titleColor={style.backgroundColorDark}
-      />
-      <View style={styles.container}>
-        <LottieView
-          source={require('../images/scan.json')}
-          autoPlay={true}
-          renderMode="AUTOMATIC"
-          resizeMode="cover"
-          style={{
-            width: normalize(150),
-            height: normalize(150),
-            marginBottom: normalize(50),
-          }}
-        />
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-        <Text style={styles.text} allowFontScaling={false}>
+      {/* Orqaga */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={styles.backBtn}
+        onPress={() => navigation.goBack()}
+      >
+        <ChevronLeft size={rs(22)} color={rd.color.text} />
+      </TouchableOpacity>
+
+      {/* Hero */}
+      <View style={styles.body}>
+        <View style={styles.heroCircle}>
+          <LottieView
+            source={require('../images/scan.json')}
+            autoPlay={true}
+            renderMode="AUTOMATIC"
+            resizeMode="cover"
+            style={styles.lottie}
+          />
+        </View>
+
+        <Text allowFontScaling={false} style={styles.title}>
+          {t('otish')}
+        </Text>
+        <Text allowFontScaling={false} style={styles.subtitle}>
           {t('753')}
         </Text>
       </View>
-      <TouchableOpacity
-        disabled={loading2}
-        activeOpacity={0.8}
-        onPress={onHandlePostData}
-        style={[styles.enterButton]}
-      >
-        {loading2 ? (
-          <ActivityIndicator color="#fff" size={'small'} />
-        ) : (
-          <Text
-            style={[
-              styles.enterText,
-              { color: '#fff', fontFamily: style.fontFamilyMedium },
-            ]}
-            allowFontScaling={false}
-          >
-            {t('45')}
-          </Text>
-        )}
-      </TouchableOpacity>
+
+      {/* MyID orqali davom etish */}
+      <View style={styles.footer}>
+        <Button
+          title={t('45')}
+          onPress={onHandlePostData}
+          loading={loading2}
+          disabled={loading2}
+          size="lg"
+          leftIcon={<ShieldIcon size={rs(20)} color={rd.color.onPrimary} />}
+          style={styles.button}
+        />
+      </View>
     </View>
   );
 };
@@ -436,32 +380,65 @@ const ScanFaceMyId = () => {
 export default ScanFaceMyId;
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
+    flex: 1,
+    backgroundColor: rd.color.page,
+    paddingHorizontal: rs(24),
+    paddingTop: rs(52),
+    paddingBottom: rs(28),
+  },
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: normalize(20),
-    paddingHorizontal: 15,
   },
-  text: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-    marginTop: 20,
+  body: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroCircle: {
+    width: rs(180),
+    height: rs(180),
+    borderRadius: rs(90),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(28),
+    overflow: 'hidden',
+  },
+  lottie: {
+    width: rs(150),
+    height: rs(150),
+  },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(23),
+    color: rd.color.text,
     textAlign: 'center',
   },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    height: style.buttonHeight,
-    alignSelf: 'center',
-    marginTop: normalize(20),
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(10),
+    lineHeight: rs(21),
+    paddingHorizontal: rs(12),
   },
-  enterText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xx - 1,
-    color: style.textColor,
+  footer: {
+    paddingTop: rs(8),
+  },
+  button: {
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
 });

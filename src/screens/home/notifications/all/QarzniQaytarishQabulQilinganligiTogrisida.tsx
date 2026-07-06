@@ -1,6 +1,7 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
+import { rd } from '../../../../theme/rd';
 
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/TextBold';
@@ -35,7 +36,7 @@ const QarzniQaytarishQabulQilinganligiTogrisida = ({
           id: item.contract,
         });
       }}
-      style={{ color: style.blue }}
+      style={{ color: rd.color.primary }}
     />
   );
 

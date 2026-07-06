@@ -1,4 +1,5 @@
 import React from 'react';
+import DrawerMenu from '../screens/home/redesign/DrawerMenu'; // redizayn burger menyu
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -24,7 +25,6 @@ import {
   DebtTakePart,
   DebtTakeSelect,
   DownloadStatistic,
-  DrawerScreen,
   FingerScanner,
   FullDebtBack,
   FullDebtSelect,
@@ -79,11 +79,7 @@ import { TransitionPresets } from '@react-navigation/stack';
 import { storage } from '../store/api/token/getToken';
 import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
 import MyIdScreen from '../screens/auth/RecoveryPassword/MyIdScreen';
-import PayFor from '../screens/auth/RecoveryPassword/PayFor';
-import PayScreenForRecovery from '../screens/auth/RecoveryPassword/PayScreenForRecovery';
-import InfoForUser from '../screens/auth/RecoveryPassword/InfoForUser';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
-import Inforamation from '../screens/auth/RecoveryPassword/Inforamation';
 import Types from '../screens/home/drawer/drawerScreens/Types';
 import ResetPassCode from '../screens/other/ResetPassCode';
 import UpdateLocalPassCode from '../screens/auth/UpdateLocalPassCode';
@@ -91,6 +87,21 @@ import NewsScreen from '../screens/other/NewsScreen';
 
 import UpdatePasswordWithJshir from '../screens/auth/UpdatePasswordWithJshir';
 import ChangePassportData from '../screens/ChangePassportData';
+import RecoverySmsReset from '../screens/auth/RecoverySmsReset';
+import QarzShartnomasi from '../screens/home/modules/QarzShartnomasi';
+import QarzDaftari from '../screens/home/modules/QarzDaftari';
+import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
+import QarzDaftariKiritish from '../screens/home/modules/QarzDaftariKiritish';
+import QarzDaftariQarzlar from '../screens/home/modules/QarzDaftariQarzlar';
+import QarzDaftariMijozlar from '../screens/home/modules/QarzDaftariMijozlar';
+import QarzDaftariMijoz from '../screens/home/modules/QarzDaftariMijoz';
+import QarzDaftariQarz from '../screens/home/modules/QarzDaftariQarz';
+import QarzDaftariYangi from '../screens/home/modules/QarzDaftariYangi';
+import QarzDaftariFaoliyat from '../screens/home/modules/QarzDaftariFaoliyat';
+import QarzDaftariYopish from '../screens/home/modules/QarzDaftariYopish';
+import QarzDaftariVozKechish from '../screens/home/modules/QarzDaftariVozKechish';
+import QarzDaftariKvitansiya from '../screens/home/modules/QarzDaftariKvitansiya';
+import QarzDaftariAmaliyotlar from '../screens/home/modules/QarzDaftariAmaliyotlar';
 
 const Stack = createNativeStackNavigator();
 
@@ -119,11 +130,13 @@ const DrawerNavigator = () => {
         swipeEdgeWidth: 30,
         drawerAllowFontScaling: true,
         drawerStyle: {
-          width: style.width / 1.3,
+          width: 308,
           zIndex: 1000,
+          borderTopRightRadius: 24,
+          borderBottomRightRadius: 24,
         },
       }}
-      drawerContent={props => <DrawerScreen {...props} />}
+      drawerContent={props => <DrawerMenu {...props} />}
     >
       <DrawerStack.Screen
         name="StackNavigator"
@@ -227,11 +240,7 @@ const AllNavigators = [
   { name: 'ChangeLocalPassword', component: ChangeLocalPassword },
   { name: 'EnterJsh', component: EnterJsh },
   { name: 'MyIdScreen', component: MyIdScreen },
-  { name: 'PayFor', component: PayFor },
-  { name: 'PayScreenForRecovery', component: PayScreenForRecovery },
-  { name: 'InfoForUser', component: InfoForUser },
   { name: 'UpdatePassword', component: UpdatePassword },
-  { name: 'Inforamation', component: Inforamation },
   { name: 'Types', component: Types },
   { name: 'NewsScreen', component: NewsScreen },
   {
@@ -239,6 +248,21 @@ const AllNavigators = [
     component: ResetPassCode,
   },
   { name: 'UpdateLocalPassCode', component: UpdateLocalPassCode },
+  { name: 'RecoverySmsReset', component: RecoverySmsReset },
+  { name: 'QarzShartnomasi', component: QarzShartnomasi },
+  { name: 'QarzDaftari', component: QarzDaftari },
+  { name: 'ShaxsiyMoliya', component: ShaxsiyMoliya },
+  { name: 'QarzDaftariKiritish', component: QarzDaftariKiritish },
+  { name: 'QarzDaftariQarzlar', component: QarzDaftariQarzlar },
+  { name: 'QarzDaftariMijozlar', component: QarzDaftariMijozlar },
+  { name: 'QarzDaftariMijoz', component: QarzDaftariMijoz },
+  { name: 'QarzDaftariQarz', component: QarzDaftariQarz },
+  { name: 'QarzDaftariYangi', component: QarzDaftariYangi },
+  { name: 'QarzDaftariFaoliyat', component: QarzDaftariFaoliyat },
+  { name: 'QarzDaftariYopish', component: QarzDaftariYopish },
+  { name: 'QarzDaftariVozKechish', component: QarzDaftariVozKechish },
+  { name: 'QarzDaftariKvitansiya', component: QarzDaftariKvitansiya },
+  { name: 'QarzDaftariAmaliyotlar', component: QarzDaftariAmaliyotlar },
 ];
 const StackNavigator = () => {
   const is = storage.getString('k2');
@@ -253,9 +277,6 @@ const StackNavigator = () => {
         ...TransitionPresets.SlideFromRightIOS,
       }}
       initialRouteName={
-        // 'ResetPassCode'
-        //ScanFaceMyId
-        //SetLocalPassword
         is === undefined ? 'SelectLanguageScreen' : 'SetLocalPassword'
       }
     >

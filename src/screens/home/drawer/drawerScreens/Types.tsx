@@ -1,11 +1,11 @@
-import {StyleSheet, View} from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import React from 'react';
-import OtherHeader from '../../../components/OtherHeader';
-import {BackGroundIcon} from '../../../../helper/homeIcon';
-import {style} from '../../../../theme/style';
 import Pdf from 'react-native-pdf';
-import {t} from 'i18next';
-import {storage} from '../../../../store/api/token/getToken';
+import { t } from 'i18next';
+
+import { rd, rs } from '../../../../theme/rd';
+import RdHeader from '../../redesign/RdHeader';
+import { storage } from '../../../../store/api/token/getToken';
 
 const Types = () => {
   const returnURL = () => {
@@ -19,25 +19,23 @@ const Types = () => {
     }
   };
   return (
-    <View style={styles.con}>
-      <View style={styles.backImage}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('117')} />
-      <View>
-        <Pdf
-          trustAllCerts={false}
-          enablePaging={true}
-          source={{
-            uri: returnURL(),
-            method: 'GET',
-            cache: false,
-          }}
-          // activityIndicator={() => (
-          //   <ActivityIndicator size={'large'} color={style.blue} />
-          // )}
-          style={styles.pdf}
-        />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('117')} />
+
+      <View style={styles.content}>
+        <View style={styles.card}>
+          <Pdf
+            trustAllCerts={false}
+            enablePaging={true}
+            source={{
+              uri: returnURL(),
+              method: 'GET',
+              cache: false,
+            }}
+            style={styles.pdf}
+          />
+        </View>
       </View>
     </View>
   );
@@ -46,16 +44,28 @@ const Types = () => {
 export default Types;
 
 const styles = StyleSheet.create({
-  con: {
+  container: {
     flex: 1,
+    backgroundColor: rd.color.page,
   },
-  backImage: {
-    position: 'absolute',
-    height: style.height / 2.5,
-    width: '100%',
+  content: {
+    flex: 1,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(6),
+    paddingBottom: rs(16),
+  },
+  card: {
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
   },
   pdf: {
+    flex: 1,
     width: '100%',
-    height: '90%',
+    height: '100%',
+    backgroundColor: rd.color.surface,
   },
 });

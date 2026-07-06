@@ -1,7 +1,5 @@
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {style} from '../../../theme/style';
-
 import {useNavigation, useRoute} from '@react-navigation/native';
 
 import ScreenLayout from '../../components/ScreenLayout';
@@ -10,9 +8,7 @@ import StatisticDebitor from '../../components/List/StatisticDebitor';
 import Dollar from '../../../images/Dollar';
 import AskTime from '../../../images/AskTime';
 import CharityDollar from '../../../images/CharityDollar';
-import MainText from '../../components/MainText';
-import {fontSize} from '../../../theme/font';
-import {colors} from '../../../theme/colors';
+import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
 
 const Debitor = () => {
@@ -50,14 +46,12 @@ const Debitor = () => {
               activeOpacity={0.8}
               style={styles.registerButton}>
               <Dollar />
-              <MainText
-                mrLeft={8}
-                textAlign={'center'}
-                style={{maxWidth: '90%'}}
-                size={fontSize[12]}
-                color={colors.white}>
+              <Text
+                allowFontScaling={false}
+                style={styles.buttonText}
+                numberOfLines={1}>
                 {t('351')}
-              </MainText>
+              </Text>
             </TouchableOpacity>
           </View>
           <View style={styles.buttonInsideContainer}>
@@ -71,9 +65,12 @@ const Debitor = () => {
               activeOpacity={0.8}
               style={styles.registerButton}>
               <AskTime />
-              <MainText mrLeft={8} size={fontSize[12]} color={colors.white}>
+              <Text
+                allowFontScaling={false}
+                style={styles.buttonText}
+                numberOfLines={1}>
                 {t('363')}
-              </MainText>
+              </Text>
             </TouchableOpacity>
           </View>
           <View style={styles.buttonInsideContainer}>
@@ -84,9 +81,12 @@ const Debitor = () => {
               activeOpacity={0.8}
               style={styles.registerButton}>
               <CharityDollar />
-              <MainText mrLeft={8} size={fontSize[12]} color={colors.white}>
+              <Text
+                allowFontScaling={false}
+                style={styles.buttonText}
+                numberOfLines={1}>
                 {t('378')}
-              </MainText>
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -98,59 +98,28 @@ const Debitor = () => {
 export default Debitor;
 
 const styles = StyleSheet.create({
-  buttonInsideContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  item: {
-    flex: 1,
-  },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-    marginLeft: 8,
-  },
-  registerButton: {
-    width: '85%',
-    // height: style.buttonHeight,
-    paddingVertical: 20,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   buttonContainer: {
     justifyContent: 'center',
   },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 1,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: '#fff',
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
+  buttonInsideContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    justifyContent: 'center',
+    marginTop: rs(16),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+  registerButton: {
+    width: '90%',
+    paddingVertical: rs(16),
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  buttonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.onPrimary,
+    marginLeft: rs(8),
+    textAlign: 'center',
   },
 });

@@ -7,6 +7,7 @@ import TextBold from '../../../components/TextBold';
 import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import NotificationShell from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 import { useSelector } from 'react-redux';
 export const getFullName = (role: string, item: any) => {
@@ -84,7 +85,7 @@ export default memo(QarzShartnomasiRejectTime);
 const styles = {
   number: {
     fontFamily: style.fontFamilyMedium,
-    color: style.blue,
+    color: rd.color.primary,
     fontSize: style.fontSize.xx - 2,
   },
 };

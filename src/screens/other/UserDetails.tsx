@@ -1,266 +1,125 @@
 import {
-  ActivityIndicator,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React from 'react';
-import { normalize, style } from '../../theme/style';
 
 import { useNavigation } from '@react-navigation/native';
 
-import Person from '../../images/home/person';
-import Juridic from '../../images/home/juridic';
 import { useSelector } from 'react-redux';
 import Edit from '../../images/Edit';
 import ScreenLayout from '../components/ScreenLayout';
-import Famale from '../../images/Famale';
 import { t } from 'i18next';
-import { URL } from '../constants';
+import { normalize } from '../../theme/style';
+import { rd, rs } from '../../theme/rd';
+import { UserIcon } from '../home/redesign/icons';
+
+const InfoRow = ({ label, value, divider, right }) => (
+  <View style={[styles.infoRow, divider && styles.infoDivider]}>
+    <View style={styles.infoTextWrap}>
+      <Text allowFontScaling={false} style={styles.label}>
+        {label}
+      </Text>
+      <Text
+        allowFontScaling={false}
+        numberOfLines={1}
+        style={styles.value}
+      >
+        {value}
+      </Text>
+    </View>
+    {right}
+  </View>
+);
 
 const UserDetails = () => {
   const navigation = useNavigation();
 
   const { user } = useSelector(state => state.HomeReducer);
 
+  const isPerson = user?.data?.type === 2;
+
+  const fullName = isPerson
+    ? `${user?.data?.last_name ?? ''} ${user?.data?.first_name ?? ''}`.trim()
+    : user?.data?.company;
+
+  const initials = (() => {
+    if (isPerson) {
+      const a = user?.data?.first_name?.[0] ?? '';
+      const b = user?.data?.last_name?.[0] ?? '';
+      return (b + a).toUpperCase();
+    }
+    return (user?.data?.company?.[0] ?? '').toUpperCase();
+  })();
+
   return (
     <ScreenLayout title={t('810')}>
-      <View>
-        <View style={styles.main}>
-          <View style={styles.aboutUsContainer}>
-              <View style={{ flexDirection: 'row' }}>
-                {/* {user.data.image === null ? ( */}
-                <View style={styles.userImageContainer}>
-                  {user?.data?.type === 2 ? (
-                    user?.data?.gender === 2 ? (
-                      <Famale
-                        width={normalize(50)}
-                        height={normalize(normalize(100))}
-                        color={style.blue}
-                      />
-                    ) : (
-                      <Person
-                        width={normalize(50)}
-                        height={normalize(100)}
-                        color={style.blue}
-                      />
-                    )
-                  ) : (
-                    <Juridic
-                      width={normalize(50)}
-                      height={normalize(100)}
-                      color={style.blue}
-                    />
-                  )}
-                </View>
-                {/* ) : ( */}
-                <>
-                  {/* {loadingImage ? (
-                      <View
-                        style={{
-                          height: normalize(100),
-                          width: normalize(70),
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                        <ActivityIndicator
-                          size="small"
-                          color={style.blue}
-                          style={{marginTop: 20}}
-                        />
-                      </View>
-                    ) : ( */}
-                  {/* <Image
-                      source={{ uri: URL.slice(0, -6) + user?.data?.image }}
-                      width={normalize(70)}
-                      height={normalize(100)}
-                      style={{
-                        borderRadius: 10,
-                      }}
-                    /> */}
-                  {/* )} */}
-                </>
-                {/* )} */}
-                <View style={{ marginLeft: 10, flex: 1 }}>
-                  {user.data.type === 2 ? (
-                    <>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          {t('familiya')}
-                        </Text>
-                        <Text
-                          allowFontScaling={false}
-                          numberOfLines={1}
-                          style={styles.name}
-                        >
-                          {user?.data?.last_name}
-                        </Text>
-                      </View>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          {t('ism')}
-                        </Text>
-                        <Text
-                          allowFontScaling={false}
-                          numberOfLines={1}
-                          style={styles.name}
-                        >
-                          {user?.data?.first_name}
-                        </Text>
-                      </View>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          {t('ota')}
-                        </Text>
-                        <Text
-                          allowFontScaling={false}
-                          numberOfLines={1}
-                          style={styles.name}
-                        >
-                          {user?.data?.middle_name}
-                        </Text>
-                      </View>
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          Direktor
-                        </Text>
-                        <Text allowFontScaling={false} style={styles.name}>
-                          {user?.data?.director}
-                        </Text>
-                      </View>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          Kompaniya
-                        </Text>
-                        <Text allowFontScaling={false} style={styles.name}>
-                          {user?.data?.company}
-                        </Text>
-                      </View>
-                      <View style={styles.info}>
-                        <Text allowFontScaling={false} style={styles.title}>
-                          {t('786') as string}
-                        </Text>
-                        <Text allowFontScaling={false} style={styles.name}>
-                          {user?.data?.address}
-                        </Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-              </View>
-              <View style={{ marginTop: 20 }}>
-                {user.data.type === 2 ? (
-                  <View style={styles.info}>
-                    <Text allowFontScaling={false} style={styles.title}>
-                      {t('684')}
-                    </Text>
-                    <Text
-                      allowFontScaling={false}
-                      numberOfLines={1}
-                      style={[styles.name, { marginTop: 5 }]}
-                    >
-                      {user?.data?.brithday}
-                    </Text>
-                  </View>
-                ) : null}
-                <View
-                  style={[
-                    styles.info,
-                    {
-                      flexDirection: 'row',
-                      alignItems: 'flex-end',
-                      justifyContent: 'space-between',
-                    },
-                  ]}
-                >
-                  <View>
-                    <Text allowFontScaling={false} style={styles.title}>
-                      {t('27')}
-                    </Text>
-                    <Text
-                      allowFontScaling={false}
-                      numberOfLines={1}
-                      style={[styles.name, { marginTop: 5 }]}
-                    >
-                      {phoneSort(user?.data?.phone)}
-                    </Text>
-                  </View>
-                  <View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        navigation.navigate('ChangePhoneNumber');
-                      }}
-                    >
-                      <Edit width={normalize(18)} height={normalize(18)} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {user.data.type === 2 ? (
-                  <>
-                    <View style={styles.info}>
-                      <Text allowFontScaling={false} style={styles.title}>
-                        {t('687')}
-                      </Text>
-                      <Text
-                        allowFontScaling={false}
-                        numberOfLines={1}
-                        style={[styles.name, { marginTop: 5 }]}
-                      >
-                        {user?.data?.pinfl}
-                      </Text>
-                    </View>
-                  </>
-                ) : null}
-                <View style={styles.info}>
-                  <Text allowFontScaling={false} style={styles.title}>
-                    {t('120')}
-                  </Text>
-                  <Text
-                    allowFontScaling={false}
-                    numberOfLines={1}
-                    style={[styles.name, { marginTop: 5 }]}
-                  >
-                    {user?.data?.uid}
-                  </Text>
-                </View>
-                <View style={styles.info}>
-                  <Text allowFontScaling={false} style={styles.title}>
-                    {t('255')}
-                  </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text
-                      allowFontScaling={false}
-                      numberOfLines={1}
-                      style={[styles.name, { marginTop: 5 }]}
-                    >
-                      {settingDate(user?.data?.created_at)}
-                    </Text>
-                  </View>
-                </View>
-                {/* <View style={styles.info}>
-                  <Text style={styles.title}>Status</Text>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Text
-                      numberOfLines={1}
-                      style={[styles.name, {marginTop: 5}]}>
-                      {user?.data?.rating || 0}
-                    </Text>
-                    <BottomIcon
-                      style={{transform: [{rotate: '180deg'}]}}
-                      size={10}
-                      color={user?.data?.rating_type === 1 ? '#048515' : 'red'}
-                    />
-                  </View>
-                </View> */}
-              </View>
-            </View>
-          </View>
+      <View style={styles.headerCard}>
+        <View style={styles.avatar}>
+          {initials ? (
+            <Text allowFontScaling={false} style={styles.avatarTx}>
+              {initials}
+            </Text>
+          ) : (
+            <UserIcon size={rs(30)} color={rd.color.primary} />
+          )}
         </View>
+        <Text allowFontScaling={false} numberOfLines={2} style={styles.headerName}>
+          {fullName}
+        </Text>
+        <Text allowFontScaling={false} style={styles.headerSub}>
+          {phoneSort(user?.data?.phone)}
+        </Text>
+        <Text allowFontScaling={false} style={styles.headerSub}>
+          {t('120')}: {user?.data?.uid}
+        </Text>
+      </View>
+
+      <View style={styles.card}>
+        {isPerson ? (
+          <>
+            <InfoRow label={t('familiya')} value={user?.data?.last_name} />
+            <InfoRow label={t('ism')} value={user?.data?.first_name} divider />
+            <InfoRow label={t('ota')} value={user?.data?.middle_name} divider />
+            <InfoRow label={t('684')} value={user?.data?.brithday} divider />
+          </>
+        ) : (
+          <>
+            <InfoRow label="Direktor" value={user?.data?.director} />
+            <InfoRow label="Kompaniya" value={user?.data?.company} divider />
+            <InfoRow label={t('786') as string} value={user?.data?.address} divider />
+          </>
+        )}
+
+        <InfoRow
+          label={t('27')}
+          value={phoneSort(user?.data?.phone)}
+          divider
+          right={
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('ChangePhoneNumber');
+              }}
+              style={styles.editBtn}
+            >
+              <Edit width={normalize(18)} height={normalize(18)} />
+            </TouchableOpacity>
+          }
+        />
+
+        {isPerson ? (
+          <InfoRow label={t('687')} value={user?.data?.pinfl} divider />
+        ) : null}
+
+        <InfoRow label={t('120')} value={user?.data?.uid} divider />
+        <InfoRow
+          label={t('255')}
+          value={settingDate(user?.data?.created_at)}
+          divider
+        />
+      </View>
     </ScreenLayout>
   );
 };
@@ -280,7 +139,10 @@ export const settingDate = text => {
 };
 export const phoneSort = text => {
   let b = [];
-  text.split('').forEach((item, index) => {
+  if (!text) return '';
+  String(text)
+    .split('')
+    .forEach((item, index) => {
     if (index === 6) {
       b.push(' ');
     }
@@ -296,70 +158,81 @@ export const phoneSort = text => {
 };
 
 const styles = StyleSheet.create({
-  TouchableOpacity: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
+  headerCard: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
     alignItems: 'center',
-    paddingLeft: 10,
-    marginTop: 5,
+    paddingVertical: rs(20),
+    paddingHorizontal: rs(16),
+    marginBottom: rs(12),
   },
-  optionTx: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 3,
-    color: '#000',
-    marginLeft: 5,
-  },
-  name: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 3,
-    color: '#000',
-  },
-  info: {
-    marginTop: 10,
-  },
-  title: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 1,
-    color: style.blue,
-  },
-  userImageContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    paddingHorizontal: 20,
+  avatar: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: rs(12),
   },
-
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 20,
+  avatarTx: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(22),
+    color: rd.color.primary,
   },
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-
-    borderRadius: 15,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    paddingBottom: 20,
-    marginBottom: 5,
-  },
-  titlex: {
+  headerName: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
     textAlign: 'center',
-    alignSelf: 'center',
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: '#fff',
+  },
+  headerSub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(3),
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingHorizontal: rs(14),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: rs(12),
+  },
+  infoDivider: {
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  infoTextWrap: {
+    flex: 1,
+  },
+  label: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12.5),
+    color: rd.color.textTertiary,
+    marginBottom: rs(3),
+  },
+  value: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.text,
+  },
+  editBtn: {
+    width: rs(36),
+    height: rs(36),
+    borderRadius: rs(18),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: rs(10),
   },
 });

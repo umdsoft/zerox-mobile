@@ -100,11 +100,36 @@ const UserDataPostApi = createAsyncThunk(
           },
         },
       );
-      console.log('UserDataPostApi response:', data);
       return data;
     } catch (error) {
       return rejectWithValue(
         'Ushbu telefon raqami tizimda muqaddam ro’yxatga olingan. Iltimos, ro’yxatdan o’tish uchun boshqa telefon raqamidan foydalaning',
+      );
+    }
+  },
+);
+
+// Ro'yxatdan o'tishda SMS kodni QAYTA yuborish — backend step:1 ni qayta chaqirsak,
+// kod qayta generatsiya qilinib SMS yuboriladi (User.js register step==1: is_active==2
+// && code!=null bo'lsa kodni yangilab SMS yuboradi). Ilgari xato bo'yicha phoneChangeReg
+// (telefon almashtirish) endpointi ishlatilardi — bu ro'yxatdan o'tish oqimi emas.
+const RegisterResendSmsApi = createAsyncThunk(
+  'user/register/resend',
+  async (phone, {rejectWithValue}) => {
+    try {
+      const lang = storage.getString('lang') ?? 'uz';
+      const {data, status} = await axios.post(URL + '/user/register', {
+        phone: '+998' + phone,
+        lang,
+        step: 1,
+        type: 2,
+      });
+      if (status === successStatus) {
+        return data;
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data ?? {message: 'network-error'},
       );
     }
   },
@@ -141,5 +166,6 @@ export {
   LoginWithPhoneSendPasswordApi,
   SmsCheckCodeApi,
   UserDataPostApi,
+  RegisterResendSmsApi,
   UpdatePasswordWithJshirApi,
 };

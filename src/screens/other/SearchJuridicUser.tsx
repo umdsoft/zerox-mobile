@@ -1,5 +1,6 @@
 import {
-  Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -7,21 +8,17 @@ import {
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { style } from '../../theme/style';
-
 import { useNavigation } from '@react-navigation/native';
 import Loading from '../components/Loading';
-import Toast from 'react-native-toast-message';
-import { toastConfig } from '../components/ToastConfig';
-// import TextInputMask from 'react-native-text-input-mask';
 import axios from 'axios';
 import DatePicker from 'react-native-date-picker';
 import { URL } from '../constants';
-import ScreenLayout from '../components/ScreenLayout';
-import Button from '../components/Button';
 import { t } from 'i18next';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
-import DateModal from '../home/modal/DateModal';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
+import { BuildingIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
+
 const SearchJuridicUser = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
@@ -32,6 +29,7 @@ const SearchJuridicUser = () => {
   const [userID, setUserID] = useState('');
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
+  const [focused, setFocused] = useState<'stir' | 'id' | null>(null);
   useEffect(() => {
     if (stir.length === 9) {
       setDisabled(false);
@@ -44,15 +42,14 @@ const SearchJuridicUser = () => {
       setLoading(true);
       setError(false);
       const { data, status } = await axios.post(
-        URL + +'/user/search',
+        URL + '/user/search',
         {
           id: userID,
           stir: stir,
           type: 2,
         },
         {
-          headers: {
-          },
+          headers: {},
         },
       );
       if (status === 200) {
@@ -69,123 +66,103 @@ const SearchJuridicUser = () => {
   }
 
   return (
-    <ScreenLayout title={t('210')}>
-        <View>
-          <View style={styles.main}>
-            <View style={styles.aboutUsContainer}>
-              <View
-                style={{
-                  width: '100%',
-                  alignSelf: 'center',
-                  marginVertical: 20,
-                }}
-              >
-                <View style={{ alignSelf: 'center' }}>
-                  <View style={styles.TextInputLabelContainer}>
-                    <View style={styles.inputTitle}>
-                      <Text style={styles.phoneText}>STIRni kiriting</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <TextInput
-                        value={stir}
-                        maxLength={9}
-                        placeholder="STIRni kiriting"
-                        onChangeText={text => setStir(text)}
-                        placeholderTextColor={style.placeHolderColor}
-                        keyboardType="numeric"
-                        style={[styles.TextInput, { paddingLeft: 15 }]}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.TextInputLabelContainer}>
-                    <View style={styles.inputTitle}>
-                      <Text style={styles.phoneText}>ID raqamini kiriting</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <MaskedTextInput
-                        value={userID}
-                        placeholder="ID raqamini kiriting"
-                        autoCapitalize="characters"
-                        onChangeText={(formatted, extracted) => {
-                          setUserID(extracted);
-                        }}
-                        mask="[000000]{/}[AA]"
-                        placeholderTextColor={style.placeHolderColor}
-                        keyboardType="default"
-                        style={[styles.TextInput, { paddingLeft: 15 }]}
-                      />
-                    </View>
-                  </View>
-                </View>
-                {error && (
-                  <Text
-                    style={{
-                      color: 'red',
-                      fontFamily: style.fontFamilyMedium,
-                      fontSize: style.fontSize.small,
-                      alignSelf: 'center',
-                      marginTop: 8,
-                    }}
-                  >
-                    Bunday foydalanuvchi topilmadi!
-                  </Text>
-                )}
-                <View
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: 20,
-                  }}
-                >
-                  <Button
-                    title="Izlash"
-                    onPress={SearchUser}
-                    disabled={disabled}
-                    fullWidth={false}
-                    style={{ width: '90%' }}
-                  />
-                </View>
-              </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('210')} />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          {/* STIR */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>STIRni kiriting</Text>
+            <View
+              style={[
+                styles.inputWrap,
+                focused === 'stir' && styles.inputWrapFocused,
+              ]}
+            >
+              <BuildingIcon size={rs(18)} color={rd.color.textTertiary} />
+              <TextInput
+                value={stir}
+                maxLength={9}
+                placeholder="STIRni kiriting"
+                onChangeText={text => setStir(text)}
+                onFocus={() => setFocused('stir')}
+                onBlur={() => setFocused(null)}
+                placeholderTextColor={rd.color.textTertiary}
+                keyboardType="numeric"
+                allowFontScaling={false}
+                style={styles.inputField}
+              />
             </View>
           </View>
-          {error === false && loading === false && data?.success && (
-            <UserInfo user={data?.user} navigation={navigation} />
+
+          {/* ID raqami */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>ID raqamini kiriting</Text>
+            <View
+              style={[
+                styles.inputWrap,
+                focused === 'id' && styles.inputWrapFocused,
+              ]}
+            >
+              <UserIcon size={rs(18)} color={rd.color.textTertiary} />
+              <MaskedTextInput
+                value={userID}
+                placeholder="ID raqamini kiriting"
+                autoCapitalize="characters"
+                allowFontScaling={false}
+                onChangeText={(formatted, extracted) => {
+                  setUserID(extracted);
+                }}
+                onFocus={() => setFocused('id')}
+                onBlur={() => setFocused(null)}
+                mask="[000000]{/}[AA]"
+                placeholderTextColor={rd.color.textTertiary}
+                keyboardType="default"
+                style={styles.inputField}
+              />
+            </View>
+          </View>
+
+          {error && (
+            <Text style={styles.errorText}>Bunday foydalanuvchi topilmadi!</Text>
           )}
+
+          <TouchableOpacity
+            disabled={disabled}
+            onPress={SearchUser}
+            activeOpacity={0.8}
+            style={[
+              styles.primaryButton,
+              disabled && styles.primaryButtonDisabled,
+            ]}
+          >
+            <Text
+              style={[
+                styles.primaryButtonText,
+                disabled && styles.primaryButtonTextDisabled,
+              ]}
+            >
+              Izlash
+            </Text>
+          </TouchableOpacity>
         </View>
-      {/* {Platform.OS === 'android' && open && (
-        <DatePicker
-          value={date}
-          display="calendar"
-          style={{
-            backgroundColor: theme === 'dark' ? '#000' : '#fff',
-            alignSelf: 'center',
-            borderRadius: 20,
-          }}
-          mode="date"
-          onChange={(event: DateTimePickerEvent, date?: Date) => {
-            setDate(date!);
-            setOpen(false);
-          }}
-        />
-      )}
 
-      {Platform.OS === 'ios' && (
-        <DateModal
-          open={open}
-          setOpen={setOpen}
-          title={t('801')}
-          date={date}
-          setDate={setDate}
+        {error === false && loading === false && data?.success && (
+          <UserInfo user={data?.user} navigation={navigation} />
+        )}
+      </ScrollView>
 
-          // max={maxDate}
-        />
-        
-      )} */}
       <DatePicker
         open={open}
         date={date}
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: rd.color.surface,
           alignSelf: 'center',
         }}
         mode="date"
@@ -203,94 +180,68 @@ const SearchJuridicUser = () => {
           setOpen(false);
         }}
       />
-      {/* <Toast config={toastConfig} /> */}
-      {/* <DateModal
-        open={open}
-        setOpen={setOpen}
-        date={date}
-        setDate={setDate}
-        title={`Tug'ulgan sanangizni \nkiriting`}
-      /> */}
-    </ScreenLayout>
+    </View>
   );
 };
 
 const UserInfo = ({ user, navigation }) => {
+  const fullName =
+    (user?.last_name || '') +
+    ' ' +
+    (user?.first_name || '') +
+    ' ' +
+    (user?.middle_name || '');
+
+  const initials = (
+    (user?.first_name?.[0] || '') + (user?.last_name?.[0] || '')
+  ).toUpperCase();
+
   return (
-    <View style={styles.main}>
-      <View style={styles.aboutUsContainer}>
-        <View
-          style={{
-            flex: 1,
-            width: '90%',
-            alignSelf: 'center',
-            marginVertical: 20,
-          }}
-        >
-          <View>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('UserInformationOfDebt');
-              }}
-              activeOpacity={0.8}
-              style={styles.getUserInfoButton}
-            >
-              <Text
-                style={[styles.textButton, { fontSize: style.fontSize.small }]}
-              >
-                Ma’lumotlarni ko‘rish
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View>
-            <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-              <View style={styles.inputTitle}>
-                <Text style={styles.phoneText}>FISH : </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  value={
-                    `${user?.last_name} ${user?.first_name} ${user?.middle_name}` ||
-                    null
-                  }
-                  placeholderTextColor={style.placeHolderColor}
-                  editable={false}
-                  keyboardType="default"
-                  style={[styles.TextInput, { paddingLeft: 15 }]}
-                />
-              </View>
-            </View>
-            <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-              <View style={styles.inputTitle}>
-                <Text style={styles.phoneText}>Ro`yxatdan o`tgan:</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  editable={false}
-                  placeholderTextColor={style.placeHolderColor}
-                  value={user?.createdAt.slice(0, 10)}
-                  keyboardType="default"
-                  style={[styles.TextInput, { paddingLeft: 15 }]}
-                />
-              </View>
-            </View>
-            <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-              <View style={styles.inputTitle}>
-                <Text style={styles.phoneText}>ID raqami:</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  placeholderTextColor={style.placeHolderColor}
-                  value={user?.uid}
-                  editable={false}
-                  keyboardType="default"
-                  style={[styles.TextInput, { paddingLeft: 15 }]}
-                />
-              </View>
-            </View>
-          </View>
+    <View style={[styles.card, styles.userCard]}>
+      {/* Foydalanuvchi kartasi */}
+      <View style={styles.userRow}>
+        <View style={styles.avatar}>
+          {initials ? (
+            <Text style={styles.avatarText}>{initials}</Text>
+          ) : (
+            <UserIcon size={rs(24)} color={rd.color.primary} />
+          )}
+        </View>
+        <View style={styles.userMeta}>
+          <Text style={styles.userName} numberOfLines={2}>
+            {fullName.trim()}
+          </Text>
+          <Text style={styles.userDetail}>ID: {user?.uid}</Text>
         </View>
       </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>FISH</Text>
+        <Text style={styles.infoValue} numberOfLines={2}>
+          {`${user?.last_name} ${user?.first_name} ${user?.middle_name}`}
+        </Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>Ro`yxatdan o`tgan</Text>
+        <Text style={styles.infoValue}>{user?.createdAt.slice(0, 10)}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.infoLabel}>ID raqami</Text>
+        <Text style={styles.infoValue}>{user?.uid}</Text>
+      </View>
+
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('UserInformationOfDebt');
+        }}
+        activeOpacity={0.8}
+        style={[styles.primaryButton, styles.actionButton]}
+      >
+        <Text style={styles.primaryButtonText}>Ma’lumotlarni ko‘rish</Text>
+        <ChevronRight size={rs(18)} color={rd.color.onPrimary} />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -298,86 +249,141 @@ const UserInfo = ({ user, navigation }) => {
 export default SearchJuridicUser;
 
 const styles = StyleSheet.create({
-  dateText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-  },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
+  container: {
+    backgroundColor: rd.color.page,
     flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
   },
-  getUserInfoButton: {
+  scrollContent: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(8),
+    paddingBottom: rs(40),
+  },
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+  },
+  userCard: {
+    marginTop: rs(16),
+  },
+  fieldGroup: {
+    marginBottom: rs(18),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    height: rs(56),
+    paddingHorizontal: rs(16),
+  },
+  inputWrapFocused: {
+    borderColor: rd.color.primary,
+  },
+  inputField: {
+    flex: 1,
+    marginLeft: rs(10),
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
+  },
+  errorText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.error,
+    textAlign: 'center',
+    marginBottom: rs(12),
+  },
+  primaryButton: {
+    backgroundColor: rd.color.primary,
+    height: rs(54),
+    borderRadius: rd.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    width: style.width / 3,
-    borderRadius: 10,
-    paddingTop: 5,
-    paddingBottom: 5,
-    paddingLeft: 10,
-    paddingRight: 10,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
     flexDirection: 'row',
-    marginTop: 20,
   },
-  title: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyBold,
-    color: style.textColor,
+  primaryButtonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
   },
-
-  main: {
+  primaryButtonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
+    textAlign: 'center',
+  },
+  primaryButtonTextDisabled: {
+    color: rd.color.textTertiary,
+  },
+  actionButton: {
+    marginTop: rs(20),
+    paddingHorizontal: rs(12),
+  },
+  // UserInfo
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: rs(52),
+    height: rs(52),
+    borderRadius: rs(26),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(18),
+    color: rd.color.primary,
+  },
+  userMeta: {
     flex: 1,
-    width: '90%',
-    alignSelf: 'center',
+    marginLeft: rs(14),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
+  userName: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+  },
+  userDetail: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(4),
+  },
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginVertical: rs(16),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: rs(8),
+  },
+  infoLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginRight: rs(12),
+  },
+  infoValue: {
     flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 10,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
+    textAlign: 'right',
   },
 });

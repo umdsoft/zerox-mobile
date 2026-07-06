@@ -2,6 +2,7 @@ import {
   Dimensions,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -10,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import React, { useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
@@ -19,7 +19,6 @@ import axios from 'axios';
 // import TextInputMask from 'react-native-text-input-mask';
 import { storage } from '../../store/api/token/getToken';
 
-import OtherHeader from '../components/OtherHeader';
 import DatePicker from 'react-native-date-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
@@ -42,10 +41,15 @@ import QuestionMarkIcon from '../../images/questionMark';
 import Popover from 'react-native-popover-view';
 import { Mode, Placement } from 'react-native-popover-view/dist/Types';
 import { widthPercentageToDP } from 'react-native-responsive-screen';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
+import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
 const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
-  const { type } = useRoute().params;
+  // params yo'q holatda ham ishlasin (paramssiz navigatsiya crash bermasin).
+  // Default type: 1 (qarz berish tarmog'i).
+  const { type = 1 } = (useRoute().params as { type?: number }) || {};
   const theme = useColorScheme();
   const { user } = useSelector(state => state.HomeReducer);
   const navigation = useNavigation();
@@ -137,143 +141,110 @@ const SearchUserScreen = () => {
     return <Loading />;
   }
 
+  const disabled = userID.length === 9 ? false : true;
+
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          width: style.width,
-          position: 'absolute',
-          height: style.height / 3,
-        }}
+      <StatusBar barStyle="dark-content" />
+      <RdHeader title={t('267')} />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('267')} />
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View>
-          {searchForm == false ? (
-            error === false &&
-            loading === false &&
-            data?.success && (
-              <UserInfo user={data?.user} navigation={navigation} type={type} />
-            )
-          ) : (
-            <View style={styles.main}>
-              <View style={styles.aboutUsContainer}>
-                <View
-                  style={{
-                    width: '100%',
-                    alignSelf: 'center',
-                    marginVertical: 20,
+        {searchForm == false ? (
+          error === false &&
+          loading === false &&
+          data?.success && (
+            <UserInfo user={data?.user} navigation={navigation} type={type} />
+          )
+        ) : (
+          <View style={styles.card}>
+            {/* Foydalanuvchi ID */}
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>{t('210')}</Text>
+                <Popover
+                  popoverStyle={{ borderRadius: 10 }}
+                  displayArea={{
+                    x: 50,
+                    y: 150,
+                    width: 300,
+                    height: 250,
                   }}
-                >
-                  <View style={{ alignSelf: 'center' }}>
-                    <View style={styles.TextInputLabelContainer}>
-                      <View
-                        style={[styles.inputTitle, { flexDirection: 'row' }]}
-                      >
-                        <MainText size={fontSize[12]}>{t('210')}</MainText>
-                        <Popover
-                          popoverStyle={{ borderRadius: 10 }}
-                          displayArea={{
-                            x: 50,
-                            y: 150,
-                            width: 300,
-                            height: 250,
-                          }}
-                          placement={Placement.BOTTOM}
-                          // placement={Placement.BOTTOM}
-                          from={
-                            <TouchableOpacity style={{ marginLeft: 5 }}>
-                              <QuestionMarkIcon
-                                width={20}
-                                height={20}
-                                color={style.blue}
-                              />
-                            </TouchableOpacity>
-                          }
-                        >
-                          <View style={{ padding: 10, width: 250 }}>
-                            <MainText size={fontSize[11]}>{t('130')}</MainText>
-                          </View>
-                        </Popover>
-                      </View>
-
-                      <View style={{ flex: 1 }}>
-                        <MaskedTextInput
-                          value={userID}
-                          placeholder="100000/AA"
-                          autoCapitalize="characters"
-                          allowFontScaling={false}
-                          onChangeText={(formatted, extracted) => {
-                            setUserID(extracted.toUpperCase());
-                          }}
-                          mask="[000000]{/}[AA]"
-                          placeholderTextColor={style.placeHolderColor}
-                          keyboardType="default"
-                          style={[styles.TextInput, { paddingLeft: 15 }]}
-                        />
-                      </View>
-                    </View>
-                    <View style={styles.TextInputLabelContainer}>
-                      <View style={styles.inputTitle}>
-                        <MainText size={fontSize[12]}>{t('213')}</MainText>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <TouchableOpacity
-                          onPress={() => setOpen(!open)}
-                          style={styles.button}
-                        >
-                          <MainText size={fontSize[14]}>
-                            {settingDate(date) === settingDate(Date.now()) ? (
-                              <MainText
-                                color={colors.placeHolderColor}
-                                size={fontSize[14]}
-                                style={{ opacity: 0.5 }}
-                              >
-                                {' '}
-                                dd.mm.yyyy{' '}
-                              </MainText>
-                            ) : (
-                              settingDate(date)
-                            )}
-                          </MainText>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View
-                    style={{
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginTop: 20,
-                    }}
-                  >
-                    <TouchableOpacity
-                      disabled={userID.length === 9 ? false : true}
-                      onPress={SearchUser}
-                      activeOpacity={0.8}
-                      style={[
-                        styles.registerButton,
-                        {
-                          backgroundColor: (userID.length === 9 ? false : true)
-                            ? style.disabledButtonColor
-                            : style.blue,
-                        },
-                      ]}
-                    >
-                      <MainText color={colors.white} size={fontSize[14]}>
-                        {t('216')}
-                      </MainText>
+                  placement={Placement.BOTTOM}
+                  from={
+                    <TouchableOpacity style={{ marginLeft: rs(6) }}>
+                      <QuestionMarkIcon
+                        width={rs(18)}
+                        height={rs(18)}
+                        color={rd.color.primary}
+                      />
                     </TouchableOpacity>
+                  }
+                >
+                  <View style={{ padding: 10, width: 250 }}>
+                    <MainText size={fontSize[11]}>{t('130')}</MainText>
                   </View>
-                </View>
+                </Popover>
+              </View>
+
+              <View style={styles.inputWrap}>
+                <SearchIcon size={rs(18)} color={rd.color.textTertiary} />
+                <MaskedTextInput
+                  value={userID}
+                  placeholder="100000/AA"
+                  autoCapitalize="characters"
+                  allowFontScaling={false}
+                  onChangeText={(formatted, extracted) => {
+                    setUserID(extracted.toUpperCase());
+                  }}
+                  mask="[000000]{/}[AA]"
+                  placeholderTextColor={rd.color.textTertiary}
+                  keyboardType="default"
+                  style={styles.inputField}
+                />
               </View>
             </View>
-          )}
-        </View>
+
+            {/* Tug'ilgan sana */}
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.label, { marginBottom: rs(8) }]}>
+                {t('213')}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setOpen(!open)}
+                activeOpacity={0.8}
+                style={styles.dateInput}
+              >
+                {settingDate(date) === settingDate(Date.now()) ? (
+                  <Text style={styles.datePlaceholder}>dd.mm.yyyy</Text>
+                ) : (
+                  <Text style={styles.dateValue}>{settingDate(date)}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              disabled={disabled}
+              onPress={SearchUser}
+              activeOpacity={0.8}
+              style={[
+                styles.primaryButton,
+                disabled && styles.primaryButtonDisabled,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.primaryButtonText,
+                  disabled && styles.primaryButtonTextDisabled,
+                ]}
+              >
+                {t('216')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* {Platform.OS === 'android' && open && (
@@ -397,149 +368,98 @@ const UserInfo = ({ user, navigation, type }) => {
     }
   };
 
-  return (
-    <View style={{ flex: 1, paddingBottom: 10 }}>
-      <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <View
-            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
-          >
-            <View>
-              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-                <View style={styles.inputTitle}>
-                  <MainText size={fontSize[12]}>{t('fish')}</MainText>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    value={
-                      user?.last_name +
-                      ' ' +
-                      user.first_name +
-                      ' ' +
-                      user.middle_name
-                    }
-                    multiline={true}
-                    placeholderTextColor={style.placeHolderColor}
-                    editable={false}
-                    allowFontScaling={false}
-                    keyboardType="default"
-                    style={[
-                      styles.TextInput,
-                      {
-                        paddingLeft: 15,
-                        paddingTop: 18,
-                        paddingBottom: 18,
-                        fontSize: fontSize[12],
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-                <View style={styles.inputTitle}>
-                  <MainText size={fontSize[12]}>{t('120')}</MainText>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    placeholderTextColor={style.placeHolderColor}
-                    value={user?.uid}
-                    multiline={true}
-                    editable={false}
-                    allowFontScaling={false}
-                    keyboardType="default"
-                    style={[
-                      styles.TextInput,
-                      {
-                        paddingLeft: 15,
-                        width: '100%',
-                        paddingTop: 18,
-                        paddingBottom: 18,
-                        fontSize: fontSize[12],
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-            </View>
+  const fullName =
+    (user?.last_name || '') +
+    ' ' +
+    (user?.first_name || '') +
+    ' ' +
+    (user?.middle_name || '');
 
-            <View>
-              <MainText mTop={10} size={fontSize[12]}>
-                {resolve
-                  ? t('246')
-                  : reject
-                  ? t('258')
-                  : !active
-                  ? t('219')
-                  : t('231')}
-              </MainText>
-              <TouchableOpacity
-                disabled={active && first}
-                onPress={() => {
-                  startTimer();
-                }}
-                activeOpacity={0.8}
-                style={[
-                  styles.getUserInfoButton,
-                  {
-                    backgroundColor:
-                      active && first
-                        ? style.disabledButtonColor
-                        : resolve
-                        ? '#48BB78'
-                        : style.blue,
-                    flexDirection: 'row',
-                  },
-                ]}
-              >
-                {resolve ? <EyeIcon /> : <AskPermission />}
-                <MainText color={colors.white} mrLeft={8} size={fontSize[12]}>
-                  {resolve ? t('252') : t('225')}
-                </MainText>
-              </TouchableOpacity>
-            </View>
-            <View>
-              <TouchableOpacity
-                onPress={() => {
-                  navigation.navigate('GiveDebtUser', {
-                    qarzoluvchi: user,
-                    type: type,
-                  });
-                }}
-                activeOpacity={0.8}
-                style={[styles.getUserInfoButton, { flexDirection: 'row' }]}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '85%',
-                    paddingHorizontal: 10,
-                    alignSelf: 'center',
-                  }}
-                >
-                  <AskPermissionNearby />
-                  <View style={{ marginLeft: 4 }}>
-                    <Text
-                      style={[
-                        styles.textButton,
-                        {
-                          fontSize: fontSize[12],
-                          flexWrap: 'wrap',
-                          textAlign: 'center',
-                        },
-                      ]}
-                      allowFontScaling={false}
-                    >
-                      {type === 1 ? t('222') : t('288')}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+  const initials = (
+    (user?.first_name?.[0] || '') + (user?.last_name?.[0] || '')
+  ).toUpperCase();
+
+  const requestDisabled = active && first;
+
+  return (
+    <View style={styles.card}>
+      {/* Foydalanuvchi kartasi */}
+      <View style={styles.userRow}>
+        <View style={styles.avatar}>
+          {initials ? (
+            <Text style={styles.avatarText}>{initials}</Text>
+          ) : (
+            <UserIcon size={rs(24)} color={rd.color.primary} />
+          )}
+        </View>
+        <View style={styles.userMeta}>
+          <Text style={styles.userName} numberOfLines={2}>
+            {fullName.trim()}
+          </Text>
+          <Text style={styles.userDetail}>
+            {t('120')}: {user?.uid}
+          </Text>
         </View>
       </View>
-      {/* <Toast config={toastConfig} /> */}
+
+      <View style={styles.divider} />
+
+      <Text style={styles.statusText}>
+        {resolve
+          ? t('246')
+          : reject
+          ? t('258')
+          : !active
+          ? t('219')
+          : t('231')}
+      </Text>
+
+      <TouchableOpacity
+        disabled={requestDisabled}
+        onPress={() => {
+          startTimer();
+        }}
+        activeOpacity={0.8}
+        style={[
+          styles.primaryButton,
+          styles.actionButton,
+          requestDisabled
+            ? styles.primaryButtonDisabled
+            : resolve
+            ? styles.successButton
+            : null,
+        ]}
+      >
+        {resolve ? <EyeIcon /> : <AskPermission />}
+        <Text
+          style={[
+            styles.primaryButtonText,
+            requestDisabled && styles.primaryButtonTextDisabled,
+            { marginLeft: rs(8) },
+          ]}
+        >
+          {resolve ? t('252') : t('225')}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('GiveDebtUser', {
+            qarzoluvchi: user,
+            type: type,
+          });
+        }}
+        activeOpacity={0.8}
+        style={[styles.primaryButton, styles.actionButton]}
+      >
+        <AskPermissionNearby />
+        <Text
+          style={[styles.primaryButtonText, { marginLeft: rs(8) }]}
+          allowFontScaling={false}
+        >
+          {type === 1 ? t('222') : t('288')}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -561,110 +481,141 @@ export default SearchUserScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
     flex: 1,
   },
-  dateText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
+  scrollContent: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(8),
+    paddingBottom: rs(40),
   },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+  },
+  fieldGroup: {
+    marginBottom: rs(18),
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: rs(8),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    height: rs(56),
+    paddingHorizontal: rs(16),
+  },
+  inputField: {
+    flex: 1,
+    marginLeft: rs(10),
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    textTransform: 'uppercase',
+    padding: 0,
+  },
+  dateInput: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    height: rs(56),
+    paddingHorizontal: rs(16),
+    justifyContent: 'center',
+  },
+  datePlaceholder: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.textTertiary,
+  },
+  dateValue: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+  },
+  primaryButton: {
+    backgroundColor: rd.color.primary,
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  primaryButtonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  successButton: {
+    backgroundColor: rd.color.success,
+  },
+  primaryButtonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
     textAlign: 'center',
   },
-  registerButton: {
-    width: '90%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+  primaryButtonTextDisabled: {
+    color: rd.color.textTertiary,
   },
-  tix: {
-    fontSize: style.fontSize.xa + 1,
-    fontFamily: style.fontFamilyMedium,
-    marginTop: 10,
+  actionButton: {
+    marginTop: rs(12),
+    paddingHorizontal: rs(12),
   },
-  button: {
-    width: '100%',
-    paddingVertical: 23,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-  },
-  TextInput: {
-    paddingVertical: 18,
-    width: '90%',
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontSize: fontSize[14],
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    textTransform: 'uppercase',
-  },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  getUserInfoButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 5,
-    marginTop: 10,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
+  // UserInfo card
+  userRow: {
     flexDirection: 'row',
-    marginTop: 20,
+    alignItems: 'center',
   },
-  title: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyBold,
-    color: style.textColor,
+  avatar: {
+    width: rs(52),
+    height: rs(52),
+    borderRadius: rs(26),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
-  main: {
+  avatarText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(18),
+    color: rd.color.primary,
+  },
+  userMeta: {
     flex: 1,
-    marginBottom: 300,
-    width: '90%',
-    alignSelf: 'center',
+    marginLeft: rs(14),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 10,
+  userName: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+  },
+  userDetail: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginTop: rs(4),
+  },
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginVertical: rs(16),
+  },
+  statusText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(4),
   },
 });

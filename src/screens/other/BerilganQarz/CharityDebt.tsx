@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {style} from '../../../theme/style';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -14,7 +14,7 @@ import {storage} from '../../../store/api/token/getToken';
 import {URL} from '../../constants';
 import {settingDate} from '../../../helper';
 import ScreenLayout from '../../components/ScreenLayout';
-import Button from '../../components/Button';
+import {rd, rs} from '../../../theme/rd';
 
 import {useDispatch, useSelector} from 'react-redux';
 import {setNotification} from '../../../store/reducers/HomeReducer';
@@ -127,16 +127,14 @@ const CharityDebt = () => {
 
   return (
     <ScreenLayout title={t('378')} scroll>
-        <View style={styles.aboutUsContainer}>
-          {loading ? (
-            <Loading />
-          ) : (
-            <View
-              style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-              <View>
+        {loading ? (
+          <Loading />
+        ) : (
+            <View style={styles.content}>
+              <View style={styles.card}>
                 {/* 375 */}
                 {/*   {sortText(info?.residual_amount)} {info?.currency} */}
-                <Text allowFontScaling={false} style={[styles.hisob, {fontSize: style.fontSize.xx}]}>
+                <Text allowFontScaling={false} style={styles.hisob}>
                   <Trans
                     t={t}
                     i18nKey="381"
@@ -175,18 +173,13 @@ const CharityDebt = () => {
                   />
                 </Text>
               </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginTop: 20,
-                }}>
+              <View style={styles.checkRow}>
                 <CheckBox
                   value={check}
-                  tintColor={style.blue}
+                  tintColor={rd.color.primary}
                   tintColors={{
-                    true: style.blue,
-                    false: style.disabledButtonColor,
+                    true: rd.color.primary,
+                    false: rd.color.textTertiary,
                   }}
                   boxType="square"
                   style={{width: 20, height: 20}}
@@ -197,24 +190,26 @@ const CharityDebt = () => {
                   onPress={() => {
                     navigation.navigate('Dalol', {type: 2, data: info});
                   }}
-                  style={[
-                    styles.phoneText,
-                    {color: style.blue, maxWidth: '90%', marginLeft: 10},
-                  ]}>
+                  style={styles.linkText}>
                   {t('372')}
                 </Text>
               </View>
-              <View>
-                <Button
-                  title={t('93')}
-                  onPress={onPress}
-                  disabled={!check}
-                  style={{marginTop: 20}}
-                />
-              </View>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onPress}
+                disabled={!check}
+                style={[styles.primaryBtn, !check && styles.primaryBtnDisabled]}>
+                <Text
+                  allowFontScaling={false}
+                  style={[
+                    styles.primaryBtnText,
+                    !check && styles.primaryBtnTextDisabled,
+                  ]}>
+                  {t('93')}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
-        </View>
 
       {/* <Toast config={toastConfig} /> */}
     </ScreenLayout>
@@ -224,108 +219,55 @@ const CharityDebt = () => {
 export default CharityDebt;
 
 const styles = StyleSheet.create({
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2.5,
-    color: style.textColor,
+  content: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(20),
+    paddingBottom: rs(24),
   },
   hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
     textAlign: 'center',
+    lineHeight: rs(22),
   },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
+  linkText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.primary,
+    maxWidth: '90%',
+    marginLeft: rs(10),
   },
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  item: {
-    flex: 1,
-  },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
+  checkRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: rs(20),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+  card: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    padding: rs(14),
+  },
+  primaryBtn: {
+    marginTop: rs(20),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  primaryBtnText: {
+    fontSize: rs(16),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
+  },
+  primaryBtnTextDisabled: {
+    color: rd.color.textTertiary,
   },
 });

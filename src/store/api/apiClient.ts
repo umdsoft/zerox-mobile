@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
+import { installAuthRefresh } from './authInterceptor';
 
 /**
  * Markaziy API klient.
@@ -31,5 +32,8 @@ apiClient.interceptors.request.use(config => {
   }
   return config;
 });
+
+// Token eskirganda avtomatik yangilash (refresh) + so'rovni qayta yuborish.
+installAuthRefresh(apiClient);
 
 export default apiClient;

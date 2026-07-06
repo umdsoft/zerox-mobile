@@ -12,7 +12,6 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 
 import LottieView from 'lottie-react-native';
-import {normalize, style} from '../theme/style';
 import {androidFace, iosFace} from '../nativemodule/android.event';
 import {storage} from '../store/api/token/getToken';
 import axios from 'axios';
@@ -27,6 +26,8 @@ import {t} from 'i18next';
 import {URL} from './constants';
 import ScreenLayout from './components/ScreenLayout';
 import Button from './components/Button';
+import {rd, rs} from '../theme/rd';
+import {FingerprintIcon} from './home/redesign/icons';
 
 const returnMessage = response => {
   switch (response.data.code) {
@@ -250,29 +251,27 @@ const ChangePassportData = () => {
   }
 
   return (
-    <ScreenLayout
-      title={t('otish')}
-      headerColor={style.blue}
-      headerIconColor="#fff"
-      headerTitleColor={style.backgroundColorDark}
-      scroll
-      background={false}
-    >
-      <View style={styles.container}>
-        <LottieView
-          source={require('../images/scan.json')}
-          autoPlay={true}
-          renderMode="AUTOMATIC"
-          resizeMode="cover"
-          style={{
-            width: normalize(150),
-            height: normalize(150),
-            marginBottom: normalize(50),
-          }}
-        />
+    <ScreenLayout title={t('otish')} scroll contentStyle={styles.content}>
+      <View style={styles.hero}>
+        <View style={styles.badge}>
+          <FingerprintIcon size={rs(30)} color={rd.color.primary} />
+        </View>
 
-        <Text allowFontScaling={false} style={styles.text}>{t('753')}</Text>
+        <View style={styles.scanCard}>
+          <LottieView
+            source={require('../images/scan.json')}
+            autoPlay={true}
+            renderMode="AUTOMATIC"
+            resizeMode="cover"
+            style={styles.lottie}
+          />
+        </View>
+
+        <Text allowFontScaling={false} style={styles.text}>
+          {t('753')}
+        </Text>
       </View>
+
       <Button
         title={t('45')}
         onPress={() => {
@@ -294,20 +293,49 @@ const ChangePassportData = () => {
 export default ChangePassportData;
 
 const styles = StyleSheet.create({
-  container: {
+  content: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingTop: rs(24),
+  },
+  hero: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: normalize(20),
-    paddingHorizontal: 15,
+  },
+  badge: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(28),
+  },
+  scanCard: {
+    width: rs(220),
+    height: rs(220),
+    borderRadius: rd.radius.huge,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(28),
+  },
+  lottie: {
+    width: rs(150),
+    height: rs(150),
   },
   text: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-    marginTop: 20,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.textSecondary,
     textAlign: 'center',
+    lineHeight: rs(22),
+    paddingHorizontal: rs(12),
   },
   buttonSpacing: {
-    marginTop: normalize(20),
+    marginTop: rs(24),
   },
 });

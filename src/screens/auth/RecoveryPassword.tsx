@@ -1,459 +1,32 @@
-// import {
-//   StyleSheet,
-//   View,
-//   TextInput,
-//   ScrollView,
-//   TouchableOpacity,
-//   KeyboardAvoidingView,
-//   Platform,
-//   Text,
-// } from 'react-native';
-// import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-// import {useNavigation} from '@react-navigation/native';
-// import {normalize, style} from '../../theme/style';
-
-// import axios from 'axios';
-// import OtherHeader from '../components/OtherHeader';
-// import {URL} from '../constants';
-// import Toast from 'react-native-toast-message';
-// import {toastConfig} from '../components/ToastConfig';
-// import {storage} from '../../store/api/token/getToken';
-// import Loading from '../components/Loading';
-// import Check from '../../images/CheckIcon';
-// import PasswordInput from '../components/PasswordInput';
-// import NewPasspord from '../../images/NewPassword';
-// import MainText from '../components/MainText';
-// import {colors} from '../../theme/colors';
-// import {fontSize} from '../../theme/font';
-// import {t} from 'i18next';
-// const RecoveryPassword = () => {
-//   // 1 type parolni uzgartirish
-//   // 2 parolni tiklash
-//   let scrollRef = useRef(null);
-
-//   const navigation = useNavigation();
-
-//   const [prevPas, setPrevPas] = useState('');
-//   const [loading, setLoading] = useState(false);
-
-//   const [password, setPassword] = useState('');
-//   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [lower, setLower] = useState(false);
-//   const [upper, setUpper] = useState(false);
-//   const [number, setNumber] = useState(false);
-//   const [space, setSpace] = useState(true);
-//   const [symbole, setSymbole] = useState(false);
-//   const [min, setMin] = useState(false);
-//   const [disabled, setDisabled] = useState(true);
-
-//   const onChangeText = text => {
-//     setPassword(text);
-//   };
-//   const onPrevPassChangeText = text => {
-//     console.log(text.split(''), 'text');
-//     setPrevPas(text);
-//   };
-
-//   const changePasswordHandle = useCallback(async () => {
-//     try {
-//       console.log(storage.getString('token'));
-//       setLoading(true);
-//       const data = await fetch(URL + '/user/edit/password', {
-//         body: JSON.stringify({
-//           newPass: password,
-//           prevPass: prevPas,
-//         }),
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           Authorization: `Bearer ${storage.getString('token')}`,
-//         },
-//       });
-//       const json = await data.json();
-//       console.log(json, 'json');
-//       if (json.code === 4) {
-//         setLoading(false);
-//         Toast.show({
-//           autoHide: true,
-//           visibilityTime: 3000,
-//           position: 'bottom',
-//           type: 'error2',
-//           props: {
-//             title: 'Xatolik',
-//             desc: t('Yangi parol joriy paroldan farq qilishi lozim'),
-//           },
-//         });
-//       }
-//       if (json.code === 0) {
-//         setLoading(false);
-//         Toast.show({
-//           autoHide: true,
-//           visibilityTime: 3000,
-//           position: 'bottom',
-//           type: 'error2',
-//           props: {title: 'Xatolik', desc: 'Bunday foydalanuvchi topilmadi.'},
-//         });
-//       }
-//       if (json.code === 1) {
-//         setLoading(false);
-//         Toast.show({
-//           autoHide: true,
-//           visibilityTime: 3000,
-//           position: 'bottom',
-//           type: 'error2',
-//           props: {
-//             title: 'Xatolik',
-//             desc: t('Joriy parolni noto‘g‘ri kiritdingiz'),
-//           },
-//         });
-//       }
-//       if (json.code === 2) {
-//         setLoading(false);
-//         Toast.show({
-//           autoHide: true,
-//           visibilityTime: 3000,
-//           position: 'bottom',
-//           type: 'omad',
-//           props: {desc: t('changepassword')},
-//         });
-//         setTimeout(() => {
-//           navigation.navigate('BottomTabNavigator');
-//         }, 3000);
-//       }
-//       if (json.code === 3) {
-//         Toast.show({
-//           autoHide: true,
-//           visibilityTime: 3000,
-//           position: 'bottom',
-//           type: 'error2',
-//           props: {
-//             title: 'Xatolik',
-//             desc: 'Parolni o‘zgartirishda xatolik sodir bo‘ldi.',
-//           },
-//         });
-//       }
-//       setLoading(false);
-//     } catch (error) {
-//       console.log(error?.message);
-//       console.error(JSON.stringify(error));
-//       setLoading(false);
-//     }
-//   }, [password, prevPas, navigation]);
-
-//   const renderValidation = useMemo(() => {
-//     return (
-//       <View style={{width: '90%', marginTop: 10}}>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={min ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {/* {t('63')} */}
-//             {t('78')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={lower ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('81')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={upper ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('75')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={number ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('84')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={symbole ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('87')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check width={20} height={20} color={space ? 'green' : '#000'} />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('90')}
-//           </MainText>
-//         </View>
-//         <View style={styles.icon}>
-//           <Check
-//             width={20}
-//             height={20}
-//             color={password === confirmPassword ? 'green' : '#000'}
-//           />
-//           <MainText mrLeft={4} color={colors.black} size={fontSize[12]}>
-//             {t('Yangi parollar mos kelmayapti')}
-//           </MainText>
-//         </View>
-//       </View>
-//     );
-//   }, [lower, min, number, space, symbole, password, confirmPassword, upper]);
-
-//   useEffect(() => {
-//     if (
-//       lower === true &&
-//       upper === true &&
-//       min === true &&
-//       number === true &&
-//       symbole === true &&
-//       space === true &&
-//       password === confirmPassword &&
-//       prevPas.length > 0
-//     ) {
-//       setDisabled(false);
-//     } else {
-//       setDisabled(true);
-//     }
-//   }, [
-//     confirmPassword,
-//     lower,
-//     min,
-//     number,
-//     password,
-//     prevPas,
-//     space,
-//     symbole,
-//     upper,
-//   ]);
-
-//   if (loading) {
-//     return <Loading />;
-//   }
-
-//   return (
-//     <View style={[styles.container]}>
-//       <OtherHeader
-//         title={t('678')}
-//         titleColor="#000"
-//         iconColor={'#fff'}
-//         backgroundColor={style.blue}
-//       />
-//       <KeyboardAvoidingView
-//         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-//         <ScrollView
-//           contentContainerStyle={{bottom: 20}}
-//           showsVerticalScrollIndicator={false}>
-//           <View>
-//             <View
-//               style={{
-//                 alignItems: 'center',
-//                 // flex: 0.5,
-//                 justifyContent: 'center',
-//               }}>
-//               <NewPasspord width={normalize(150)} height={normalize(150)} />
-//             </View>
-
-//             <View style={styles.main}>
-//               <View
-//                 style={{
-//                   width: '90%',
-//                   paddingLeft: 0,
-//                   paddingRight: 0,
-//                   marginBottom: 15,
-//                 }}>
-//                 <MainText color={colors.black} size={fontSize[12]}>
-//                   {t('66')}
-//                 </MainText>
-//               </View>
-//               <View
-//                 style={[
-//                   styles.TextInputLabelContainer,
-//                   {marginTop: 15, marginBottom: 15},
-//                 ]}>
-//                 <View style={styles.title}>
-//                   <MainText color={colors.black} size={fontSize[12]}>
-//                     {t('693')}
-//                   </MainText>
-//                 </View>
-//                 <View style={{flex: 1}}>
-//                   <TextInput
-//                     value={prevPas}
-//                     onChangeText={onPrevPassChangeText}
-//                     keyboardType="default"
-//                     style={styles.TextInput}
-//                   />
-//                 </View>
-//               </View>
-//               <View style={{width: '90%'}}>
-//                 <PasswordInput
-//                   title={t('696')}
-//                   password={password}
-//                   onChangeText={onChangeText}
-//                   setLower={setLower}
-//                   setMin={setMin}
-//                   setSymbole={setSymbole}
-//                   setUpper={setUpper}
-//                   setNumber={setNumber}
-//                   setSpace={setSpace}
-//                 />
-//               </View>
-
-//               <View style={[styles.TextInputLabelContainer, {marginTop: 15}]}>
-//                 <View style={styles.title}>
-//                   <MainText color={colors.black} size={fontSize[12]}>
-//                     {t('699')}
-//                   </MainText>
-//                 </View>
-//                 <View style={{flex: 1}}>
-//                   <TextInput
-//                     value={confirmPassword}
-//                     onChangeText={text => {
-//                       setConfirmPassword(text);
-//                     }}
-//                     keyboardType="default"
-//                     style={styles.TextInput}
-//                   />
-//                 </View>
-//               </View>
-//               {renderValidation}
-//             </View>
-//             <View style={styles.enterButtonContainer}>
-//               <TouchableOpacity
-//                 disabled={disabled}
-//                 activeOpacity={0.8}
-//                 onPress={changePasswordHandle}
-//                 style={[
-//                   styles.enterButton,
-//                   {
-//                     backgroundColor: disabled
-//                       ? style.disabledButtonColor
-//                       : style.blue,
-//                   },
-//                 ]}>
-//                 <MainText color={colors.white} size={fontSize[16]}>
-//                   {t('93')}
-//                 </MainText>
-//               </TouchableOpacity>
-//             </View>
-//           </View>
-//         </ScrollView>
-//       </KeyboardAvoidingView>
-//       {/* <Toast config={toastConfig} /> */}
-//     </View>
-//   );
-// };
-
-// export default RecoveryPassword;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//   },
-//   title: {
-//     position: 'absolute',
-//     marginLeft: 15,
-//     flex: 1,
-//     zIndex: 1,
-//     top: -10,
-//     backgroundColor: '#fff',
-//     paddingLeft: 5,
-//     paddingRight: 5,
-//   },
-//   icon: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginTop: 5,
-//   },
-//   phoneText: {
-//     fontFamily: style.fontFamilyMedium,
-//     fontSize: style.fontSize.small,
-//     color: style.textColor,
-//   },
-//   text: type => {
-//     return {
-//       color: type ? 'green' : '#000',
-//       marginLeft: 10,
-//       fontFamily: style.fontFamilyMedium,
-//       fontSize: style.fontSize.xx - 2,
-//     };
-//   },
-//   retryPassword: {
-//     position: 'absolute',
-//     marginLeft: 15,
-//     flex: 1,
-//     zIndex: 1,
-//     top: -10,
-//     backgroundColor: '#fff',
-//     paddingLeft: 5,
-//     paddingRight: 5,
-//   },
-//   TextInputLabelContainer: {
-//     borderColor: style.textColor,
-//     borderWidth: 0.5,
-//     borderRadius: 6,
-//     width: '90%',
-//     flexDirection: 'row',
-//   },
-//   enterButtonContainer: {
-//     marginTop: 20,
-//   },
-//   main: {
-//     alignItems: 'center',
-//     marginTop: 20,
-//   },
-//   enterButton: {
-//     width: '90%',
-//     backgroundColor: style.blue,
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     borderRadius: 10,
-//     height: style.buttonHeight,
-//     alignSelf: 'center',
-//   },
-//   enterText: {
-//     fontFamily: style.fontFamilyMedium,
-//     fontSize: style.fontSize.xs,
-//     color: style.textColor,
-//   },
-
-//   TextInput: {
-//     width: '100%',
-//     height: style.textInputHeight,
-//     borderTopRightRadius: 15,
-//     borderBottomRightRadius: 15,
-//     paddingLeft: 15,
-//     fontSize: style.fontSize.small,
-//     fontFamily: style.fontFamilyMedium,
-//     color: style.textColor,
-//   },
-// });
 import {
-  StyleSheet,
-  View,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import React, {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { normalize, style } from '../../theme/style';
-
-import Toast from 'react-native-toast-message';
+import axios from 'axios';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { storage } from '../../store/api/token/getToken';
 import { t } from 'i18next';
-import OtherHeader from '../components/OtherHeader';
 import Loading from '../components/Loading';
 import Check from '../../images/CheckIcon';
-import NewPasswordIcon from '../../images/NewPassword';
-import MainText from '../components/MainText';
-import { colors, fontSize } from '../../theme';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import { URL } from '../constants';
+import { rd, rs } from '../../theme/rd';
+import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 
 const PasswordInput = React.memo(
   ({
@@ -463,47 +36,65 @@ const PasswordInput = React.memo(
     title,
     showPassword,
     onTogglePassword,
-  }) => (
-    <View style={{ marginTop: 20 }}>
-      <View style={styles.absoluteTitle}>
-        <View style={styles.title}>
-          <MainText
-            color={colors.black}
-            style={{ backgroundColor: '#fff' }}
-            size={fontSize[12]}
+  }) => {
+    const [focused, setFocused] = useState(false);
+    return (
+      <View style={styles.fieldBlock}>
+        <Text style={styles.label}>{t(title)}</Text>
+        <View style={[styles.field, focused && styles.fieldFocused]}>
+          <View style={styles.leadIcon}>
+            <LockIcon size={rs(20)} color={rd.color.textTertiary} />
+          </View>
+          <TextInput
+            allowFontScaling={false}
+            value={value}
+            onChangeText={onChangeText}
+            secureTextEntry={!showPassword}
+            placeholderTextColor={rd.color.textTertiary}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={styles.input}
+          />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onTogglePassword}
+            style={styles.eyeBtn}
           >
-            {t(title)}
-          </MainText>
+            {showPassword ? (
+              <EyeClose
+                width={rs(22)}
+                height={rs(22)}
+                color={rd.color.textSecondary}
+              />
+            ) : (
+              <Eye
+                width={rs(22)}
+                height={rs(22)}
+                color={rd.color.textSecondary}
+              />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
-      <TextInput
-        allowFontScaling={false}
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={!showPassword}
-        style={styles.textInput}
-      />
-      <TouchableOpacity onPress={onTogglePassword} style={styles.eyeIcon}>
-        {showPassword ? (
-          <EyeClose width={24} height={24} color={style.blue} />
-        ) : (
-          <Eye width={24} height={24} color={style.blue} />
-        )}
-      </TouchableOpacity>
-    </View>
-  ),
+    );
+  },
 );
 const ValidationItem = React.memo(
   ({ isValid, text }: { isValid: boolean; text: string }) => (
     <View style={styles.validationItem}>
-      <Check width={20} height={20} color={isValid ? 'green' : '#000'} />
-      <MainText
-        mrLeft={5}
-        color={isValid ? 'green' : '#000'}
-        style={styles.validationText}
+      <Check
+        width={rs(18)}
+        height={rs(18)}
+        color={isValid ? rd.color.success : rd.color.textTertiary}
+      />
+      <Text
+        style={[
+          styles.validationText,
+          { color: isValid ? rd.color.success : rd.color.textSecondary },
+        ]}
       >
         {text}
-      </MainText>
+      </Text>
     </View>
   ),
 );
@@ -631,29 +222,38 @@ const RecoveryPassword = () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
 
-      const response = await fetch(`${URL}/user/edit/password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${storage.getString('token')}`,
-        },
-        body: JSON.stringify({
+      // axios (fetch emas) — token eskirsa authInterceptor avto-refresh qiladi.
+      const response = await axios.post(
+        `${URL}/user/edit/password`,
+        {
           newPass: state.password,
           prevPass: state.prevPassword,
-        }),
-      });
-      const json = await response.json();
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${storage.getString('token')}`,
+          },
+        },
+      );
 
       setState(prev => ({ ...prev, loading: false }));
-      handleResponse(json);
+      handleResponse(response.data);
     } catch (error) {
-      console.error(JSON.stringify(error, null, 2));
       setState(prev => ({ ...prev, loading: false }));
-      showToast(
-        'error',
-        t('Xatolik'),
-        t('Server bilan bog‘lanishda muammo yuzaga keldi'),
-      );
+      // Server xato javob tanasini qaytargan bo'lsa (masalan noto'g'ri joriy parol) —
+      // uni handleResponse'ga uzatamiz (fetch xulqi bilan bir xil). Aks holda (tarmoq
+      // xatosi) umumiy toast.
+      const data = (error as any)?.response?.data;
+      if (data) {
+        handleResponse(data);
+      } else {
+        showToast(
+          'error',
+          t('Xatolik'),
+          t('Server bilan bog‘lanishda muammo yuzaga keldi'),
+        );
+      }
     }
   }, [state.password, state.prevPassword, handleResponse, showToast]);
   // Memoize the validation UI to prevent unnecessary re-renders
@@ -679,31 +279,32 @@ const RecoveryPassword = () => {
 
   return (
     <View style={styles.container}>
-      <OtherHeader
-        title={t('678')}
-        titleColor="#000"
-        iconColor="#fff"
-        backgroundColor={style.blue}
-      />
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.scrollViewContent}
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.select({ios: 60, android: 0})}> */}
-        <View style={styles.iconContainer}>
-          <NewPasswordIcon width={normalize(150)} height={normalize(150)} />
-        </View>
-        <View style={styles.mainContent}>
-          <View style={styles.instructionContainer}>
-            <MainText
-              color={colors.black}
-              textAlign="center"
-              size={fontSize[14]}
-            >
-              {t('66')}
-            </MainText>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <LockIcon size={rs(34)} color={rd.color.primary} />
+            </View>
+            <Text style={styles.title}>{t('678')}</Text>
+            <Text style={styles.subtitle}>{t('66')}</Text>
           </View>
 
           <PasswordInput
@@ -737,21 +338,21 @@ const RecoveryPassword = () => {
 
           <TouchableOpacity
             disabled={disabled}
+            activeOpacity={0.85}
             onPress={changePasswordHandle}
             style={[styles.button, disabled && styles.buttonDisabled]}
           >
-            <MainText
-              color={colors.white}
-              size={fontSize[16]}
-              ft={style.fontFamilyMedium}
-              style={styles.buttonText}
+            <Text
+              style={[
+                styles.buttonText,
+                disabled && { color: rd.color.textTertiary },
+              ]}
             >
               {t('93')}
-            </MainText>
+            </Text>
           </TouchableOpacity>
-        </View>
-        {/* </KeyboardAvoidingView> */}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -759,68 +360,107 @@ const RecoveryPassword = () => {
 export default RecoveryPassword;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scrollViewContent: { paddingBottom: 50 },
-  iconContainer: { alignItems: 'center', marginVertical: 20 },
-  mainContent: { paddingHorizontal: 20 },
-  absoluteTitle: {
-    position: 'absolute',
-    zIndex: 1,
-    top: -10,
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
+  },
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(8),
+  },
+
+  hero: { alignItems: 'center', marginTop: rs(20), marginBottom: rs(24) },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
+  },
+  title: { fontFamily: rd.font.bold, fontSize: rs(24), color: rd.color.text },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(12),
+  },
+
+  fieldBlock: { marginTop: rs(16) },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  field: {
+    height: rs(56),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(14),
+  },
+  fieldFocused: { borderColor: rd.color.primary },
+  leadIcon: { marginRight: rs(10) },
+  input: {
     flex: 1,
+    height: '100%',
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
   },
-  eyeIcon: {
-    position: 'absolute',
-    right: 10,
-    top: 17,
-  },
-  textInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    borderRadius: 10,
-    borderWidth: 0.5,
-    borderColor: style.textColor,
-  },
-  validationContainer: { marginVertical: 10 },
+  eyeBtn: { paddingLeft: rs(8), height: '100%', justifyContent: 'center' },
+
+  validationContainer: { marginTop: rs(16), marginBottom: rs(4) },
   validationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: rs(8),
+    gap: rs(8),
   },
   validationText: {
-    marginLeft: 5,
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyRegular,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
   },
-  title: {
-    zIndex: 2,
-    // width: '100%',
-    paddingHorizontal: 5,
-    marginLeft: 10,
-  },
+
   button: {
-    marginTop: 20,
-    backgroundColor: style.blue,
-    paddingVertical: 15,
-    borderRadius: 10,
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(20),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
-    textAlign: 'center',
-  },
-  instructionContainer: {
-    paddingLeft: 0,
-    paddingRight: 0,
-    marginBottom: 15,
-    alignItems: 'center',
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

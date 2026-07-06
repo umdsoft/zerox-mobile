@@ -1,6 +1,7 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
+import { rd } from '../../../../theme/rd';
 import TextBold from '../../../components/TextBold';
 import { t } from 'i18next';
 import TransText from '../../../components/TransText';
@@ -26,7 +27,7 @@ const QarzniQaytarishRadQilinganligi = ({ item, okay, navigation }) => {
           id: item.contract,
         });
       }}
-      style={[styles_notification, { color: style.blue }]}
+      style={[styles_notification, { color: rd.color.primary }]}
     >
       {item.number}
     </Text>

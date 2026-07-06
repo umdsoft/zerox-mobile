@@ -1,13 +1,12 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
+  StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { style } from '../../theme/style';
 import ScreenLayout from '../components/ScreenLayout';
 import axios from 'axios';
 import { URL } from '../constants';
@@ -23,6 +22,8 @@ import { checkExpire } from '../../store/reducers/HomeReducer';
 import { t } from 'i18next';
 
 import { expire_passport_check } from '../../helper/timeChecker';
+import { rd, rs } from '../../theme/rd';
+import { UserIcon } from '../home/redesign/icons';
 
 const UserInfo = () => {
   const userInfo = useSelector(state => state.HomeReducer);
@@ -71,13 +72,6 @@ const UserInfo = () => {
       });
       if (status === 201) {
         setTimeout(() => {
-          // socketService.sendNotification({
-          //   id: user?.id,
-          // });
-          // socketService.emit('notification', user?.id);
-          // socketService.on('notification', data => {
-          //   dispatch(setNotification({notification: data.not}));
-          // });
           navigation.reset({
             routes: [{ name: 'BottomTabNavigator' }],
             index: 0,
@@ -89,158 +83,87 @@ const UserInfo = () => {
     }
   }, []);
 
+  const disabled = active && first;
+
   return (
     <ScreenLayout title={t('Ma’lumot')} scroll>
-      <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <View
-            style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
-          >
-            <View>
-              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-                <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText} allowFontScaling={false}>
-                    {t('fish')}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    value={
-                      user?.last_name +
-                      ' ' +
-                      user.first_name +
-                      ' ' +
-                      user.middle_name
-                    }
-                    multiline={true}
-                    placeholderTextColor={style.placeHolderColor}
-                    editable={false}
-                    keyboardType="default"
-                    style={[
-                      styles.TextInput,
-                      { paddingLeft: 15, paddingTop: 18, paddingBottom: 18 },
-                    ]}
-                    allowFontScaling={false}
-                  />
-                </View>
-              </View>
-              <View style={[styles.TextInputLabelContainer, { width: '100%' }]}>
-                <View style={styles.inputTitle}>
-                  <Text style={styles.phoneText} allowFontScaling={false}>
-                    {t('120')}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    placeholderTextColor={style.placeHolderColor}
-                    value={user?.uid}
-                    multiline={true}
-                    editable={false}
-                    keyboardType="default"
-                    style={[
-                      styles.TextInput,
-                      {
-                        paddingLeft: 15,
-                        width: '100%',
-                        paddingTop: 18,
-                        paddingBottom: 18,
-                      },
-                    ]}
-                    allowFontScaling={false}
-                  />
-                </View>
-              </View>
-            </View>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-            <View>
-              <Text style={styles.tix} allowFontScaling={false}>
-                {resolve
-                  ? t('246')
-                  : reject
-                  ? t('258')
-                  : !active
-                  ? t('219')
-                  : t('231')}
-              </Text>
-              <TouchableOpacity
-                disabled={active && first}
-                onPress={startTimerx}
-                activeOpacity={0.8}
-                style={[
-                  styles.getUserInfoButton,
-                  {
-                    marginTop: 10,
-                    backgroundColor:
-                      active && first
-                        ? style.disabledButtonColor
-                        : resolve
-                        ? '#48BB78'
-                        : style.blue,
-                    flexDirection: 'row',
-                  },
-                ]}
-              >
-                {resolve ? <EyeIcon /> : <AskPermission />}
-                <Text
-                  style={[
-                    styles.textButton,
-                    { fontSize: style.fontSize.small - 1, marginLeft: 8 },
-                  ]}
-                  allowFontScaling={false}
-                >
-                  {' '}
-                  {resolve ? t('252') : t('225')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View>
-              <TouchableOpacity
-                onPress={() => {
-                  if (expire_passport_check(userInfo.user.data.expiry_date)) {
-                    dispatch(checkExpire({ expire: true }));
-                    return;
-                  }
-
-                  navigation.navigate('GiveDebtUser', {
-                    qarzoluvchi: user,
-                    type: type,
-                  });
-                }}
-                activeOpacity={0.8}
-                style={[styles.getUserInfoButton, { flexDirection: 'row' }]}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '85%',
-                    paddingHorizontal: 10,
-                    alignSelf: 'center',
-                  }}
-                >
-                  <AskPermissionNearby />
-
-                  <View style={{ marginLeft: 4, flex: 1 }}>
-                    <Text
-                      style={[
-                        styles.textButton,
-                        {
-                          fontSize: style.fontSize.small - 1,
-                          textAlign: 'center',
-                        },
-                      ]}
-                      allowFontScaling={false}
-                    >
-                      {type === 1 ? t('222') : t('288')}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+      <View style={styles.profileCard}>
+        <View style={styles.avatar}>
+          <UserIcon size={rs(40)} color={rd.color.primary} />
+        </View>
+        <Text allowFontScaling={false} style={styles.name}>
+          {user?.last_name + ' ' + user.first_name + ' ' + user.middle_name}
+        </Text>
+        <View style={styles.uidChip}>
+          <Text allowFontScaling={false} style={styles.uidLabel}>
+            {t('120')}
+          </Text>
+          <Text allowFontScaling={false} style={styles.uidValue}>
+            {user?.uid}
+          </Text>
         </View>
       </View>
-      {/* <Toast config={toastConfig} /> */}
+
+      <Text allowFontScaling={false} style={styles.status}>
+        {resolve
+          ? t('246')
+          : reject
+          ? t('258')
+          : !active
+          ? t('219')
+          : t('231')}
+      </Text>
+
+      <TouchableOpacity
+        disabled={disabled}
+        onPress={startTimerx}
+        activeOpacity={0.85}
+        style={[
+          styles.primaryBtn,
+          {
+            backgroundColor: disabled
+              ? rd.color.surfaceAlt
+              : resolve
+              ? rd.color.success
+              : rd.color.primary,
+          },
+          disabled && styles.primaryBtnDisabled,
+        ]}
+      >
+        {resolve ? <EyeIcon /> : <AskPermission />}
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.primaryText,
+            disabled && { color: rd.color.textTertiary },
+          ]}
+        >
+          {resolve ? t('252') : t('225')}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          if (expire_passport_check(userInfo.user.data.expiry_date)) {
+            dispatch(checkExpire({ expire: true }));
+            return;
+          }
+
+          navigation.navigate('GiveDebtUser', {
+            qarzoluvchi: user,
+            type: type,
+          });
+        }}
+        activeOpacity={0.85}
+        style={styles.secondaryBtn}
+      >
+        <AskPermissionNearby />
+        <Text allowFontScaling={false} style={styles.secondaryText}>
+          {type === 1 ? t('222') : t('288')}
+        </Text>
+      </TouchableOpacity>
     </ScreenLayout>
   );
 };
@@ -254,108 +177,102 @@ export const secToMin = sec => {
 };
 
 export default UserInfo;
+
 const styles = StyleSheet.create({
-  dateText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
+  profileCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    paddingVertical: rs(22),
+    paddingHorizontal: rs(16),
+    marginTop: rs(8),
   },
-  textButton: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-  },
-  registerButton: {
-    width: '90%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
+  avatar: {
+    width: rs(88),
+    height: rs(88),
+    borderRadius: rs(44),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tix: {
-    fontSize: style.fontSize.xa + 1.5,
-    fontFamily: style.fontFamilyMedium,
-    marginTop: 10,
-    color: '#000',
+  name: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(14),
+    maxWidth: '90%',
   },
-  button: {
-    width: '100%',
-    paddingVertical: 23,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-  },
-  TextInput: {
-    // paddingVertical: 18,
-    width: '90%',
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    textTransform: 'uppercase',
-  },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  getUserInfoButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 5,
-    marginTop: 10,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
+  uidChip: {
     flexDirection: 'row',
-    marginTop: 20,
+    alignItems: 'center',
+    gap: rs(6),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(6),
+    marginTop: rs(12),
   },
-  title: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyBold,
-    color: style.textColor,
+  uidLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.textSecondary,
+  },
+  uidValue: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13),
+    color: rd.color.text,
   },
 
-  main: {
-    flex: 1,
-
-    width: '90%',
-    alignSelf: 'center',
+  status: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(20),
+    marginTop: rs(20),
+    marginBottom: rs(4),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
 
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 10,
+  primaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    marginTop: rs(12),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  primaryBtnDisabled: {
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  primaryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
+  },
+
+  secondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primaryTint,
+    marginTop: rs(12),
+  },
+  secondaryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.primary,
+    textAlign: 'center',
   },
 });

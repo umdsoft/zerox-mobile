@@ -1,7 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
 import React, { memo, useCallback, useState } from 'react';
-
-import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
 import axios from 'axios';
@@ -15,7 +13,10 @@ import { filter_notification } from '../../../../store/reducers/HomeReducer';
 import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
-import NotificationShell from '../../../components/NotificationShell';
+import NotificationShell, {
+  NotifButton,
+} from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
   const dispatch = useDispatch();
@@ -107,46 +108,19 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
       time={item.time}
       actions={
         <>
-          <TouchableOpacity
-            disabled={loading}
+          <NotifButton
+            label={t('240') as string}
             onPress={resoleShow}
-            activeOpacity={0.8}
-            style={styles.button}
-          >
-            {loading ? (
-              <ActivityIndicator size={'small'} color={'#fff'} />
-            ) : (
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                {t('240') as string}
-              </Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            disabled={rejectLoading}
+            loading={loading}
+            disabled={loading}
+          />
+          <NotifButton
+            label={t('96') as string}
+            variant="danger"
             onPress={rejectShow}
-            activeOpacity={0.8}
-            style={[styles.button, { backgroundColor: 'red' }]}
-          >
-            {rejectLoading ? (
-              <ActivityIndicator size={'small'} color={'#fff'} />
-            ) : (
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.notification,
-                  { color: '#fff', fontSize: style.fontSize.xx - 2 },
-                ]}
-              >
-                {t('96') as string}
-              </Text>
-            )}
-          </TouchableOpacity>
+            loading={rejectLoading}
+            disabled={rejectLoading}
+          />
         </>
       }
     >
@@ -169,19 +143,10 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
 export default memo(QarzShartnomasiRuxsatSorash);
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: style.blue,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(20),
   },
 });

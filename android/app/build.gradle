@@ -90,11 +90,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 13
         versionName "1.6"
-        missingDimensionStrategy "react-native-capture-protection", "base"
+        missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
         ndk {
             // x86_64 emulyator testi uchun qo'shildi. Production release uchun
             // (kichikroq APK) x86_64'ni olib tashlasangiz bo'ladi — real qurilmalar ARM.
-            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            abiFilters 'arm64-v8a'
         }
     }
     signingConfigs {
@@ -134,10 +134,10 @@ android {
                 nativeSymbolUploadEnabled true
                 unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
             }
-            // VAQTINCHA: test telefon uchun debug-imzo (zerox.keystore bu mashinada yo'q).
-            // Production release uchun qaytaring: signingConfig signingConfigs.release
-//            signingConfig signingConfigs.release
-            signingConfig signingConfigs.debug
+            // Production imzo: android/keystore.properties (gitignored) + android/app/zerox.keystore.
+            // Bu MyID PRODUCTION (clientHashId 7b4507ca) ro'yxatidan o'tgan sertifikat — Play
+            // Integrity/liveness aynan shu imzo bilan o'tadi.
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

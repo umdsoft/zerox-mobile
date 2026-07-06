@@ -1,28 +1,26 @@
 import {
   ActivityIndicator,
-  Alert,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon/index';
-import { style } from '../../theme/style';
 
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import DownloadIcon from '../../images/home/download.svg';
 import Toast from 'react-native-toast-message';
-import { toastConfig } from '../components/ToastConfig';
 import Pdf from 'react-native-pdf';
 
-import OtherHeader from '../components/OtherHeader';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
-// import RNFS from 'react-native-fs';
 import { t } from 'i18next';
 import { useSelector } from 'react-redux';
+
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
 
 const Contract = () => {
   const [loading, setLoading] = useState(true);
@@ -96,75 +94,44 @@ const Contract = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={title} />
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={title} />
+
       <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              marginTop: 10,
-              marginBottom: 10,
-            }}
-          >
-            <TouchableOpacity
-              onPress={onDownload}
-              activeOpacity={0.8}
-              style={styles.download}
-            >
-              <DownloadIcon width="20" height="20" />
-              <Text style={styles.downloadText} allowFontScaling={false}>
-                {' '}
-                {t('126')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={{ flex: 1, backgroundColor: '#fff' }}>
-            {loading && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <ActivityIndicator size={'large'} color={style.blue} />
-              </View>
+        <TouchableOpacity
+          onPress={onDownload}
+          activeOpacity={0.85}
+          style={styles.download}
+        >
+          <DownloadIcon width={rs(18)} height={rs(18)} />
+          <Text style={styles.downloadText} allowFontScaling={false}>
+            {t('126')}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.pdfCard}>
+          {loading && (
+            <View style={styles.loaderOverlay}>
+              <ActivityIndicator size={'large'} color={rd.color.primary} />
+            </View>
+          )}
+          <Pdf
+            trustAllCerts={false}
+            enablePaging={true}
+            renderActivityIndicator={() => (
+              <ActivityIndicator size={'large'} color={rd.color.primary} />
             )}
-            <Pdf
-              trustAllCerts={false}
-              enablePaging={true}
-              renderActivityIndicator={() => (
-                <ActivityIndicator size={'large'} color={style.blue} />
-              )}
-              source={{
-                uri: url,
-                method: 'GET',
-              }}
-              onLoadComplete={() => {
-                setLoading(false);
-              }}
-              style={styles.pdf}
-            />
-          </View>
+            source={{
+              uri: url,
+              method: 'GET',
+            }}
+            onLoadComplete={() => {
+              setLoading(false);
+            }}
+            style={styles.pdf}
+          />
         </View>
       </View>
-      {/* <DownloadModal hide={hide} onHide={setHide} data={item} path={path} /> */}
-      {/* <Toast config={toastConfig} /> */}
     </View>
   );
 };
@@ -173,80 +140,62 @@ export default Contract;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
     flex: 1,
-  },
-  pdf: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  pdfView: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    elevation: 7,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  userName: {
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    padding: 80,
-    alignSelf: 'center',
-  },
-  download: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    flexDirection: 'row',
-  },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: rd.color.page,
   },
   main: {
     flex: 1,
     width: '100%',
     alignSelf: 'center',
+    paddingHorizontal: rs(16),
+    paddingBottom: rs(16),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 15,
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-  },
-
-  title: {
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
+  download: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'center',
-    textAlign: 'center',
+    gap: rs(8),
+    height: rs(48),
+    width: '100%',
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    marginTop: rs(6),
+    marginBottom: rs(14),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  downloadText: {
+    color: rd.color.onPrimary,
+    fontSize: rs(15),
+    fontFamily: rd.font.semibold,
+  },
+  pdfCard: {
+    flex: 1,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    overflow: 'hidden',
+  },
+  pdf: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: rd.color.surface,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
   },
 });

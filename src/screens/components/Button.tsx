@@ -1,12 +1,13 @@
 /**
- * Button — yagona, qayta ishlatiluvchi tugma (token'larga asoslangan).
+ * Button — yagona, qayta ishlatiluvchi tugma (REDIZAYN: `rd` dizayn tizimi).
  *
  * Ilgari ~111 ekran ko'k tugmani inline (`backgroundColor: style.blue`) qayta yozardi.
  * Endi: <Button title="Saqlash" onPress={...} loading={x} variant="primary" />
  *
  * Variant'lar: primary | danger | success | outline | ghost
  * O'lchamlar: sm | md (default) | lg
- * Tugma ko'rinishini o'zgartirish = SHU fayl + tokens.ts (har bir ekran emas).
+ * Prop interfeysi SAQLANGAN (111 chaqiruvchi buzilmaydi) — faqat vizual qatlam
+ * yangi Inter + #2f6fed palitraga ko'chdi. Tugma ko'rinishini o'zgartirish = SHU fayl.
  */
 import React from 'react';
 import {
@@ -18,7 +19,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { normalize, tokens } from '../../theme/tokens';
+import { rd, rs } from '../../theme/rd';
 
 export type ButtonVariant = 'primary' | 'danger' | 'success' | 'outline' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -38,20 +39,20 @@ interface ButtonProps {
 }
 
 const SIZES: Record<ButtonSize, { height: number; fontSize: number }> = {
-  sm: { height: normalize(40), fontSize: tokens.fontSize.xx },
-  md: { height: tokens.size.buttonHeight, fontSize: tokens.fontSize.xs },
-  lg: { height: tokens.size.buttonHeight + normalize(4), fontSize: tokens.fontSize.s },
+  sm: { height: rs(42), fontSize: rs(13) },
+  md: { height: rs(52), fontSize: rs(15) },
+  lg: { height: rs(56), fontSize: rs(16) },
 };
 
 const VARIANTS: Record<
   ButtonVariant,
   { bg: string; fg: string; border?: string }
 > = {
-  primary: { bg: tokens.color.primary, fg: tokens.color.onPrimary },
-  danger: { bg: tokens.color.danger, fg: tokens.color.white },
-  success: { bg: tokens.color.success, fg: tokens.color.white },
-  outline: { bg: 'transparent', fg: tokens.color.primary, border: tokens.color.primary },
-  ghost: { bg: 'transparent', fg: tokens.color.primary },
+  primary: { bg: rd.color.primary, fg: rd.color.onPrimary },
+  danger: { bg: rd.color.error, fg: rd.color.onPrimary },
+  success: { bg: rd.color.success, fg: rd.color.onPrimary },
+  outline: { bg: 'transparent', fg: rd.color.primary, border: rd.color.primary },
+  ghost: { bg: 'transparent', fg: rd.color.primary },
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -74,15 +75,15 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.85}
       onPress={onPress}
       disabled={isDisabled}
       style={[
         styles.base,
         {
           height: s.height,
-          backgroundColor: isDisabled && !isTransparent ? tokens.color.muted : v.bg,
-          borderWidth: v.border ? 1 : 0,
+          backgroundColor: isDisabled && !isTransparent ? rd.color.textTertiary : v.bg,
+          borderWidth: v.border ? 1.5 : 0,
           borderColor: v.border,
           width: fullWidth ? '100%' : undefined,
           opacity: isDisabled && isTransparent ? 0.5 : 1,
@@ -98,7 +99,7 @@ const Button: React.FC<ButtonProps> = ({
           <Text
             allowFontScaling={false}
             style={[
-              { color: v.fg, fontSize: s.fontSize, fontFamily: tokens.font.bold },
+              { color: v.fg, fontSize: s.fontSize, fontFamily: rd.font.semibold },
               textStyle,
             ]}
           >
@@ -115,13 +116,13 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: tokens.radius.md,
+    borderRadius: rs(16),
     alignSelf: 'center',
-    paddingHorizontal: tokens.spacing.md,
+    paddingHorizontal: rs(16),
   },
   row: { flexDirection: 'row', alignItems: 'center' },
-  iconLeft: { marginRight: tokens.spacing.sm },
-  iconRight: { marginLeft: tokens.spacing.sm },
+  iconLeft: { marginRight: rs(8) },
+  iconRight: { marginLeft: rs(8) },
 });
 
 export default Button;

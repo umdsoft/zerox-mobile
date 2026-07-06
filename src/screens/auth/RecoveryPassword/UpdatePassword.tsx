@@ -1,18 +1,43 @@
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
-import Toast from 'react-native-toast-message';
-import ResetPasswordIcon from '../../../images/RecoveryPassword';
-import CheckIcon from '../../../images/CheckIcon';
-import ScreenLayout from '../../components/ScreenLayout';
-import Button from '../../components/Button';
-import Loading from '../../components/Loading';
+import Svg, { Polyline } from 'react-native-svg';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 
-import MainText from '../../components/MainText';
+import Eye from '../../../images/auth/Eye';
+import EyeClose from '../../../images/auth/CloseEye';
+import Loading from '../../components/Loading';
 import { URL } from '../../constants';
-import { style, fontSize, colors } from '../../../theme/index';
 import { t } from 'i18next';
+import { rd, rs } from '../../../theme/rd';
+import { ChevronLeft, LockIcon } from '../../home/redesign/icons';
+
+// Kichik "check" ikonkasi — checklist uchun (bajarilgan shart yashil ✓ bilan).
+const Check = ({ color }: { color: string }) => (
+  <Svg
+    width={rs(12)}
+    height={rs(12)}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={3}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <Polyline points="20 6 9 17 4 12" />
+  </Svg>
+);
 
 const UpdatePassword = () => {
   const navigation = useNavigation();
@@ -22,6 +47,9 @@ const UpdatePassword = () => {
   const [value, setValue] = useState('');
   const [confirmValue, setConfirmValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focused, setFocused] = useState<'password' | 'confirm' | null>(null);
 
   // Password validation states
   const [validation, setValidation] = useState({
@@ -137,7 +165,7 @@ const UpdatePassword = () => {
 
   const renderValidation = useMemo(
     () => (
-      <View style={styles.validationContainer}>
+      <View style={styles.checklist}>
         {[
           { label: t('78'), valid: validation.minLength },
           { label: t('81'), valid: validation.lower },
@@ -151,15 +179,18 @@ const UpdatePassword = () => {
           },
         ].map(({ label, valid }, index) => (
           <View style={styles.validationItem} key={index}>
-            <CheckIcon
-              width={20}
-              height={20}
-              color={valid ? 'green' : '#000'}
-            />
+            <View
+              style={[
+                styles.checkDot,
+                valid ? styles.checkDotOn : styles.checkDotOff,
+              ]}
+            >
+              <Check color={valid ? rd.color.onPrimary : rd.color.textTertiary} />
+            </View>
             <Text
               style={[
                 styles.validationText,
-                { color: valid ? 'green' : '#000' },
+                { color: valid ? rd.color.success : rd.color.textTertiary },
               ]}
               allowFontScaling={false}
             >
@@ -172,140 +203,268 @@ const UpdatePassword = () => {
     [validation, value, confirmValue],
   );
 
+  const onChangeShow = useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
+
+  const onChangeShowConfirm = useCallback(() => {
+    setShowConfirmPassword(prev => !prev);
+  }, []);
+
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <ScreenLayout
-      title={t('729')}
-      headerColor={style.blue}
-      headerIconColor="#fff"
-      headerTitleColor="#000"
-      background={false}
-    >
-      <View style={styles.contentContainer}>
-          <View style={styles.iconContainer}>
-            <ResetPasswordIcon />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <LockIcon size={rs(34)} color={rd.color.primary} />
+            </View>
+            <Text style={styles.title} allowFontScaling={false}>
+              {t('729')}
+            </Text>
+            <Text style={styles.subtitle} allowFontScaling={false}>
+              {t('66')}
+            </Text>
           </View>
 
-          <MainText
-            color={colors.black}
-            size={fontSize[12]}
-            textAlign="center"
-            style={styles.infoText}
+          {/* Yangi parol */}
+          <Text style={styles.label} allowFontScaling={false}>
+            {t('696')}
+          </Text>
+          <View
+            style={[styles.field, focused === 'password' && styles.fieldFocused]}
           >
-            {t('66')}
-          </MainText>
-
-          <View style={styles.inputContainer}>
-            <View style={styles.confirmInputContainer}>
-              <Text style={styles.label} allowFontScaling={false}>
-                {t('696')}
-              </Text>
-              <TextInput
-                // title={t('696')}
-                // password={value}
-                allowFontScaling={false}
-                value={value}
-                style={styles.textInput}
-                onChangeText={handlePasswordChange}
-                placeholderTextColor={colors.disabledButtonColor}
-              />
+            <View style={styles.leadIcon}>
+              <LockIcon size={rs(20)} color={rd.color.textTertiary} />
             </View>
+            <TextInput
+              key={'password'}
+              value={value}
+              selectTextOnFocus={false}
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              onChangeText={handlePasswordChange}
+              onFocus={() => setFocused('password')}
+              onBlur={() => setFocused(null)}
+              keyboardType="default"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholderTextColor={rd.color.textTertiary}
+              allowFontScaling={false}
+            />
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onChangeShow}
+              style={styles.eyeBtn}
+            >
+              {showPassword ? (
+                <EyeClose width={rs(22)} height={rs(22)} color={rd.color.textSecondary} />
+              ) : (
+                <Eye width={rs(22)} height={rs(22)} color={rd.color.textSecondary} />
+              )}
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.confirmInputContainer}>
-              <Text style={styles.label} allowFontScaling={false}>
-                {t('699')}
-              </Text>
-              <TextInput
-                allowFontScaling={false}
-                value={confirmValue}
-                onChangeText={setConfirmValue}
-                keyboardType="default"
-                style={styles.textInput}
-                placeholderTextColor={colors.disabledButtonColor}
-              />
+          {/* Parolni tasdiqlang */}
+          <Text style={[styles.label, { marginTop: rs(16) }]} allowFontScaling={false}>
+            {t('699')}
+          </Text>
+          <View
+            style={[styles.field, focused === 'confirm' && styles.fieldFocused]}
+          >
+            <View style={styles.leadIcon}>
+              <LockIcon size={rs(20)} color={rd.color.textTertiary} />
             </View>
+            <TextInput
+              key={'confirm'}
+              value={confirmValue}
+              secureTextEntry={!showConfirmPassword}
+              onChangeText={setConfirmValue}
+              onFocus={() => setFocused('confirm')}
+              onBlur={() => setFocused(null)}
+              keyboardType="default"
+              style={styles.input}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholderTextColor={rd.color.textTertiary}
+              allowFontScaling={false}
+            />
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onChangeShowConfirm}
+              style={styles.eyeBtn}
+            >
+              {showConfirmPassword ? (
+                <EyeClose width={rs(22)} height={rs(22)} color={rd.color.textSecondary} />
+              ) : (
+                <Eye width={rs(22)} height={rs(22)} color={rd.color.textSecondary} />
+              )}
+            </TouchableOpacity>
           </View>
 
           {renderValidation}
 
-          <Button
-            title={t('45')}
+          {/* Tasdiqlash */}
+          <TouchableOpacity
+            disabled={!isFormValid || loading}
             onPress={handlePasswordUpdate}
-            disabled={!isFormValid}
-          />
-        </View>
-    </ScreenLayout>
+            activeOpacity={0.85}
+            style={[
+              styles.submitBtn,
+              (!isFormValid || loading) && styles.submitBtnDisabled,
+            ]}
+          >
+            <Text
+              style={[
+                styles.submitText,
+                (!isFormValid || loading) && { color: rd.color.textTertiary },
+              ]}
+              allowFontScaling={false}
+            >
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
+export default UpdatePassword;
+
 const styles = StyleSheet.create({
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  contentContainer: {
-    padding: 20,
-  },
-  iconContainer: {
-    alignSelf: 'center',
-    marginVertical: 20,
-  },
-  infoText: {
-    textAlign: 'center',
-    marginVertical: 10,
-  },
-  inputContainer: {
-    // marginBottom: 10,
-  },
-  confirmInputContainer: {
-    marginTop: 20,
-    backgroundColor: '#fff',
-  },
-  label: {
-    position: 'absolute',
-    left: 15,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingHorizontal: 5,
-    fontSize: fontSize[12],
-    color: colors.black,
-    zIndex: 1,
-    fontFamily: style.fontFamilyMedium,
-  },
-  textInput: {
-    width: '100%',
-    height: 55,
-    paddingLeft: 15,
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    fontSize: fontSize[12],
-    color: colors.black,
-    fontFamily: style.fontFamilyMedium,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(8),
   },
-  validationContainer: {
-    marginTop: 10,
-    marginBottom: 10,
+
+  hero: { alignItems: 'center', marginTop: rs(16), marginBottom: rs(26) },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
   },
-  validationItem: {
+  title: { fontFamily: rd.font.bold, fontSize: rs(23), color: rd.color.text },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(12),
+  },
+
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  field: {
+    height: rs(56),
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(14),
+  },
+  fieldFocused: { borderColor: rd.color.primary },
+  leadIcon: { marginRight: rs(10) },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+    padding: 0,
+  },
+  eyeBtn: { paddingLeft: rs(8), height: '100%', justifyContent: 'center' },
+
+  checklist: { marginTop: rs(20), gap: rs(10) },
+  validationItem: { flexDirection: 'row', alignItems: 'center' },
+  checkDot: {
+    width: rs(20),
+    height: rs(20),
+    borderRadius: rs(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(10),
+  },
+  checkDotOn: { backgroundColor: rd.color.success },
+  checkDotOff: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
   },
   validationText: {
-    marginLeft: 10,
-    fontSize: fontSize[12],
-    fontFamily: style.fontFamilyMedium,
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    flex: 1,
+  },
+
+  submitBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(28),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });
-
-export default UpdatePassword;

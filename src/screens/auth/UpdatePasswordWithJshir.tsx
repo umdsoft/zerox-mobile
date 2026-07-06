@@ -1,31 +1,26 @@
 import {
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import BackButton from '../components/BackButton';
-import { normalize, style } from '../../theme/style';
-import ResetPassword from '../../images/RecoveryPassword';
+import { useNavigation } from '@react-navigation/native';
 import Loading from '../components/Loading';
 
-import PhoneInput from '../components/PhoneInput';
-import MainText from '../components/MainText';
-import { font, fontSize } from '../../theme/font';
-import { colors } from '../../theme/colors';
 import { t } from 'i18next';
-import { URL } from '../constants';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { storage } from '../../store/api/token/getToken';
 import { UpdatePasswordWithJshirApi } from '../../store/api/auth';
 import { useDispatch } from 'react-redux';
 import InputMask from '../components/InputMask';
+import { rd, rs } from '../../theme/rd';
+import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -50,11 +45,8 @@ const checkPhoneTime = async () => {
 const UpdatePasswordWithJshir = () => {
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
-  //   const route = useRoute();
-  //   const {type} = route.params;
   const navigation = useNavigation();
   const [phone, setPhone] = useState('');
-  const [error, setError] = useState(false);
   const dispatch = useDispatch();
 
   const { i18n } = useTranslation();
@@ -74,29 +66,33 @@ const UpdatePasswordWithJshir = () => {
         },
         visibilityTime: 3000,
         autoHide: true,
-        topOffset: Platform.OS === 'android' ? 5 : normalize(50),
+        topOffset: Platform.OS === 'android' ? 5 : rs(50),
       });
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    console.log(phone.replace(/\s/g, ''));
     try {
-      ``;
       const response = await dispatch(
         UpdatePasswordWithJshirApi({
           phone: phone.replace(/\s/g, ''),
         }),
       ).unwrap();
 
-      // PAROL TIKLASH — FAQAT MyID/JSHSHIR orqali, SMS YO'Q.
-      // code 2 (pinfl bor) va code 1 (pinfl yo'q) → ro'yxatda bor → EnterJsh (JSHSHIR → MyID).
-      if (response.code === 2 || response.code === 1) {
-        navigation.navigate('EnterJsh', { phone: phone.replace(/\s/g, '') });
+      // PAROL TIKLASH — foydalanuvchi holatiga qarab 2 xil yo'l:
+      //   code 2 (PINFL bor = IDENTIFIKATSIYADAN O'TGAN) → JSHSHIR + MyID orqali (xavfsiz,
+      //           yuz-tasdiq). EnterJsh ekraniga o'tadi.
+      //   code 1 (PINFL yo'q = IDENTIFIKATSIYADAN O'TMAGAN) → SMS orqali tiklash.
+      //           RecoverySmsReset ekrani telefon raqamiga SMS yuboradi va tekshiradi.
+      const cleanPhone = phone.replace(/\s/g, '');
+      if (response.code === 2) {
+        navigation.navigate('EnterJsh', { phone: cleanPhone });
+      } else if (response.code === 1) {
+        navigation.navigate('RecoverySmsReset', { phone: cleanPhone });
       }
 
-      // code 0 → raqam ro'yxatdan o'tmagan → SMS/registratsiya YO'Q, aniq xato beramiz.
+      // code 0 → raqam ro'yxatdan o'tmagan → aniq xato beramiz.
       if (response.code === 0) {
         Toast.show({
           type: 'error2',
@@ -125,11 +121,18 @@ const UpdatePasswordWithJshir = () => {
       setTimeout(() => {
         setLoading(false);
       }, 500);
-
-      console.log('UpdatePasswordWithJshir response:', response);
     } catch (error) {
       setLoading(false);
-      console.error('Error updating password:', error);
+      Toast.show({
+        type: 'error2',
+        position: 'bottom',
+        props: {
+          title: 'Xatolik!',
+          desc: t('Xatolik!'),
+        },
+        visibilityTime: 3000,
+        autoHide: true,
+      });
     }
   };
 
@@ -140,97 +143,69 @@ const UpdatePasswordWithJshir = () => {
       setDisabled(true);
     }
   }, [phone]);
+
   if (loading) {
     return <Loading />;
   }
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView>
-          <View
-            style={[
-              styles.BackButton,
-              { marginTop: Platform.OS === 'android' ? 10 : normalize(10) },
-            ]}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
           >
-            <BackButton
-              navigation={navigation}
-              IconColor="#fff"
-              backgroundColor={style.blue}
-            />
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <LockIcon size={rs(34)} color={rd.color.primary} />
+            </View>
+            <Text style={styles.title}>{t('729')}</Text>
+            <Text style={styles.subtitle}>{t('42')}</Text>
           </View>
-          <View style={{ width: style.width, height: style.height }}>
-            <View
-              style={{
-                alignItems: 'center',
-                flex: 0.5,
-                justifyContent: 'center',
-              }}
+
+          {/* Telefon raqami — tiklash shu raqam bo'yicha aniqlanadi */}
+          <Text style={styles.label}>{t('Telefon raqami')}</Text>
+          <InputMask
+            onChangeText={(formatted, extracted) => {
+              setPhone(extracted);
+            }}
+            value={phone}
+            icon={true}
+          />
+
+          {/* Davom etish */}
+          <TouchableOpacity
+            disabled={disabled}
+            activeOpacity={0.85}
+            onPress={() => {
+              PostData();
+            }}
+            style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
+          >
+            <Text
+              style={[
+                styles.submitText,
+                disabled && { color: rd.color.textTertiary },
+              ]}
             >
-              <ResetPassword />
-            </View>
-            <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
-              <MainText size={fontSize[16]} ft={font.bold} color={colors.black}>
-                {t('729')}
-              </MainText>
-              <MainText
-                size={fontSize[12]}
-                color={colors.disabledButtonColor}
-                textAlign="center"
-                style={{ marginTop: 6 }}
-              >
-                {t('42')}
-              </MainText>
-            </View>
-            <View style={styles.main}>
-              <View>
-                <InputMask
-                  onChangeText={(formatted, extracted) => {
-                    setPhone(extracted);
-                  }}
-                  value={phone}
-                  icon={true}
-                />
-              </View>
-            </View>
-            {/* {error && (
-              <View
-                style={{
-                  alignSelf: 'center',
-                  alignItems: 'center',
-                  marginTop: 20,
-                  width: '90%',
-                }}>
-                <MainText color={colors.red} size={fontSize[12]}>
-                  {t('48')}
-                </MainText>
-              </View>
-            )} */}
-            <View style={styles.enterButtonContainer}>
-              <TouchableOpacity
-                disabled={disabled}
-                onPress={() => {
-                  PostData();
-                }}
-                style={[
-                  styles.enterButton,
-                  {
-                    backgroundColor: disabled
-                      ? style.disabledButtonColor
-                      : style.blue,
-                  },
-                ]}
-              >
-                <MainText color={colors.white} size={fontSize[16]}>
-                  {t('45')}
-                </MainText>
-              </TouchableOpacity>
-            </View>
-          </View>
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -240,72 +215,78 @@ const UpdatePasswordWithJshir = () => {
 export default UpdatePasswordWithJshir;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  retryPassword: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    marginTop: Platform.OS === 'android' ? 10 : 0,
-    zIndex: 1,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-  },
-  main: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
+    marginTop: rs(8),
   },
 
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(28) },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
+  },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(22),
+    color: rd.color.text,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(12),
+  },
+
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+
+  submitBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(24),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

@@ -1,76 +1,66 @@
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import React, {useState} from 'react';
-import {PurseIcon} from '../../helper/homeIcon';
-import {normalize, style} from '../../theme/style';
-import BackButton from '../components/BackButton';
-import {useNavigation} from '@react-navigation/native';
-
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
 import CheckBox from '@react-native-community/checkbox';
 import ScreenLayout from '../components/ScreenLayout';
-import Button from '../components/Button';
+import { rd, rs } from '../../theme/rd';
+import { CoinIcon } from '../home/redesign/icons';
 
 const FullDebtBack = () => {
   const [check, setCheck] = useState(false);
-  const navigation = useNavigation();
+
   return (
     <ScreenLayout title={' Qarzni to’liq qaytarishni talab qilish'} scroll>
-      <View>
-        <View style={{marginTop: 10}}>
-          <BackButton
-            navigation={navigation}
-            backgroundColor={'#fff'}
-            IconColor={style.blue}
-          />
-        </View>
-        <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-            <View>
-              <View style={[styles.card]}>
-                <View style={styles.insideMoney}>
-                  <Text
-                    style={[styles.hisob, {fontSize: style.fontSize.small}]}
-                    allowFontScaling={false}>
-                    01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz
-                    fuqaro Abdullayev Abdulladan qarzni to’liq qaytarishini
-                    talab qilmoqdasiz.
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginTop: 20,
-                }}
-              >
-                <CheckBox
-                  value={check}
-                  tintColor={style.blue}
-                  tintColors={{
-                    true: style.blue,
-                    false: style.disabledButtonColor,
-                  }}
-                  onValueChange={() => setCheck(!check)}
-                />
-                <Text style={styles.phoneText} allowFontScaling={false}>
-                  Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
-                  tanishdim
-                </Text>
-              </View>
-            </View>
-            <View>
-              <Button title={'Tasdiqlash'} style={{marginTop: 20}} />
-            </View>
+      <View style={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.heroCircle}>
+            <CoinIcon size={rs(30)} color={rd.color.primary} />
           </View>
+          <Text style={styles.heroTitle} allowFontScaling={false}>
+            Qarzni to’liq qaytarish
+          </Text>
         </View>
+
+        <View style={styles.card}>
+          <Text style={styles.hisob} allowFontScaling={false}>
+            01.01.2021 yildagi 1-sonli qarz shartnomasi bo‘yicha siz fuqaro
+            Abdullayev Abdulladan qarzni to’liq qaytarishini talab qilmoqdasiz.
+          </Text>
+        </View>
+
+        <View style={styles.checkRow}>
+          <CheckBox
+            value={check}
+            tintColor={rd.color.primary}
+            tintColors={{
+              true: rd.color.primary,
+              false: rd.color.textTertiary,
+            }}
+            boxType="square"
+            style={styles.checkbox}
+            onValueChange={() => setCheck(!check)}
+          />
+          <Text style={styles.checkText} allowFontScaling={false}>
+            Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
+            tanishdim
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={!check}
+          style={[
+            styles.primaryBtn,
+            check ? styles.primaryBtnShadow : styles.primaryBtnDisabled,
+          ]}>
+          <Text
+            style={[
+              styles.primaryBtnText,
+              !check && styles.primaryBtnTextDisabled,
+            ]}
+            allowFontScaling={false}>
+            Tasdiqlash
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScreenLayout>
   );
@@ -79,93 +69,85 @@ const FullDebtBack = () => {
 export default FullDebtBack;
 
 const styles = StyleSheet.create({
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
+  content: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(12),
+    paddingBottom: rs(24),
   },
-  TextInput: {
+  hero: {
+    alignItems: 'center',
+    marginBottom: rs(24),
+  },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(14),
+  },
+  heroTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
+  card: {
     width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    padding: rs(16),
   },
   hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
     textAlign: 'center',
+    lineHeight: rs(22),
   },
-  insideMoney: {
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: rs(20),
+  },
+  checkbox: {
+    height: rs(20),
+    width: rs(20),
+    marginRight: rs(10),
+  },
+  checkText: {
+    flex: 1,
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    lineHeight: rs(19),
+  },
+  primaryBtn: {
+    marginTop: rs(24),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+  primaryBtnShadow: {
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  item: {
-    flex: 1,
+  primaryBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
   },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
+  primaryBtnText: {
+    fontSize: rs(16),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
   },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+  primaryBtnTextDisabled: {
+    color: rd.color.textTertiary,
   },
 });

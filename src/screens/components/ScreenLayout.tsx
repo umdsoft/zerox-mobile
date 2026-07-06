@@ -1,44 +1,42 @@
 /**
  * ScreenLayout — standart ekran skeleti (scaffold).
  *
- * Ilgari ~47 ekran shu strukturani inline takrorlardi:
- *   container (fon) + absolute BackGroundIcon + OtherHeader + ScrollView + oq soya-karta.
+ * REDIZAYN: eski ko'k BackGroundIcon + OtherHeader o'rniga och fon (rd.color.page) +
+ * RdHeader (orqaga + sarlavha). ~47 ekran shu skeletni ishlatgani uchun bu YAGONA
+ * o'zgarish barchasini bir vaqtda yangi dizaynga o'tkazadi.
  *
- * Endi:
- *   <ScreenLayout title={t('816')} card>
- *     ...kontent...
- *   </ScreenLayout>
- *
- * Layout/fon/karta ko'rinishini o'zgartirish = SHU fayl (har bir ekran emas).
+ * Prop interfeysi saqlangan (chaqiruvchilar buzilmaydi):
+ *   <ScreenLayout title={t('816')} card>...</ScreenLayout>
+ * Eski `headerColor`/`headerIconColor`/`background` proplari qabul qilinadi, lekin
+ * yangi (yagona och) dizaynda ko'rinishga ta'sir qilmaydi.
  */
 import React from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
-import { BackGroundIcon } from '../../helper/homeIcon';
-import { tokens } from '../../theme/tokens';
-import OtherHeader from './OtherHeader';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
 
 interface ScreenLayoutProps {
-  title?: string; // berilsa OtherHeader chiqadi
+  title?: string; // berilsa RdHeader chiqadi
   headerColor?: string;
   headerIconColor?: string;
   headerTitleColor?: string;
   scroll?: boolean; // default: true
-  card?: boolean; // kontentni soya-kartaga o'rash, default: false
-  cardColor?: string; // karta foni (default: surface = oq)
-  background?: boolean; // tepa BackGroundIcon, default: true
+  card?: boolean; // kontentni oq kartaga o'rash, default: false
+  cardColor?: string;
+  background?: boolean; // (eski) — endi e'tiborsiz
+  showBack?: boolean;
+  right?: React.ReactNode;
   children: React.ReactNode;
   contentStyle?: ViewStyle | ViewStyle[];
 }
 
 const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   title,
-  headerColor,
-  headerIconColor,
-  headerTitleColor,
   scroll = true,
   card = false,
-  cardColor = tokens.color.surface,
-  background = true,
+  cardColor = rd.color.surface,
+  showBack = true,
+  right,
   children,
   contentStyle,
 }) => {
@@ -48,23 +46,10 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({
     children
   );
 
-  const body = <View style={styles.main}>{inner}</View>;
-
   return (
     <View style={styles.container}>
-      {background ? (
-        <View style={styles.bg}>
-          <BackGroundIcon width="100%" height="100%" />
-        </View>
-      ) : null}
-
       {title !== undefined ? (
-        <OtherHeader
-          title={title}
-          backgroundColor={headerColor}
-          iconColor={headerIconColor}
-          titleColor={headerTitleColor}
-        />
+        <RdHeader title={title} showBack={showBack} right={right} />
       ) : null}
 
       {scroll ? (
@@ -73,41 +58,31 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[styles.scrollContent, contentStyle]}
         >
-          {body}
+          {inner}
         </ScrollView>
       ) : (
-        <View style={[styles.flex, contentStyle]}>{body}</View>
+        <View style={[styles.flex, styles.pad, contentStyle]}>{inner}</View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: tokens.color.background,
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: rd.color.page },
   flex: { flex: 1 },
-  // Responsive: flexGrow=1 -> kontent baland ekranda to'ldiradi, past ekranda scroll
-  // bo'ladi (tugma har doim yetib boriladi). paddingBottom -> oxirgi element kesilmaydi.
+  pad: { paddingHorizontal: rs(16) },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: tokens.spacing.xl,
-  },
-  bg: {
-    height: '40%',
-    position: 'absolute',
-    width: tokens.size.width,
-  },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: tokens.spacing.lg,
+    paddingHorizontal: rs(16),
+    paddingTop: rs(6),
+    paddingBottom: rs(24),
   },
   card: {
-    borderRadius: tokens.radius.lg,
-    padding: tokens.spacing.sm,
-    ...tokens.shadow.card,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(14),
   },
 });
 

@@ -2,20 +2,22 @@ import {
   Image,
   RefreshControl,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
-import { normalize, style } from '../../theme/style';
+import React, { useMemo } from 'react';
+import { normalize } from '../../theme/style';
 import { useNavigation } from '@react-navigation/native';
 import { useFetch } from '../../hooks/useFetch';
 import { URL } from '../constants';
 import Loading from '../components/Loading';
 import { VictoryPie } from 'victory-native';
 import { useTranslation } from 'react-i18next';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from './redesign/RdHeader';
 
 const Statistic = () => {
   const { t } = useTranslation();
@@ -38,16 +40,17 @@ const Statistic = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: normalize(185),
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader
+        title={t('hisobot')}
+        onBack={() =>
+          navigation.canGoBack()
+            ? navigation.goBack()
+            : navigation.navigate('Home')
+        }
+      />
       <ScrollView
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={debitor.loading && creditor.loading}
@@ -58,25 +61,18 @@ const Statistic = () => {
           />
         }
       >
-        <View style={styles.header}>
-          <View style={styles.aboutUsContainer}>
-            <View style={{}}>
-              <RenderInfo
-                datax={debitor.data}
-                navigation={navigation}
-                title={t('180')}
-                type={1}
-              />
-              <View style={{ height: 10, backgroundColor: '#fff' }} />
-              <RenderInfo
-                datax={creditor.data}
-                navigation={navigation}
-                title={t('183')}
-                type={2}
-              />
-            </View>
-          </View>
-        </View>
+        <RenderInfo
+          datax={debitor.data}
+          navigation={navigation}
+          title={t('180')}
+          type={1}
+        />
+        <RenderInfo
+          datax={creditor.data}
+          navigation={navigation}
+          title={t('183')}
+          type={2}
+        />
       </ScrollView>
     </View>
   );
@@ -87,6 +83,8 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
 
   const renderPie = useMemo(() => {
     console.log(datax?.data, 'datax?.data?.chart');
+    const isEmpty =
+      datax?.data?.chart?.rad === 0 && datax?.data?.chart?.tugallangan === 0;
     return (
       <>
         <View style={{ alignSelf: 'center' }}>
@@ -101,18 +99,15 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
             flexDirection: 'row',
           }}
         >
-          {datax?.data?.chart?.rad === 0 &&
-          datax?.data?.chart?.tugallangan === 0 ? (
-            <View>
-              <Image
-                source={require('../../images/home/circular-diagram.png')}
-                style={{ width: normalize(120), height: normalize(150) }}
-                resizeMode="contain"
-              />
+          {isEmpty ? (
+            <View style={styles.emptyBox}>
+              <Text allowFontScaling={false} style={styles.emptyText}>
+                {t('471') as string}
+              </Text>
             </View>
           ) : (
             <VictoryPie
-              colorScale={['#47bb78', '#feb116']}
+              colorScale={[rd.color.success, rd.color.error]}
               height={normalize(150)}
               radius={50}
               width={normalize(120)}
@@ -121,8 +116,8 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
               innerRadius={normalize(20)}
               style={{
                 labels: {
-                  fontFamily: style.fontFamilyMedium,
-                  fontSize: style.fontSize.xa + 2,
+                  fontFamily: rd.font.medium,
+                  fontSize: rs(15),
                   opacity: 0,
                 },
               }}
@@ -132,13 +127,25 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
               ]}
             />
           )}
-          <View>
-            <Text allowFontScaling={false} style={styles.key('#47bb78')}>
-              {t('198')} : {datax?.data?.chart?.tugallangan}
-            </Text>
-            <Text allowFontScaling={false} style={styles.key('#feb116')}>
-              {t('201')} : {datax?.data?.chart?.rad}
-            </Text>
+          <View style={styles.legend}>
+            <View style={styles.legendRow}>
+              <View style={[styles.dot, { backgroundColor: rd.color.success }]} />
+              <Text allowFontScaling={false} style={styles.legendLabel}>
+                {t('198')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.legendCount}>
+                {datax?.data?.chart?.tugallangan}
+              </Text>
+            </View>
+            <View style={styles.legendRow}>
+              <View style={[styles.dot, { backgroundColor: rd.color.error }]} />
+              <Text allowFontScaling={false} style={styles.legendLabel}>
+                {t('201')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.legendCount}>
+                {datax?.data?.chart?.rad}
+              </Text>
+            </View>
           </View>
         </View>
       </>
@@ -179,13 +186,7 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
           }}
           style={styles.btn}
         >
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.count,
-              { color: '#fff', fontSize: style.fontSize.xs },
-            ]}
-          >
+          <Text allowFontScaling={false} style={styles.btnText}>
             {t('471') as string}
           </Text>
         </TouchableOpacity>
@@ -199,121 +200,76 @@ export default Statistic;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
+  },
+  scrollContent: {
+    padding: rs(16),
+  },
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+    marginBottom: rs(16),
+  },
+  enterText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    paddingVertical: rs(4),
+    textAlign: 'center',
+  },
+  legend: {
+    marginLeft: rs(8),
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: rs(4),
+  },
+  dot: {
+    width: rs(8),
+    height: rs(8),
+    borderRadius: rs(4),
+    marginRight: rs(8),
+  },
+  legendLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    marginRight: rs(6),
+  },
+  legendCount: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
+  },
+  emptyBox: {
+    minHeight: normalize(150),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(16),
+  },
+  emptyText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13.5),
+    color: rd.color.textTertiary,
+    textAlign: 'center',
   },
   btn: {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 16,
-    paddingVertical: 15,
-    marginTop: 8,
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.lg,
+    paddingVertical: rs(14),
+    marginTop: rs(12),
   },
-  key: color => {
-    return {
-      fontFamily: style.fontFamilyMedium,
-      fontSize: style.fontSize.xa,
-      color: color,
-      marginTop: 2,
-    };
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    marginBottom: 5,
-  },
-  text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 4,
-    padding: 2,
-    color: '#000',
-    marginLeft: 5,
-  },
-  count: {
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-
-    fontSize: style.fontSize.xa + 4,
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-  },
-  header: {
-    width: '95%',
-    flex: 1,
-    alignSelf: 'center',
-    marginBottom: 5,
-  },
-  userNameText: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-  },
-  DrawerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  enterButton: {
-    width: '85%',
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6,
-    // height: style.textInputHeight,
-    alignSelf: 'center',
-    paddingVertical: 5,
-  },
-  drawer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  AlarmContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ImageButton: {
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    justifyContent: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyBold,
-    fontSize: style.fontSize.xa + 5,
-    color: '#000',
-    padding: 5,
-    textAlign: 'center',
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-
-    fontFamily: style.fontFamilyBold,
-    alignSelf: 'center',
+  btnText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.onPrimary,
   },
 });

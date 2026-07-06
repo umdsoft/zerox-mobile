@@ -2,6 +2,7 @@ import {
   AppState,
   Image,
   Linking,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -9,13 +10,12 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {BackGroundIcon} from '../../../helper/homeIcon';
-import {style} from '../../../theme/style';
+import {rd, rs} from '../../../theme/rd';
 import Toast from 'react-native-toast-message';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import ClickIcon from '../../../images/pay/ClickIcon';
 import {useDispatch, useSelector} from 'react-redux';
-import OtherHeader from '../../components/OtherHeader';
+import RdHeader from '../../home/redesign/RdHeader';
 import {t} from 'i18next';
 import {textInputPlace} from '../../../helper/index';
 
@@ -146,65 +146,41 @@ const Pay = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={title} />
-      <View style={[styles.main]}>
-        <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-            <View>
-              <View style={styles.card}>
-                <View style={styles.insideMoney}>
-                  {type === 0 ? (
-                    <ClickIcon
-                      width={style.width / 4}
-                      height={style.width / 12}
-                      color={style.blue}
-                    />
-                  ) : type === 1 ? (
-                    <PaymeIcon
-                      width={style.width / 4}
-                      height={style.width / 12}
-                    />
-                  ) : (
-                    <Image source={require('../../../images/paynet.png')} />
-                  )}
-                </View>
-              </View>
-            </View>
-            <View style={{marginTop: 20}}>
-              <View style={[styles.TextInputLabelContainer, {width: '100%'}]}>
-                <View style={{flex: 1}}>
-                  <TextInput
-                    value={textInputPlace(amount)}
-                    placeholder={t('276')}
-                    placeholderTextColor={style.placeHolderColor}
-                    keyboardType="numeric"
-                    onChangeText={val => {
-                      setAmount(val);
-                    }}
-                    style={[styles.TextInput, {paddingLeft: 15}]}
-                    allowFontScaling={false} />
-                </View>
-              </View>
-              <TouchableOpacity
-                // disabled={amount.length > 3 ? false : true}
-                activeOpacity={0.8}
-                onPress={PayUser}
-                style={[
-                  styles.registerButton,
-                  {
-                    // backgroundColor: amount.length > 3 ? style.blue : style.disabledButtonColor,
-                    backgroundColor: style.blue,
-                  },
-                ]}>
-                <Text style={styles.text} allowFontScaling={false}>{t('45')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      <StatusBar barStyle="dark-content" />
+      <RdHeader title={title} />
+      <View style={styles.main}>
+        <View style={styles.logoCard}>
+          {type === 0 ? (
+            <ClickIcon width={rs(90)} height={rs(30)} color={rd.color.primary} />
+          ) : type === 1 ? (
+            <PaymeIcon width={rs(90)} height={rs(30)} />
+          ) : (
+            <Image source={require('../../../images/paynet.png')} />
+          )}
         </View>
+
+        <Text style={styles.label}>{t('276')}</Text>
+        <TextInput
+          value={textInputPlace(amount)}
+          placeholder={t('276')}
+          placeholderTextColor={rd.color.textTertiary}
+          keyboardType="numeric"
+          onChangeText={val => {
+            setAmount(val);
+          }}
+          style={styles.input}
+          allowFontScaling={false}
+        />
+
+        <TouchableOpacity
+          // disabled={amount.length > 3 ? false : true}
+          activeOpacity={0.8}
+          onPress={PayUser}
+          style={styles.payButton}>
+          <Text style={styles.payButtonText} allowFontScaling={false}>
+            {t('45')}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -214,96 +190,54 @@ export default Pay;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
     flex: 1,
   },
-  text: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: '#fff',
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    // height: style.buttonHeight,
-  },
-
   main: {
     flex: 1,
-    width: '90%',
-    alignSelf: 'center',
+    paddingHorizontal: rs(16),
+    paddingTop: rs(10),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+  logoCard: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingVertical: rs(22),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(22),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  input: {
+    width: '100%',
+    height: rs(56),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingHorizontal: rs(16),
+    fontFamily: rd.font.semibold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
+  payButton: {
+    marginTop: rs(22),
+    width: '100%',
+    height: rs(54),
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  payButtonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

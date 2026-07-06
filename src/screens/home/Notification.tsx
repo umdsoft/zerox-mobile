@@ -28,6 +28,9 @@ import { URL } from '../constants';
 import QarzShartnomasiRuxsatSorash from './notifications/all/QarzShartnomasiRuxsatSorash';
 import QarzniQaytarishRadQilinganligi from './notifications/all/QarzniQaytarishRadQilinganligi';
 import OtherHeader from '../components/OtherHeader';
+import RdHeader from './redesign/RdHeader';
+import { BellIcon } from './redesign/icons';
+import { rd, rs } from '../../theme/rd';
 import QarzShartnomasiRejectTime from './notifications/all/QarzShartnomasiRejectTime';
 import PulMablagOtkazilganligi from './notifications/all/PulMablagOtkazilganligi';
 import PulMablagOtkazilganligiHaqida from './notifications/all/PulMablagOtkazilganligiHaqida';
@@ -64,31 +67,39 @@ type ObjType = {
   res?: string;
 };
 
+// Professional bo'sh holat (bildirishnoma/yangilik yo'q).
+const RdEmpty = ({ text }: { text: string }) => (
+  <View style={styles.rdEmpty}>
+    <View style={styles.rdEmptyCircle}>
+      <BellIcon size={rs(34)} color={rd.color.textTertiary} />
+    </View>
+    <Text allowFontScaling={false} style={styles.rdEmptyText}>
+      {text}
+    </Text>
+  </View>
+);
+
 const TopTab = createMaterialTopTabNavigator();
 const Notification = () => {
   return (
-    <View style={styles.container}>
-      <View style={styles.headers}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('666')} />
-      <View style={{ flex: 1 }}>
-        <View style={styles.main}>
-          <View style={styles.aboutUsContainer}>
-            <TopTab.Navigator tabBar={props => <TopTabBar {...props} />}>
-              <TopTab.Screen
-                options={{ tabBarLabel: t('666') }}
-                name="Bildrishnoma"
-                component={Bildrishnoma}
-              />
-              <TopTab.Screen
-                options={{ tabBarLabel: t('669') }}
-                name="News"
-                component={News}
-              />
-            </TopTab.Navigator>
-          </View>
-        </View>
+    <View style={styles.rdContainer}>
+      <RdHeader title={t('666')} />
+      <View style={styles.rdBody}>
+        <TopTab.Navigator
+          tabBar={props => <TopTabBar {...props} />}
+          screenOptions={{ sceneStyle: { backgroundColor: rd.color.page } }}
+        >
+          <TopTab.Screen
+            options={{ tabBarLabel: t('666') }}
+            name="Bildrishnoma"
+            component={Bildrishnoma}
+          />
+          <TopTab.Screen
+            options={{ tabBarLabel: t('669') }}
+            name="News"
+            component={News}
+          />
+        </TopTab.Navigator>
       </View>
     </View>
   );
@@ -132,17 +143,8 @@ const News = () => {
         data={[]}
         keyExtractor={({ id }) => id?.toString()}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 10 }}
-        // refreshControl={
-        //   <RefreshControl refreshing={loading} onRefresh={onRefresh} />
-        // }
-        ListEmptyComponent={() => {
-          return (
-            <View style={{ alignItems: 'center', marginTop: 20 }}>
-              <MainText size={fontSize[12]}> {t('pp1')}</MainText>
-            </View>
-          );
-        }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: rs(16), paddingBottom: rs(16) }}
+        ListEmptyComponent={<RdEmpty text={t('pp1')} />}
         renderItem={({ item, index }) => {
           return <NewsNotificationCard data={item} key={index} />;
         }}
@@ -790,20 +792,16 @@ const Bildrishnoma = () => {
     }
   };
 
-  const EmptyListComponent = () => (
-    <View style={styles.emptyListContainer}>
-      <MainText size={fontSize[12]}>{t('177')}</MainText>
-    </View>
-  );
+  const EmptyListComponent = () => <RdEmpty text={t('177')} />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: rd.color.page }}>
       <Animated.FlatList
         ref={listRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 10 }}
+        contentContainerStyle={{ paddingHorizontal: rs(16), paddingBottom: rs(16) }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+          <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={rd.color.primary} />
         }
         // itemLayoutAnimation={LinearTransition}
         keyExtractor={item => item.id?.toString()}
@@ -820,8 +818,20 @@ const Bildrishnoma = () => {
 export default Notification;
 
 const styles = StyleSheet.create({
+  rdContainer: { flex: 1, backgroundColor: rd.color.page },
+  rdBody: { flex: 1, paddingTop: rs(8) },
+  rdEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: rs(60), gap: rs(14) },
+  rdEmptyCircle: {
+    width: rs(84),
+    height: rs(84),
+    borderRadius: rs(42),
+    backgroundColor: rd.color.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rdEmptyText: { fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.textTertiary, textAlign: 'center' },
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: rd.color.page,
     flex: 1,
   },
   emptyListContainer: {

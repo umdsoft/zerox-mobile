@@ -1,13 +1,13 @@
 import {
   ActivityIndicator,
   Platform,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useState } from 'react';
-import { BackGroundIcon } from '../../../helper/homeIcon';
-import { style } from '../../../theme/style';
 import FileViewer from 'react-native-file-viewer';
 
 import { useRoute } from '@react-navigation/native';
@@ -18,16 +18,15 @@ import Toast from 'react-native-toast-message';
 import Pdf from 'react-native-pdf';
 
 import Share from 'react-native-share';
-import OtherHeader from '../../components/OtherHeader';
-// import RNFS from 'react-native-fs';
-import MainText from '../../components/MainText';
-import { fontSize } from '../../../theme/font';
-import { colors } from '../../../theme/colors';
 import { t } from 'i18next';
 import { storage } from '../../../store/api/token/getToken';
 
+import { rd, rs } from '../../../theme/rd';
+import RdHeader from '../redesign/RdHeader';
+
 const DownloadStatistic = () => {
-  const { item, id } = useRoute().params;
+  // paramssiz ochilsa ham crash bermasin (guard).
+  const { item, id } = (useRoute().params as { item?: any; id?: any }) || {};
   const [loading, setLoading] = useState(true);
 
   const onShare = async () => {
@@ -162,7 +161,6 @@ const DownloadStatistic = () => {
       });
     }
   };
-  // console.log(path, 'padth');
 
   const setNameByLang = (lang: string) => {
     switch (lang) {
@@ -177,118 +175,60 @@ const DownloadStatistic = () => {
     }
   };
 
-  // const requestPermission = async () => {
-  //   const granted = await PermissionsAndroid.request(
-  //     PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //     {
-  //       title: 'Ruxsat berish',
-  //       message: 'Fayllarni yuklab olish uchun ruxsat bering',
-  //       buttonNeutral: "Keyinroq so'rash",
-  //       buttonNegative: 'Bekor qilish',
-  //       buttonPositive: 'Ruxsat berish',
-  //     },
-  //   );
-  //   if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-  //     console.log('You can use the camera');
-  //   } else {
-  //     console.log('Camera permission denied');
-  //   }
-  // };
-
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('324')} />
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('324')} />
+
       <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          {/* <View
-            style={{
-              marginTop: 20,
-              maxWidth: '80%',
-              alignItems: 'center',
-              alignSelf: 'center',
-              justifyContent: 'center',
-            }}>
-            <TransText
-              tKey={'399'}
-              values={{
-                id: item.number,
-              }}
-              components={{
-                id: <MainText size={fontSize[12]} textAlign={'center'} />,
-              }}
-            />
-           
-          </View> */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              marginTop: 10,
-              marginBottom: 10,
-            }}
+        <View style={styles.actionsRow}>
+          {/* ------------------------   Yuklab olish   ------------------------ */}
+          <TouchableOpacity
+            onPress={onDownload}
+            activeOpacity={0.85}
+            style={styles.download}
           >
-            {/* ------------------------   Yuklab olish   ------------------------ */}
-            <TouchableOpacity
-              onPress={onDownload}
-              activeOpacity={0.8}
-              style={styles.download}
-            >
-              <DownloadIcon width="20" height="20" />
-              <MainText color={colors.white} size={fontSize[12]}>
-                {t('126')}
-              </MainText>
-            </TouchableOpacity>
-            {/* ------------------------   Ulashish   ------------------------ */}
-            <TouchableOpacity
-              onPress={onShare}
-              activeOpacity={0.8}
-              style={styles.download}
-            >
-              <ShareIcon width="20" height="20" />
-              <MainText color={colors.white} size={fontSize[12]}>
-                {t('129')}
-              </MainText>
-            </TouchableOpacity>
-          </View>
-          <View style={{ flex: 1, backgroundColor: '#fff' }}>
-            {loading && (
-              <View style={styles.indicator}>
-                <ActivityIndicator size={'large'} color={style.blue} />
-              </View>
-            )}
-            <Pdf
-              trustAllCerts={false}
-              enablePaging={true}
-              // renderActivityIndicator={() => (
-              //   <ActivityIndicator size={'small'} color={style.blue} />
-              // )}
-              // source={{ uri: `https://pdf.zerox.uz/index.php?id=${item.uid}&download=0&lang=uz`, method: 'GET' }}
-              source={{
-                uri: `https://pdf.zerox.uz/index.php?id=${
-                  item.uid
-                }&download=0&lang=${storage.getString('lang') || 'uz'}`,
-                method: 'GET',
-              }}
-              onLoadComplete={() => {
-                setLoading(false);
-              }}
-              style={styles.pdf}
-            />
-          </View>
+            <DownloadIcon width={rs(18)} height={rs(18)} />
+            <Text style={styles.downloadText} allowFontScaling={false}>
+              {t('126')}
+            </Text>
+          </TouchableOpacity>
+
+          {/* ------------------------   Ulashish   ------------------------ */}
+          <TouchableOpacity
+            onPress={onShare}
+            activeOpacity={0.85}
+            style={styles.share}
+          >
+            <ShareIcon width={rs(18)} height={rs(18)} />
+            <Text style={styles.shareText} allowFontScaling={false}>
+              {t('129')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.pdfCard}>
+          {loading && (
+            <View style={styles.loaderOverlay}>
+              <ActivityIndicator size={'large'} color={rd.color.primary} />
+            </View>
+          )}
+          <Pdf
+            trustAllCerts={false}
+            enablePaging={true}
+            source={{
+              uri: `https://pdf.zerox.uz/index.php?id=${
+                item?.uid
+              }&download=0&lang=${storage.getString('lang') || 'uz'}`,
+              method: 'GET',
+            }}
+            onLoadComplete={() => {
+              setLoading(false);
+            }}
+            style={styles.pdf}
+          />
         </View>
       </View>
-      {/* <DownloadModal hide={hide} onHide={setHide} data={item} path={path} /> */}
-      {/* <Toast config={toastConfig} /> */}
     </View>
   );
 };
@@ -297,89 +237,82 @@ export default DownloadStatistic;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
     flex: 1,
-  },
-  indicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pdf: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  pdfView: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    elevation: 7,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  userName: {
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    padding: 80,
-    alignSelf: 'center',
-  },
-  download: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    flexDirection: 'row',
-  },
-  downloadText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: rd.color.page,
   },
   main: {
     flex: 1,
     width: '100%',
     alignSelf: 'center',
+    paddingHorizontal: rs(16),
+    paddingBottom: rs(16),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 15,
+  actionsRow: {
+    flexDirection: 'row',
+    gap: rs(12),
+    marginTop: rs(6),
+    marginBottom: rs(14),
+  },
+  download: {
     flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    height: rs(48),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
-
-  title: {
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    alignSelf: 'center',
-    textAlign: 'center',
+  downloadText: {
+    color: rd.color.onPrimary,
+    fontSize: rs(15),
+    fontFamily: rd.font.semibold,
+  },
+  share: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    height: rs(48),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
+  shareText: {
+    color: rd.color.text,
+    fontSize: rs(15),
+    fontFamily: rd.font.semibold,
+  },
+  pdfCard: {
+    flex: 1,
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    overflow: 'hidden',
+  },
+  pdf: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: rd.color.surface,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
   },
 });

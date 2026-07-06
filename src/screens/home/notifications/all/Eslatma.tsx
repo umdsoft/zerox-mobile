@@ -1,10 +1,10 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import React from 'react';
 
-import {style} from '../../../../theme/style';
 import {t} from 'i18next';
 import {useSelector} from 'react-redux';
-import NotificationShell from '../../../components/NotificationShell';
+import NotificationShell, {NotifButton} from '../../../components/NotificationShell';
+import {rd, rs} from '../../../../theme/rd';
 const Eslatma = ({item, okay, navigation}) => {
   const {home} = useSelector(state => state.HomeReducer);
   const onOkay = async () => {
@@ -16,42 +16,19 @@ const Eslatma = ({item, okay, navigation}) => {
       date={item?.created}
       time={item?.time}
       actions={
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
+        <>
+          <NotifButton
+            label={t('22') as string}
             onPress={() => {
-              // i need to call api to get creditor and debitor
-              // /contract/near-notification?type=creditor&page=${this.page + 1}&limit=${this.limit}
               navigation.navigate('MuddatOzQolgan', {
                 creditor: home?.creditor,
                 debitor: home?.debitor,
                 type: 'creditor',
               });
             }}
-            activeOpacity={0.8}
-            style={styles.button}>
-            <Text
-              style={[
-                styles.notification,
-                {color: '#fff', fontSize: style.fontSize.xx - 2},
-              ]}
-              allowFontScaling={false}>
-              {t('22')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onOkay}
-            activeOpacity={0.8}
-            style={[styles.button, {marginLeft: 10}]}>
-            <Text
-              style={[
-                styles.notification,
-                {color: '#fff', fontSize: style.fontSize.xx - 2},
-              ]}
-              allowFontScaling={false}>
-              Ok
-            </Text>
-          </TouchableOpacity>
-        </View>
+          />
+          <NotifButton label="Ok" variant="ghost" onPress={onOkay} />
+        </>
       }>
       <Text style={styles.notification} allowFontScaling={false}>
         {t('eslatma1')}
@@ -63,25 +40,10 @@ const Eslatma = ({item, okay, navigation}) => {
 export default Eslatma;
 
 const styles = StyleSheet.create({
-  actionsRow: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: style.blue,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(13.5),
+    fontFamily: rd.font.regular,
+    color: rd.color.textSecondary,
+    lineHeight: rs(20),
   },
 });

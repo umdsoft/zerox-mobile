@@ -1,19 +1,16 @@
-import {Platform, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Platform, Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {normalize, style} from '../../theme/style';
-import SetCode from '../../images/ChangeLocalPassword';
+import {normalize} from '../../theme/style';
 import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../components/ToastConfig';
-import ArrowLeft from '../../images/ArrowLeft';
-import Hand from '../../images/Hand';
 import {storage} from '../../store/api/token/getToken';
-import OtherHeader from '../components/OtherHeader';
 import {t} from 'i18next';
 
-import BiometricModule from '../../../BiometricModule';
 import {heightPercentageToDP} from 'react-native-responsive-screen';
 import {scale} from '../../helper/scale';
+import {rd, rs} from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
+import {BackspaceIcon, LockIcon} from '../home/redesign/icons';
 
 const UpdateLocalPassCode = () => {
   const [password, setPassword] = useState('');
@@ -102,18 +99,19 @@ const UpdateLocalPassCode = () => {
 
   return (
     <View style={styles.container}>
-      <OtherHeader title={t('PIN-kodni tiklash')} />
-      <View style={{alignItems: 'center'}}>
-        <SetCode
-          width={heightPercentageToDP(22)}
-          height={heightPercentageToDP(30)}
-          style={{transform: [{scale: 1.5}]}}
-        />
-      </View>
-      <View style={{flex: 1}}>
-        <View style={[styles.setCodeTextContainer, {alignItems: 'center'}]}>
-          {renderText(step)}
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('PIN-kodni tiklash')} />
+
+      {/* Hero */}
+      <View style={styles.hero}>
+        <View style={styles.heroCircle}>
+          <LockIcon size={rs(34)} color={rd.color.primary} />
         </View>
+      </View>
+
+      <View style={{flex: 1}}>
+        <View style={styles.setCodeTextContainer}>{renderText(step)}</View>
+
         <View style={styles.codeContainer}>
           <View style={styles.fourItem}>
             {Array.from({length: 4}, (_v, i) => {
@@ -124,7 +122,9 @@ const UpdateLocalPassCode = () => {
                     styles.codeItem,
                     {
                       backgroundColor:
-                        i < password.length ? style.blue : '#EEEEEE',
+                        i < password.length
+                          ? rd.color.primary
+                          : rd.color.border,
                     },
                   ]}
                 />
@@ -147,12 +147,14 @@ const UpdateLocalPassCode = () => {
                           onSetCode(0);
                         }}
                         android_ripple={{
-                          color: style.blue,
+                          color: rd.color.primaryTint,
                           radius: 50,
                           borderless: true,
                         }}
                         style={styles.codeButton}>
-                        <Text style={styles.textCode} allowFontScaling={false}>0</Text>
+                        <Text style={styles.textCode} allowFontScaling={false}>
+                          0
+                        </Text>
                       </Pressable>
                     </View>
                   );
@@ -165,12 +167,15 @@ const UpdateLocalPassCode = () => {
                           onBackSpace();
                         }}
                         android_ripple={{
-                          color: style.blue,
+                          color: rd.color.primaryTint,
                           radius: 50,
                           borderless: true,
                         }}
                         style={styles.codeButton}>
-                        <ArrowLeft width={12} height={12} color={style.blue} />
+                        <BackspaceIcon
+                          size={rs(24)}
+                          color={rd.color.textSecondary}
+                        />
                       </Pressable>
                     </View>
                   );
@@ -178,17 +183,12 @@ const UpdateLocalPassCode = () => {
                 if (i === 9) {
                   return (
                     <View key={i} style={styles.codeNumberContainer}>
-                      <Pressable
-                        disabled={true}
-                        onPress={() => {}}
-                        android_ripple={{
-                          color: style.blue,
-                          radius: 50,
-                          borderless: true,
-                        }}
-                        style={[styles.codeButton, {backgroundColor: '#fff'}]}>
-                        {/* <ArrowLeft width={12} height={12} color={style.blue} /> */}
-                      </Pressable>
+                      <View
+                        style={[
+                          styles.codeButton,
+                          {backgroundColor: 'transparent'},
+                        ]}
+                      />
                     </View>
                   );
                 }
@@ -200,12 +200,14 @@ const UpdateLocalPassCode = () => {
                         onSetCode(i + 1);
                       }}
                       android_ripple={{
-                        color: style.blue,
+                        color: rd.color.primaryTint,
                         radius: 50,
                         borderless: true,
                       }}
                       style={styles.codeButton}>
-                      <Text style={styles.textCode} allowFontScaling={false}>{i + 1}</Text>
+                      <Text style={styles.textCode} allowFontScaling={false}>
+                        {i + 1}
+                      </Text>
                     </Pressable>
                   </View>
                 );
@@ -214,7 +216,6 @@ const UpdateLocalPassCode = () => {
           </View>
         </View>
       </View>
-      {/* <Toast config={toastConfig} /> */}
     </View>
   );
 };
@@ -222,9 +223,17 @@ const UpdateLocalPassCode = () => {
 const renderText = step => {
   switch (step) {
     case 2:
-      return <Text style={styles.text} allowFontScaling={false}>{t('850')}</Text>;
+      return (
+        <Text style={styles.text} allowFontScaling={false}>
+          {t('850')}
+        </Text>
+      );
     case 3:
-      return <Text style={styles.text} allowFontScaling={false}>{t('851')}</Text>;
+      return (
+        <Text style={styles.text} allowFontScaling={false}>
+          {t('851')}
+        </Text>
+      );
   }
 };
 
@@ -233,7 +242,21 @@ export default UpdateLocalPassCode;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.page,
+  },
+  hero: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(24),
+    marginBottom: rs(8),
+  },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   codeNumberContainer: {
     flexDirection: 'row',
@@ -245,58 +268,44 @@ const styles = StyleSheet.create({
   codeButton: {
     width: heightPercentageToDP(7.5),
     height: heightPercentageToDP(7.5),
-    borderRadius: 50,
+    borderRadius: rd.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEEEEE',
+    backgroundColor: rd.color.surfaceAlt,
     margin: scale(10),
+    overflow: 'hidden',
   },
   fourItem: {
     flexDirection: 'row',
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: rs(10),
   },
   codeItem: {
-    width: 15,
-    height: 15,
-    backgroundColor: style.blue,
-    borderRadius: 50,
+    width: rs(15),
+    height: rs(15),
+    borderRadius: rd.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 5,
+    margin: rs(6),
   },
   codeContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderTopRightRadius: 15,
-    borderTopLeftRadius: 15,
+    backgroundColor: 'transparent',
   },
   setCodeTextContainer: {
     alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: rs(16),
+    marginBottom: rs(16),
+    alignItems: 'center',
   },
   textCode: {
-    fontSize: style.fontSize.m,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  notSetPasswordButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
-    marginRight: 20,
-    marginTop: 10,
+    fontSize: rs(22),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
   },
   text: {
-    fontSize: style.fontSize.xx,
-    color: '#fff',
-    fontFamily: style.fontFamilyBold,
-  },
-  notSetText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
+    fontSize: rs(16),
+    color: rd.color.text,
+    fontFamily: rd.font.bold,
   },
 });

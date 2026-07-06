@@ -5,8 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Dimensions, StyleSheet } from 'react-native';
 
 import { style } from '../theme/style';
-import { GiveDebt, Home, Statistic, TakeDebt } from './Index';
+import { GiveDebt, Statistic, TakeDebt } from './Index';
 import MainBottomTab from './MainBottomTab';
+import RdTabBar from './RdTabBar';
+import HomeRedesign from '../screens/home/redesign/HomeRedesign';
 let width = Dimensions.get('window').width;
 let indicatorWidth = width / 4;
 const BottomTabStack = createBottomTabNavigator();
@@ -15,7 +17,8 @@ export const BottomTabNavigator = () => {
 
   return (
     <BottomTabStack.Navigator
-      tabBar={props => <MainBottomTab {...props} />}
+      backBehavior="history"
+      tabBar={props => <RdTabBar {...props} />}
       screenOptions={{
         headerShown: false,
       }}>
@@ -25,7 +28,7 @@ export const BottomTabNavigator = () => {
           title: t('asosiy'),
         }}
         name="Home"
-        component={Home}
+        component={HomeRedesign}
       />
       <BottomTabStack.Screen
         key={'TakeDebt'}

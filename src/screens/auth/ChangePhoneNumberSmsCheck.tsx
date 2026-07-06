@@ -1,6 +1,9 @@
 import {
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,33 +17,46 @@ import React, {
   useState,
 } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { normalize, style } from '../../theme/style';
-import CheckSms from '../../images/changeNumber';
-import Loading from '../components/Loading';
-import ScreenLayout from '../components/ScreenLayout';
-import Button from '../components/Button';
-import { storage } from '../../store/api/token/getToken';
 import axios from 'axios';
-import { URL } from '../constants';
 import Toast from 'react-native-toast-message';
-
-import { useDispatch, useSelector } from 'react-redux';
-import { HomeApi } from '../../store/api/home';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { fontSize } from '../../theme';
+import { useDispatch, useSelector } from 'react-redux';
+import Svg, { Path } from 'react-native-svg';
 
 import _BackgroundTimer from 'react-native-background-timer';
 import { useKeepAwake } from '@sayem314/react-native-keep-awake';
-
-import MainText from '../components/MainText';
-import { secToMin } from '../other/SaveUserDetails';
 import { OtpInput } from 'react-native-otp-entry';
 import {
   getHash,
   removeListener,
   startOtpListener,
 } from 'react-native-otp-verify';
+
+import Loading from '../components/Loading';
+import { storage } from '../../store/api/token/getToken';
+import { URL } from '../constants';
+import { HomeApi } from '../../store/api/home';
+import { normalize } from '../../theme/style';
+import { secToMin } from '../other/SaveUserDetails';
+import { rd, rs } from '../../theme/rd';
+import { ChevronLeft } from '../home/redesign/icons';
+
+// Hero uchun xabar (SMS) ikonasi — Feather uslubi.
+const MessageIcon = ({ size = rs(34), color = rd.color.primary }) => (
+  <Svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </Svg>
+);
 
 const ChangePhoneNumberSmsCheck = () => {
   useKeepAwake();
@@ -137,6 +153,7 @@ const ChangePhoneNumberSmsCheck = () => {
       setLoading(false);
     }
   }, [code, dispatch, i18n.language, navigation, phone, user?.data?.phone]);
+
   useEffect(() => {
     if (code.length === 5) {
       setDisabled(false);
@@ -146,13 +163,7 @@ const ChangePhoneNumberSmsCheck = () => {
   }, [code]);
 
   const renderTimerView = useMemo(() => {
-    return (
-      <View style={styles.timeContainer}>
-        <MainText size={fontSize[12]} color={style.blue}>
-          {secToMin(timer)}
-        </MainText>
-      </View>
-    );
+    return <Text style={styles.timerText}>{secToMin(timer)}</Text>;
   }, [timer]);
 
   const startTimer = useCallback(() => {
@@ -262,223 +273,219 @@ const ChangePhoneNumberSmsCheck = () => {
     return <Loading />;
   }
   return (
-    <ScreenLayout
-      title={t('702')}
-      headerColor={style.blue}
-      headerIconColor="#fff"
-      headerTitleColor="#000"
-      background={false}
-    >
-      <View style={{ marginTop: normalize(90) }}>
-        <View style={{ alignItems: 'center' }}>
-          <CheckSms />
-        </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
 
-            <View style={styles.main}>
-              <View>
-                <View
-                  style={[styles.TextInputLabelContainer, { marginBottom: 25 }]}
-                >
-                  <View style={styles.retryPassword}>
-                    <Text allowFontScaling={false} style={styles.phoneText}>
-                      {t('852')}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      flex: 1,
-                      width: '90%',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      marginTop: 50,
-                    }}
-                  >
-                    <OtpInput
-                      ref={refI}
-                      onTextChange={text => {
-                        setCode(text);
-                      }}
-                      textInputProps={{
-                        value: code,
-                      }}
-                      onFocus={() => {
-                        setAutoFocus(true);
-                      }}
-                      //  autoFocus={autoFocus}
-                      autoFocus={false}
-                      numberOfDigits={5}
-                      theme={{
-                        focusedPinCodeContainerStyle: {
-                          borderColor: style.blue,
-                          borderRadius: 20,
-                        },
-                        focusStickStyle: {
-                          backgroundColor: style.blue,
-                        },
-                        pinCodeContainerStyle: {
-                          marginHorizontal: 5,
-                          width: normalize(45),
-                          height: normalize(60),
-                          borderRadius: 20,
-                        },
-                        pinCodeTextStyle: {
-                          fontFamily: style.fontFamilyMedium,
-                          color: style.textColor,
-                        },
-                      }}
-                    />
-                    {/* {renderInput} */}
-                  </View>
-                </View>
-              </View>
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <MessageIcon size={rs(34)} color={rd.color.primary} />
             </View>
+            <Text style={styles.title}>{t('702')}</Text>
+            <Text style={styles.subtitle}>{t('852')}</Text>
+            <Text style={styles.phone}>{phone}</Text>
+          </View>
 
-            <View style={styles.enterButtonContainer}>
-              <Button
-                title={t('45')}
-                onPress={() => {
-                  SendSmsCode();
-                }}
-                disabled={disabled}
-                style={{ width: '90%' }}
-              />
-            </View>
-            <View style={styles.footerContainer}>
-              <View style={styles.footerInside}>
-                <TouchableOpacity
-                  onPress={() => {
-                    resendSms();
-                  }}
-                  disabled={isRetry}
-                  activeOpacity={0.8}
-                  style={[]}
-                >
-                  <MainText
-                    size={fontSize[12]}
-                    color={isRetry ? style.disabledButtonColor : style.blue}
-                  >
-                    {t('60')}
-                  </MainText>
-                </TouchableOpacity>
-                {renderTimerView}
-              </View>
-            </View>
-            {/* <View style={styles.footerContainer}>
-              <View style={styles.footerInside}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={styles.retryPasswordSend}
-                >
-                  <Text style={styles.retryPasswordText}>
-                    Kodni qayta {'\n'} yuborish
-                  </Text>
-                </TouchableOpacity>
-                <View style={styles.timeContainer}>
-                  <Text style={styles.time}>02 : 00</Text>
-                </View>
-              </View>
-            </View> */}
-      </View>
-      {/* <Toast config={toastConfig} /> */}
-    </ScreenLayout>
+          {/* Kod kiritish */}
+          <View style={styles.otpContainer}>
+            <OtpInput
+              ref={refI}
+              onTextChange={text => {
+                setCode(text);
+              }}
+              textInputProps={{
+                value: code,
+              }}
+              onFocus={() => {
+                setAutoFocus(true);
+              }}
+              autoFocus={false}
+              numberOfDigits={5}
+              theme={{
+                focusedPinCodeContainerStyle: {
+                  borderColor: rd.color.primary,
+                  backgroundColor: rd.color.surface,
+                  borderWidth: 1.5,
+                  borderRadius: rd.radius.lg,
+                },
+                focusStickStyle: {
+                  backgroundColor: rd.color.primary,
+                  borderRadius: rd.radius.pill,
+                },
+                pinCodeContainerStyle: {
+                  marginHorizontal: rs(5),
+                  width: rs(52),
+                  height: rs(60),
+                  borderRadius: rd.radius.lg,
+                  borderWidth: 1.5,
+                  borderColor: rd.color.border,
+                  backgroundColor: rd.color.surface,
+                },
+                pinCodeTextStyle: {
+                  fontFamily: rd.font.semibold,
+                  fontSize: rs(22),
+                  color: rd.color.text,
+                },
+              }}
+            />
+          </View>
+
+          {/* Timer / qayta yuborish */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              onPress={() => {
+                resendSms();
+              }}
+              disabled={isRetry}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.resendLink,
+                  isRetry && { color: rd.color.textTertiary },
+                ]}
+              >
+                {t('60')}
+              </Text>
+            </TouchableOpacity>
+            {isRetry && renderTimerView}
+          </View>
+
+          {/* Tasdiqlash */}
+          <TouchableOpacity
+            disabled={disabled}
+            activeOpacity={0.85}
+            onPress={() => {
+              SendSmsCode();
+            }}
+            style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
+          >
+            <Text
+              style={[
+                styles.submitText,
+                disabled && { color: rd.color.textTertiary },
+              ]}
+            >
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 export default ChangePhoneNumberSmsCheck;
 
 const styles = StyleSheet.create({
-  error: {
-    color: 'red',
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
+  container: { flex: 1, backgroundColor: rd.color.page },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  time: {
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInput: {
-    width: normalize(45),
-    height: normalize(60),
-    fontSize: fontSize[22],
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    borderRadius: 20,
-    textAlign: 'center',
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
     borderWidth: 1,
-    borderColor: style.blue,
-  },
-  timeContainer: {
-    width: 55,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 4,
+    marginTop: rs(8),
   },
-  retryPasswordText: {
-    fontSize: style.fontSize.small - 1,
-    color: '#fff',
-    fontFamily: style.fontFamilyMedium,
+
+  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(32) },
+  heroCircle: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
+  },
+  title: { fontFamily: rd.font.bold, fontSize: rs(24), color: rd.color.text },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
     textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(16),
   },
-  retryPasswordSend: {
-    borderRadius: 6,
-    backgroundColor: style.blue,
-    alignItems: 'center',
+  phone: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+    marginTop: rs(6),
+  },
+
+  otpContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    height: 60,
-    padding: 10,
-    marginRight: 20,
+    alignItems: 'center',
+    marginTop: rs(4),
   },
-  footerInside: {
+
+  footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: rs(6),
+    marginTop: rs(22),
   },
-  enterButtonContainer: {
-    marginTop: 5,
+  timerText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.primary,
   },
-  footerContainer: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-  phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-    textAlign: 'center',
-  },
-  retryPassword: {
-    // position: 'absolute',
-    // marginLeft: 15,
-    // flex: 1,
-    // zIndex: 1,
-    // top: -10,
-    // backgroundColor: '#fff',
-    // paddingLeft: 5,
-    // paddingRight: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // position: 'absolute',
+  resendLink: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.primary,
   },
 
-  TextInputLabelContainer: {
-    // borderColor: style.textColor,
-    // borderWidth: 0.5,
-    // borderRadius: 6,
-    width: '100%',
-    // flexDirection: 'row',
-  },
-
-  main: {
+  submitBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
+    marginTop: rs(28),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

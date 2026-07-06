@@ -1,23 +1,22 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import React from 'react';
-import { style } from '../../theme/style';
+import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
 import Uzbekistan from '../../images/Uzbekistan';
-import { fontSize } from '../../theme/font';
-// import PhoneInputMask from 'react-native-text-input-mask';
+import { rd, rs } from '../../theme/rd';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
 
+// REDIZAYN: eski `style`/`fontSize` o'rniga `rd` tizimi. Mask va prop interfeysi
+// O'ZGARMAGAN — faqat vizual qatlam yangi.
 const InputMask = ({ onChangeText, value, icon = false }) => {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.TextInputLabelContainer}>
+    <View style={[styles.box, focused && styles.boxFocused]}>
       {icon && (
         <View style={styles.inputFlag}>
           <Uzbekistan />
-          <TextInput
-            value="+998"
-            editable={false}
-            style={styles.phoneNumberText}
-            allowFontScaling={false}
-          />
+          <Text style={styles.phoneNumberText} allowFontScaling={false}>
+            +998
+          </Text>
+          <View style={styles.divider} />
         </View>
       )}
       <View style={{ flex: 1 }}>
@@ -26,10 +25,12 @@ const InputMask = ({ onChangeText, value, icon = false }) => {
           value={value}
           mask="[00] [000] [00] [00]"
           placeholder="__ ___-__-__"
-          placeholderTextColor={style.placeHolderColor}
+          placeholderTextColor={rd.color.textTertiary}
           onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           keyboardType="number-pad"
-          style={[styles.TextInput]}
+          style={styles.input}
         />
       </View>
     </View>
@@ -39,37 +40,40 @@ const InputMask = ({ onChangeText, value, icon = false }) => {
 export default InputMask;
 
 const styles = StyleSheet.create({
+  box: {
+    backgroundColor: rd.color.surface,
+    borderColor: rd.color.border,
+    borderWidth: 1.5,
+    borderRadius: rs(14),
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  boxFocused: { borderColor: rd.color.primary },
   inputFlag: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 15,
-    height: style.textInputHeight,
-
-    // justifyContent: 'flex-end',
+    paddingLeft: rs(14),
+    height: rs(52),
   },
   phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: fontSize[14],
-    color: style.textColor,
-    marginLeft: 5,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+    marginLeft: rs(6),
   },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-    marginTop: 30,
+  divider: {
+    width: 1,
+    height: rs(22),
+    backgroundColor: rd.color.border,
+    marginLeft: rs(10),
   },
-  TextInput: {
+  input: {
     width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 5,
-    fontSize: fontSize[14],
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    height: rs(52),
+    paddingLeft: rs(12),
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
   },
 });

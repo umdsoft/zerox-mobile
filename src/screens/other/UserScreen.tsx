@@ -2,12 +2,24 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {normalize, style} from '../../theme/style';
+import {rd, rs} from '../../theme/rd';
+import {
+  UserIcon,
+  ChevronRight,
+  ShieldIcon,
+  HelpIcon,
+  LogOutIcon,
+  CoinIcon,
+} from '../home/redesign/icons';
 import messaging from '@react-native-firebase/messaging';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {storage} from '../../store/api/token/getToken';
@@ -19,6 +31,7 @@ import ExitIcon from '../../images/Exit';
 import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 import ScreenLayout from '../components/ScreenLayout';
+import RdHeader from '../home/redesign/RdHeader';
 import {useDispatch} from 'react-redux';
 import {
   checkUpdate,
@@ -42,7 +55,7 @@ import {expire_passport_check} from '../../helper/timeChecker';
 
 const UserScreen = () => {
   const route = useRoute();
-  const {user} = route.params;
+  const {user} = route.params || {};
   const dispatch = useDispatch();
   const {t} = useTranslation();
   const [hide, setHide] = useState(false);
@@ -62,52 +75,6 @@ const UserScreen = () => {
     }
   }, [navigateScreen, user]);
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const UserInfo = () => {
-    if (user.data.is_active === 0) {
-      return (
-        <View style={[styles.info]}>
-          <MainText size={fontSize[12]}>
-            {t('Tasdiqlanmagan foydalanuvchi')}
-          </MainText>
-          <TouchableOpacity
-            onPress={() => {
-              navigateScreen('ScanFaceMyId');
-            }}
-            style={styles.active}>
-            <MainText color={colors.white} size={fontSize[12]}>
-              {user.data.is_active === 0
-                ? t('747')
-                : 'Identifikatsiyalangan mijoz'}
-            </MainText>
-          </TouchableOpacity>
-        </View>
-      );
-    } else {
-      return (
-        <>
-          <View style={styles.info}>
-            <MainText color={colors.blue} size={fontSize[11]}>
-              {t('familiya')}
-            </MainText>
-            <MainText size={fontSize[13]}>{user?.data?.last_name}</MainText>
-          </View>
-          <View style={styles.info}>
-            <MainText color={colors.blue} size={fontSize[11]}>
-              {t('ism')}
-            </MainText>
-            <MainText size={fontSize[13]}>{user?.data?.first_name}</MainText>
-          </View>
-          <View style={styles.info}>
-            <MainText color={colors.blue} size={fontSize[11]}>
-              {t('ota')}
-            </MainText>
-            <MainText size={fontSize[13]}>{user?.data?.middle_name}</MainText>
-          </View>
-        </>
-      );
-    }
-  };
   // console.log(
   //   `https://pdf.zerox.uz/oferta.php?id=${user.data.uid}&lang=uz&download=0`,
   // );
@@ -124,176 +91,156 @@ const UserScreen = () => {
     await messaging().deleteToken();
   }, []);
 
-  return (
-    <ScreenLayout title={t('807')}>
-      <View style={styles.aboutUsContainer}>
-        <View style={{flexDirection: 'row'}}>
-                {/* {user.data.image === null ? ( */}
-                  <View style={styles.userImageContainer}>
-                    {user?.data?.type === 2 ? (
-                      user?.data?.gender === 2 ? (
-                        <Famale
-                          width={normalize(50)}
-                          height={normalize(normalize(100))}
-                          color={style.blue}
-                        />
-                      ) : (
-                        <Person
-                          width={normalize(50)}
-                          height={normalize(100)}
-                          color={style.blue}
-                        />
-                      )
-                    ) : (
-                      <Juridic
-                        width={normalize(50)}
-                        height={normalize(100)}
-                        color={style.blue}
-                      />
-                    )}
-                  </View>
-                {/* ) : ( */}
-                  <>
-                    {/* {loadingImage ? (
-                      <View
-                        style={{
-                          height: normalize(100),
-                          width: normalize(70),
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                        <ActivityIndicator
-                          size="small"
-                          color={style.blue}
-                          style={{marginTop: 20}}
-                        />
-                      </View>
-                    ) : ( */}
-                    {/* <Image
-                      source={{uri: URL.slice(0, -6) + user?.data?.image}}
-                      width={normalize(70)}
-                      // onLoadEnd={() => setLoadingImage(false)}
-                      // onError={() => setLoadingImage(false)}
-                      // onLoad={() => setLoadingImage(false)}
-                      height={normalize(100)}
-                      style={{
-                        borderRadius: 10,
-                      }}
-                    /> */}
-                    {/* )} */}
-                  </>
-                {/* )} */}
+  const isIndividual = user?.data?.type === 2;
+  const displayName = isIndividual
+    ? `${user?.data?.first_name || ''} ${user?.data?.last_name || ''}`.trim()
+    : user?.data?.company || user?.data?.director || '';
+  const displaySub = isIndividual
+    ? user?.data?.middle_name || user?.data?.phone || ''
+    : user?.data?.director || '';
+  const initials = (() => {
+    if (isIndividual) {
+      const a = (user?.data?.first_name || '')[0] || '';
+      const b = (user?.data?.last_name || '')[0] || '';
+      return (a + b).toUpperCase() || 'U';
+    }
+    return ((user?.data?.company || 'Z')[0] || 'Z').toUpperCase();
+  })();
+  const showPassportCta =
+    user?.data?.is_active !== 0 &&
+    expire_passport_check(user?.data?.expiry_date);
 
-                <View style={{marginLeft: 10, flex: 1}}>
-                  {user?.data?.type === 2 ? (
-                    UserInfo()
-                  ) : (
-                    <>
-                      <View style={styles.info}>
-                        <MainText color={colors.blue} size={fontSize[12]}>
-                          Direktor
-                        </MainText>
-                        <MainText size={fontSize[14]}>
-                          {user?.data?.director}
-                        </MainText>
-                      </View>
-                      <View style={styles.info}>
-                        <MainText color={colors.blue} size={fontSize[12]}>
-                          Kompaniya
-                        </MainText>
-                        <MainText size={fontSize[14]}>
-                          {user?.data?.company}
-                        </MainText>
-                      </View>
-                      <View style={styles.info}>
-                        <MainText color={colors.blue} size={fontSize[12]}>
-                          {t('786')}
-                        </MainText>
-                        <MainText size={fontSize[14]}>
-                          {user?.data?.address}
-                        </MainText>
-                      </View>
-                    </>
-                  )}
-                </View>
+  const Row = ({icon, label, onPress, last}: any) => (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={[styles.row, last && styles.rowLast]}>
+      <View style={styles.rowIconWrap}>{icon}</View>
+      <Text style={styles.rowLabel} numberOfLines={1}>
+        {label}
+      </Text>
+      <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.screen}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <RdHeader title={t('807')} />
+      <ScrollView
+        style={styles.page}
+        contentContainerStyle={styles.pageContent}
+        showsVerticalScrollIndicator={false}>
+        {/* Profile header card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <View style={styles.profileMeta}>
+            <Text style={styles.profileName} numberOfLines={1}>
+              {displayName}
+            </Text>
+            {!!displaySub && (
+              <Text style={styles.profileSub} numberOfLines={1}>
+                {displaySub}
+              </Text>
+            )}
+            {user?.data?.is_active === 0 && (
+              <View style={styles.statusChip}>
+                <Text style={styles.statusChipText}>
+                  {t('Tasdiqlanmagan foydalanuvchi')}
+                </Text>
               </View>
-              <View>
-                {user.data.is_active === 0
-                  ? null
-                  : expire_passport_check(user?.data?.expiry_date) && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          navigateScreen('ChangePassportData');
-                        }}
-                        style={[styles.active, {width: '65%'}]}>
-                        <MainText color={colors.white} size={fontSize[12]}>
-                          {t('747')}
-                        </MainText>
-                      </TouchableOpacity>
-                    )}
-              </View>
-              <View style={{marginTop: 5}}>
-                <TouchableOpacity
-                  onPress={onCheckIsActive}
-                  style={styles.TouchableOpacity}>
-                  <ProfileIcon size={22} color={style.blue} />
-                  <MainText mrLeft={8} color={colors.black} size={fontSize[14]}>
-                    {t('810')}
-                  </MainText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    let lang = storage.getString('lang');
-                    navigation.navigate('Contract', {
-                      url: `https://pdf.zerox.uz/oferta.php?id=${user.data.uid}&lang=${lang}&download=0`,
-                      title: t('681'),
-                    });
-                  }}
-                  style={styles.TouchableOpacity}>
-                  <ContractIcon size={22} color={style.blue} />
-                  <MainText mrLeft={8} color={colors.black} size={fontSize[14]}>
-                    {t('681')}
-                  </MainText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigateScreen('Language');
-                  }}
-                  style={styles.TouchableOpacity}>
-                  <LanguageIcon size={22} color={style.blue} />
-                  <MainText mrLeft={8} color={colors.black} size={fontSize[14]}>
-                    {t('til')}
-                  </MainText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigateScreen('Security');
-                  }}
-                  style={styles.TouchableOpacity}>
-                  <SecurityIcon size={22} color={style.blue} />
-                  <MainText mrLeft={8} color={colors.black} size={fontSize[14]}>
-                    {t('816')}
-                  </MainText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setHide(true);
-                  }}
-                  style={styles.TouchableOpacity}>
-                  <ExitIcon size={22} color={style.blue} />
-                  <MainText mrLeft={8} color={colors.black} size={fontSize[14]}>
-                    {t('672')}
-                  </MainText>
-                </TouchableOpacity>
-              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Unverified user CTA (preserves ScanFaceMyId flow) */}
+        {user?.data?.is_active === 0 && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              navigateScreen('ScanFaceMyId');
+            }}
+            style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>{t('747')}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Passport re-check CTA (preserves ChangePassportData flow) */}
+        {showPassportCta && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              navigateScreen('ChangePassportData');
+            }}
+            style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>{t('747')}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Menu */}
+        <View style={styles.menuCard}>
+          <Row
+            icon={<UserIcon size={rs(20)} color={rd.color.primary} />}
+            label={t('810')}
+            onPress={onCheckIsActive}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon={<CoinIcon size={rs(20)} color={rd.color.primary} />}
+            label={t('681')}
+            onPress={() => {
+              let lang = storage.getString('lang');
+              navigation.navigate('Contract', {
+                url: `https://pdf.zerox.uz/oferta.php?id=${user.data.uid}&lang=${lang}&download=0`,
+                title: t('681'),
+              });
+            }}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon={<HelpIcon size={rs(20)} color={rd.color.primary} />}
+            label={t('til')}
+            onPress={() => {
+              navigateScreen('Language');
+            }}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon={<ShieldIcon size={rs(20)} color={rd.color.primary} />}
+            label={t('816')}
+            onPress={() => {
+              navigateScreen('Security');
+            }}
+            last
+          />
+        </View>
+
+        {/* Logout */}
+        <View style={styles.menuCard}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              setHide(true);
+            }}
+            style={[styles.row, styles.rowLast]}>
+            <View style={styles.rowIconWrapError}>
+              <LogOutIcon size={rs(20)} color={rd.color.error} />
             </View>
+            <Text style={[styles.rowLabel, styles.rowLabelError]}>
+              {t('672')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
       <ExitModal
         hide={hide}
         setHide={setHide}
         navigation={navigation}
         deleteToken={deleteToken}
       />
-    </ScreenLayout>
+    </View>
   );
 };
 
@@ -381,6 +328,130 @@ const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
 export default UserScreen;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: rd.color.page,
+  },
+  page: {
+    flex: 1,
+    backgroundColor: rd.color.page,
+  },
+  pageContent: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(12),
+    paddingBottom: rs(28),
+  },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+    marginBottom: rs(16),
+  },
+  avatar: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(22),
+    color: rd.color.primary,
+  },
+  profileMeta: {
+    flex: 1,
+    marginLeft: rs(14),
+  },
+  profileName: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
+  profileSub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    marginTop: rs(3),
+  },
+  statusChip: {
+    alignSelf: 'flex-start',
+    marginTop: rs(8),
+    backgroundColor: rd.color.warningBg,
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(10),
+    paddingVertical: rs(4),
+  },
+  statusChipText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(11.5),
+    color: rd.color.warning,
+  },
+  ctaButton: {
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: rs(13),
+    marginBottom: rs(16),
+  },
+  ctaButtonText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.onPrimary,
+  },
+  menuCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    marginBottom: rs(16),
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: rs(56),
+    paddingHorizontal: rs(14),
+  },
+  rowLast: {},
+  rowIconWrap: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowIconWrapError: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.errorBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowLabel: {
+    flex: 1,
+    marginLeft: rs(12),
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+  },
+  rowLabelError: {
+    color: rd.color.error,
+    fontFamily: rd.font.semibold,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: rd.color.border,
+    marginLeft: rs(14) + rs(40) + rs(12),
+  },
   btn: {
     alignItems: 'center',
     justifyContent: 'center',

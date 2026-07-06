@@ -10,6 +10,7 @@ import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import { font } from '../../../../theme/font';
 import NotificationShell from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const Qarzqaytarilganligitogrisida = ({
   item,
@@ -57,7 +58,7 @@ const Qarzqaytarilganligitogrisida = ({
                   id: item.contract,
                 });
               }}
-              style={{ color: style.blue }}
+              style={{ color: rd.color.primary }}
             />
           ),
           start: <MainText ft={font.medium} size={style.fontSize.xx - 2} />,

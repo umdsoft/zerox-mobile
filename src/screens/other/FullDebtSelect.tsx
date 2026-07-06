@@ -1,6 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -12,8 +11,8 @@ import axios from 'axios';
 import { storage } from '../../store/api/token/getToken';
 import { URL } from '../constants';
 import ScreenLayout from '../components/ScreenLayout';
-import Button from '../components/Button';
 import { settingDate } from '../../helper';
+import { rd, rs } from '../../theme/rd';
 
 import { setNotification } from '../../store/reducers/HomeReducer';
 import { useDispatch, useSelector } from 'react-redux';
@@ -124,14 +123,11 @@ const FullDebtSelect = () => {
             <Loading />
           </View>
         ) : (
-          <View style={styles.aboutUsContainer}>
-            <View
-              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
-            >
-              <View style={{ marginTop: 10 }}>
+          <View style={styles.content}>
+              <View style={styles.card}>
                 <Text
                   allowFontScaling={false}
-                  style={[styles.hisob, { fontSize: style.fontSize.xx }]}
+                  style={styles.hisob}
                 >
                   <Trans
                     t={t}
@@ -143,7 +139,7 @@ const FullDebtSelect = () => {
                     }}
                     components={{
                       start: (
-                        <TextBold styles={{ fontSize: style.fontSize.xx }} />
+                        <TextBold styles={{ fontSize: rs(16) }} />
                       ),
                       count: (
                         <Text
@@ -155,25 +151,26 @@ const FullDebtSelect = () => {
                             });
                           }}
                           style={{
-                            color: style.blue,
+                            color: rd.color.primary,
                           }}
                         />
                       ),
                       name: (
-                        <TextBold styles={{ fontSize: style.fontSize.xx }} />
+                        <TextBold styles={{ fontSize: rs(16) }} />
                       ),
                     }}
                   />
                 </Text>
               </View>
-              <View>
-                <Button
-                  title={t('357') as string}
-                  onPress={onPress}
-                  style={{ marginTop: 20 }}
-                />
-              </View>
-            </View>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onPress}
+                style={styles.primaryBtn}
+              >
+                <Text allowFontScaling={false} style={styles.primaryBtnText}>
+                  {t('357') as string}
+                </Text>
+              </TouchableOpacity>
           </View>
         )}
       </View>
@@ -189,93 +186,37 @@ export const dotHelper = text => {
 export default FullDebtSelect;
 
 const styles = StyleSheet.create({
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
+  content: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(20),
+    paddingBottom: rs(24),
   },
   hisob: {
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
     textAlign: 'center',
+    lineHeight: rs(22),
   },
-  insideMoney: {
+  card: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    padding: rs(14),
+  },
+  primaryBtn: {
+    marginTop: rs(20),
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  item: {
-    flex: 1,
-  },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+  primaryBtnText: {
+    fontSize: rs(16),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
   },
 });

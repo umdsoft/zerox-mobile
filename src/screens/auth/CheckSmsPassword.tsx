@@ -1,7 +1,11 @@
 import {
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -21,19 +25,17 @@ import { useDispatch, useSelector } from 'react-redux';
 
 // Components
 import Loading from '../components/Loading';
-import ScreenLayout from '../components/ScreenLayout';
-import Button from '../components/Button';
-import MainText from '../components/MainText';
-import CheckSms from '../../images/changeNumber';
+import { OtpInput } from 'react-native-otp-entry';
+import { GradientIconBadge } from '../components/BrandLockup';
 
 // Utils
-import { normalize, style } from '../../theme/style';
+import { normalize } from '../../theme/style';
 import { secToMin } from '../other/SaveUserDetails';
-import { fontSize } from '../../theme/font';
+import { rd, rs } from '../../theme/rd';
+import { ChevronLeft, MessageIcon } from '../home/redesign/icons';
 
 // API
-import { SmsCheckCodeApi, UserDataPostApi } from '../../store/api/auth';
-import { OtpInput } from 'react-native-otp-entry';
+import { SmsCheckCodeApi, RegisterResendSmsApi } from '../../store/api/auth';
 import {
   getHash,
   removeListener,
@@ -159,7 +161,7 @@ const CheckSmsPassword = () => {
   const handleResendSms = async () => {
     try {
       const response = await dispatch(
-        UserDataPostApi(phone.replace(/\s/g, '')),
+        RegisterResendSmsApi(phone.replace(/\s/g, '')),
       ).unwrap();
 
       if (response.success) {
@@ -207,16 +209,11 @@ const CheckSmsPassword = () => {
   };
 
   useEffect(() => {
-    getHash()
-      .then(hash => {
-        console.log('hash', hash);
-        // use this hash in the message.
-      })
-      .catch(console.log);
+    // SMS Retriever hash (Android auto-read uchun); xato bo'lsa jim o'tamiz.
+    getHash().catch(() => {});
 
     startOtpListener(message => {
       const otp = message.match(/\b\d{5}\b/);
-      console.log('otp', otp);
       if (otp && otp[0]) {
         setCode(otp[0]);
         inputRefs.current?.setValue(otp[0]);
@@ -227,167 +224,224 @@ const CheckSmsPassword = () => {
 
   // Render timer component
   const renderTimer = useMemo(
-    () => (
-      <View style={styles.timerContainer}>
-        <MainText size={fontSize[12]} color={style.blue}>
-          {secToMin(timer)}
-        </MainText>
-      </View>
-    ),
+    () => <Text style={styles.timerText}>{secToMin(timer)}</Text>,
     [timer],
   );
 
-  console.log(code, 'code');
+  const disabled = code.length !== CODE_LENGTH;
 
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <ScreenLayout
-      title={t('36')}
-      headerColor={style.blue}
-      headerIconColor="#fff"
-      headerTitleColor="#000"
-      background={false}
-      contentStyle={styles.scrollContent}
-    >
-      <View style={styles.content}>
-          <View style={styles.illustrationContainer}>
-            <CheckSms />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
+          {/* Orqaga */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
+          </TouchableOpacity>
+
+          {/* Hero */}
+          <View style={styles.hero}>
+            <GradientIconBadge size={rs(84)}>
+              <MessageIcon size={rs(34)} color={rd.color.primary} />
+            </GradientIconBadge>
+            <Text style={styles.title}>{t('36')}</Text>
+            <Text style={styles.subtitle}>{t('54')}</Text>
+            <Text style={styles.phone}>{phone}</Text>
           </View>
 
-          <View style={styles.mainContent}>
-            <View style={styles.instructionContainer}>
-              <MainText textAlign="center" size={fontSize[12]}>
-                {t('54')}
-              </MainText>
-            </View>
-
-            <View style={styles.otpContainer}>
-              <OtpInput
-                textInputProps={{
-                  textContentType: 'oneTimeCode',
-                  autoComplete: 'sms-otp',
-                }}
-                onTextChange={text => {
-                  setCode(text);
-                }}
-                // textInputProps={{
-                //   onPress: () => {
-                //     inputRefs.current?.focus();
-                //   },
-                // }}
-                // autoFocus={autoFocus}
-                autoFocus={false}
-                ref={inputRefs}
-                onFocus={() => {
-                  setAutoFocus(true);
-                }}
-                type="numeric"
-                numberOfDigits={5}
-                theme={{
-                  focusedPinCodeContainerStyle: {
-                    borderColor: style.blue,
-                    borderRadius: 20,
-                  },
-                  focusStickStyle: {
-                    backgroundColor: style.blue,
-                    borderRadius: 20,
-                  },
-
-                  pinCodeContainerStyle: {
-                    marginHorizontal: 5,
-                    width: normalize(45),
-                    height: normalize(60),
-                    borderRadius: 20,
-                  },
-                  pinCodeTextStyle: {
-                    fontFamily: style.fontFamilyMedium,
-                    color: style.textColor,
-                  },
-                }}
-              />
-            </View>
-
-            <Button
-              title={t('45')}
-              onPress={handleSubmitCode}
-              disabled={code.length !== CODE_LENGTH}
-              style={{ marginTop: 20 }}
+          {/* Kod kiritish */}
+          <View style={styles.otpContainer}>
+            <OtpInput
+              textInputProps={{
+                textContentType: 'oneTimeCode',
+                autoComplete: 'sms-otp',
+              }}
+              onTextChange={text => {
+                setCode(text);
+              }}
+              autoFocus={false}
+              ref={inputRefs}
+              onFocus={() => {
+                setAutoFocus(true);
+              }}
+              type="numeric"
+              numberOfDigits={5}
+              theme={{
+                focusedPinCodeContainerStyle: {
+                  borderColor: rd.color.primary,
+                  backgroundColor: rd.color.surface,
+                  borderWidth: 1.5,
+                  borderRadius: rd.radius.lg,
+                },
+                focusStickStyle: {
+                  backgroundColor: rd.color.primary,
+                  borderRadius: rd.radius.pill,
+                },
+                pinCodeContainerStyle: {
+                  marginHorizontal: rs(5),
+                  width: rs(52),
+                  height: rs(60),
+                  borderRadius: rd.radius.lg,
+                  borderWidth: 1.5,
+                  borderColor: rd.color.border,
+                  backgroundColor: rd.color.surface,
+                },
+                pinCodeTextStyle: {
+                  fontFamily: rd.font.semibold,
+                  fontSize: rs(22),
+                  color: rd.color.text,
+                },
+              }}
             />
-
-            <View style={styles.footer}>
-              <TouchableOpacity
-                onPress={handleResendSms}
-                disabled={!isRetryEnabled}
-              >
-                <MainText
-                  size={fontSize[12]}
-                  color={
-                    isRetryEnabled ? style.blue : style.disabledButtonColor
-                  }
-                >
-                  {t('60')}
-                </MainText>
-              </TouchableOpacity>
-              {renderTimer}
-            </View>
           </View>
-        </View>
-    </ScreenLayout>
+
+          {/* Timer / qayta yuborish */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleResendSms}
+              disabled={!isRetryEnabled}
+            >
+              <Text
+                style={[
+                  styles.resendLink,
+                  !isRetryEnabled && { color: rd.color.textTertiary },
+                ]}
+              >
+                {t('60')}
+              </Text>
+            </TouchableOpacity>
+            {!isRetryEnabled && renderTimer}
+          </View>
+
+          {/* Tasdiqlash */}
+          <TouchableOpacity
+            disabled={disabled}
+            activeOpacity={0.85}
+            onPress={handleSubmitCode}
+            style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
+          >
+            <Text
+              style={[
+                styles.submitText,
+                disabled && { color: rd.color.textTertiary },
+              ]}
+            >
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
+export default CheckSmsPassword;
+
 const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-  },
+  container: { flex: 1, backgroundColor: rd.color.page },
   content: {
-    marginTop: normalize(70),
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  illustrationContainer: {
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(8),
   },
-  mainContent: {
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: 40,
+
+  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(32) },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(24),
+    color: rd.color.text,
+    marginTop: rs(18),
   },
-  instructionContainer: {
-    marginBottom: 25,
-    alignItems: 'center',
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(16),
   },
+  phone: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+    marginTop: rs(6),
+  },
+
   otpContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginTop: rs(4),
   },
-  otpInput: {
-    width: normalize(45),
-    height: normalize(60),
-    fontSize: fontSize[22],
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    borderRadius: 20,
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: style.blue,
-  },
+
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 10,
+    justifyContent: 'center',
+    gap: rs(6),
+    marginTop: rs(22),
   },
-  timerContainer: {
-    width: 55,
+  timerText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.primary,
+  },
+  resendLink: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.primary,
+  },
+
+  submitBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 4,
-    marginLeft: 5,
+    marginTop: rs(28),
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });
-
-export default CheckSmsPassword;

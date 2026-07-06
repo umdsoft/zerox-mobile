@@ -1,6 +1,7 @@
 import notifee from '@notifee/react-native';
 import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
+import { onTokenRefreshed } from '../store/api/authInterceptor';
 import { SOCKET_URL } from '../screens/constants';
 import { Store } from '../store/store/Store';
 import {
@@ -69,6 +70,7 @@ class SocketService {
   private userId: string | null = null;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private deviceCount = 0;
+  private tokenRefreshUnsub: (() => void) | null = null;
 
   // Callbacks for external listeners
   public onRegistered: SocketEventCallback<RegisteredResponse> | null = null;
@@ -122,6 +124,14 @@ class SocketService {
     });
 
     this.isInitialized = true;
+
+    // Access token yangilanganда (authInterceptor refresh) socket query'sidagi eski
+    // token endi yaroqsiz — yangi token bilan qayta ulanamiz (realtime uzilmasin).
+    if (!this.tokenRefreshUnsub) {
+      this.tokenRefreshUnsub = onTokenRefreshed(newToken =>
+        this.updateToken(newToken),
+      );
+    }
 
     // Connection events
     this.socket.on('connect', () => {
@@ -197,6 +207,28 @@ class SocketService {
 
   connected(): 'Online' | 'Offline' {
     return this.socket?.connected ? 'Online' : 'Offline';
+  }
+
+  // Yangi access token bilan qayta ulanadi (token refresh'dan keyin). Socket query'sidagi
+  // token yangilanadi va ulanish qayta tiklanadi — aks holda server eski (yaroqsiz)
+  // token bilan auth_error berardi.
+  updateToken(newToken: string): void {
+    if (!this.socket) return;
+    try {
+      const opts: any = this.socket.io?.opts || {};
+      opts.query = { ...(opts.query || {}), token: newToken, id: this.userId };
+      if (this.socket.connected) {
+        this.socket.disconnect();
+      }
+      this.socket.connect();
+      if (this.userId) {
+        this.socket.once('connect', () => {
+          this.initSubscribeWithId(this.userId!);
+        });
+      }
+    } catch (e) {
+      console.warn('Socket updateToken failed:', e);
+    }
   }
 
   restart(): void {

@@ -1,6 +1,5 @@
 import {
   Alert,
-  Image,
   Linking,
   Platform,
   Pressable,
@@ -17,17 +16,22 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
-import ArrowLeft from '../../images/ArrowLeft';
 import { storage } from '../../store/api/token/getToken';
 import MainText from '../components/MainText';
-import { colors } from '../../theme/colors';
-import { font, fontSize } from '../../theme/font';
+import { fontSize } from '../../theme/font';
 import { t } from 'i18next';
 import BiometricModule from '../../../BiometricModule';
 import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
 import MarkIcon from '../../images/mark';
 import { scale } from '../../helper/scale';
 import { heightPercentageToDP } from 'react-native-responsive-screen';
+import { rd, rs } from '../../theme/rd';
+import {
+  BackspaceIcon,
+  FingerprintIcon,
+  ShieldIcon,
+} from '../home/redesign/icons';
+import { GradientIconBadge } from '../components/BrandLockup';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
@@ -323,11 +327,11 @@ const SetLocalPassword = () => {
         />
         <MarkIcon width={100} height={100} color={'#fff'} />
 
-        <MainText size={fontSize[12]} mTop={10} ft={font.bold}>
+        <MainText size={fontSize[12]} mTop={10} ft={rd.font.bold}>
           {t('Ilovaga kirish 30 daqiqaga cheklandi')}
         </MainText>
 
-        <MainText size={fontSize[12]} mTop={10} ft={font.medium}>
+        <MainText size={fontSize[12]} mTop={10} ft={rd.font.medium}>
           {t('PIN-kod bir necha bor xato kiritildi')}
         </MainText>
         <View
@@ -348,7 +352,7 @@ const SetLocalPassword = () => {
             }}
             style={[styles.enterButton]}
           >
-            <MainText color={colors.white} size={fontSize[14]}>
+            <MainText color={rd.color.onPrimary} size={fontSize[14]}>
               {t('PIN-kodni tiklash')}
             </MainText>
           </TouchableOpacity>
@@ -359,8 +363,8 @@ const SetLocalPassword = () => {
             }}
           >
             <MainText
-              ft={font.bold}
-              color={colors.blue}
+              ft={rd.font.bold}
+              color={rd.color.primary}
               mTop={15}
               size={fontSize[12]}
             >
@@ -374,7 +378,7 @@ const SetLocalPassword = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor={style.blue} />
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {count !== 0 ? (
         <View style={{ flex: 1 }}>
           {!isLocal && (
@@ -399,10 +403,9 @@ const SetLocalPassword = () => {
                   })
                 }
               >
-                <MainText color={colors.white} size={fontSize[12]}>
+                <MainText color={rd.color.primary} size={fontSize[13]} ft={rd.font.medium}>
                   {t('PIN-kodni tiklash')}
                 </MainText>
-                {/* <ArrowRight width={12} height={12} color="#fff" /> */}
               </TouchableOpacity>
             </View>
           )}
@@ -419,7 +422,7 @@ const SetLocalPassword = () => {
             }}
             activeOpacity={0.8}
             style={styles.notSetPasswordButton}>
-            <MainText color={colors.white} size={fontSize[12]}>
+            <MainText color={rd.color.onPrimary} size={fontSize[12]}>
               {t('768')}
             </MainText>
             <ArrowRight width={12} height={12} color="#fff" />
@@ -430,21 +433,21 @@ const SetLocalPassword = () => {
             style={{
               alignItems: 'center',
               justifyContent: 'center',
+              marginTop: rs(48),
+              marginBottom: rs(20),
             }}
           >
-            <SetCode
-              width={heightPercentageToDP(22)}
-              height={heightPercentageToDP(30)}
-              style={{ transform: [{ scale: 1.3 }] }}
-            />
+            <GradientIconBadge size={rs(84)}>
+              <ShieldIcon size={rs(34)} color={rd.color.primary} />
+            </GradientIconBadge>
           </View>
           <View style={{ flex: 1 }}>
             {isLocal ? (
               <View style={styles.setCodeTextContainer}>
                 <MainText
-                  color={colors.white}
-                  size={fontSize[14]}
-                  ft={font.bold}
+                  color={rd.color.text}
+                  size={fontSize[16]}
+                  ft={rd.font.bold}
                 >
                   {step === 1 ? t('771') : t('PIN-kodni takrorlang')}
                 </MainText>
@@ -452,9 +455,9 @@ const SetLocalPassword = () => {
             ) : (
               <View style={styles.setCodeTextContainer}>
                 <MainText
-                  color={colors.white}
-                  size={fontSize[14]}
-                  ft={font.bold}
+                  color={rd.color.text}
+                  size={fontSize[16]}
+                  ft={rd.font.bold}
                 >
                   {t('PIN-kodni kiriting')}
                 </MainText>
@@ -471,7 +474,7 @@ const SetLocalPassword = () => {
                         // eslint-disable-next-line react-native/no-inline-styles
                         {
                           backgroundColor:
-                            i < password.length ? style.blue : '#EEEEEE',
+                            i < password.length ? rd.color.primary : rd.color.border,
                         },
                       ]}
                     />
@@ -493,7 +496,7 @@ const SetLocalPassword = () => {
                           {supportScan ? (
                             <Pressable
                               android_ripple={{
-                                color: style.blue,
+                                color: rd.color.primary,
                                 radius: 50,
                                 borderless: true,
                               }}
@@ -502,17 +505,16 @@ const SetLocalPassword = () => {
                               }}
                               style={styles.codeButton}
                             >
-                              <Image
-                                source={require('../../images/auth/fingerprint.png')}
-                                style={{ width: 30, height: 30 }}
-                                resizeMode="cover"
+                              <FingerprintIcon
+                                size={rs(30)}
+                                color={rd.color.primary}
                               />
                             </Pressable>
                           ) : (
                             <View
                               style={[
                                 styles.codeButton,
-                                { backgroundColor: '#fff' },
+                                { backgroundColor: 'transparent' },
                               ]}
                             />
                           )}
@@ -527,7 +529,7 @@ const SetLocalPassword = () => {
                                 onSetCode(0);
                               }}
                               android_ripple={{
-                                color: style.blue,
+                                color: rd.color.primary,
                                 radius: 50,
                                 borderless: true,
                               }}
@@ -535,7 +537,7 @@ const SetLocalPassword = () => {
                             >
                               <MainText
                                 // ft={font.bold}
-                                color={colors.black}
+                                color={rd.color.text}
                                 size={fontSize[21]}
                               >
                                 0
@@ -552,16 +554,15 @@ const SetLocalPassword = () => {
                                 onBackSpace();
                               }}
                               android_ripple={{
-                                color: style.blue,
+                                color: rd.color.primary,
                                 radius: 50,
                                 borderless: true,
                               }}
                               style={styles.codeButton}
                             >
-                              <ArrowLeft
-                                width={12}
-                                height={12}
-                                color={style.blue}
+                              <BackspaceIcon
+                                size={rs(24)}
+                                color={rd.color.textSecondary}
                               />
                             </Pressable>
                           </View>
@@ -574,15 +575,15 @@ const SetLocalPassword = () => {
                               onSetCode(i + 1);
                             }}
                             android_ripple={{
-                              color: style.blue,
+                              color: rd.color.primary,
                               radius: 50,
                               borderless: true,
                             }}
                             style={styles.codeButton}
                           >
                             <MainText
-                              // ft={font.bold}
-                              color={colors.black}
+                              ft={rd.font.medium}
+                              color={rd.color.text}
                               size={fontSize[21]}
                             >
                               {i + 1}
@@ -611,11 +612,11 @@ export default SetLocalPassword;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.page,
   },
   enterButton: {
     width: '90%',
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
@@ -635,8 +636,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEEEEE',
+    backgroundColor: rd.color.surfaceAlt,
     margin: scale(10),
+    overflow: 'hidden',
   },
   fourItem: {
     flexDirection: 'row',
@@ -646,7 +648,7 @@ const styles = StyleSheet.create({
   codeItem: {
     width: 15,
     height: 15,
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.primary,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
@@ -654,7 +656,7 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderTopRightRadius: 15,
     borderTopLeftRadius: 15,
   },

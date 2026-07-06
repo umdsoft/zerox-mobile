@@ -1,6 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -11,9 +10,9 @@ import { URL } from '../../constants';
 import QismanIcon from '../../../images/qismanqaytarish';
 import FullIcon from '../../../images/toliqqay';
 import { t } from 'i18next';
-import { fontSize } from '../../../theme';
 import ScreenLayout from '../../components/ScreenLayout';
-import Button from '../../components/Button';
+import { rd, rs } from '../../../theme/rd';
+import { ChevronRight } from '../../home/redesign/icons';
 
 const DebtTakeSelect = () => {
   const navigation = useNavigation();
@@ -45,50 +44,51 @@ const DebtTakeSelect = () => {
 
   return (
     <ScreenLayout title={t('438')} scroll>
-        {loading ? (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <Loading />
+        </View>
+      ) : (
+        <View style={styles.content}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.optionCard}
+            onPress={() => {
+              navigation.navigate('DebtTakeFull', {
+                item: info.data,
+                id: item?.id,
+              });
             }}
           >
-            <Loading />
-          </View>
-        ) : (
-          <View style={styles.aboutUsContainer}>
-            <View
-              style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
-            >
-              <View>
-                <Button
-                  title={t('441')}
-                  onPress={() => {
-                    navigation.navigate('DebtTakeFull', {
-                      item: info.data,
-                      id: item?.id,
-                    });
-                  }}
-                  leftIcon={<FullIcon />}
-                  style={{ marginTop: 20 }}
-                />
-              </View>
-              <View>
-                <Button
-                  title={t('450')}
-                  onPress={() => {
-                    navigation.navigate('DebtTakePart', {
-                      item: info.data,
-                      id: item?.id,
-                    });
-                  }}
-                  leftIcon={<QismanIcon />}
-                  style={{ marginTop: 20 }}
-                />
-              </View>
+            <View style={styles.optionIcon}>
+              <FullIcon />
             </View>
-          </View>
-        )}
+            <Text style={styles.optionText} allowFontScaling={false}>
+              {t('441')}
+            </Text>
+            <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.optionCard}
+            onPress={() => {
+              navigation.navigate('DebtTakePart', {
+                item: info.data,
+                id: item?.id,
+              });
+            }}
+          >
+            <View style={styles.optionIcon}>
+              <QismanIcon />
+            </View>
+            <Text style={styles.optionText} allowFontScaling={false}>
+              {t('450')}
+            </Text>
+            <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+          </TouchableOpacity>
+        </View>
+      )}
     </ScreenLayout>
   );
 };
@@ -96,112 +96,38 @@ const DebtTakeSelect = () => {
 export default DebtTakeSelect;
 
 const styles = StyleSheet.create({
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
+  loadingWrap: {
     flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  content: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(20),
+    gap: rs(14),
   },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
+  optionCard: {
     flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    padding: rs(16),
   },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-    textAlign: 'center',
-  },
-  textButton: {
-    fontSize: fontSize[12],
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
-    marginLeft: 8,
-    maxWidth: '80%',
-    textAlign: 'center',
-  },
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
+  optionIcon: {
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
+    marginRight: rs(12),
   },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  optionText: {
     flex: 1,
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  item: {
-    flex: 1,
-  },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+    fontSize: rs(15),
+    fontFamily: rd.font.semibold,
+    color: rd.color.text,
   },
 });

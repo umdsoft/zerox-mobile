@@ -1,28 +1,28 @@
 import {
   Alert,
   DeviceEventEmitter,
+  KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import BackButton from '../components/BackButton';
-import {normalize, style} from '../../theme/style';
-import RegisterWithJuridic from '../../images/auth/illustrationregisterwithpeople.svg';
 
 import {eimzo} from '../../nativemodule/android.event';
 import axios from 'axios';
 import {URL} from '../constants';
 import Loading from '../components/Loading';
 import {storage} from '../../store/api/token/getToken';
-import {Toast} from 'react-native-toast-message';
-import MainText from '../components/MainText';
-import {colors} from '../../theme/colors';
-import {font, fontSize} from '../../theme/font';
+import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {useTranslation} from 'react-i18next';
+import {rd, rs} from '../../theme/rd';
+import {ChevronLeft, FingerprintIcon} from '../home/redesign/icons';
+import BrandLockup from '../components/BrandLockup';
 
 const Register = () => {
   const navigation = useNavigation();
@@ -57,6 +57,9 @@ const Register = () => {
         });
         if (data.success && data?.token) {
           storage.set('token', data?.token);
+          if (data?.refreshToken) {
+            storage.set('refreshToken', data.refreshToken);
+          }
           navigation.reset({
             routes: [
               {name: 'BottomTabNavigator', params: {token: data?.token}},
@@ -75,10 +78,14 @@ const Register = () => {
   useEffect(() => {
     DeviceEventEmitter.addListener('eimzo', data => {
       let a = JSON.parse(data.data);
-      let code = a.subjectCertificateInfo.subjectName['1.2.860.3.16.1.1'];
-      if (code.slice(0, 1) === 2 || 3) {
+      const subj = a?.subjectCertificateInfo?.subjectName ?? {};
+      // Yuridik shaxs sertifikatida tashkilot nomi (company / O) bo'ladi; jismoniy
+      // shaxs sertifikatida yo'q. Ilgari `code.slice(0,1)===2 || 3` sharti DOIM rost
+      // edi (string≠number + `|| 3` truthy) — hammani yuridik deb qabul qilardi.
+      const isLegal = !!(subj['company'] || subj['O'] || subj['OU']);
+      if (isLegal) {
         setLoading(true);
-        onPostUserData(JSON.parse(data.data));
+        onPostUserData(a);
       } else {
         Toast.show({
           autoHide: true,
@@ -93,8 +100,18 @@ const Register = () => {
       }
     });
 
-    DeviceEventEmitter.addListener('eimzo_error', data => {
-      console.log(data, 'errorr');
+    DeviceEventEmitter.addListener('eimzo_error', () => {
+      setLoading(false);
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: {
+          title: 'Xatolik',
+          desc: 'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
+        },
+      });
     });
 
     return () => {
@@ -108,94 +125,56 @@ const Register = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.BackButton,
-          {marginTop: Platform.OS === 'android' ? 10 : normalize(35)},
-        ]}>
-        <BackButton
-          navigation={navigation}
-          IconColor="#fff"
-          backgroundColor={style.blue}
-        />
-      </View>
-      <View style={{width: style.width, height: style.height}}>
-        <View
-          style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
-          <RegisterWithJuridic width="70%" height="70%" />
-        </View>
-        <View style={{alignItems: 'center'}}>
-          <MainText color={colors.black} size={fontSize[16]} ft={font.bold}>
-            Avtorizatsiya
-          </MainText>
-        </View>
-
-        {/* <View style={styles.main}>
-          <View>
-            <View style={[styles.TextInputLabelContainer, {marginBottom: 25}]}>
-              <View style={styles.retryPassword}>
-                <Text style={styles.phoneText}>STIRni kiriting</Text>
-              </View>
-              <View style={{flex: 1}}>
-                <TextInput
-                  placeholderTextColor={style.placeHolderColor}
-                  placeholder="AA1215125"
-                  keyboardType="default"
-                  style={styles.TextInput}
-                />
-              </View>
-            </View>
-            <View style={styles.TextInputLabelContainer}>
-              <View
-                style={{
-                  position: 'absolute',
-                  marginLeft: 15,
-                  flex: 1,
-                  zIndex: 1,
-                  top: -10,
-                  backgroundColor: '#fff',
-                  paddingLeft: 5,
-                  paddingRight: 5,
-                }}
-              >
-                <Text style={styles.phoneText}>
-                  Telefon raqamingizni kiriting
-                </Text>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '22%',
-                  justifyContent: 'flex-end',
-                }}
-              >
-                <Uzbekistan width="40%" height="40%" />
-                <Text style={styles.phoneNumberText}>+998</Text>
-              </View>
-              <View style={{flex: 1}}>
-                <TextInput
-                  placeholder="00 000 00 00"
-                  placeholderTextColor={style.placeHolderColor}
-                  maxLength={9}
-                  keyboardType="number-pad"
-                  style={[styles.TextInput, {paddingLeft: 5}]}
-                />
-              </View>
-            </View>
-          </View>
-        </View> */}
-        <View style={styles.enterButtonContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{flex: 1}}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}>
+          {/* Orqaga */}
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={onOpenNativeFunction}
-            style={styles.enterButton}>
-            <MainText color={colors.white} size={fontSize[16]}>
-              E-imzo orqali kirish
-            </MainText>
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}>
+            <ChevronLeft size={rs(22)} color={rd.color.text} />
           </TouchableOpacity>
-        </View>
-      </View>
+
+          {/* Brend hero */}
+          <View style={styles.hero}>
+            <BrandLockup />
+            <Text style={styles.title}>Avtorizatsiya</Text>
+            <Text style={styles.subtitle}>
+              Yuridik shaxs sifatida E-imzo (ERI) orqali xavfsiz kiring
+            </Text>
+          </View>
+
+          {/* Karta */}
+          <View style={styles.card}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <FingerprintIcon size={rs(22)} color={rd.color.primary} />
+              </View>
+              <View style={styles.infoTextBox}>
+                <Text style={styles.infoTitle}>E-imzo (ERI)</Text>
+                <Text style={styles.infoDesc}>
+                  Elektron raqamli imzo orqali yuridik shaxsingizni tasdiqlang
+                </Text>
+              </View>
+            </View>
+
+            {/* E-imzo orqali kirish */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onOpenNativeFunction}
+              style={styles.enterButton}>
+              <FingerprintIcon size={rs(20)} color={rd.color.onPrimary} />
+              <Text style={styles.enterText}>E-imzo orqali kirish</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -203,74 +182,91 @@ const Register = () => {
 export default Register;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: {flex: 1, backgroundColor: rd.color.page},
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
-  },
-  retryPassword: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    zIndex: 1,
-    marginTop: Platform.OS === 'android' ? 40 : 0,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-  },
-
-  main: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
-  },
-  enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
+    marginTop: rs(8),
   },
 
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.xx,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+  hero: {alignItems: 'center', marginTop: rs(24), marginBottom: rs(30)},
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(23),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(16),
+  },
+  subtitle: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(8),
+    lineHeight: rs(20),
+    paddingHorizontal: rs(20),
+  },
+
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(20),
+  },
+  infoRow: {flexDirection: 'row', alignItems: 'center'},
+  infoIcon: {
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
+  },
+  infoTextBox: {flex: 1},
+  infoTitle: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
+    marginBottom: rs(2),
+  },
+  infoDesc: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(18),
+  },
+
+  enterButton: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    marginTop: rs(24),
+    shadowColor: rd.color.primary,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  enterText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

@@ -1,12 +1,12 @@
 import {StyleSheet, Text, TouchableOpacity, View, Modal} from 'react-native';
 import React, {useCallback} from 'react';
-// import {Modal} from 'react-native-paper';
-import {style} from '../../../theme/style';
 import {useDispatch, useSelector} from 'react-redux';
 
 import {useTranslation} from 'react-i18next';
 import {navigate} from '../../../navigation/NavigationRef';
 import {checkExpire} from '../../../store/reducers/HomeReducer';
+import {rd, rs} from '../../../theme/rd';
+import {ClockIcon} from '../redesign/icons';
 
 const ExpirePassportModal = () => {
   const {t} = useTranslation();
@@ -30,23 +30,32 @@ const ExpirePassportModal = () => {
         dispatch(checkExpire({expire: false}));
       }}>
       <View style={styles.overlay}>
-        <View style={styles.main}>
-          <View style={styles.view}>
-            <Text style={styles.teext} allowFontScaling={false}>{t('expire_passport')}</Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-              }}>
-              <TouchableOpacity
-                onPress={onClose}
-                style={[styles.btn, {marginRight: 10}]}>
-                <Text style={[styles.teextx, {color: '#fff'}]} allowFontScaling={false}>{t('747')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onOk} style={styles.btn}>
-                <Text style={[styles.teextx, {color: '#fff'}]} allowFontScaling={false}>{t('OK')}</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.card}>
+          <View style={styles.iconCircle}>
+            <ClockIcon size={rs(30)} color={rd.color.warning} strokeWidth={1.8} />
+          </View>
+
+          <Text style={styles.title} allowFontScaling={false}>
+            {t('expire_passport')}
+          </Text>
+
+          <View style={styles.row}>
+            <TouchableOpacity
+              onPress={onOk}
+              activeOpacity={0.85}
+              style={[styles.btn, styles.btnCancel]}>
+              <Text style={styles.btnCancelText} allowFontScaling={false}>
+                {t('OK')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onClose}
+              activeOpacity={0.85}
+              style={[styles.btn, styles.btnPrimary]}>
+              <Text style={styles.btnPrimaryText} allowFontScaling={false}>
+                {t('747')}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -59,37 +68,68 @@ export default ExpirePassportModal;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)', // semi-transparent background
+    backgroundColor: 'rgba(19,26,42,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: rs(24),
   },
-  main: {
-    backgroundColor: '#fff',
-    width: '90%',
-    height: '20%',
-    padding: 10,
-    borderRadius: 12,
+  card: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(24),
+    padding: rs(24),
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.warningBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(18),
+  },
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(17),
+    lineHeight: rs(24),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginBottom: rs(22),
+  },
+  row: {
+    flexDirection: 'row',
+    width: '100%',
   },
   btn: {
+    flex: 1,
+    height: rs(50),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    borderRadius: rd.radius.lg,
   },
-  view: {flex: 1, justifyContent: 'space-around'},
-  teext: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    // marginLeft: 10,
-    maxWidth: '90%',
+  btnCancel: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    marginRight: rs(12),
   },
-  teextx: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2,
-    color: style.textColor,
-    // marginLeft: 10,
+  btnCancelText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.textSecondary,
+  },
+  btnPrimary: {
+    backgroundColor: rd.color.primary,
+    shadowColor: rd.color.primary,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  btnPrimaryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
   },
 });

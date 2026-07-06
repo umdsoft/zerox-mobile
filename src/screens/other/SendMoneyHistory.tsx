@@ -3,15 +3,17 @@ import {
   Dimensions,
   FlatList,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import OtherHeader from '../components/OtherHeader';
-import { BackGroundIcon } from '../../helper/homeIcon';
-import { normalize, style } from '../../theme/style';
+import RdHeader from '../home/redesign/RdHeader';
+import { ArrowDownLeft, ArrowUpRight } from '../home/redesign/icons';
+import { rd, rs } from '../../theme/rd';
+import { normalize } from '../../theme/style';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBarSendMoney from '../../navigation/TopTabBarSendMoney';
 import { useFetch } from '../../hooks/useFetch';
@@ -20,16 +22,12 @@ import { URL, renderHTMLS } from '../constants';
 import PdfIcon from '../../images/pdf';
 import { sortText } from '../components/StatisticCard';
 
-import Transfer from '../../images/Transfer';
-import Transfer2 from '../../images/Transfer2';
 import { Modal } from 'react-native-paper';
 import Cancel from '../../images/Cancel';
 import CancelTransfer from '../../images/cancel_transfer';
 import Success from '../../images/Success';
-import LottieView from 'lottie-react-native';
 import { generatePDF } from 'react-native-html-to-pdf';
 
-import Money from '../../images/Money';
 import FileViewer from 'react-native-file-viewer';
 import { settingDate } from '../../helper';
 import { t } from 'i18next';
@@ -54,11 +52,9 @@ const SendMoneyHistory = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.backgroundImage}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
+      <StatusBar barStyle="dark-content" />
 
-      <OtherHeader title={t('582')} />
+      <RdHeader title={t('582')} />
 
       <View style={styles.topbar}>
         <TopTab.Navigator tabBar={props => <TopTabBarSendMoney {...props} />}>
@@ -156,62 +152,44 @@ const ListStatistic = ({ item, index, type, openModal }) => {
     }
   };
 
-  const renderIcon = (iconType: any) => {
-    switch (iconType) {
-      case 4:
-        return (
-          <Money width={normalize(16)} color={'#fff'} height={normalize(16)} />
-        );
-      case 5:
-        return (
-          <Money width={normalize(16)} color={'#fff'} height={normalize(16)} />
-        );
-
-      case 1:
-        return (
-          <Transfer2
-            width={normalize(16)}
-            color={'#fff'}
-            height={normalize(16)}
-          />
-        );
-
-      default:
-        return (
-          <Transfer
-            width={normalize(16)}
-            color={'#fff'}
-            height={normalize(16)}
-          />
-        );
-    }
-  };
+  const incoming = type === 2;
 
   return (
     <TouchableOpacity
+      activeOpacity={0.8}
       onPress={() => {
         openModal(item, type);
       }}
       style={styles.card}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={styles.icon}>{renderIcon(item.type)}</View>
-        <View style={{ flex: 1 }}>
-          {mainInfo(item.type)}
-          <View style={styles.uzs}>
-            <Text
-              allowFontScaling={false}
-              style={[styles.number(type), { color: '#000' }]}
-            >
-              {settingDate(item?.created_at)} {item?.time?.slice(0, 5)}
-            </Text>
-            <Text allowFontScaling={false} style={styles.number(type)}>
-              {type === 2 ? ' + ' : ' - '}
-              {sortText(item?.amount)} UZS
-            </Text>
-          </View>
-        </View>
+      <View
+        style={[
+          styles.icon,
+          { backgroundColor: incoming ? rd.color.successBg : rd.color.errorBg },
+        ]}
+      >
+        {incoming ? (
+          <ArrowDownLeft size={rs(20)} color={rd.color.success} />
+        ) : (
+          <ArrowUpRight size={rs(20)} color={rd.color.error} />
+        )}
       </View>
+      <View style={styles.cardBody}>
+        <View style={styles.cardName}>{mainInfo(item.type)}</View>
+        <Text allowFontScaling={false} style={styles.cardSub}>
+          {settingDate(item?.created_at)} {item?.time?.slice(0, 5)}
+        </Text>
+      </View>
+      <Text
+        allowFontScaling={false}
+        style={[
+          styles.cardAmount,
+          { color: incoming ? rd.color.success : rd.color.error },
+        ]}
+      >
+        {incoming ? '+ ' : '- '}
+        {sortText(item?.amount)} UZS
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -236,22 +214,10 @@ const Enter = ({ openModal, closeModal }) => {
           `${Math.round(Math.random) * 10000}` + id?.toString()
         }
         ListEmptyComponent={
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <LottieView
-              autoPlay
-              source={require('../../images/not-found.json')}
-              style={{
-                width: normalize(200),
-                height: normalize(200),
-                marginTop: 40,
-              }}
-            />
+          <View style={styles.empty}>
+            <Text allowFontScaling={false} style={styles.emptyText}>
+              {t('mavjud')}
+            </Text>
           </View>
         }
         renderItem={({ item, index }) => (
@@ -283,22 +249,10 @@ const Exit = ({ openModal, closeModal }) => {
         contentContainerStyle={styles.flat}
         keyExtractor={({ id }) => id?.toString()}
         ListEmptyComponent={
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <LottieView
-              autoPlay
-              source={require('../../images/not-found.json')}
-              style={{
-                width: normalize(200),
-                height: normalize(200),
-                marginTop: 40,
-              }}
-            />
+          <View style={styles.empty}>
+            <Text allowFontScaling={false} style={styles.emptyText}>
+              {t('mavjud')}
+            </Text>
           </View>
         }
         renderItem={({ item, index }) => (
@@ -463,7 +417,7 @@ const ShowDetailsModal = ({ getRef }) => {
                     id: data.id,
                   });
                 }}
-                style={[styles.info, { color: style.blue }]}
+                style={[styles.info, { color: rd.color.primary }]}
               >
                 {data?.number}
               </Text>
@@ -776,14 +730,14 @@ const ShowDetailsModal = ({ getRef }) => {
           ) : (
             <Success
               width={normalize(50)}
-              color={'#47bb78'}
+              color={rd.color.success}
               height={normalize(50)}
             />
           )}
           {/* {data.type === 1 ? ( */}
           <Text
             allowFontScaling={false}
-            style={[styles.sum, { color: data.type === 5 ? 'red' : '#47bb78' }]}
+            style={[styles.sum, { color: data.type === 5 ? rd.color.error : rd.color.success }]}
           >
             {sortText(data?.amount)} UZS
           </Text>
@@ -798,7 +752,7 @@ const ShowDetailsModal = ({ getRef }) => {
             <PdfIcon width={normalize(15)} height={normalize(15)} />
             <Text
               allowFontScaling={false}
-              style={[styles.info, { color: '#fff', marginLeft: 4 }]}
+              style={[styles.info, { color: rd.color.onPrimary, marginLeft: 4 }]}
             >
               {t('download')}
             </Text>
@@ -814,7 +768,7 @@ export default SendMoneyHistory;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f2f5',
+    backgroundColor: rd.color.page,
   },
 
   mainInside: {
@@ -826,13 +780,13 @@ const styles = StyleSheet.create({
     right: 0,
   },
   sum: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.MoneyColor,
+    fontFamily: rd.font.medium,
+    fontSize: rs(16),
+    color: rd.color.success,
     marginTop: 5,
   },
   downloadButton: {
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.primary,
     width: '60%',
     paddingVertical: normalize(10),
     borderRadius: 12,
@@ -844,23 +798,23 @@ const styles = StyleSheet.create({
   },
   info: {
     marginTop: normalize(3),
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 1,
-    color: '#000',
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
   },
   main: {
     marginTop: normalize(10),
   },
   infoTitle: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2,
-    color: '#000',
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.text,
     opacity: 0.5,
   },
   title: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: '#000',
+    fontFamily: rd.font.medium,
+    fontSize: rs(16),
+    color: rd.color.text,
     textAlign: 'center',
   },
   iconSuccess: {
@@ -868,10 +822,16 @@ const styles = StyleSheet.create({
     marginTop: normalize(15),
     alignItems: 'center',
   },
-  backgroundImage: {
-    position: 'absolute',
-    height: style.height / 3,
-    width: '100%',
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: rs(80),
+  },
+  emptyText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.textTertiary,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -895,53 +855,59 @@ const styles = StyleSheet.create({
     width: '100%',
     // height: normalize(400),
     // height: normalize(400),
-    backgroundColor: '#fff',
+    backgroundColor: rd.color.surface,
     borderRadius: 12,
     padding: normalize(10),
   },
   number2: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2,
-    color: '#000',
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
-  topbar: { flex: 1, marginTop: 10 },
+  topbar: { flex: 1, marginTop: rs(6) },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    marginTop: 10,
-  },
-  icon: {
-    backgroundColor: style.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  uzs: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+    marginTop: rs(10),
+  },
+  cardBody: {
+    flex: 1,
+    marginLeft: rs(12),
+  },
+  cardName: {
+    marginBottom: rs(4),
+  },
+  cardSub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
+  },
+  cardAmount: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    marginLeft: rs(8),
+  },
+  icon: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   flat: {
-    width: '90%',
-    alignSelf: 'center',
-    paddingBottom: normalize(25),
+    paddingHorizontal: rs(16),
+    paddingBottom: rs(24),
+    flexGrow: 1,
   },
   name: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx - 2,
-    color: '#000',
-  },
-  number: (type: number) => {
-    return {
-      color: type === 2 ? '#47bb78' : 'red',
-      fontFamily: style.fontFamilyMedium,
-      fontSize: style.fontSize.xx - 2,
-    };
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.text,
   },
 });

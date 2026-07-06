@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -22,7 +22,6 @@ import axios from 'axios';
 import { storage } from '../../store/api/token/getToken';
 import { URL } from '../constants';
 import TextBold from '../components/TextBold';
-import OtherHeader from '../components/OtherHeader';
 import { settingDate } from '../../helper';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,6 +31,8 @@ import MainText from '../components/MainText';
 import { font } from '../../theme/font';
 
 import DateModal from '../home/modal/DateModal';
+import { rd, rs } from '../../theme/rd';
+import RdHeader from '../home/redesign/RdHeader';
 
 const DebtDateLengthAsk = () => {
   const { item } = useRoute().params;
@@ -195,141 +196,106 @@ const DebtDateLengthAsk = () => {
   // console.log(plus_day(date), 'plus_day(info?.end_date)');
   // console.log(formatDate(plus_day(date)), 'checkingDate(date)');
 
+  const isPlaceholder = settingDate(date) === settingDate(Date.now());
+  const disabled = checkingDate(date) || loading1;
+
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          position: 'absolute',
-          height: style.height / 3,
-          width: '100%',
-        }}
-      >
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('462')} />
-      <View style={[styles.main]}>
-        <View style={styles.aboutUsContainer}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Loading />
-            </View>
-          ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <View
-                style={{ width: '90%', alignSelf: 'center', marginVertical: 20 }}
-              >
-              <View>
-                <View style={[styles.card]}>
-                  <View style={styles.insideMoney}>
+      <StatusBar barStyle="dark-content" />
+      <RdHeader title={t('462')} />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Loading />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.card}>
+            <Text allowFontScaling={false} style={styles.hisob}>
+              <Trans
+                t={t}
+                i18nKey="465"
+                values={{
+                  start: settingDate(info.created_at),
+                  id: info?.number,
+                  end: settingDate(info?.end_date),
+                }}
+                components={{
+                  start: (
+                    <MainText size={style.fontSize.xx} ft={font.bold} />
+                  ),
+                  id: (
                     <Text
                       allowFontScaling={false}
-                      style={[styles.hisob, { fontSize: style.fontSize.xx }]}
-                    >
-                      <Trans
-                        t={t}
-                        i18nKey="465"
-                        values={{
-                          start: settingDate(info.created_at),
-                          id: info?.number,
-                          end: settingDate(info?.end_date),
-                        }}
-                        components={{
-                          start: (
-                            <MainText size={style.fontSize.xx} ft={font.bold} />
-                          ),
-                          id: (
-                            <Text
-                              allowFontScaling={false}
-                              onPress={() => {
-                                navigation.navigate('DownloadStatistic', {
-                                  item: info,
-                                  id: info.id,
-                                });
-                              }}
-                              style={{
-                                color: style.blue,
-                              }}
-                            />
-                          ),
-                          end: (
-                            <TextBold
-                              styles={{ fontSize: style.fontSize.xx }}
-                            />
-                          ),
-                        }}
-                      />
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View>
-                <View style={styles.TextInputLabelContainer}>
-                  <View style={styles.inputTitle}>
-                    {/* <Text style={styles.phoneText}>
-                      Yangi muddatni kiriting
-                    </Text> */}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <TouchableOpacity
-                      onPress={() => setOpen(!open)}
-                      style={styles.TextInput}
-                    >
-                      <Text
-                        allowFontScaling={false}
-                        style={[
-                          styles.dateText,
-                          {
-                            color:
-                              settingDate(date) === settingDate(Date.now())
-                                ? '#a9a9a9'
-                                : '#000',
-                          },
-                        ]}
-                      >
-                        {settingDate(date) === settingDate(Date.now())
-                          ? t('369')
-                          : settingDate(date)}
-                        {/* {date !== new Date()
-                          ? settingDate(date)
-                          : settingDate(info?.end_date)} */}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-              <View>
-                <TouchableOpacity
-                  disabled={checkingDate(date) || loading1}
-                  onPress={onPress}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.registerButton,
-                    {
-                      marginTop: 20,
-                      backgroundColor: checkingDate(date)
-                        ? style.disabledButtonColor
-                        : style.blue,
-                    },
-                  ]}
-                >
-                  {loading1 ? (
-                    <ActivityIndicator size={'small'} />
-                  ) : (
-                    <Text allowFontScaling={false} style={[styles.textButton]}>
-                      {t('357')}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              </View>
-            </ScrollView>
-          )}
-        </View>
-      </View>
+                      onPress={() => {
+                        navigation.navigate('DownloadStatistic', {
+                          item: info,
+                          id: info.id,
+                        });
+                      }}
+                      style={{
+                        color: rd.color.primary,
+                      }}
+                    />
+                  ),
+                  end: (
+                    <TextBold styles={{ fontSize: style.fontSize.xx }} />
+                  ),
+                }}
+              />
+            </Text>
+          </View>
+
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>{t('369')}</Text>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setOpen(!open)}
+              style={styles.field}
+            >
+              <Text
+                allowFontScaling={false}
+                style={[
+                  styles.fieldValue,
+                  isPlaceholder && styles.fieldPlaceholder,
+                ]}
+              >
+                {isPlaceholder ? t('369') : settingDate(date)}
+                {/* {date !== new Date()
+                  ? settingDate(date)
+                  : settingDate(info?.end_date)} */}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            disabled={disabled}
+            onPress={onPress}
+            activeOpacity={0.8}
+            style={[
+              styles.registerButton,
+              disabled && styles.registerButtonDisabled,
+            ]}
+          >
+            {loading1 ? (
+              <ActivityIndicator size={'small'} color={rd.color.onPrimary} />
+            ) : (
+              <Text
+                allowFontScaling={false}
+                style={[
+                  styles.textButton,
+                  disabled && styles.textButtonDisabled,
+                ]}
+              >
+                {t('357')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      )}
 
       {open && (
         <DatePicker
@@ -442,138 +408,80 @@ export function checkingDate(date) {
 }
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
     flex: 1,
   },
-  mainText: {
-    fontFamily: style.fontFamilyBold,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: rs(20),
+    paddingTop: rs(8),
+    paddingBottom: rs(24),
   },
-  inputTitle: {
-    position: 'absolute',
-    marginLeft: 15,
-    flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  buttontime: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-  },
-  dateText: {
-    fontSize: style.fontSize.xx - 3,
-    fontFamily: style.fontFamilyMedium,
-    color: '#000',
-  },
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 10,
-    justifyContent: 'center',
-    fontSize: style.fontSize.xx - 3,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.small,
-    color: style.textColor,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingHorizontal: rs(16),
+    paddingVertical: rs(16),
   },
   hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontSize: rs(15),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
     textAlign: 'center',
+    lineHeight: rs(22),
+  },
+  fieldBlock: {
+    marginTop: rs(24),
+  },
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
+  field: {
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    height: rs(56),
+    paddingHorizontal: rs(16),
+    justifyContent: 'center',
+  },
+  fieldValue: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(15),
+    color: rd.color.text,
+  },
+  fieldPlaceholder: {
+    color: rd.color.textTertiary,
   },
   textButton: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: '#fff',
+    fontSize: rs(16),
+    fontFamily: rd.font.semibold,
+    color: rd.color.onPrimary,
+  },
+  textButtonDisabled: {
+    color: rd.color.textTertiary,
   },
   registerButton: {
     width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
+    height: rs(54),
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: rs(24),
   },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  item: {
-    flex: 1,
-  },
-  info: {
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    textAlign: 'left',
-  },
-  header: {
-    backgroundColor: '#fff',
-    height: style.height / 15,
-    justifyContent: 'space-evenly',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  main: {
-    flex: 1,
-    width: '90%',
-    alignSelf: 'center',
+  registerButtonDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
   },
   loadingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    height: '100%',
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
   },
 });

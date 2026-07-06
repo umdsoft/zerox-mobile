@@ -1,7 +1,7 @@
 import { Text, TextStyle } from 'react-native';
 import React from 'react';
-import { font, fontSize } from '../../theme/font';
-import { colors } from '../../theme/colors';
+import { fontSize } from '../../theme/font';
+import { rd } from '../../theme/rd';
 
 interface MainTextProps {
   size?: number;
@@ -31,7 +31,7 @@ const MainText: React.FC<MainTextProps> = ({
   style,
   children = '',
   onPress = () => {},
-  color = colors.black,
+  color = rd.color.text,
   ft,
   lineH,
   textAlign,
@@ -49,7 +49,7 @@ const MainText: React.FC<MainTextProps> = ({
           marginRight: mrRight,
           fontSize: size ?? fontSize['14'],
           color: color,
-          fontFamily: ft ?? font.medium,
+          fontFamily: ft ?? rd.font.medium,
           lineHeight: lineH,
           textAlign: textAlign,
           marginBottom: mBottom,

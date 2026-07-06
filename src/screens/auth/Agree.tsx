@@ -1,74 +1,71 @@
 import {
-  Platform,
   SafeAreaView,
+  StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {style} from '../../theme/style';
-import AgreeSVG from '../../images/agree.svg';
 import CheckBox from '@react-native-community/checkbox';
-import {colors} from '../../theme/colors';
-import MainText from '../components/MainText';
-import {fontSize} from '../../theme/font';
 import {t} from 'i18next';
+import {rd, rs} from '../../theme/rd';
+import {ShieldIcon} from '../home/redesign/icons';
+import {GradientIconBadge} from '../components/BrandLockup';
 
 const Agree = () => {
   const navigation = useNavigation();
   const [checked, setChecked] = useState(false);
+
   return (
     <View style={styles.container}>
-      <View style={{width: style.width, height: style.height}}>
-        <View
-          style={{alignItems: 'center', flex: 0.5, justifyContent: 'center'}}>
-          <AgreeSVG width="70%" height="70%" />
+      <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      <SafeAreaView style={styles.safe}>
+        {/* Illustratsiya */}
+        <View style={styles.hero}>
+          <GradientIconBadge size={rs(96)}>
+            <ShieldIcon size={rs(42)} color={rd.color.primary} />
+          </GradientIconBadge>
         </View>
-        <View style={{flex: 0.5}}>
-          <View
-            style={{
-              alignItems: 'center',
-              flexDirection: 'row',
-              width: '80%',
-              alignSelf: 'center',
-            }}>
-            <View>
-              <CheckBox
-                value={checked}
-                tintColors={{true: style.blue, false: style.blue}}
-                tintColor={colors.blue}
-                onValueChange={value => {
-                  setChecked(value);
-                }}
-                boxType="square"
-                style={{height: 20, width: 20}}
-                onCheckColor={colors.blue}
-              />
-            </View>
-            <View style={{marginLeft: 5}}>
-              <MainText color={colors.black} size={fontSize[12]} mrLeft={6}>
-                {/* Universal shartnoma bilan tanishib chiqib, shartnomaning barcha
-                shartlariga rozi{'\n'}ekanligimni tasdiqlayman */}
-                {t('846')}
-              </MainText>
-            </View>
-          </View>
 
-          <View style={styles.enterButtonContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('BottomTabNavigator');
+        {/* Rozilik kartasi */}
+        <View style={styles.card}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setChecked(!checked)}
+            style={styles.consentRow}>
+            <CheckBox
+              value={checked}
+              tintColors={{true: rd.color.primary, false: rd.color.textTertiary}}
+              tintColor={rd.color.textTertiary}
+              onValueChange={value => {
+                setChecked(value);
               }}
-              activeOpacity={0.8}
-              style={styles.enterButton}>
-              <MainText color={colors.white} size={fontSize[16]}>
-                {t('42')}
-              </MainText>
-            </TouchableOpacity>
-          </View>
+              boxType="square"
+              style={styles.checkbox}
+              onCheckColor={rd.color.onPrimary}
+              onFillColor={rd.color.primary}
+              onTintColor={rd.color.primary}
+            />
+            <Text style={styles.consentText}>
+              {/* Universal shartnoma bilan tanishib chiqib, shartnomaning barcha
+              shartlariga rozi ekanligimni tasdiqlayman */}
+              {t('846')}
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
+
+        {/* Davom etish */}
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('BottomTabNavigator');
+          }}
+          activeOpacity={0.85}
+          style={styles.enterButton}>
+          <Text style={styles.enterText}>{t('42')}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
     </View>
   );
 };
@@ -78,78 +75,58 @@ export default Agree;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: rd.color.page,
   },
-  enterButtonContainer: {
-    marginTop: 20,
-  },
-  phoneNumberText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-  },
-  phoneText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-  },
-  retryPassword: {
-    position: 'absolute',
-    marginLeft: 15,
+  safe: {
     flex: 1,
-    zIndex: 1,
-    top: -10,
-    backgroundColor: '#fff',
-    paddingLeft: 5,
-    paddingRight: 5,
+    paddingHorizontal: rs(24),
+    paddingBottom: rs(28),
   },
-  BackButton: {
-    position: 'absolute',
-    marginLeft: 15,
-    zIndex: 1,
-    marginTop: Platform.OS === 'android' ? 40 : 0,
-  },
-  TextInputLabelContainer: {
-    borderColor: style.textColor,
-    borderWidth: 0.5,
-    borderRadius: 6,
-    width: '90%',
-    flexDirection: 'row',
-  },
-
-  main: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  enterButton: {
-    width: '90%',
-    backgroundColor: style.blue,
+  hero: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    height: style.textInputHeight,
-    alignSelf: 'center',
+  },
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingVertical: rs(18),
+    paddingHorizontal: rs(18),
+    marginBottom: rs(20),
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    height: rs(20),
+    width: rs(20),
+  },
+  consentText: {
+    flex: 1,
+    marginLeft: rs(12),
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    lineHeight: rs(20),
+    color: rd.color.text,
+  },
+  enterButton: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: rd.color.primary,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
   enterText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.s,
-    color: style.textColor,
-  },
-  notificationText: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    textAlign: 'left',
-  },
-
-  TextInput: {
-    width: '100%',
-    height: style.textInputHeight,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingLeft: 15,
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

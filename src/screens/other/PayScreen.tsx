@@ -1,13 +1,13 @@
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StatusBar, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {BackGroundIcon} from '../../helper/homeIcon';
-import {style} from '../../theme/style';
+import {rd, rs} from '../../theme/rd';
 
 import {useNavigation} from '@react-navigation/native';
 import ClickIcon from '../../images/Click.svg';
-import OtherHeader from '../components/OtherHeader';
+import RdHeader from '../home/redesign/RdHeader';
 import {t} from 'i18next';
 import PaymeIcon from '../../images/Payme';
+import {ChevronRight} from '../home/redesign/icons';
 
 const PayScreen = () => {
   const navigation = useNavigation();
@@ -19,38 +19,34 @@ const PayScreen = () => {
   };
   return (
     <View style={styles.container}>
-      <View
-        style={{position: 'absolute', height: style.height / 3, width: '100%'}}>
-        <BackGroundIcon width="100%" height="100%" />
-      </View>
-      <OtherHeader title={t('602')} />
+      <StatusBar barStyle="dark-content" />
+      <RdHeader title={t('602')} />
       <View style={styles.main}>
-        <View style={styles.aboutUsContainer}>
-          <View style={{width: '90%', alignSelf: 'center', marginVertical: 20}}>
-            <View>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  onPress(0);
-                }}
-                style={styles.registerButton}>
-                <ClickIcon width={style.width / 4} height={style.width / 12} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  onPress(1);
-                }}
-                style={[styles.registerButton, {marginTop: 20}]}>
-                <PaymeIcon width={style.width / 4} height={style.width / 12} />
-                {/* <Image
-                  style={{width: style.width / 4, height: style.width / 12}}
-                  source={require('../../images/payme.png')}
-                /> */}
-              </TouchableOpacity>
-            </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onPress(0);
+          }}
+          style={styles.methodCard}>
+          <View style={styles.logoWrap}>
+            <ClickIcon width={rs(70)} height={rs(24)} />
           </View>
-        </View>
+          <Text style={styles.methodLabel}>CLICK</Text>
+          <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            onPress(1);
+          }}
+          style={styles.methodCard}>
+          <View style={styles.logoWrap}>
+            <PaymeIcon width={rs(70)} height={rs(24)} />
+          </View>
+          <Text style={styles.methodLabel}>PAYME</Text>
+          <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -60,65 +56,33 @@ export default PayScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: style.backgroundColor,
+    backgroundColor: rd.color.page,
     flex: 1,
   },
-
-  hisob: {
-    fontSize: style.fontSize.xs,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-
-  registerButton: {
-    width: '100%',
-    height: style.buttonHeight,
-    backgroundColor: style.blue,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  insideMoney: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    width: '100%',
-    elevation: 6,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    height: style.buttonHeight,
-  },
-
   main: {
     flex: 1,
-
-    width: '90%',
-    alignSelf: 'center',
+    paddingHorizontal: rs(16),
+    paddingTop: rs(10),
   },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
-    marginTop: 20,
-    borderRadius: 10,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    overflow: 'hidden',
+  methodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderRadius: rd.radius.lg,
+    paddingHorizontal: rs(16),
+    paddingVertical: rs(16),
+    marginBottom: rs(14),
+  },
+  logoWrap: {
+    marginRight: rs(14),
+    justifyContent: 'center',
+  },
+  methodLabel: {
+    flex: 1,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.text,
   },
 });

@@ -1,7 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
-
-import { style } from '../../../../theme/style';
 
 import TextBold from '../../../components/TextBold';
 import axios from 'axios';
@@ -13,7 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
 import { filter_notification } from '../../../../store/reducers/HomeReducer';
-import NotificationShell from '../../../components/NotificationShell';
+import NotificationShell, {
+  NotifButton,
+} from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
   const { user } = useSelector(state => state.HomeReducer);
@@ -65,41 +66,10 @@ const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
       date={item?.created}
       time={item?.time}
       actions={
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            onPress={SeeNotification}
-            activeOpacity={0.8}
-            style={[
-              styles.button,
-              { backgroundColor: '#4e91d2', marginRight: 10 },
-            ]}
-          >
-            <Text
-              allowFontScaling={false}
-              style={[
-                styles.notification,
-                { color: '#fff', fontSize: style.fontSize.xx - 2 },
-              ]}
-            >
-              {t('950')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={RemoveNotification}
-            activeOpacity={0.8}
-            style={[styles.button, { backgroundColor: '#4e91d2' }]}
-          >
-            <Text
-              allowFontScaling={false}
-              style={[
-                styles.notification,
-                { color: '#fff', fontSize: style.fontSize.xx - 2 },
-              ]}
-            >
-              Ok
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <>
+          <NotifButton label={t('950') as string} onPress={SeeNotification} />
+          <NotifButton label="Ok" variant="ghost" onPress={RemoveNotification} />
+        </>
       }
     >
       <Text allowFontScaling={false} style={styles.notification}>
@@ -116,25 +86,10 @@ const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
 export default memo(MalumotniKorishgaRuxsatBerildi);
 
 const styles = StyleSheet.create({
-  actionsRow: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: style.blue,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 5,
-    paddingBottom: 5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   notification: {
-    fontSize: style.fontSize.xx - 2,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(20),
   },
 });

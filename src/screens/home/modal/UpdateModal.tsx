@@ -8,10 +8,11 @@ import {
 } from 'react-native';
 import React, { useCallback } from 'react';
 import { Modal } from 'react-native-paper';
-import { style } from '../../../theme/style';
 import { useSelector } from 'react-redux';
 
 import { useTranslation } from 'react-i18next';
+import { rd, rs } from '../../../theme/rd';
+import { ShieldIcon } from '../redesign/icons';
 
 const UpdateModal = () => {
   const { t } = useTranslation();
@@ -29,24 +30,29 @@ const UpdateModal = () => {
     <Modal
       visible={update}
       dismissable={false}
+      contentContainerStyle={styles.overlay}
       // onDismiss={() => {
       //   dispatch(checkUpdate({update: false}));
       // }}
     >
-      <View style={styles.main}>
-        <View style={styles.view}>
-          <Text style={styles.teext} allowFontScaling={false}>
-            {t('newUpdate')}
-          </Text>
-          <TouchableOpacity onPress={onClose} style={styles.btn}>
-            <Text
-              style={[styles.teext, { color: '#fff' }]}
-              allowFontScaling={false}
-            >
-              {t('update')}
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.card}>
+        <View style={styles.iconCircle}>
+          <ShieldIcon size={rs(30)} color={rd.color.primary} strokeWidth={1.8} />
         </View>
+
+        <Text style={styles.title} allowFontScaling={false}>
+          {t('newUpdate')}
+        </Text>
+
+        <TouchableOpacity
+          onPress={onClose}
+          activeOpacity={0.85}
+          style={styles.btn}
+        >
+          <Text style={styles.btnText} allowFontScaling={false}>
+            {t('update')}
+          </Text>
+        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -55,29 +61,48 @@ const UpdateModal = () => {
 export default UpdateModal;
 
 const styles = StyleSheet.create({
-  main: {
-    backgroundColor: '#fff',
-    width: '90%',
-    // height: normalize(100),
-    height: Platform.OS === 'ios' ? '60%' : '40%',
-    alignSelf: 'center',
-    padding: 10,
-    borderRadius: 12,
+  overlay: {
+    paddingHorizontal: rs(24),
   },
-  btn: {
-    padding: 15,
+  card: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(24),
+    padding: rs(24),
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: rs(64),
+    height: rs(64),
+    borderRadius: rs(32),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: style.blue,
-    borderRadius: 12,
-    width: '100%',
+    marginBottom: rs(18),
   },
-  view: { flex: 1, justifyContent: 'space-between' },
-  teext: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-    color: style.textColor,
-    marginLeft: 10,
-    maxWidth: '90%',
+  title: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(17),
+    lineHeight: rs(24),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginBottom: rs(22),
+  },
+  btn: {
+    height: rs(52),
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rd.color.primary,
+    borderRadius: rd.radius.lg,
+    shadowColor: rd.color.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  btnText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.onPrimary,
   },
 });

@@ -7,6 +7,7 @@ import { t } from 'i18next';
 import TransText from '../../../components/TransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
+import { rd, rs } from '../../../../theme/rd';
 
 const Qarzdanvozkechilganligitogrisida = ({ item, okay, navigation }) => {
   const onOkay = () => okay(item.id);
@@ -32,7 +33,7 @@ const Qarzdanvozkechilganligitogrisida = ({ item, okay, navigation }) => {
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         },
-        { color: style.blue },
+        { color: rd.color.primary },
       ]}
     >
       {item.number}

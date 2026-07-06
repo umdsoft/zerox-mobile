@@ -1,17 +1,10 @@
-import {
-  Image,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Platform, StyleSheet, View} from 'react-native';
 import React, {useMemo} from 'react';
 import ScreenLayout from '../components/ScreenLayout';
-import {t} from 'i18next';
 import {useRoute} from '@react-navigation/native';
 import {mylog} from '../../log';
 import WebView from 'react-native-webview';
-import {URL as URLL} from '../constants';
+import {rd, rs} from '../../theme/rd';
 type Props = {
   videoId: string; // YouTube video id, e.g. "dQw4w9WgXcQ"
   height?: number; // specific height (optional)
@@ -32,60 +25,19 @@ const NewsScreen = () => {
           : params?.data?.title.slice(0, 30) + '...'
       }
     >
-      <View style={{paddingHorizontal: 15, paddingVertical: 15}}>
-          {/* {params?.data?.img && (
-            <View>
-              <Image
-                source={{uri: URLL.slice(0, -6) + params?.data?.img}}
-                style={{width: '100%', height: 200, borderRadius: 20}}
-              />
-            </View>
-          )}
-          {params?.data?.youtube && (
-            <View style={{borderRadius: 20, overflow: 'hidden'}}>
-              <YouTubeWebView
-                videoId={getYouTubeVideoId(params?.data?.youtube) || ''}
-                height={210}
-                autoplay={false}
-                controls={1}
-                start={0}
-                onMessage={data => console.log(data)}
-              />
-            </View>
-          )} */}
-          <View style={{marginTop: 15}}>
-            {/* <Text
-              style={{
-                fontSize: style.fontSize.xx + 1,
-                fontFamily: style.fontFamilyMedium,
-                color: '#000',
-              }}>
-              {params?.data?.title}
-            </Text> */}
-          </View>
-          <View style={{marginTop: 5}}>
-            <WebView
-              source={{html: params?.data?.description}}
-              // height is to be full Screen
-              style={{height: 1000, width: '100%', transform: [{scaleY: 1}]}}
-              // V-006: server HTML sanitize'siz keladi → JS'ni O'CHIRAMIZ (stored XSS himoyasi).
-              // Yangilik kontenti statik HTML (matn/rasm/media) — JavaScript talab qilmaydi.
-              javaScriptEnabled={false}
-              domStorageEnabled={false}
-              allowsInlineMediaPlayback={true}
-              mediaPlaybackRequiresUserAction={false}
-            />
-            {/* <Text
-              style={{
-                fontSize: style.fontSize.xx - 2,
-                fontFamily: style.fontFamilyMedium,
-                lineHeight: 25,
-                color: '#000',
-              }}>
-              {params?.data?.description}
-            </Text> */}
-          </View>
-        </View>
+      <View style={styles.content}>
+        <WebView
+          source={{html: params?.data?.description}}
+          // height is to be full Screen
+          style={{height: 1000, width: '100%', transform: [{scaleY: 1}]}}
+          // V-006: server HTML sanitize'siz keladi → JS'ni O'CHIRAMIZ (stored XSS himoyasi).
+          // Yangilik kontenti statik HTML (matn/rasm/media) — JavaScript talab qilmaydi.
+          javaScriptEnabled={false}
+          domStorageEnabled={false}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+        />
+      </View>
     </ScreenLayout>
   );
 };
@@ -179,13 +131,16 @@ export function getYouTubeVideoId(url: string): string | null {
 export default NewsScreen;
 
 const styles = StyleSheet.create({
+  content: {
+    paddingTop: rs(8),
+  },
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: rd.color.surface,
     flex: 1,
   },
   webview: {
     flex: 1,
     backgroundColor: 'transparent',
-    borderRadius: 20,
+    borderRadius: rd.radius.xxl,
   },
 });

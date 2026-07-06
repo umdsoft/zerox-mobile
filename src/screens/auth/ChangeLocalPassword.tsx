@@ -1,19 +1,15 @@
-import {Platform, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Platform, Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {normalize, style} from '../../theme/style';
-import SetCode from '../../images/SetCode';
+import {normalize} from '../../theme/style';
+import {rd, rs} from '../../theme/rd';
 import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import {toastConfig} from '../components/ToastConfig';
-import ArrowLeft from '../../images/ArrowLeft';
-import Hand from '../../images/Hand';
 import {storage} from '../../store/api/token/getToken';
-import OtherHeader from '../components/OtherHeader';
+import RdHeader from '../home/redesign/RdHeader';
+import {ShieldIcon, BackspaceIcon} from '../home/redesign/icons';
 import {t} from 'i18next';
 
 import BiometricModule from '../../../BiometricModule';
-import {heightPercentageToDP} from 'react-native-responsive-screen';
-import {scale} from '../../helper/scale';
 
 const ChangeLocalPassword = () => {
   const [password, setPassword] = useState('');
@@ -123,143 +119,94 @@ const ChangeLocalPassword = () => {
 
   return (
     <View style={styles.container}>
-      <OtherHeader title={t('774')} />
-      <View style={{alignItems: 'center'}}>
-        <SetCode
-          width={heightPercentageToDP(22)}
-          height={heightPercentageToDP(27)}
-          style={{transform: [{scale: 1.5}]}}
-        />
-      </View>
-      <View style={{flex: 1}}>
-        <View style={[styles.setCodeTextContainer, {alignItems: 'center'}]}>
-          {renderText(step)}
+      <StatusBar barStyle="dark-content" />
+      <RdHeader title={t('774')} />
+      <View style={styles.iconWrap}>
+        <View style={styles.iconCircle}>
+          <ShieldIcon size={rs(38)} color={rd.color.primary} />
         </View>
-        <View style={styles.codeContainer}>
-          <View style={styles.fourItem}>
-            {Array.from({length: 4}, (_v, i) => {
+      </View>
+      <View style={styles.textWrap}>{renderText(step)}</View>
+      <View style={styles.dotsRow}>
+        {Array.from({length: 4}, (_v, i) => {
+          return (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    i < password.length ? rd.color.primary : rd.color.border,
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+      <View style={styles.keypad}>
+        {Array.from({length: 12}, (_v, i) => {
+          switch (i) {
+            case 10:
               return (
-                <View
-                  key={i}
-                  style={[
-                    styles.codeItem,
-                    {
-                      backgroundColor:
-                        i < password.length ? style.blue : '#EEEEEE',
-                    },
-                  ]}
-                />
+                <View key={i} style={styles.keyCell}>
+                  <Pressable
+                    onPress={() => {
+                      onSetCode(0);
+                    }}
+                    android_ripple={{
+                      color: rd.color.border,
+                      radius: rs(36),
+                      borderless: true,
+                    }}
+                    style={styles.keyButton}>
+                    <Text allowFontScaling={false} style={styles.keyDigit}>0</Text>
+                  </Pressable>
+                </View>
               );
-            })}
-          </View>
-          <View
-            style={{
-              flex: 1,
-              alignSelf: 'center',
-              width: heightPercentageToDP(33),
-            }}>
-            <View style={styles.codeNumberContainer}>
-              {Array.from({length: 12}, (_v, i) => {
-                switch (i) {
-                  case 10:
-                    return (
-                      <View key={i} style={styles.codeNumberContainer}>
-                        <Pressable
-                          onPress={() => {
-                            onSetCode(0);
-                          }}
-                          android_ripple={{
-                            color: style.blue,
-                            radius: 50,
-                            borderless: true,
-                          }}
-                          style={styles.codeButton}>
-                          <Text allowFontScaling={false} style={styles.textCode}>0</Text>
-                        </Pressable>
-                      </View>
-                    );
-                  case 11:
-                    return (
-                      <View key={i} style={styles.codeNumberContainer}>
-                        <Pressable
-                          onPress={() => {
-                            onBackSpace();
-                          }}
-                          android_ripple={{
-                            color: style.blue,
-                            radius: 50,
-                            borderless: true,
-                          }}
-                          style={styles.codeButton}>
-                          <ArrowLeft
-                            width={12}
-                            height={12}
-                            color={style.blue}
-                          />
-                        </Pressable>
-                      </View>
-                    );
-                  case 9:
-                    return Platform.OS === 'android' ? (
-                      <View
-                        key={i}
-                        style={[
-                          styles.codeNumberContainer,
-                          {
-                            width: heightPercentageToDP(7.5),
-                            height: heightPercentageToDP(7.5),
-                            margin: scale(10),
-                          },
-                        ]}>
-                        {/* <Pressable
-                          onPress={() => {
-                            onFingerScan();
-                          }}
-                          android_ripple={{
-                            color: style.blue,
-                            radius: 50,
-                            borderless: true,
-                          }}
-                          style={styles.codeButton}>
-                          <Hand width={30} height={30} color={style.blue} />
-                        </Pressable> */}
-                      </View>
-                    ) : (
-                      <View
-                        key={i}
-                        style={[styles.codeButton, {backgroundColor: '#fff'}]}
-                      />
-                    );
-                  default:
-                    return (
-                      <View key={i} style={styles.codeNumberContainer}>
-                        <Pressable
-                          onPress={() => {
-                            onSetCode(i + 1);
-                          }}
-                          android_ripple={{
-                            color: style.blue,
-                            radius: 50,
-                            borderless: true,
-                          }}
-                          style={styles.codeButton}>
-                          <Text allowFontScaling={false} style={styles.textCode}>{i + 1}</Text>
-                        </Pressable>
-                      </View>
-                    );
-                }
-              })}
-            </View>
-          </View>
-        </View>
+            case 11:
+              return (
+                <View key={i} style={styles.keyCell}>
+                  <Pressable
+                    onPress={() => {
+                      onBackSpace();
+                    }}
+                    android_ripple={{
+                      color: rd.color.border,
+                      radius: rs(36),
+                      borderless: true,
+                    }}
+                    style={styles.keyButtonPlain}>
+                    <BackspaceIcon size={rs(24)} color={rd.color.text} />
+                  </Pressable>
+                </View>
+              );
+            case 9:
+              return <View key={i} style={styles.keyCell} />;
+            default:
+              return (
+                <View key={i} style={styles.keyCell}>
+                  <Pressable
+                    onPress={() => {
+                      onSetCode(i + 1);
+                    }}
+                    android_ripple={{
+                      color: rd.color.border,
+                      radius: rs(36),
+                      borderless: true,
+                    }}
+                    style={styles.keyButton}>
+                    <Text allowFontScaling={false} style={styles.keyDigit}>{i + 1}</Text>
+                  </Pressable>
+                </View>
+              );
+          }
+        })}
       </View>
-      {/* <Toast config={toastConfig} /> */}
     </View>
   );
 };
 
 const renderText = step => {
-  console.log(step, 'step');
   switch (step) {
     case 1:
       return <Text allowFontScaling={false} style={styles.text}>{t('882')}</Text>;
@@ -275,70 +222,73 @@ export default ChangeLocalPassword;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: style.blue,
+    backgroundColor: rd.color.page,
   },
-  codeNumberContainer: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-    flexWrap: 'wrap',
+  iconWrap: {
+    alignItems: 'center',
+    marginTop: rs(24),
+  },
+  iconCircle: {
+    width: rs(76),
+    height: rs(76),
+    borderRadius: rs(38),
+    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  codeButton: {
-    width: heightPercentageToDP(7.5),
-    height: heightPercentageToDP(7.5),
-    borderRadius: 50,
+  textWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EEEEEE',
-    margin: scale(10),
-  },
-  fourItem: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-    marginTop: 10,
-  },
-  codeItem: {
-    width: heightPercentageToDP(2),
-    height: heightPercentageToDP(2),
-    backgroundColor: style.blue,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 5,
-  },
-  codeContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderTopRightRadius: 15,
-    borderTopLeftRadius: 15,
-  },
-  setCodeTextContainer: {
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  textCode: {
-    fontSize: style.fontSize.m,
-    fontFamily: style.fontFamilyMedium,
-    color: style.textColor,
-  },
-  notSetPasswordButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
-    marginRight: 20,
-    marginTop: 10,
+    marginTop: rs(20),
+    marginBottom: rs(28),
+    paddingHorizontal: rs(24),
   },
   text: {
-    fontSize: style.fontSize.xx,
-    color: '#fff',
-    fontFamily: style.fontFamilyBold,
+    fontSize: rs(17),
+    color: rd.color.text,
+    fontFamily: rd.font.semibold,
+    textAlign: 'center',
   },
-  notSetText: {
-    color: '#fff',
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
+  dotsRow: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    marginBottom: rs(36),
+  },
+  dot: {
+    width: rs(14),
+    height: rs(14),
+    borderRadius: rs(7),
+    marginHorizontal: rs(8),
+  },
+  keypad: {
+    width: rs(300),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignSelf: 'center',
+  },
+  keyCell: {
+    width: rs(100),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(16),
+  },
+  keyButton: {
+    width: rs(68),
+    height: rs(68),
+    borderRadius: rs(34),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  keyButtonPlain: {
+    width: rs(68),
+    height: rs(68),
+    borderRadius: rs(34),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keyDigit: {
+    fontSize: rs(26),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
   },
 });

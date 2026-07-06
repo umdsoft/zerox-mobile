@@ -1,6 +1,6 @@
 import {Dimensions, StyleSheet, View} from 'react-native';
 import React from 'react';
-import {style} from '../../theme/style';
+import {rd, rs} from '../../theme/rd';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import ListCard from '../components/ListCard';
 import ScreenLayout from '../components/ScreenLayout';
@@ -19,8 +19,8 @@ const MuddatOzQolgan = () => {
           {type === 'debitor' ? (
             <ListCard
               type={2}
-              width={width - 40}
-              color={style.blue}
+              width={width - rs(40)}
+              color={rd.color.primary}
               isHave={true}
               disabled={true}
               userType={1}
@@ -32,10 +32,10 @@ const MuddatOzQolgan = () => {
               type={2}
               userType={2}
               disabled={true}
-              width={width - 40}
+              width={width - rs(40)}
               isHave={true}
               title={t('olinganqarz')}
-              color={style.blue}
+              color={rd.color.primary}
               data={creditor?.data?.five}
             />
           )}
@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
   cardViewContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: rs(20),
     flex: 0.9,
-    borderRadius: 12,
+    borderRadius: rd.radius.md,
   },
 });
