@@ -67,6 +67,7 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   'RecoveryPassword',
   'NewRecoveryPassword',
   'UpdatePasswordWithJshir',
+  'RecoverySmsReset',
   'ChangePassportData',
   'EnterJsh',
   'MyIdScreen',

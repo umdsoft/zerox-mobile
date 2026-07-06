@@ -1,9 +1,11 @@
 package com.zeroxuz
 
+import android.content.Intent
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.margelo.nitro.nitromyid.NitroMyid
 
 class MainActivity : ReactActivity() {
 
@@ -20,7 +22,16 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-  // NOTE: MyID natijasi NitroMyid ichidagi `MyIdResultListener` orqali keladi
-  // (SDK to'g'ridan listener'ni chaqiradi). README MainActivity'da onActivityResult
-  // talab qilmaydi — eski versiyaning `handleActivityResult` glue kodi olib tashlandi.
+  // MyID SDK (uz.myid.sdk.capture 3.1.x) `myIdClient.startActivityForResult(REQUEST_CODE_MY_ID)`
+  // bilan ishlaydi — natija host Activity'ning onActivityResult'iga qaytadi. Uni NitroMyid'ga
+  // UZATMASAK, SDK pending start() oqimini yakunlamaydi -> onSuccess/onError/onUserExited
+  // HECH QACHON ishlamaydi -> MyID kamera yopilgach ilova "loading"da qotib qoladi.
+  // (Bu glue avval olib tashlangan edi -> parol-tiklash MyID'dan keyin o'tmasdi.)
+  @Suppress("DEPRECATION")
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode == NitroMyid.REQUEST_CODE_MY_ID) {
+      NitroMyid.handleActivityResult(resultCode)
+    }
+  }
 }

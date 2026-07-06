@@ -8,12 +8,14 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { t } from 'i18next';
 import { getVersion } from 'react-native-device-info';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useDispatch, useSelector } from 'react-redux';
@@ -115,10 +117,24 @@ const DrawerMenu = () => {
     }
   };
 
-  const logout = () => {
-    close();
+  const doLogout = () => {
     storage.clearAll();
     navigation.reset({ index: 0, routes: [{ name: 'SelectLanguageScreen' }] });
+  };
+
+  const logout = () => {
+    // Avval menyuni yopamiz, so'ng tasdiq so'raymiz — foydalanuvchi tasodifan
+    // chiqib ketmasin (oldin so'ramasdan darhol chiqarardi).
+    close();
+    Alert.alert(
+      t('Chiqish'),
+      t('Profildan chiqmoqchimisiz?'),
+      [
+        { text: t('Bekor qilish'), style: 'cancel' },
+        { text: t('Chiqish'), style: 'destructive', onPress: doLogout },
+      ],
+      { cancelable: true },
+    );
   };
 
   return (
