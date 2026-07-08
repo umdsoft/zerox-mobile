@@ -21,7 +21,7 @@ import MainText from '../components/MainText';
 import { fontSize } from '../../theme/font';
 import { t } from 'i18next';
 import BiometricModule from '../../../BiometricModule';
-import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
+import ReactNativeBiometrics from 'react-native-biometrics';
 import MarkIcon from '../../images/mark';
 import { scale } from '../../helper/scale';
 import { heightPercentageToDP } from 'react-native-responsive-screen';
@@ -84,32 +84,30 @@ const SetLocalPassword = () => {
           }, 500);
         }
       } else {
-        if (Platform.OS === 'ios') {
-          const { biometryType } = await rnBiometrics.isSensorAvailable();
+        // iOS: Face ID YOKI Touch ID — IKKALASI ham. Oldin faqat FaceID tekshirilardi,
+        // shuning uchun Touch ID li iPhone/iPad'да biometrik umuman ishlamasdi.
+        const { available } = await rnBiometrics.isSensorAvailable();
+        if (available) {
+          const result = await rnBiometrics.simplePrompt({
+            promptMessage: t('Face ID / Touch ID bilan tasdiqlang'),
+            cancelButtonText: t('Bekor qilish'),
+          });
 
-          if (biometryType === BiometryTypes.FaceID) {
-            const result = await rnBiometrics.simplePrompt({
-              promptMessage: 'Confirm fingerprint',
-            });
+          if (result.success) {
+            storage.set('appLocked', false);
 
-            if (result.success) {
-              storage.set('appLocked', false);
-
-              if (storage.getString('pendingNavigation') !== undefined) {
-                navigation.navigate('Notification');
-                storage.delete('pendingNavigation');
-                return;
-              }
-
-              setTimeout(() => {
-                navigation.reset({
-                  routes: [{ name: 'BottomTabNavigator' }],
-                  index: 0,
-                });
-              }, 500);
-            } else {
-              console.log('biometric failed');
+            if (storage.getString('pendingNavigation') !== undefined) {
+              navigation.navigate('Notification');
+              storage.delete('pendingNavigation');
+              return;
             }
+
+            setTimeout(() => {
+              navigation.reset({
+                routes: [{ name: 'BottomTabNavigator' }],
+                index: 0,
+              });
+            }, 500);
           }
         }
       }
@@ -290,14 +288,10 @@ const SetLocalPassword = () => {
   // };
 
   useEffect(() => {
-    // onSupportScan();
-    let a = storage.getBoolean('touch');
-
-    let countt = storage.getNumber('time');
-
-    if (countt !== undefined) {
-      let time = Date.now() - parseInt(countt);
-      if (time > 1800000) {
+    const lockTime = storage.getNumber('time');
+    if (lockTime !== undefined) {
+      // 30 daqiqalik bloklash tugadimi?
+      if (Date.now() - lockTime > 1800000) {
         setCount(3);
         storage.delete('time');
       } else {
@@ -305,8 +299,21 @@ const SetLocalPassword = () => {
       }
     }
 
-    if (a !== undefined && a && countt === undefined && !isLocal) {
-      onFingerScan();
+    // BIOMETRIK: PIN o'rnatilgan (!isLocal), bloklanmagan, va foydalanuvchi ochiq
+    // O'CHIRMAGAN (touch !== false — default YOQILGAN) bo'lsa — mavjudligini tekshirib,
+    // app ochilishi bilan DARHOL so'raymiz. Muvaffaqiyatli bo'lsa PIN kiritish shart emas.
+    // Mavjud bo'lsa tugma ham ko'rsatiladi (auto-so'rov bekor qilinsa qayta urinish uchun).
+    const touch = storage.getBoolean('touch');
+    if (!isLocal && lockTime === undefined && touch !== false) {
+      rnBiometrics
+        .isSensorAvailable()
+        .then(({ available }) => {
+          setSupportScan(available);
+          if (available) {
+            onFingerScan();
+          }
+        })
+        .catch(() => {});
     }
   }, [isLocal, onFingerScan]);
 

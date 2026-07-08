@@ -15,7 +15,7 @@
 import { useRoute } from '@react-navigation/native';
 import React from 'react';
 import {
-  ScrollView,
+  FlatList,
   StatusBar,
   StyleSheet,
   Text,
@@ -98,6 +98,9 @@ const amountColor = (turi: Turi): string => {
   return rd.color.text;
 };
 
+// Satrlar orasidagi 12px oraliq (ilgari ScrollView `gap` bergan edi).
+const ListSeparator = () => <View style={{ height: rs(12) }} />;
+
 // ---------- Ekran ----------
 const QarzDaftariAmaliyotlar = () => {
   const route = useRoute<any>();
@@ -130,6 +133,40 @@ const QarzDaftariAmaliyotlar = () => {
     [tranzaksiyalar],
   );
 
+  // FlatList uchun memoizatsiyalangan qator (barcha yordamchilar module-level -> deps []).
+  const renderItem = React.useCallback(({ item: t }: { item: any }) => {
+    const turi: Turi = t?.turi;
+    const { color, Icon } = iconMeta(turi);
+    const sign = turi === 'qaytarish' || turi === 'voz_kechish' ? '−' : '';
+    return (
+      <View style={styles.row}>
+        <View style={[styles.rowIcon, { backgroundColor: color + '1A' }]}>
+          <Icon size={rs(18)} color={color} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {TITLE_BY_TURI[turi] || 'Amaliyot'}
+          </Text>
+          <Text style={styles.rowMeta} numberOfLines={1}>
+            {fmtDateTime(t?.created_at)}
+          </Text>
+        </View>
+        <Text
+          style={[styles.rowAmount, { color: amountColor(turi) }]}
+          numberOfLines={1}
+        >
+          {sign}
+          {sortMoneyText(t?.summa) || 0} {t?.valyuta || 'UZS'}
+        </Text>
+      </View>
+    );
+  }, []);
+
+  const keyExtractor = React.useCallback(
+    (t: any, i: number) => String(t?.id ?? i),
+    [],
+  );
+
   if (loading) return <Loading />;
 
   return (
@@ -137,82 +174,64 @@ const QarzDaftariAmaliyotlar = () => {
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title="Amaliyotlar tarixi" />
 
-      <ScrollView
+      <FlatList
         style={styles.scroll}
+        data={sorted}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-      >
-        {/* 1. Mijoz subtitr kartasi */}
-        <View style={styles.clientCard}>
-          <View style={styles.clientAvatar}>
-            <UserIcon size={rs(20)} color={BLUE} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.clientName} numberOfLines={1}>
-              {fish}
-            </Text>
-            <Text style={styles.clientPhone} numberOfLines={1}>
-              {telefon || '—'}
-            </Text>
-          </View>
-        </View>
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={11}
+        removeClippedSubviews
+        ItemSeparatorComponent={ListSeparator}
+        ListHeaderComponent={
+          <View style={styles.headerWrap}>
+            {/* 1. Mijoz subtitr kartasi */}
+            <View style={styles.clientCard}>
+              <View style={styles.clientAvatar}>
+                <UserIcon size={rs(20)} color={BLUE} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.clientName} numberOfLines={1}>
+                  {fish}
+                </Text>
+                <Text style={styles.clientPhone} numberOfLines={1}>
+                  {telefon || '—'}
+                </Text>
+              </View>
+            </View>
 
-        {/* 2. Mini statistikalar */}
-        <View style={styles.statGrid}>
-          <View style={[styles.statCard, { borderLeftColor: BLUE }]}>
-            <Text style={styles.statLabel}>Jami qarzlar</Text>
-            <Text style={styles.statValue}>{jamiQarzlar}</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-            <Text style={styles.statLabel}>Aktiv</Text>
-            <Text style={styles.statValue}>{aktivQarzlar}</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-            <Text style={styles.statLabel}>Amaliyotlar</Text>
-            <Text style={styles.statValue}>{tranzaksiyalar.length}</Text>
-          </View>
-        </View>
+            {/* 2. Mini statistikalar */}
+            <View style={styles.statGrid}>
+              <View style={[styles.statCard, { borderLeftColor: BLUE }]}>
+                <Text style={styles.statLabel}>Jami qarzlar</Text>
+                <Text style={styles.statValue}>{jamiQarzlar}</Text>
+              </View>
+              <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
+                <Text style={styles.statLabel}>Aktiv</Text>
+                <Text style={styles.statValue}>{aktivQarzlar}</Text>
+              </View>
+              <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
+                <Text style={styles.statLabel}>Amaliyotlar</Text>
+                <Text style={styles.statValue}>{tranzaksiyalar.length}</Text>
+              </View>
+            </View>
 
-        {/* 3. Amaliyotlar tarixi */}
-        <Text style={styles.blockTitle}>Amaliyotlar tarixi</Text>
-
-        {sorted.length === 0 ? (
+            {/* 3. Amaliyotlar tarixi sarlavhasi */}
+            <Text style={styles.blockTitle}>Amaliyotlar tarixi</Text>
+          </View>
+        }
+        ListEmptyComponent={
           <View style={styles.emptyBox}>
             <View style={styles.emptyCircle}>
               <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
             <Text style={styles.emptyText}>Hali amaliyotlar yo‘q</Text>
           </View>
-        ) : (
-          sorted.map((t, i) => {
-            const turi: Turi = t?.turi;
-            const { color, Icon } = iconMeta(turi);
-            const sign = turi === 'qaytarish' || turi === 'voz_kechish' ? '−' : '';
-            return (
-              <View key={t?.id ?? i} style={styles.row}>
-                <View style={[styles.rowIcon, { backgroundColor: color + '1A' }]}>
-                  <Icon size={rs(18)} color={color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {TITLE_BY_TURI[turi] || 'Amaliyot'}
-                  </Text>
-                  <Text style={styles.rowMeta} numberOfLines={1}>
-                    {fmtDateTime(t?.created_at)}
-                  </Text>
-                </View>
-                <Text
-                  style={[styles.rowAmount, { color: amountColor(turi) }]}
-                  numberOfLines={1}
-                >
-                  {sign}
-                  {sortMoneyText(t?.summa) || 0} {t?.valyuta || 'UZS'}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
+        }
+      />
     </View>
   );
 };
@@ -227,8 +246,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(20),
     paddingTop: rs(8),
     paddingBottom: rs(28),
-    gap: rs(12),
+    flexGrow: 1,
   },
+  headerWrap: { gap: rs(12), marginBottom: rs(12) },
 
   // Mijoz subtitr kartasi
   clientCard: {

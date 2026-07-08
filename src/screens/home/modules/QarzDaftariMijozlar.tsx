@@ -10,7 +10,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import {
-  ScrollView,
+  FlatList,
   StatusBar,
   StyleSheet,
   Text,
@@ -44,6 +44,9 @@ const titleCase = (s?: string) =>
     .filter(Boolean)
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ') || 'Noma’lum';
+
+// Satrlar orasidagi 12px oraliq (ilgari ScrollView `gap` bergan edi).
+const ListSeparator = () => <View style={{ height: rs(12) }} />;
 
 const QarzDaftariMijozlar = () => {
   const navigation = useNavigation<any>();
@@ -83,6 +86,67 @@ const QarzDaftariMijozlar = () => {
       props: { title: 'Tez kunda', desc: 'Yangi mijoz qo‘shish tez orada' },
     });
 
+  // FlatList uchun: har bir mijoz qatori (memoizatsiya — qayta render'да funksiya
+  // qayta yaratilmaydi). Ilgari ScrollView + .map edi (barcha satrlar birdan
+  // render bo'lardi); FlatList virtualizatsiya qiladi -> uzun ro'yxatда tez.
+  const renderItem = React.useCallback(
+    ({ item: c }: { item: any }) => {
+      const fish = titleCase(c?.fish);
+      const qoldiqUzs = Number(c?.qoldiq_uzs || 0);
+      const qoldiqUsd = Number(c?.qoldiq_usd || 0);
+      const active = Number(c?.aktiv_qarz_soni || 0) > 0;
+      const st = active
+        ? { label: 'Aktiv', color: AMBER }
+        : { label: 'Qarzsiz', color: rd.color.textTertiary };
+      return (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.row}
+          onPress={() =>
+            navigation.navigate('QarzDaftariMijoz', { id: c.id, turi, fish })
+          }
+        >
+          <View style={[styles.avatar, { backgroundColor: accent + '1A' }]}>
+            <UserIcon size={rs(20)} color={accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowName} numberOfLines={1}>
+              {fish}
+            </Text>
+            <Text style={styles.rowMeta} numberOfLines={1}>
+              {c?.telefon || '—'} · {Number(c?.qarz_soni || 0)} ta qarz
+            </Text>
+            <View style={styles.rowAmts}>
+              {qoldiqUzs > 0 && (
+                <Text style={styles.rowAmt}>{sortMoneyText(qoldiqUzs) || 0} UZS</Text>
+              )}
+              {qoldiqUsd > 0 && (
+                <Text style={[styles.rowAmt, { color: GREEN }]}>
+                  {sortMoneyText(qoldiqUsd) || 0} USD
+                </Text>
+              )}
+              {qoldiqUzs === 0 && qoldiqUsd === 0 && (
+                <Text style={styles.rowAmtMuted}>Qoldiq yo‘q</Text>
+              )}
+            </View>
+          </View>
+          <View style={{ alignItems: 'flex-end', gap: rs(8) }}>
+            <View style={[styles.stPill, { backgroundColor: st.color + '1A' }]}>
+              <Text style={[styles.stPillText, { color: st.color }]}>{st.label}</Text>
+            </View>
+            <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [accent, turi, navigation],
+  );
+
+  const keyExtractor = React.useCallback(
+    (c: any, i: number) => String(c?.id ?? i),
+    [],
+  );
+
   if (loading) return <Loading />;
 
   return (
@@ -90,132 +154,83 @@ const QarzDaftariMijozlar = () => {
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={title} />
 
-      <ScrollView
+      <FlatList
         style={styles.scroll}
+        data={filtered}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-      >
-        {/* Do'kon nomi */}
-        {!!faoliyat_nomi && (
-          <Text style={styles.shopChip} numberOfLines={1}>
-            {faoliyat_nomi}
-          </Text>
-        )}
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={11}
+        removeClippedSubviews
+        ItemSeparatorComponent={ListSeparator}
+        ListHeaderComponent={
+          // Element (funksiya EMAS) sifatida beriladi -> qidiruv yozayotganda
+          // TextInput reconciliation orqali fokusni SAQLAYDI (remount bo'lmaydi).
+          <View style={styles.headerWrap}>
+            {!!faoliyat_nomi && (
+              <Text style={styles.shopChip} numberOfLines={1}>
+                {faoliyat_nomi}
+              </Text>
+            )}
 
-        {/* Statistikalar */}
-        <View style={styles.statGrid}>
-          <View style={[styles.statCard, { borderLeftColor: accent }]}>
-            <Text style={styles.statLabel}>Jami mijozlar</Text>
-            <Text style={styles.statValue}>{list.length}</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-            <Text style={styles.statLabel}>Aktiv qarzlar</Text>
-            <Text style={styles.statValue}>{totalActive}</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: RED }]}>
-            <Text style={styles.statLabel}>Jami qoldiq</Text>
-            <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
-              {sortMoneyText(totalQoldiqUzs) || 0} UZS
-            </Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-            <Text style={styles.statLabel}>Jami qoldiq</Text>
-            <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
-              {sortMoneyText(totalQoldiqUsd) || 0} USD
-            </Text>
-          </View>
-        </View>
+            <View style={styles.statGrid}>
+              <View style={[styles.statCard, { borderLeftColor: accent }]}>
+                <Text style={styles.statLabel}>Jami mijozlar</Text>
+                <Text style={styles.statValue}>{list.length}</Text>
+              </View>
+              <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
+                <Text style={styles.statLabel}>Aktiv qarzlar</Text>
+                <Text style={styles.statValue}>{totalActive}</Text>
+              </View>
+              <View style={[styles.statCard, { borderLeftColor: RED }]}>
+                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
+                  {sortMoneyText(totalQoldiqUzs) || 0} UZS
+                </Text>
+              </View>
+              <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
+                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
+                  {sortMoneyText(totalQoldiqUsd) || 0} USD
+                </Text>
+              </View>
+            </View>
 
-        {/* Yangi mijoz */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={[styles.newBtn, { backgroundColor: accent }]}
-          onPress={onYangiMijoz}
-        >
-          <PlusIcon size={rs(18)} color="#fff" />
-          <Text style={styles.newBtnText}>Yangi mijoz</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.newBtn, { backgroundColor: accent }]}
+              onPress={onYangiMijoz}
+            >
+              <PlusIcon size={rs(18)} color="#fff" />
+              <Text style={styles.newBtnText}>Yangi mijoz</Text>
+            </TouchableOpacity>
 
-        {/* Qidiruv */}
-        <View style={styles.searchBox}>
-          <SearchIcon size={rs(18)} color={rd.color.textTertiary} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="FISH yoki telefon bo‘yicha qidirish..."
-            placeholderTextColor={rd.color.textTertiary}
-            style={styles.searchInput}
-          />
-        </View>
-        <Text style={styles.countText}>{filtered.length} ta mijoz</Text>
-
-        {/* Ro'yxat */}
-        {filtered.length === 0 ? (
+            <View style={styles.searchBox}>
+              <SearchIcon size={rs(18)} color={rd.color.textTertiary} />
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder="FISH yoki telefon bo‘yicha qidirish..."
+                placeholderTextColor={rd.color.textTertiary}
+                style={styles.searchInput}
+              />
+            </View>
+            <Text style={styles.countText}>{filtered.length} ta mijoz</Text>
+          </View>
+        }
+        ListEmptyComponent={
           <View style={styles.emptyBox}>
             <View style={styles.emptyCircle}>
               <UserIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
             <Text style={styles.emptyText}>Mijozlar hali qo‘shilmagan.</Text>
           </View>
-        ) : (
-          filtered.map((c, i) => {
-            const fish = titleCase(c?.fish);
-            const qoldiqUzs = Number(c?.qoldiq_uzs || 0);
-            const qoldiqUsd = Number(c?.qoldiq_usd || 0);
-            const active = Number(c?.aktiv_qarz_soni || 0) > 0;
-            const st = active
-              ? { label: 'Aktiv', color: AMBER }
-              : { label: 'Qarzsiz', color: rd.color.textTertiary };
-            return (
-              <TouchableOpacity
-                key={i}
-                activeOpacity={0.85}
-                style={styles.row}
-                onPress={() =>
-                  navigation.navigate('QarzDaftariMijoz', {
-                    id: c.id,
-                    turi,
-                    fish,
-                  })
-                }
-              >
-                <View style={[styles.avatar, { backgroundColor: accent + '1A' }]}>
-                  <UserIcon size={rs(20)} color={accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowName} numberOfLines={1}>
-                    {fish}
-                  </Text>
-                  <Text style={styles.rowMeta} numberOfLines={1}>
-                    {c?.telefon || '—'} · {Number(c?.qarz_soni || 0)} ta qarz
-                  </Text>
-                  <View style={styles.rowAmts}>
-                    {qoldiqUzs > 0 && (
-                      <Text style={styles.rowAmt}>{sortMoneyText(qoldiqUzs) || 0} UZS</Text>
-                    )}
-                    {qoldiqUsd > 0 && (
-                      <Text style={[styles.rowAmt, { color: GREEN }]}>
-                        {sortMoneyText(qoldiqUsd) || 0} USD
-                      </Text>
-                    )}
-                    {qoldiqUzs === 0 && qoldiqUsd === 0 && (
-                      <Text style={styles.rowAmtMuted}>Qoldiq yo‘q</Text>
-                    )}
-                  </View>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: rs(8) }}>
-                  <View style={[styles.stPill, { backgroundColor: st.color + '1A' }]}>
-                    <Text style={[styles.stPillText, { color: st.color }]}>
-                      {st.label}
-                    </Text>
-                  </View>
-                  <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </ScrollView>
+        }
+      />
     </View>
   );
 };
@@ -229,8 +244,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(20),
     paddingTop: rs(8),
     paddingBottom: rs(28),
-    gap: rs(12),
+    flexGrow: 1,
   },
+  // Header ichidagi bloklar orasida 12px + oxirgi blokdan birinchi satrga 12px.
+  headerWrap: { gap: rs(12), marginBottom: rs(12) },
 
   shopChip: {
     alignSelf: 'flex-start',

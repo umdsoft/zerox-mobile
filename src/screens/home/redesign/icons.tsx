@@ -69,7 +69,7 @@ export const PlusIcon = (p: IconProps) => (
 
 export const SearchIcon = (p: IconProps) => (
   <Base {...p}>
-    <Circle cx="11" cy="11" r="7" />
+    <Circle cx="11" cy="11" r="8" />
     <Line x1="21" y1="21" x2="16.65" y2="16.65" />
   </Base>
 );
@@ -168,7 +168,7 @@ export const SunSettingsIcon = (p: IconProps) => (
 export const HelpIcon = (p: IconProps) => (
   <Base {...p}>
     <Circle cx="12" cy="12" r="10" />
-    <Path d="M9.1 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3" />
+    <Path d="M9.1 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
     <Line x1="12" y1="17" x2="12.01" y2="17" />
   </Base>
 );
@@ -234,15 +234,19 @@ export const MessageIcon = (p: IconProps) => (
 );
 
 export const BuildingIcon = (p: IconProps) => (
+  // Lucide "building" — deraza nuqtalari h.01 (ishonchli render; nol uzunlik EMAS).
   <Base {...p}>
-    <Rect x="4" y="3" width="16" height="18" rx="1.5" />
-    <Line x1="9" y1="7" x2="9" y2="7" />
-    <Line x1="15" y1="7" x2="15" y2="7" />
-    <Line x1="9" y1="11" x2="9" y2="11" />
-    <Line x1="15" y1="11" x2="15" y2="11" />
-    <Line x1="9" y1="15" x2="9" y2="15" />
-    <Line x1="15" y1="15" x2="15" y2="15" />
-    <Path d="M9 21v-3h6v3" />
+    <Rect x="4" y="2" width="16" height="20" rx="2" />
+    <Path d="M9 22v-4h6v4" />
+    <Path d="M8 6h.01" />
+    <Path d="M16 6h.01" />
+    <Path d="M12 6h.01" />
+    <Path d="M12 10h.01" />
+    <Path d="M12 14h.01" />
+    <Path d="M16 10h.01" />
+    <Path d="M16 14h.01" />
+    <Path d="M8 10h.01" />
+    <Path d="M8 14h.01" />
   </Base>
 );
 

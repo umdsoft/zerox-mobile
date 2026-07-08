@@ -50,6 +50,11 @@ export const refreshAccessToken = (): Promise<string | null> => {
       const newToken = res?.data?.token as string | undefined;
       if (newToken) {
         storage.set('token', newToken);
+        // Backend refresh tokenni ROTATSIYA qiladi (har refresh'da yangi refreshToken).
+        // Uni ham saqlaymiz -> 7 kunlik oyna "sirg'aluvchi" bo'ladi: foydalanuvchi
+        // ilovadan 7 kundan kam tanaffus bilan foydalansa qayta login talab qilinmaydi.
+        const newRefresh = res?.data?.refreshToken as string | undefined;
+        if (newRefresh) storage.set('refreshToken', newRefresh);
         listeners.forEach(l => {
           try {
             l(newToken);

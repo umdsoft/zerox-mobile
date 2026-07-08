@@ -172,34 +172,28 @@ const Main = () => {
         }
       });
 
-    // const unsubscribeOpenApp = messaging().onNotificationOpenedApp(
-    //   remoteMessage => {
-    //     console.warn('App opened from background via FCM:', remoteMessage);
-    //     if (remoteMessage) {
-    //       const isLocked = storage.getBoolean('appLocked');
-
-    //       if (isLocked) {
-    //         // Save target navigation for after unlock
-    //         storage.set(
-    //           'pendingNavigation',
-    //           JSON.stringify({
-    //             screen: 'NotificationScreen',
-    //             data: {},
-    //           }),
-    //         );
-
-    //         navigation.reset({
-    //           index: 0,
-    //           routes: [{name: 'SetLocalPassword'}],
-    //         });
-    //       } else {
-    //         // Directly go to notification screen
-    //         navigation.navigate('Notification');
-    //         dispatch(getNotifications({page: 1}));
-    //       }
-    //     }
-    //   },
-    // );
+    // ✅ App FONDA (background) turganda notification bosilsa — Notification ekraniga
+    // o'tkazamiz. FCM notification-payload xabarini OS system-tray'da ko'rsatadi va uni
+    // bosganda notifee EMAS, aynan shu firebase handler ishga tushadi. Oldin kommentда
+    // edi -> fonda bosilgan bildirishnoma ekranga o'tkazmasdi (faqat killed holat ishlardi).
+    const unsubscribeOpenApp = messaging().onNotificationOpenedApp(remoteMessage => {
+      if (remoteMessage) {
+        const isLocked = storage.getBoolean('appLocked');
+        if (isLocked) {
+          storage.set(
+            'pendingNavigation',
+            JSON.stringify({ screen: 'NotificationScreen', data: {} }),
+          );
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'SetLocalPassword' }],
+          });
+        } else {
+          navigation.navigate('Notification');
+          dispatch(getNotifications({ page: 1 }));
+        }
+      }
+    });
 
     const unsubscribeRefToken = messaging().onTokenRefresh(async token => {
       console.warn('FCM token refreshed:', token);
@@ -211,7 +205,7 @@ const Main = () => {
     return () => {
       unsubscribeOnMessage();
       unsubscribeForeground();
-      // unsubscribeOpenApp();
+      unsubscribeOpenApp();
       unsubscribeRefToken();
     };
   }, [navigation]);
