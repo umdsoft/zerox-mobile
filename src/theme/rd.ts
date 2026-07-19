@@ -51,11 +51,18 @@ export const rd = {
   },
 
   font: {
-    // Figma dizayni Inter shriftida — 1:1 moslik uchun Inter qo'shildi (assets/fonts).
-    regular: 'Inter-Regular',
-    medium: 'Inter-Medium',
-    semibold: 'Inter-SemiBold',
-    bold: 'Inter-Bold',
+    // MONTSERRAT — Play Market'dagi amaldagi ilova shrifti. Redizayn Inter'ga
+    // o'tgandi, lekin foydalanuvchilar tanigan brend shrifti Montserrat bo'lgani
+    // uchun butun ilova bo'ylab qaytarildi (eski `tokens.font` bilan bir xil).
+    //
+    // DIQQAT: loyihadagi Montserrat to'plamida SemiBold YO'Q (Thin/Light/Regular/
+    // Medium/Bold bor). Shu sababli `semibold` -> Montserrat-Bold ga yo'naltirildi
+    // (urg'uni saqlash uchun yuqoriga yaxlitlash). Agar juda og'ir ko'rinsa,
+    // Montserrat-Medium ga o'zgartirish kifoya — boshqa hech joyni tahrirlash shart emas.
+    regular: 'Montserrat-Regular',
+    medium: 'Montserrat-Medium',
+    semibold: 'Montserrat-Bold',
+    bold: 'Montserrat-Bold',
   },
 
   radius: { sm: 8, md: 12, lg: 16, xl: 18, xxl: 20, huge: 24, pill: 999 },

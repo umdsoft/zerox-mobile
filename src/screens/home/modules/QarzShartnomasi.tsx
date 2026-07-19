@@ -39,6 +39,7 @@ import {
   ClockIcon,
   IconProps,
 } from '../redesign/icons';
+import { debtNav, DebtRole, DebtTab } from '../redesign/debtNav';
 
 // Pie/gradient ranglari (literal hex faqat shu yerda ruxsat etilgan).
 const C_JARAYON = '#2f6fed'; // jarayonda — ko'k
@@ -143,6 +144,7 @@ const DebtCard = ({
   badgeColor,
   lines,
   amountColor,
+  onPress,
 }: {
   accent: string;
   Icon: (p: IconProps) => React.ReactElement;
@@ -152,8 +154,16 @@ const DebtCard = ({
   badgeColor: string;
   lines: string[];
   amountColor: string;
+  onPress?: () => void;
 }) => (
-  <View style={[styles.debtCard, { borderColor: accent }]}>
+  // View -> TouchableOpacity: karta bosilganda tegishli qarzlar ro'yxati ochiladi.
+  // onPress berilmasa disabled — bosilmaydigan karta sifatida ishlaydi (regressiyasiz).
+  <TouchableOpacity
+    activeOpacity={0.85}
+    disabled={!onPress}
+    onPress={onPress}
+    style={[styles.debtCard, { borderColor: accent }]}
+  >
     <View style={styles.debtHead}>
       <View style={[styles.debtIcon, { backgroundColor: badgeBg }]}>
         <Icon size={rs(18)} color={accent} />
@@ -167,18 +177,40 @@ const DebtCard = ({
       {lines[0]}
     </Text>
     {lines[1] ? <Text style={styles.debtAmountUsd}>{lines[1]}</Text> : null}
-  </View>
+    {/* Bosiladigan ekanini bildiruvchi ishora (o'ngda kichik strelka) */}
+    {onPress ? (
+      <View style={styles.debtGo}>
+        <ChevronRight size={rs(15)} color={rd.color.textTertiary} />
+      </View>
+    ) : null}
+  </TouchableOpacity>
 );
 
 // ---------- Muddati oz qolgan (segment-toggle + jadval) ----------
-const NearCard = ({ title, five }: { title: string; five?: Row[] }) => {
+const NearCard = ({
+  title,
+  five,
+  onPress,
+}: {
+  title: string;
+  five?: Row[];
+  onPress?: () => void;
+}) => {
   const [cur, setCur] = useState<'UZS' | 'USD'>('UZS');
   const rows = useMemo(
     () => (five || []).filter(r => isCur(r, cur)),
     [five, cur],
   );
   return (
-    <View style={styles.nearCard}>
+    // Butun karta bosiladigan. Ichkaridagi UZS/USD tugmalari o'z bosishini
+    // o'zlari ushlaydi (RN'da ichki touchable ustun) -> valyuta almashtirish
+    // navigatsiyani ishga tushirmaydi.
+    <TouchableOpacity
+      activeOpacity={0.9}
+      disabled={!onPress}
+      onPress={onPress}
+      style={styles.nearCard}
+    >
       <View style={styles.nearHead}>
         <Text style={styles.nearTitle} numberOfLines={2}>
           {title}
@@ -227,7 +259,15 @@ const NearCard = ({ title, five }: { title: string; five?: Row[] }) => {
           })}
         </View>
       )}
-    </View>
+
+      {/* Bosiladigan ekanini bildiruvchi pastki qator */}
+      {onPress ? (
+        <View style={styles.nearMore}>
+          <Text style={styles.nearMoreText}>Barchasini ko‘rish</Text>
+          <ChevronRight size={rs(15)} color={rd.color.primary} />
+        </View>
+      ) : null}
+    </TouchableOpacity>
   );
 };
 
@@ -283,10 +323,25 @@ const QarzShartnomasi = () => {
   const deb: MyData = (debitor.data as any)?.data || {};
   const cred: MyData = (creditor.data as any)?.data || {};
 
-  const debCount = Array.isArray(deb.data) ? deb.data.length : 0;
-  const credCount = Array.isArray(cred.data) ? cred.data.length : 0;
-  const activeCount = num(deb.chart?.jarayon) + num(cred.chart?.jarayon);
+  // Debitor/Kreditor — JORIY (jarayondagi) shartnomalar soni.
+  // Ilgari `data.length` ishlatilardi, lekin u sahifalangan ro'yxatning yuklangan
+  // uzunligi (limit bilan cheklangan) — shu sabab "debitorda 2 / kreditorda 2,
+  // lekin faol shartnomalarda 16" nomuvofiqligi chiqardi. chart.jarayon esa
+  // backend hisoblagan haqiqiy joriy shartnomalar soni.
+  const debCount = num(deb.chart?.jarayon);
+  const credCount = num(cred.chart?.jarayon);
+  // Eski "Faol shartnomalar" = debCount + credCount bo'lgani uchun endi takror
+  // bo'lardi. O'rniga tugallangan shartnomalar soni ko'rsatiladi — natijada
+  // to'liq hayot-sikl: joriy (debitor/kreditor) -> tugallangan -> muddati o'tgan.
+  const completedCount =
+    num(deb.chart?.tugallangan) + num(cred.chart?.tugallangan);
   const expiredCount = (deb.expired?.length || 0) + (cred.expired?.length || 0);
+
+  // Karta bosilganda qarzlar ro'yxatiga (SearchDebitor) o'tish.
+  // `tab` mavjud filtrni darhol ochadi: 'overdue' — muddati o'tganlar,
+  // 'near' — muddati oz qolganlar, 'all' — barchasi.
+  const goList = (role: DebtRole, tab: DebtTab, title: string) =>
+    navigation.navigate('SearchDebitor', debtNav(role, tab, title));
 
   // Qarzdorlik summalari (valyuta bo'yicha alohida).
   const debGivenUzs = sumCur(deb.data, 'UZS');
@@ -329,8 +384,8 @@ const QarzShartnomasi = () => {
           <Text style={styles.heroTitle} numberOfLines={2}>
             Xush kelibsiz, {name}!
           </Text>
-          <Text style={styles.heroSub}>
-            Qarz shartnomalarini elektron rasmiylashtiring va ularni oson boshqaring.
+          <Text style={styles.heroSub} numberOfLines={2}>
+            Shartnomalarni elektron rasmiylashtiring va oson boshqaring.
           </Text>
           <View style={styles.heroBtns}>
             <TouchableOpacity
@@ -353,7 +408,7 @@ const QarzShartnomasi = () => {
           <View style={styles.heroStats}>
             <HeroStat value={debCount} label="Debitor qarzdorlik" />
             <HeroStat value={credCount} label="Kreditor qarzdorlik" />
-            <HeroStat value={activeCount} label="Faol shartnomalar" />
+            <HeroStat value={completedCount} label="Tugallangan" />
             <HeroStat value={expiredCount} label="Muddati o‘tgan" />
           </View>
         </View>
@@ -375,6 +430,7 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.primary}
             amountColor={rd.color.text}
             lines={money(debGivenUzs, debGivenUsd)}
+            onPress={() => goList('debitor', 'all', 'Berilgan qarz')}
           />
           <DebtCard
             accent={rd.color.error}
@@ -385,6 +441,7 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.error}
             amountColor={rd.color.error}
             lines={money(debExpUzs, debExpUsd)}
+            onPress={() => goList('debitor', 'overdue', 'Muddati o‘tgan (debitor)')}
           />
           <DebtCard
             accent={rd.color.success}
@@ -395,6 +452,7 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.success}
             amountColor={rd.color.text}
             lines={money(credTakenUzs, credTakenUsd)}
+            onPress={() => goList('creditor', 'all', 'Olingan qarz')}
           />
           <DebtCard
             accent={rd.color.error}
@@ -405,13 +463,22 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.error}
             amountColor={rd.color.error}
             lines={money(credExpUzs, credExpUsd)}
+            onPress={() => goList('creditor', 'overdue', 'Muddati o‘tgan (kreditor)')}
           />
         </View>
 
         {/* 4. Muddati oz qolgan */}
         <Text style={styles.blockTitle}>Muddati oz qolgan qarzdorliklar</Text>
-        <NearCard title="Muddati oz qolgan debitor qarzdorliklar" five={deb.five} />
-        <NearCard title="Muddati oz qolgan kreditor qarzdorliklar" five={cred.five} />
+        <NearCard
+          title="Muddati oz qolgan debitor qarzdorliklar"
+          five={deb.five}
+          onPress={() => goList('debitor', 'near', 'Muddati oz qolgan (debitor)')}
+        />
+        <NearCard
+          title="Muddati oz qolgan kreditor qarzdorliklar"
+          five={cred.five}
+          onPress={() => goList('creditor', 'near', 'Muddati oz qolgan (kreditor)')}
+        />
 
         {/* 5. Hisobotlar */}
         <Text style={styles.blockTitle}>Hisobotlar</Text>
@@ -435,42 +502,45 @@ const styles = StyleSheet.create({
   content: { padding: rs(16), gap: rs(16), paddingBottom: rs(28) },
 
   // Hero
+  // KICHRAYTIRILDI: hero ilgari kichik ekranlarda sahifaning yarmidan ko'pini
+  // egallardi. Barcha o'lchamlar rs() orqali — ya'ni har qanday ekranda
+  // proporsional kichrayadi, kichik telefonlarda ham mos tushadi.
   hero: {
-    borderRadius: rs(22),
+    borderRadius: rs(18),
     overflow: 'hidden',
-    padding: rs(20),
+    padding: rs(16),
     shadowColor: GRAD_BRAND[1],
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.onPrimary },
+  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
   heroSub: {
     fontFamily: rd.font.regular,
-    fontSize: rs(12.5),
+    fontSize: rs(11.5),
     color: 'rgba(255,255,255,0.9)',
-    marginTop: rs(6),
-    lineHeight: rs(18),
+    marginTop: rs(4),
+    lineHeight: rs(16),
   },
-  heroBtns: { flexDirection: 'row', gap: rs(10), marginTop: rs(16) },
+  heroBtns: { flexDirection: 'row', gap: rs(8), marginTop: rs(12) },
   heroBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: rs(6),
-    borderRadius: rs(14),
-    paddingVertical: rs(12),
+    gap: rs(5),
+    borderRadius: rs(12),
+    paddingVertical: rs(10),
   },
   heroBtnLight: { backgroundColor: rd.color.surface },
-  heroBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13.5) },
-  heroStats: { flexDirection: 'row', flexWrap: 'wrap', marginTop: rs(18), gap: rs(12) },
+  heroBtnText: { fontFamily: rd.font.semibold, fontSize: rs(12.5) },
+  heroStats: { flexDirection: 'row', flexWrap: 'wrap', marginTop: rs(14), gap: rs(10) },
   heroStat: { width: '45%', flexGrow: 1 },
-  heroStatValue: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.onPrimary },
+  heroStatValue: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
   heroStatLabel: {
     fontFamily: rd.font.medium,
-    fontSize: rs(11.5),
+    fontSize: rs(10.5),
     color: 'rgba(255,255,255,0.85)',
     marginTop: rs(2),
   },
@@ -510,6 +580,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(14),
     paddingVertical: rs(14),
   },
+  // Bosiladigan karta ishorasi. `position: absolute` — kontent oqimiga ta'sir
+  // qilmaydi, shuning uchun kichik ekranlarda ham matnni siqib qo'ymaydi.
+  debtGo: {
+    position: 'absolute',
+    right: rs(9),
+    bottom: rs(9),
+    opacity: 0.65,
+  },
   debtHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   debtIcon: {
     width: rs(32),
@@ -541,6 +619,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: rd.color.border,
     padding: rs(16),
+  },
+  // "Barchasini ko'rish" pastki qatori — kartaning bosiladiganini bildiradi.
+  nearMore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(4),
+    marginTop: rs(12),
+    paddingTop: rs(10),
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  nearMoreText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+    color: rd.color.primary,
   },
   nearHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   nearTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },

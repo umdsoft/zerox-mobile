@@ -24,6 +24,8 @@ import Loading from '../components/Loading';
 import Check from '../../images/CheckIcon';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
+// Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
+import NewPasswordIllustration from '../../images/NewPassword';
 import { URL } from '../constants';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
@@ -299,10 +301,9 @@ const RecoveryPassword = () => {
           </TouchableOpacity>
 
           {/* Hero */}
+          {/* Kichik ikonka-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
           <View style={styles.hero}>
-            <View style={styles.heroCircle}>
-              <LockIcon size={rs(34)} color={rd.color.primary} />
-            </View>
+            <NewPasswordIllustration width={rs(206)} height={rs(162)} />
             <Text style={styles.title}>{t('678')}</Text>
             <Text style={styles.subtitle}>{t('66')}</Text>
           </View>

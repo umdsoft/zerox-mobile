@@ -25,6 +25,7 @@ import { HomeApi } from '../../../store/api/home';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
+import { DEBT_NAV } from './debtNav';
 import Donut from './Donut';
 import {
   ArrowDownLeft,
@@ -41,6 +42,7 @@ import {
   PlusIcon,
   SearchIcon,
   TransferIcon,
+  UserIcon,
 } from './icons';
 
 type Nav = (route: string, params?: object) => void;
@@ -115,41 +117,48 @@ const CircleIcon = ({ size, bg, children }: { size: number; bg: string; children
   </View>
 );
 
+/**
+ * Header — chapda menyu tugmasi, o'ngda AVATAR + qo'ng'iroq.
+ *
+ * Dizayn talabi bo'yicha o'zgardi:
+ *  - "Assalomu alaykum 👋" salomi va qo'l ikonkasi olib tashlandi;
+ *  - foydalanuvchi ismi sarlavha qatorida ko'rsatilmaydi;
+ *  - "BB" bosh harflari o'rniga odamni bildiruvchi ikonka (UserIcon);
+ *  - avatar o'ng tomonga, qo'ng'iroqdan OLDIN ko'chirildi;
+ *  - avatar bosilsa Sozlamalar (profil) sahifasi ochiladi.
+ * Natijada qator ancha yengil bo'ldi — kichik ekranlarda ism uzun bo'lsa ham
+ * siqilib ketmaydi (endi umuman matn yo'q).
+ */
 const Header = ({
-  name,
-  initials,
   badge,
   onMenu,
   onBell,
+  onProfile,
 }: {
-  name: string;
-  initials: string;
   badge: number;
   onMenu: () => void;
   onBell: () => void;
+  onProfile: () => void;
 }) => (
   <View style={styles.headerRow}>
-    <View style={styles.headerLeft}>
-      <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
-        <MenuIcon color={rd.color.text} size={rs(18)} />
-      </TouchableOpacity>
-      <View style={styles.avatar}>
-        <GradientBg />
-        <Text style={styles.avatarText}>{initials}</Text>
-      </View>
-      <View>
-        <Text style={styles.greeting}>Assalomu alaykum 👋</Text>
-        <Text style={styles.userName} numberOfLines={1}>{name}</Text>
-      </View>
-    </View>
-    <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onBell}>
-      <BellIcon color={rd.color.text} size={rs(24)} />
-      {badge > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-        </View>
-      )}
+    <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
+      <MenuIcon color={rd.color.text} size={rs(18)} />
     </TouchableOpacity>
+
+    <View style={styles.headerRight}>
+      <TouchableOpacity activeOpacity={0.8} style={styles.avatar} onPress={onProfile}>
+        <GradientBg />
+        <UserIcon color={rd.color.onPrimary} size={rs(20)} />
+      </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onBell}>
+        <BellIcon color={rd.color.text} size={rs(24)} />
+        {badge > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
   </View>
 );
 
@@ -199,28 +208,8 @@ const QuickActions = ({ nav }: { nav: Nav }) => (
   </View>
 );
 
-// Qarzdorlik ro'yxatlariga navigatsiya paramlari — Statistic.tsx bilan AYNAN bir xil
-// (SearchDebitor real /contract/report endpointidan ro'yxatni yuklaydi).
-const DEBT_NAV = {
-  creditor: {
-    title: 'Kreditor qarzdorlik',
-    type: 3,
-    person: 'creditor',
-    isHave: false,
-    url: '/contract/report?type=creditor&page=1&limit=1000&status=all&start=0&end=0',
-    searchUrl: '/contract/report/search?type=creditor&page=1&limit=500&search=',
-    iconType: 3,
-  },
-  debitor: {
-    title: 'Debitor qarzdorlik',
-    type: 1,
-    person: 'debitor',
-    isHave: false,
-    url: '/contract/report?type=debitor&page=1&limit=1000&status=all&start=0&end=0',
-    searchUrl: '/contract/report/search?type=debitor&page=1&limit=500&search=',
-    iconType: 3,
-  },
-};
+// Qarzdorlik ro'yxatlariga navigatsiya paramlari endi `./debtNav` faylida —
+// QarzShartnomasi kartalari ham aynan shu ro'yxatga o'tadi (bitta manba).
 
 // Qarzdorlik kartasi (kreditor / debitor) — JONLI GRADIENT (fintech), UZS + USD.
 const DebtCard = ({
@@ -352,8 +341,8 @@ const HeroBanner = ({
     <Text style={styles.heroTitle} numberOfLines={2}>
       Xush kelibsiz, {name}!
     </Text>
-    <Text style={styles.heroSub}>
-      Qarz shartnomalarini elektron rasmiylashtiring va ularni oson boshqaring.
+    <Text style={styles.heroSub} numberOfLines={2}>
+      Shartnomalarni elektron rasmiylashtiring va oson boshqaring.
     </Text>
     <View style={styles.heroChips}>
       <View style={styles.heroChip}>
@@ -606,13 +595,9 @@ const HomeRedesign = () => {
 
   // Ism (login qilinganda real; yuklanmagunicha neytral placeholder — demo emas).
   const first = storeUser?.data?.first_name;
-  const last = storeUser?.data?.last_name;
   const name = first || (isLoggedIn ? 'Foydalanuvchi' : user.name);
-  const initials = first
-    ? ((first[0] ?? '') + (last?.[0] ?? '')).toUpperCase()
-    : isLoggedIn
-    ? 'ZX'
-    : user.initials;
+  // `initials` olib tashlandi — sarlavhadagi "BB" doirasi o'rniga endi odam
+  // ikonkasi turadi, shuning uchun bosh harflar hisoblanmaydi.
 
   // Agregatlar (backend /home/my javobidan — o'zgartirilmaydi, faqat o'qiladi).
   const cred = home?.creditor?.data;
@@ -706,11 +691,12 @@ const HomeRedesign = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <Header
-        name={name}
-        initials={initials}
         badge={badgeCount}
         onMenu={openMenu}
         onBell={() => nav('Notification')}
+        // Avatar bosilsa Sozlamalar (profil) sahifasi — DrawerMenu'dagi
+        // "Sozlamalar" shu yerga ko'chdi, shuning uchun menyudan olib tashlandi.
+        onProfile={() => nav('UserScreen', { user: storeUser?.data })}
       />
 
       <ScrollView
@@ -813,7 +799,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
+  // Avatar + qo'ng'iroq o'ng tomonda yonma-yon (ilgari chapda headerLeft edi).
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   iconBtn: {
     width: rs(40),
     height: rs(40),
@@ -825,9 +812,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatar: { width: rs(40), height: rs(40), borderRadius: rs(20), overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: rd.font.semibold, fontSize: rs(15), color: rd.color.onPrimary },
-  greeting: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textTertiary },
-  userName: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text, marginTop: 2 },
+  // avatarText / greeting / userName olib tashlandi — sarlavhada endi matn yo'q
+  // (salom + ism talab bo'yicha chiqarildi, avatar ichida odam ikonkasi turadi).
   badge: {
     position: 'absolute',
     top: -5,
@@ -849,37 +835,39 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: rs(20), paddingTop: rs(8), paddingBottom: rs(16), gap: rs(16) },
 
   // Hero banner
+  // KICHRAYTIRILDI: hero kichik ekranlarda sahifaning yarmini egallardi.
+  // Barcha qiymatlar rs() orqali -> har qanday ekran o'lchamida proporsional.
   hero: {
-    borderRadius: rs(22),
+    borderRadius: rs(18),
     overflow: 'hidden',
-    padding: rs(20),
+    padding: rs(15),
     shadowColor: GRAD.brand[1],
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.onPrimary },
+  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(16.5), color: rd.color.onPrimary },
   heroSub: {
     fontFamily: rd.font.regular,
-    fontSize: rs(12.5),
+    fontSize: rs(11.5),
     color: 'rgba(255,255,255,0.9)',
-    marginTop: rs(6),
-    lineHeight: rs(18),
+    marginTop: rs(4),
+    lineHeight: rs(15.5),
   },
-  heroChips: { flexDirection: 'row', gap: rs(10), marginTop: rs(16) },
+  heroChips: { flexDirection: 'row', gap: rs(8), marginTop: rs(11) },
   heroChip: {
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: rs(14),
-    paddingVertical: rs(11),
-    paddingHorizontal: rs(12),
+    borderRadius: rs(12),
+    paddingVertical: rs(9),
+    paddingHorizontal: rs(10),
     alignItems: 'center',
   },
-  heroChipValue: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.onPrimary },
+  heroChipValue: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
   heroChipLabel: {
     fontFamily: rd.font.medium,
-    fontSize: rs(11),
+    fontSize: rs(10),
     color: 'rgba(255,255,255,0.9)',
     marginTop: rs(2),
   },

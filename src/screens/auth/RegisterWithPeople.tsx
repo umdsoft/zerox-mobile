@@ -23,6 +23,8 @@ import { rd, rs } from '../../theme/rd';
 import InputMask from '../components/InputMask';
 import { ChevronLeft } from '../home/redesign/icons';
 import BrandLockup from '../components/BrandLockup';
+// Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
+import PhoneIllustration from '../../images/changeNumber';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -221,8 +223,10 @@ const RegisterWithPeople = () => {
           </TouchableOpacity>
 
           {/* Brend hero */}
+          {/* Brend hero: kichik logotip + illyustratsiya (eski ilovadagidek) */}
           <View style={styles.hero}>
-            <BrandLockup />
+            <BrandLockup width={rs(112)} />
+            <PhoneIllustration width={rs(206)} height={rs(154)} />
             <Text style={styles.title}>{t('42')}</Text>
           </View>
 

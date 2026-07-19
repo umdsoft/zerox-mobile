@@ -17,12 +17,12 @@ import {
 } from 'react-native';
 import { t } from 'i18next';
 import { getVersion } from 'react-native-device-info';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '../../../store/reducers/HomeReducer';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
+import BrandLockup from '../../components/BrandLockup';
 import {
   CoinIcon,
   GridIcon,
@@ -33,7 +33,6 @@ import {
   MessageIcon,
   PlusIcon,
   SearchIcon,
-  SunSettingsIcon,
   TransferIcon,
 } from './icons';
 
@@ -63,23 +62,18 @@ const MENU: Item[] = [
   { key: 'qr', label: 'QR-kod', Icon: SearchIcon, route: 'QrCode' },
   { key: 'yoriqnoma', label: "Foydalanish yo'riqnomasi", Icon: HelpIcon, route: 'UseTerm' },
   { key: 'support', label: "Qo'llab-quvvatlash xizmati", Icon: MessageIcon, route: 'Support' },
-  { key: 'tariflar', label: 'Tariflar', Icon: CoinIcon, soon: true },
+  // Tariflar saytda ishlaydi -> ilovada ham OCHIQ. Ilgari `soon: true` edi va
+  // "Tez kunda" badge bilan bloklangan edi. `Types` ekrani tarif PDF'ini
+  // (pdf.zerox.uz/tarif_<til>.pdf) ko'rsatadi.
+  { key: 'tariflar', label: 'Tariflar', Icon: CoinIcon, route: 'Types' },
 ];
 
-// Mobil'ga xos qo'shimcha (web'da yo'q, pastda alohida).
-const SETTINGS: Item = { key: 'settings', label: 'Sozlamalar', Icon: SunSettingsIcon, route: 'UserScreen', needsUser: true };
+// SOZLAMALAR menyudan olib tashlandi — uning barcha funksiyalari endi bosh
+// sahifadagi avatar bosilganda ochiladigan sahifada (UserScreen). Shu sababli
+// bu yerda alohida band ham, pastki blokdagi qatori ham yo'q.
 
-const HeaderGradient = () => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id="drawerGrad" x1="0.05" y1="0" x2="0.85" y2="1">
-        <Stop offset="0" stopColor={rd.color.gradient[0]} />
-        <Stop offset="1" stopColor={rd.color.gradient[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill="url(#drawerGrad)" />
-  </Svg>
-);
+// HeaderGradient olib tashlandi — sarlavha endi och fonli brend bloki
+// (rasmiy logotip och fon uchun mo'ljallangan, gradient ustida ko'rinmasdi).
 
 const DrawerMenu = () => {
   const navigation = useNavigation<any>();
@@ -87,9 +81,8 @@ const DrawerMenu = () => {
   const { user } = useSelector((state: any) => state.HomeReducer);
   const data = user?.data;
 
-  const fullName =
-    [data?.first_name, data?.last_name].filter(Boolean).join(' ') || 'Foydalanuvchi';
-  const phone = data?.phone ? String(data.phone) : '';
+  // fullName / phone olib tashlandi — sarlavhada endi foydalanuvchi ismi emas,
+  // rasmiy logotip turadi (profil ma'lumotlari Sozlamalar sahifasida).
   const balance = data?.balance != null ? sortText(data.balance) : '0';
 
   const close = () => navigation.closeDrawer?.();
@@ -119,7 +112,14 @@ const DrawerMenu = () => {
 
   const doLogout = () => {
     storage.clearAll();
-    navigation.reset({ index: 0, routes: [{ name: 'SelectLanguageScreen' }] });
+    // Menyuni YANA yopamiz va reset'ni animatsiya tugagach bajaramiz.
+    // Sababi: `reset` drawer yopilib ulgurmasdan ishga tushsa, menyu yangi
+    // ekran (til tanlash) USTIDA ochiq qolib ketardi — emulyator testida
+    // aynan shu holat aniqlandi.
+    close();
+    setTimeout(() => {
+      navigation.reset({ index: 0, routes: [{ name: 'SelectLanguageScreen' }] });
+    }, 280);
   };
 
   const logout = () => {
@@ -139,16 +139,15 @@ const DrawerMenu = () => {
 
   return (
     <View style={styles.panel}>
-      {/* Profil sarlavhasi (gradient) */}
-      <View style={styles.header}>
-        <HeaderGradient />
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(data?.first_name?.[0] ?? 'U') + (data?.last_name?.[0] ?? 'J')}
-          </Text>
-        </View>
-        <Text style={styles.name} numberOfLines={1}>{fullName}</Text>
-        {phone ? <Text style={styles.phone}>{phone}</Text> : null}
+      {/* Brend sarlavhasi — "JQ" avatar + ism/telefon o'rniga RASMIY logotip.
+          Fon och (ilgari ko'k gradient edi): logo.svg trademark ranglari
+          (#2D62B6 ko'k, #FE5E58 marjon) och fon uchun mo'ljallangan — ko'k
+          gradient ustida logotipning ko'k qismi yo'qolib ketardi. Ilovaning
+          barcha auth ekranlarida ham logotip aynan och fonda ko'rsatiladi,
+          shuning uchun brend ko'rinishi bir xil bo'ladi. */}
+      <View style={styles.brandHeader}>
+        <BrandLockup width={rs(128)} />
+        <Text style={styles.brandTagline}>ishonch kafolati</Text>
       </View>
 
       {/* Mobil hisob */}
@@ -198,15 +197,9 @@ const DrawerMenu = () => {
         })}
       </ScrollView>
 
-      {/* Pastki blok: Sozlamalar + Chiqish + versiya */}
+      {/* Pastki blok: Chiqish + versiya (Sozlamalar avatar sahifasiga ko'chdi) */}
       <View style={styles.bottom}>
         <View style={styles.divider} />
-        <TouchableOpacity activeOpacity={0.8} style={styles.row} onPress={() => go(SETTINGS)}>
-          <View style={[styles.chip, styles.chipInactive]}>
-            <SETTINGS.Icon size={rs(22)} color={rd.color.textSecondary} />
-          </View>
-          <Text style={styles.rowLabel}>{SETTINGS.label}</Text>
-        </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.8} style={styles.row} onPress={logout}>
           <View style={[styles.chip, { backgroundColor: rd.color.errorBg }]}>
             <LogOutIcon size={rs(22)} color={rd.color.error} />
@@ -224,19 +217,23 @@ export default DrawerMenu;
 const styles = StyleSheet.create({
   panel: { flex: 1, backgroundColor: rd.color.surface, overflow: 'hidden' },
 
-  // Profil sarlavha
-  header: { paddingHorizontal: rs(22), paddingTop: rs(22), paddingBottom: rs(22), gap: rs(12), overflow: 'hidden' },
-  avatar: {
-    width: rs(56),
-    height: rs(56),
-    borderRadius: rs(28),
-    backgroundColor: rd.color.primaryStrong,
+  // Brend sarlavha — och fon (rasmiy logotip aynan shunday fonda to'g'ri
+  // ko'rinadi; eski gradient + avatar + ism/telefon bloki olib tashlandi).
+  brandHeader: {
+    paddingHorizontal: rs(22),
+    paddingTop: rs(26),
+    paddingBottom: rs(18),
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: rs(4),
+    backgroundColor: rd.color.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: rd.color.border,
   },
-  avatarText: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.onPrimary },
-  name: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
-  phone: { fontFamily: rd.font.regular, fontSize: rs(13), color: 'rgba(255,255,255,0.8)' },
+  brandTagline: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
+  },
 
   // Mobil hisob
   accountWrap: { paddingHorizontal: rs(14), paddingTop: rs(14) },

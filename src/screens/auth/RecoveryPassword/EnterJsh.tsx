@@ -22,6 +22,8 @@ import Loading from '../../components/Loading';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
+// Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
+import RecoveryIllustration from '../../../images/RecoveryPassword';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
@@ -141,10 +143,9 @@ const EnterJsh = () => {
           </TouchableOpacity>
 
           {/* Hero */}
+          {/* Kichik ikonka-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
           <View style={styles.hero}>
-            <View style={styles.heroCircle}>
-              <UserIcon size={rs(34)} color={rd.color.primary} />
-            </View>
+            <RecoveryIllustration width={rs(206)} height={rs(155)} />
             <Text style={styles.title}>{t('729')}</Text>
           </View>
 

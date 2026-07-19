@@ -21,6 +21,8 @@ import Uzbekistan from '../../images/Uzbekistan';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import BrandLockup from '../components/BrandLockup';
+// Eski ilovadagi kirish illyustratsiyasi — redizaynda tushib qolgandi, qaytarildi.
+import PhoneLoginImage from '../../images/phoneloginimage.svg';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
 import { checkPhoneTime } from '../../helper/timeChecker';
@@ -221,9 +223,11 @@ const LoginWithPhone = () => {
             <ChevronLeft size={rs(22)} color={rd.color.text} />
           </TouchableOpacity>
 
-          {/* Brend hero */}
+          {/* Brend hero: logotip + illyustratsiya. Logotip 88 -> 60 ga
+              kichraytirildi, chunki endi asosiy vizual illyustratsiya. */}
           <View style={styles.hero}>
-            <BrandLockup badgeSize={rs(88)} wordSize={rs(26)} />
+            <BrandLockup badgeSize={rs(60)} wordSize={rs(26)} />
+            <PhoneLoginImage width={rs(210)} height={rs(127)} />
             <Text style={styles.title}>Xush kelibsiz</Text>
             <Text style={styles.subtitle}>
               Hisobingizga kirish uchun ma’lumotlarni kiriting
@@ -369,12 +373,14 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(30) },
+  // Illyustratsiya qo'shilgani uchun hero bo'shliqlari qisqartirildi
+  // (vertikal balans saqlanadi, ekran cho'zilib ketmaydi).
+  hero: { alignItems: 'center', marginTop: rs(10), marginBottom: rs(22) },
   title: {
     fontFamily: rd.font.bold,
-    fontSize: rs(23),
+    fontSize: rs(22),
     color: rd.color.text,
-    marginTop: rs(16),
+    marginTop: rs(10),
   },
   subtitle: {
     fontFamily: rd.font.regular,

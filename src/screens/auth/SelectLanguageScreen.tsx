@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../theme/rd';
 import { storage, prefsStorage } from '../../store/api/token/getToken';
 import BrandLockup from '../components/BrandLockup';
+// Eski ilovadagi illyustratsiya — redizaynda tushib qolgandi, qaytarildi.
+import PersonIllustration from '../../images/Person';
 
 const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
   <Svg
@@ -77,9 +79,12 @@ const SelectLanguageScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Brend hero */}
+        {/* Brend hero: kichik logotip + illyustratsiya (eski ilovadagidek).
+            Logotip kichraytirildi (80 -> 56), chunki endi asosiy vizual
+            illyustratsiya — ikkalasi ham katta bo'lsa ekran to'lib ketardi. */}
         <View style={styles.hero}>
-          <BrandLockup badgeSize={rs(80)} />
+          <BrandLockup badgeSize={rs(56)} />
+          <PersonIllustration width={rs(150)} height={rs(161)} />
           <Text style={styles.title}>{t('723')}</Text>
           <Text style={styles.subtitle}>{t('879').slice(0, -1)}</Text>
         </View>
@@ -149,21 +154,24 @@ const styles = StyleSheet.create({
     paddingVertical: rs(32),
   },
 
-  hero: { alignItems: 'center', marginBottom: rs(32) },
+  // Illyustratsiya qo'shilgani uchun hero'ning pastki bo'shlig'i kamaytirildi.
+  hero: { alignItems: 'center', marginBottom: rs(24) },
+  // Sarlavha va tagidagi matn KICHRAYTIRILDI (talab bo'yicha) — bu bir vaqtda
+  // illyustratsiya uchun vertikal joy ham bo'shatadi.
   title: {
     fontFamily: rd.font.bold,
-    fontSize: rs(23),
+    fontSize: rs(19),
     color: rd.color.text,
     textAlign: 'center',
-    marginTop: rs(20),
+    marginTop: rs(14),
   },
   subtitle: {
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(12),
     color: rd.color.textSecondary,
     textAlign: 'center',
-    marginTop: rs(8),
-    lineHeight: rs(20),
+    marginTop: rs(6),
+    lineHeight: rs(17.5),
     paddingHorizontal: rs(16),
   },
 

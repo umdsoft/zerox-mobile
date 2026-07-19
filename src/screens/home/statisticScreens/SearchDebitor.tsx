@@ -21,13 +21,21 @@ import RdHeader from '../redesign/RdHeader';
 import {SearchIcon} from '../redesign/icons';
 
 const SearchDebitor = () => {
-  const route = useRoute();
-  const {title, color, type, url, person, isHave, searchUrl, iconType} =
+  // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
+  // Generic'siz `route.params` = `object | undefined` bo'lib, har bir maydon
+  // destrukturizatsiyasi TS xatosi berardi. <any> bilan hammasi tozalanadi.
+  const route = useRoute<any>();
+  const {title, color, type, url, person, isHave, searchUrl, iconType, initialTab} =
     route.params;
   const [searchData, setSearchData] = useState([]);
   const [isCheck, setIsCheck] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'near' | 'overdue'>('all');
+  // Boshlang'ich filtr tab'i chaqiruvchidan keladi: masalan "Muddati o'tgan"
+  // kartasi bosilsa darhol 'overdue', "Muddati oz qolgan" bosilsa 'near' ochiladi.
+  // Berilmasa — eski xatti-harakat saqlanadi ('all').
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'near' | 'overdue'>(
+    initialTab ?? 'all',
+  );
   const [token] = useState(() => {
     return storage.getString('token');
   });

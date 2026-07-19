@@ -21,6 +21,8 @@ import { useDispatch } from 'react-redux';
 import InputMask from '../components/InputMask';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
+// Eski ilovada bu ekranda telefon-kiritish illyustratsiyasi bor edi.
+import PhoneIllustration from '../../images/changeNumber';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -171,9 +173,8 @@ const UpdatePasswordWithJshir = () => {
 
           {/* Hero */}
           <View style={styles.hero}>
-            <View style={styles.heroCircle}>
-              <LockIcon size={rs(34)} color={rd.color.primary} />
-            </View>
+            {/* Kichik qulf-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
+            <PhoneIllustration width={rs(206)} height={rs(154)} />
             <Text style={styles.title}>{t('729')}</Text>
             <Text style={styles.subtitle}>{t('42')}</Text>
           </View>
