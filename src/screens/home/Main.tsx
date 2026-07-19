@@ -232,6 +232,14 @@ const Main = () => {
   }, [handleNotificationEvents, onGetLocalToken]);
 
   const postDefaultLanguage = useCallback(async () => {
+    // Foydalanuvchi ma'lumoti hali yuklanmagan bo'lsa CHAQIRMAYMIZ.
+    // Sababi: endpoint `/user/edit-lang/:id` — id undefined bo'lsa URL
+    // `/user/edit-lang/undefined` bo'lib 400 qaytarardi va har ilova ochilishida
+    // konsolga "Error setting default language" xatosi tushardi. Effekt
+    // `user?.data?.id` o'zgarganda qayta ishga tushadi, ya'ni ma'lumot
+    // kelgach so'rov baribir yuboriladi.
+    const userId = user?.data?.id;
+    if (!userId) return;
     try {
       const defaultLanguage = storage.getString('lang') || 'uz';
       console.log('Default language:', defaultLanguage);

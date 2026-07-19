@@ -1,6 +1,7 @@
 package com.zeroxuz
 
 import android.content.Intent
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -14,6 +15,21 @@ class MainActivity : ReactActivity() {
    * rendering of the component.
    */
   override fun getMainComponentName(): String = "ZeroX"
+
+  /**
+   * `react-native-screens` TALABI: Activity qayta yaratilganda (konfiguratsiya
+   * o'zgarishi — ekran burilishi, shrift o'lchami, split-screen, buklanadigan
+   * telefon ochilishi) Android saqlangan FRAGMENT holatini tiklashga urinadi va
+   * ilova quladi:
+   *   Unable to instantiate fragment com.swmansion.rnscreens.ScreenFragment
+   *
+   * `super.onCreate(null)` saqlangan holatni bermaydi -> React Native navigatsiya
+   * daraxtini o'zi qaytadan quradi, fragment tiklash urinishi bo'lmaydi.
+   * (Emulyatorda ekran o'lchamini o'zgartirganda aynan shu crash aniqlandi.)
+   */
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(null)
+  }
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]

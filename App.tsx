@@ -28,14 +28,12 @@ import { getMe } from './src/store/api/home';
 import useAppStateListener from './src/hooks/useAppStateListener';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
-import WebView from 'react-native-webview';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { logError } from './src/log';
 import {
   APP_LOADING_TIMEOUT,
-  TABLET_WEBVIEW_URL,
   LOG_BOX_IGNORE_MESSAGES,
   DEEP_LINK_PATHS,
   STORAGE_KEYS,
@@ -218,23 +216,18 @@ const App: React.FC = () => {
     return <Enter />;
   }
 
-  // Show WebView for tablet devices
-  if (isTablet) {
-    return (
-      <WebView
-        source={{ uri: TABLET_WEBVIEW_URL }}
-        style={{ flex: 1 }}
-        startInLoadingState
-        javaScriptEnabled
-        domStorageEnabled
-      />
-    );
-  }
-
+  // PLANSHET: ilgari bu yerda `if (isTablet) return <WebView uri="zerox.uz" />`
+  // turgan edi — ya'ni planshetda butun native ilova chetlab o'tilib, veb-sayt
+  // ochilardi. Endi planshetda ham AYNAN shu native ilova ishlaydi.
+  //
+  // Layout moslashuvi: `rs()` masshtabi 1.15 da qisiladi, shuning uchun keng
+  // ekranda kontent cho'zilib, elementlar kichkina ko'rinardi. Yechim —
+  // kontentni telefon kengligiga cheklab, markazga joylash (`tabletFrame`).
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: '#f5f7fb' }}
       edges={['top', 'bottom']}>
+      <View style={isTablet ? styles.tabletFrame : styles.phoneFrame}>
       <I18nextProvider i18n={i18n}>
         {/* Navigation flex:1 — global menyu ko'ringanda kontent ustini yopmasdan
             joy ajratadi (overlay emas, layout siblingi). */}
@@ -248,6 +241,7 @@ const App: React.FC = () => {
         {/* <UpdateModal /> */}
         <ExpirePassportModal />
       </I18nextProvider>
+      </View>
       <Toast config={toastConfig} />
       <View
         style={{
@@ -283,5 +277,16 @@ const styles = StyleSheet.create({
   ImageBackground: {
     width: style.width,
     height: style.height,
+  },
+  // Telefonda hech narsa o'zgarmaydi — butun kenglik.
+  phoneFrame: { flex: 1 },
+  // Planshetda kontent telefon kengligiga cheklanadi va markazga joylashadi.
+  // Aks holda kartalar butun kenglikka cho'zilib, matn satrlari juda uzun
+  // bo'lib ketardi (aynan shu "veb-sahifa" taassurotini berardi).
+  tabletFrame: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
   },
 });

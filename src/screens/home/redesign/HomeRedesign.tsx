@@ -25,6 +25,7 @@ import { HomeApi } from '../../../store/api/home';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
+import socketService from '../../../helper/socketService';
 import { DEBT_NAV } from './debtNav';
 import Donut from './Donut';
 import {
@@ -584,6 +585,24 @@ const HomeRedesign = () => {
         }
       });
   }, [dispatch, navigation]);
+
+  // SOCKET (real-time). REGRESSIYA TUZATUVI: redizaynda eski `Home.tsx` o'rniga
+  // shu ekran kelganda `socketService.init(...)` chaqiruvi tushib qolgan edi —
+  // natijada socket UMUMAN ulanmasdi (serverga doimiy ulanish yo'q edi) va
+  // bildirishnoma/real-time yangilanishlar ishlamasdi. Eski mantiq tiklandi:
+  // faqat offline bo'lsa init qilamiz (singleton — takror ulanmaydi).
+  React.useEffect(() => {
+    if (!myId) return;
+    if (socketService.connected() !== 'Offline') return;
+    socketService
+      .init(String(myId))
+      .then(() => {
+        socketService.getSocket()?.connect();
+      })
+      .catch(() => {
+        // token yo'q / init xatosi — ilovani buzmaymiz, real-time'siz davom etadi.
+      });
+  }, [myId]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);

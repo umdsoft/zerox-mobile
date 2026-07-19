@@ -35,6 +35,16 @@ import { GradientIconBadge } from '../components/BrandLockup';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
+// PIN paneli o'lchamlari.
+// MUAMMO: panel kengligi `heightPercentageToDP(33)` edi — ya'ni GORIZONTAL o'lcham
+// ekran BALANDLIGIga bog'langan, tugma cheti esa `scale()` orqali KENGLIKka. Ikki xil
+// manba aralashgani uchun planshetda 3 ta tugma sig'may, panel 2 ustunga tushib qolardi
+// (415.8dp kerak edi, 422.4dp bor — yaxlitlash bilan yetmay qolgan).
+// YECHIM: panel kengligi TUGMA o'lchamidan hisoblanadi -> har qanday ekranda aynan 3 ustun.
+const PIN_BTN_SIZE = heightPercentageToDP(7.5);
+const PIN_BTN_MARGIN = scale(10);
+const PIN_GRID_WIDTH = (PIN_BTN_SIZE + PIN_BTN_MARGIN * 2) * 3;
+
 const SetLocalPassword = () => {
   const [supportScan, setSupportScan] = useState(false);
   const [password, setPassword] = useState('');
@@ -492,7 +502,7 @@ const SetLocalPassword = () => {
                 style={{
                   flex: 1,
                   alignSelf: 'center',
-                  width: heightPercentageToDP(33),
+                  width: PIN_GRID_WIDTH,
                 }}
               >
                 <View style={styles.codeNumberContainer}>
@@ -638,13 +648,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   codeButton: {
-    width: heightPercentageToDP(7.5),
-    height: heightPercentageToDP(7.5),
+    width: PIN_BTN_SIZE,
+    height: PIN_BTN_SIZE,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: rd.color.surfaceAlt,
-    margin: scale(10),
+    margin: PIN_BTN_MARGIN,
     overflow: 'hidden',
   },
   fourItem: {
