@@ -11,7 +11,6 @@ import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Line } from 'react-native-svg';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, UserIcon } from '../home/redesign/icons';
-import BrandLockup from '../components/BrandLockup';
 
 // Redizayn: yuridik shaxs uchun lokal ikonka (Feather uslubi, react-native-svg).
 const BuildingIcon = ({ size = 24, color = rd.color.primary }) => (
@@ -95,7 +94,6 @@ const SelectJuridical = () => {
 
         {/* Brend hero */}
         <View style={styles.hero}>
-          <BrandLockup />
           <Text style={styles.title}>Avtorizatsiya</Text>
           <Text style={styles.subtitle}>
             Davom etish uchun hisob turini tanlang

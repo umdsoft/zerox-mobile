@@ -22,7 +22,6 @@ import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../theme/rd';
 import {ChevronLeft, FingerprintIcon} from '../home/redesign/icons';
-import BrandLockup from '../components/BrandLockup';
 
 const Register = () => {
   const navigation = useNavigation();
@@ -143,7 +142,6 @@ const Register = () => {
 
           {/* Brend hero */}
           <View style={styles.hero}>
-            <BrandLockup />
             <Text style={styles.title}>Avtorizatsiya</Text>
             <Text style={styles.subtitle}>
               Yuridik shaxs sifatida E-imzo (ERI) orqali xavfsiz kiring

@@ -22,7 +22,6 @@ import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
 import InputMask from '../components/InputMask';
 import { ChevronLeft } from '../home/redesign/icons';
-import BrandLockup from '../components/BrandLockup';
 // Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
 import PhoneIllustration from '../../images/changeNumber';
 import {
@@ -235,7 +234,6 @@ const RegisterWithPeople = () => {
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
           <AuthReveal>
             <AuthHero style={styles.hero}>
-              <BrandLockup width={rs(108)} />
               <AuthFloat>
                 <PhoneIllustration width={rs(206)} height={rs(154)} />
               </AuthFloat>
