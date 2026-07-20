@@ -8,7 +8,6 @@ import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../theme/rd';
 import { storage, prefsStorage } from '../../store/api/token/getToken';
-import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi illyustratsiya — redizaynda tushib qolgandi, qaytarildi.
 import PersonIllustration from '../../images/Person';
 import {
@@ -92,7 +91,6 @@ const SelectLanguageScreen = () => {
         {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
         <AuthReveal>
           <AuthHero style={styles.hero}>
-            <BrandLockup badgeSize={rs(52)} />
             <AuthFloat>
               <PersonIllustration width={rs(150)} height={rs(161)} />
             </AuthFloat>
