@@ -25,6 +25,7 @@ import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
 // Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
 import RecoveryIllustration from '../../../images/RecoveryPassword';
 import {
+  AuthBackdrop,
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
@@ -131,6 +132,8 @@ const EnterJsh = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Fintech atmosfera — butun ekran ortidagi brend gradienti */}
+      <AuthBackdrop />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

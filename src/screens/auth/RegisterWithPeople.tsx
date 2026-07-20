@@ -26,6 +26,7 @@ import BrandLockup from '../components/BrandLockup';
 // Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
 import PhoneIllustration from '../../images/changeNumber';
 import {
+  AuthBackdrop,
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
@@ -211,6 +212,8 @@ const RegisterWithPeople = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Fintech atmosfera — butun ekran ortidagi brend gradienti */}
+      <AuthBackdrop />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}

@@ -62,6 +62,9 @@ import { rd, rs } from '../../theme/rd';
  */
 const REVEAL_RISE = rs(20);
 
+/** Tugma burchagi — SVG va View bir xil qiymatdan foydalanadi. */
+const BTN_RADIUS = rs(16);
+
 /** Ketma-ket paydo bo'lish: pastdan yumshoq ko'tarilib, ochiladi. */
 export const AuthReveal = ({
   children,
@@ -127,14 +130,54 @@ export const AuthFloat = ({
   return <Animated.View style={[style, anim]}>{children}</Animated.View>;
 };
 
-/** Muhr yog'dusi — hero (logotip/illyustratsiya) ORTIGA qo'yiladi. */
+/**
+ * Sahifa atmosferasi — butun ekran ortidagi yumshoq brend gradienti.
+ *
+ * Fintech ilovalarida chuqurlik TEKIS kulrang fondan emas, rangli muhitdan
+ * keladi. Bu yerda gradient yuqorida brend tinidan boshlanib, pastga qarab
+ * sahifa rangiga singiydi — ko'z ilg'amaydi, lekin ekran "yassi qog'oz"
+ * bo'lib qolmaydi. Kuchli rang faqat CTA tugmasida.
+ */
+export const AuthBackdrop = () => (
+  <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <Svg style={StyleSheet.absoluteFill}>
+      <Defs>
+        {/*
+          VERTIKAL, diagonal EMAS. Sabab: diagonal gradient tusni butun ekran
+          bo'ylab, jumladan FORMA ostiga ham yoyadi — natijada oq inputlar toza
+          qog'ozda emas, bo'yalgan qog'ozda turgandek ko'rinadi. Atmosfera
+          brend zonasida (yuqorida) yashashi, forma zonasiga yetguncha esa toza
+          `page` rangiga TO'LIQ singib ketishi kerak (0.42 da tugaydi).
+        */}
+        <LinearGradient id="authBackdrop" x1="0.2" y1="0" x2="0.8" y2="0.42">
+          <Stop offset="0" stopColor="#DCE7FF" />
+          <Stop offset="0.55" stopColor="#EDF1FA" />
+          <Stop offset="1" stopColor={rd.color.page} />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill="url(#authBackdrop)" />
+    </Svg>
+  </View>
+);
+
+/**
+ * Muhr maydoni — hero ORTIDAGI radial brend gradienti (rasmiy shtamp siyohi
+ * qog'ozga singganday). Ikki rangli: brend ko'kidan binafshaga — logotipdagi
+ * gradient bilan bir oilada.
+ */
 export const AuthSeal = ({ size = rs(300), top = rs(-40) }: { size?: number; top?: number }) => (
   <View pointerEvents="none" style={[styles.sealWrap, { height: size, top }]}>
     <Svg width={size} height={size}>
       <Defs>
-        <RadialGradient id="authSeal" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor={rd.color.primary} stopOpacity="0.18" />
-          <Stop offset="0.55" stopColor={rd.color.primary} stopOpacity="0.06" />
+        {/*
+          KO'K USTUNLIK QILADI. Binafsha (gradient[1]) faqat yadroda, past
+          shaffoflikda — logotip gradienti bilan qarindoshlikni bildiradigan
+          ISHORA. Ilgari binafsha 0.22 edi va ko'k fon bilan qo'shilib butun
+          hero zonasini LAVANDA loyqasiga aylantirardi: fintech ko'ki emas.
+        */}
+        <RadialGradient id="authSeal" cx="50%" cy="42%" r="52%">
+          <Stop offset="0" stopColor={rd.color.gradient[1]} stopOpacity="0.10" />
+          <Stop offset="0.45" stopColor={rd.color.primary} stopOpacity="0.13" />
           <Stop offset="1" stopColor={rd.color.primary} stopOpacity="0" />
         </RadialGradient>
       </Defs>
@@ -207,29 +250,92 @@ export const AuthPrimaryButton = ({
   style?: ViewStyle | ViewStyle[];
 }) => {
   const off = disabled || loading;
+  // SVG viewport'ini O'LCHAB olamiz.
+  //
+  // Ilgari gradient `<Svg style={absoluteFill}>` + `width="100%"` bilan
+  // chizilardi. Foiz esa SVG VIEWPORT'iga nisbatan yechiladi, tashqi layout'ga
+  // emas — viewport hali o'lchanmagan bo'lsa 100% = 0 va gradient UMUMAN
+  // chizilmaydi. Aynan shu kuzatildi: bir xil komponent til tanlash ekranida
+  // to'g'ri, login ekranida esa bo'sh chiqardi (ikkalasida layout vaqti farq
+  // qiladi — login'da klaviatura va ScrollView qayta o'lchov keltirib chiqaradi).
+  // Yechim: o'lchamni onLayout'dan olib, SVG'ga TAYYOR SON beramiz.
+  const [size, setSize] = React.useState({ w: 0, h: 0 });
   return (
+    // IKKI QATLAM — ATAYLAB.
+    //
+    // Ilgari soya (elevation) va kesish (overflow:'hidden') BITTA tugunda edi.
+    // Androidda bu ziddiyat: elevation alohida render qatlami ochadi, clipping
+    // esa uni buzadi — natijada SVG gradienti UMUMAN chizilmasdi va tugma oq
+    // to'rtburchakka aylanardi (matn ham oq — ko'rinmasdi). Emulyatorda aynan
+    // shu holat kuzatildi. Yechim: soya TASHQI tugunda, kesish va gradient esa
+    // ICHKI tugunda — ikkisi bir-biriga tegmaydi.
     <TouchableOpacity
       activeOpacity={0.9}
       disabled={off}
       onPress={onPress}
-      style={[styles.btn, off ? styles.btnOff : styles.btnOn, style]}
+      style={[!off && styles.btnShadow, style]}
     >
-      {!off && (
-        <Svg style={StyleSheet.absoluteFill}>
-          <Defs>
-            <LinearGradient id="authBtn" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={rd.color.gradient[0]} />
-              <Stop offset="1" stopColor={rd.color.gradient[1]} />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#authBtn)" />
-        </Svg>
-      )}
-      {loading ? (
-        <ActivityIndicator color={rd.color.onPrimary} />
-      ) : (
-        <Text style={[styles.btnText, off && styles.btnTextOff]}>{label}</Text>
-      )}
+      <View
+        style={[styles.btn, off && styles.btnOff]}
+        onLayout={e => {
+          const { width, height } = e.nativeEvent.layout;
+          setSize(s => (s.w === width && s.h === height ? s : { w: width, h: height }));
+        }}
+      >
+        {/*
+          Gradient qatlami HAR DOIM mavjud — faqat `opacity` o'zgaradi.
+          Ilgari u `{!off && ...}` bilan shartli MOUNT qilinardi va aynan shu
+          xatoga olib kelardi: tugma `disabled -> enabled` ga o'tganda
+          `overflow:'hidden'` li View'ning bolalar ro'yxati o'zgarardi, Android
+          esa qatlamni qayta qurishda ICHKI BOLALARNI umuman chizmay qo'yardi —
+          tugma bo'sh ko'k to'rtburchakka aylanardi (yorliq ham yo'qolardi).
+          Til tanlash ekranida tugma birinchi renderdanoq faol bo'lgani uchun
+          bu ko'rinmasdi — xato faqat holat O'ZGARGANDA chiqardi.
+          Doimiy mount + faqat stil o'zgarishi bu sinfdagi xatoni butunlay yopadi.
+        */}
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { opacity: off ? 0 : 1 }]}
+        >
+          {size.w > 0 && (
+            <Svg width={size.w} height={size.h}>
+              <Defs>
+                <LinearGradient id="authBtn" x1="0" y1="0" x2="1" y2="1">
+                  <Stop offset="0" stopColor={rd.color.gradient[0]} />
+                  <Stop offset="1" stopColor={rd.color.gradient[1]} />
+                </LinearGradient>
+              </Defs>
+              <Rect
+                x="0"
+                y="0"
+                width={size.w}
+                height={size.h}
+                rx={BTN_RADIUS}
+                ry={BTN_RADIUS}
+                fill="url(#authBtn)"
+              />
+            </Svg>
+          )}
+        </View>
+        {/*
+          Yorliq ham HAR DOIM mount holatida (yuqoridagi sabab bilan) — yuklanish
+          paytida faqat ko'rinmas bo'ladi, indikator esa ustidan chiqadi.
+        */}
+        <Text
+          style={[
+            styles.btnText,
+            off && styles.btnTextOff,
+            loading && styles.btnTextHidden,
+          ]}
+        >
+          {label}
+        </Text>
+        {loading && (
+          <View pointerEvents="none" style={styles.btnLoader}>
+            <ActivityIndicator color={rd.color.onPrimary} />
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 };
@@ -248,30 +354,27 @@ export const authStyles = StyleSheet.create({
     color: rd.color.textTertiary,
     marginBottom: rs(8),
   },
-  /** Qog'ozdek ko'tarilgan kiritish maydoni. */
+  /**
+   * Kiritish maydoni — TEKIS va TOZA, SOYASIZ.
+   *
+   * Qoida: gradient va chuqurlik ATMOSFERA (fon) hamda ASOSIY AMAL (tugma)
+   * uchun. Forma maydonlari esa aniq va sokin bo'lishi kerak — soya ham,
+   * gradient ham qo'shilsa ekran shovqinga aylanadi va "arzon" ko'rinadi.
+   */
   field: {
     height: rs(58),
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
-    borderRadius: rs(16),
-    borderWidth: 1,
-    borderColor: '#E6EBF4',
+    borderRadius: rs(14),
+    borderWidth: 1.5,
+    borderColor: '#E3E9F4',
     paddingHorizontal: rs(16),
-    shadowColor: '#0E1626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  /** Fokus — brend halqasi va yumshoq brend soyasi. */
+  /** Fokus — brend halqasi + juda yengil brend tini. Soya YO'Q. */
   fieldFocused: {
     borderColor: rd.color.primary,
-    borderWidth: 1.5,
-    shadowColor: rd.color.primary,
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: '#F8FAFF',
   },
   /** Sarlavha — kattaroq va zichroq traking (nufuzli ko'rinish). */
   title: {
@@ -301,24 +404,57 @@ const styles = StyleSheet.create({
   },
   btn: {
     height: rs(56),
-    borderRadius: rs(16),
+    borderRadius: BTN_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    // `overflow:'hidden'` ATAYLAB YO'Q. AuthReveal tugmani TRANSFORM qilingan
+    // Animated.View ichiga joylaydi; Androidda bunday ota-tugun ichidagi
+    // clipping to'g'ri koordinata fazosida hisoblanmaydi va BARCHA bolalarni
+    // kesib tashlaydi — tugma bo'sh ko'k to'rtburchakka aylanardi (gradient
+    // ham, yorliq ham yo'q). Burchak endi SVG'ning o'zida yumaltiriladi.
+    // Gradient ustidan chiziladi. Bu esa KAFOLATLANGAN zamin: SVG biror
+    // qurilmada chizilmay qolsa ham tugma brend ko'kida qoladi va oq yorliq
+    // o'qiladi — hech qachon bo'sh to'rtburchak bo'lmaydi.
+    backgroundColor: rd.color.primary,
   },
-  btnOn: {
+  // ANDROID `elevation` ATAYLAB YO'Q.
+  //
+  // Emulyatorda aniq naqsh kuzatildi: `elevation` bo'lgan tugunning ICHKI
+  // bolalari (gradient SVG va yorliq matni) chizilmay qolardi — tugma bo'sh
+  // ko'k to'rtburchakka aylanardi. Android elevation'ni alohida render
+  // qatlami sifatida ishlaydi va ichki kompozitsiyani buzadi. Soya `shadow*`
+  // xossalari orqali beriladi (iOS'da ishlaydi), Androidda esa chuqurlikni
+  // gradientning o'zi beradi — bu yerda soya ZARURAT emas, bezak edi.
+  btnShadow: {
+    borderRadius: BTN_RADIUS,
     shadowColor: rd.color.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
-    elevation: 6,
   },
-  btnOff: { backgroundColor: rd.color.surfaceAlt },
+  // O'CHIQ HOLAT ham BOSHQARUV ELEMENTI bo'lib qolishi kerak. Tusli fonda
+  // yalang'och `surfaceAlt` deyarli yo'qoladi — tugma shaklini yo'qotadi va
+  // "keyingi qadam qayerda?" degan savol tug'iladi. Chegara shaklni saqlaydi,
+  // rang esa hali faol emasligini halol aytadi.
+  btnOff: {
+    backgroundColor: rd.color.surfaceAlt,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
   btnText: {
     fontFamily: rd.font.bold,
     fontSize: rs(15.5),
     letterSpacing: 0.2,
     color: rd.color.onPrimary,
+    // Androidda elevation z-tartibni o'zgartirishi mumkin — yorliq gradient
+    // ostida qolib ketmasligi uchun aniq ustunlik beriladi.
+    zIndex: 1,
   },
   btnTextOff: { color: rd.color.textTertiary },
+  btnTextHidden: { opacity: 0 },
+  btnLoader: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

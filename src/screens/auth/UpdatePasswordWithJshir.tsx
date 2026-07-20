@@ -24,6 +24,7 @@ import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 // Eski ilovada bu ekranda telefon-kiritish illyustratsiyasi bor edi.
 import PhoneIllustration from '../../images/changeNumber';
 import {
+  AuthBackdrop,
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
@@ -160,6 +161,8 @@ const UpdatePasswordWithJshir = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Fintech atmosfera — butun ekran ortidagi brend gradienti */}
+      <AuthBackdrop />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

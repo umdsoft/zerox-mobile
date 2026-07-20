@@ -12,6 +12,7 @@ import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi illyustratsiya — redizaynda tushib qolgandi, qaytarildi.
 import PersonIllustration from '../../images/Person';
 import {
+  AuthBackdrop,
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
@@ -82,6 +83,8 @@ const SelectLanguageScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Fintech atmosfera — butun ekran ortidagi brend gradienti */}
+      <AuthBackdrop />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}

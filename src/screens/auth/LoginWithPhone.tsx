@@ -24,6 +24,7 @@ import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi kirish illyustratsiyasi — redizaynda tushib qolgandi, qaytarildi.
 import PhoneLoginImage from '../../images/phoneloginimage.svg';
 import {
+  AuthBackdrop,
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
@@ -213,6 +214,8 @@ const LoginWithPhone = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Fintech atmosfera — butun ekran ortidagi brend gradienti */}
+      <AuthBackdrop />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
