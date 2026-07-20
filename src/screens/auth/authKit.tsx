@@ -18,7 +18,7 @@
  *  - TUGMA (AuthPrimaryButton) — tekis rang o'rniga brend gradienti va rangli
  *    soya: bosiladigan asosiy amal ekranning eng "og'ir" elementi bo'ladi.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -27,8 +27,105 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { rd, rs } from '../../theme/rd';
+
+/**
+ * HARAKAT.
+ *
+ * Ekran ochilganda elementlar KETMA-KET (orkestrlangan) paydo bo'ladi —
+ * tarqoq effektlar emas, bitta boshqariladigan lahza. Illyustratsiya esa
+ * doimiy, sezilar-sezilmas suzadi: rasm "tirik" bo'ladi, lekin diqqatni
+ * o'g'irlamaydi.
+ *
+ * `useReducedMotion()` — tizimda "harakatni kamaytirish" yoqilgan bo'lsa
+ * (foydalanuvchi vestibulyar sezgir bo'lishi mumkin) animatsiya o'chiriladi
+ * va element darhol o'z joyida ko'rinadi.
+ */
+
+/**
+ * DIQQAT (Reanimated worklet qoidasi): `useAnimatedStyle` ichidagi kod UI
+ * oqimda, ALOHIDA JS kontekstida bajariladi — u yerda oddiy JS funksiyalari
+ * (masalan `rs()`) MAVJUD EMAS. Chaqirilsa ilova "Object is not a function"
+ * bilan quladi (emulyatorda aynan shu bo'ldi). Shuning uchun barcha o'lchamlar
+ * worklet TASHQARISIDA hisoblanadi va worklet'ga tayyor SON sifatida tushadi.
+ */
+const REVEAL_RISE = rs(20);
+
+/** Ketma-ket paydo bo'lish: pastdan yumshoq ko'tarilib, ochiladi. */
+export const AuthReveal = ({
+  children,
+  delay = 0,
+  style,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  style?: ViewStyle | ViewStyle[];
+}) => {
+  const reduce = useReducedMotion();
+  const p = useSharedValue(reduce ? 1 : 0);
+
+  useEffect(() => {
+    if (reduce) {
+      p.value = 1;
+      return;
+    }
+    p.value = withDelay(
+      delay,
+      withTiming(1, { duration: 460, easing: Easing.out(Easing.cubic) }),
+    );
+  }, [delay, p, reduce]);
+
+  const anim = useAnimatedStyle(() => ({
+    opacity: p.value,
+    // REVEAL_RISE — worklet tashqarisida hisoblangan SON (yuqoridagi izohga qarang).
+    transform: [{ translateY: (1 - p.value) * REVEAL_RISE }],
+  }));
+
+  return <Animated.View style={[style, anim]}>{children}</Animated.View>;
+};
+
+/** Doimiy yengil suzish — illyustratsiyani "tirik" qiladi. */
+export const AuthFloat = ({
+  children,
+  amplitude = rs(7),
+  style,
+}: {
+  children: React.ReactNode;
+  amplitude?: number;
+  style?: ViewStyle | ViewStyle[];
+}) => {
+  const reduce = useReducedMotion();
+  const y = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduce) return;
+    y.value = withRepeat(
+      withSequence(
+        withTiming(-1, { duration: 1900, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 1900, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      true,
+    );
+  }, [reduce, y]);
+
+  const anim = useAnimatedStyle(() => ({
+    transform: [{ translateY: y.value * amplitude }],
+  }));
+
+  return <Animated.View style={[style, anim]}>{children}</Animated.View>;
+};
 
 /** Muhr yog'dusi — hero (logotip/illyustratsiya) ORTIGA qo'yiladi. */
 export const AuthSeal = ({ size = rs(300), top = rs(-40) }: { size?: number; top?: number }) => (
@@ -47,13 +144,13 @@ export const AuthSeal = ({ size = rs(300), top = rs(-40) }: { size?: number; top
 );
 
 /**
- * Hero — "hujjat varag'i".
+ * Hero — muhr yog'dusi va uning ustidagi brend/illyustratsiya.
  *
- * Ilgari logotip va illyustratsiya kulrang fonда suzib turardi: kompozitsiya
- * yo'q edi, shuning uchun ekran "shablon" bo'lib ko'rinardi. Endi ular oq
- * varaq ustida turadi, muhr yog'dusi esa varaq ICHIGA singadi — mahsulotning
- * o'zi (qarzni rasmiy hujjatga aylantirish) vizual tilga aylanadi.
- * Oq fon illyustratsiyalarning oq foni bilan ham uyg'unlashadi.
+ * DIQQAT: bu yerda RAMKA (oq panel) YO'Q. Avvalgi urinishda illyustratsiya
+ * oq kartaga solingandi — lekin ramka muammoni hal qilmaydi, faqat o'raydi.
+ * Ekran "tirik" bo'lishi kerak: shuning uchun kompozitsiya o'rniga HARAKAT
+ * ishlatiladi — chaqiruvchi illyustratsiyani `AuthFloat` bilan o'raydi va
+ * elementlar `AuthReveal` orqali ketma-ket paydo bo'ladi.
  */
 export const AuthHero = ({
   children,
@@ -63,7 +160,7 @@ export const AuthHero = ({
   style?: ViewStyle | ViewStyle[];
 }) => (
   <View style={[styles.hero, style]}>
-    <AuthSeal size={rs(280)} top={rs(-70)} />
+    <AuthSeal size={rs(300)} top={rs(-56)} />
     {children}
   </View>
 );
@@ -188,21 +285,8 @@ export const authStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   sealWrap: { position: 'absolute', alignSelf: 'center', alignItems: 'center' },
-  // "Hujjat varag'i" — oq yuza, yumshoq soya, muhr yog'dusi ichida.
-  hero: {
-    alignItems: 'center',
-    paddingTop: rs(18),
-    paddingBottom: rs(20),
-    paddingHorizontal: rs(16),
-    borderRadius: rs(28),
-    backgroundColor: rd.color.surface,
-    overflow: 'hidden',
-    shadowColor: '#0E1626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 20,
-    elevation: 3,
-  },
+  // Ramka YO'Q — faqat markazlash. Muhr yog'dusi fon vazifasini bajaradi.
+  hero: { alignItems: 'center' },
   trust: {
     flexDirection: 'row',
     alignItems: 'center',

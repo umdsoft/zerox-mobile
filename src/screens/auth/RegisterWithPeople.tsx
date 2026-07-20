@@ -25,7 +25,13 @@ import { ChevronLeft } from '../home/redesign/icons';
 import BrandLockup from '../components/BrandLockup';
 // Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
 import PhoneIllustration from '../../images/changeNumber';
-import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
+import {
+  AuthFloat,
+  AuthHero,
+  AuthPrimaryButton,
+  AuthReveal,
+  authStyles,
+} from './authKit';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -224,14 +230,21 @@ const RegisterWithPeople = () => {
           </TouchableOpacity>
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthHero style={styles.hero}>
-            <BrandLockup width={rs(108)} />
-            <PhoneIllustration width={rs(198)} height={rs(148)} />
-          </AuthHero>
+          <AuthReveal>
+            <AuthHero style={styles.hero}>
+              <BrandLockup width={rs(108)} />
+              <AuthFloat>
+                <PhoneIllustration width={rs(206)} height={rs(154)} />
+              </AuthFloat>
+            </AuthHero>
+          </AuthReveal>
 
-          <Text style={styles.title}>{t('42')}</Text>
+          <AuthReveal delay={140}>
+            <Text style={styles.title}>{t('42')}</Text>
+          </AuthReveal>
 
           {/* Forma kartasi */}
+          <AuthReveal delay={230}>
           <View style={styles.card}>
             <Text style={styles.label}>Telefon raqam</Text>
             <InputMask
@@ -252,6 +265,7 @@ const RegisterWithPeople = () => {
               style={styles.enterButton}
             />
           </View>
+          </AuthReveal>
 
           {/* Yordam */}
           <TouchableOpacity

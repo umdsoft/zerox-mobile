@@ -24,7 +24,13 @@ import { rd, rs } from '../../../theme/rd';
 import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
 // Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
 import RecoveryIllustration from '../../../images/RecoveryPassword';
-import { AuthHero, AuthPrimaryButton, authStyles } from '../authKit';
+import {
+  AuthFloat,
+  AuthHero,
+  AuthPrimaryButton,
+  AuthReveal,
+  authStyles,
+} from '../authKit';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
@@ -144,12 +150,19 @@ const EnterJsh = () => {
           </TouchableOpacity>
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthHero style={styles.hero}>
-            <RecoveryIllustration width={rs(198)} height={rs(149)} />
-          </AuthHero>
+          <AuthReveal>
+            <AuthHero style={styles.hero}>
+              <AuthFloat>
+                <RecoveryIllustration width={rs(206)} height={rs(155)} />
+              </AuthFloat>
+            </AuthHero>
+          </AuthReveal>
 
-          <Text style={styles.title}>{t('729')}</Text>
+          <AuthReveal delay={140}>
+            <Text style={styles.title}>{t('729')}</Text>
+          </AuthReveal>
 
+          <AuthReveal delay={230}>
           {/* JSHSHIR */}
           <Text style={styles.label}>{t('732').slice(0, -1)}</Text>
           <View style={[styles.field, focused && styles.fieldFocused]}>
@@ -185,6 +198,7 @@ const EnterJsh = () => {
             onPress={onHandle}
             style={styles.button}
           />
+          </AuthReveal>
         </ScrollView>
       </KeyboardAvoidingView>
       <ModalView hide={hide} setHide={setHide} />

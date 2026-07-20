@@ -11,7 +11,13 @@ import { storage, prefsStorage } from '../../store/api/token/getToken';
 import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi illyustratsiya — redizaynda tushib qolgandi, qaytarildi.
 import PersonIllustration from '../../images/Person';
-import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
+import {
+  AuthFloat,
+  AuthHero,
+  AuthPrimaryButton,
+  AuthReveal,
+  authStyles,
+} from './authKit';
 
 const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
   <Svg
@@ -81,15 +87,22 @@ const SelectLanguageScreen = () => {
         contentContainerStyle={styles.content}
       >
         {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-        <AuthHero style={styles.hero}>
-          <BrandLockup badgeSize={rs(52)} />
-          <PersonIllustration width={rs(142)} height={rs(152)} />
-        </AuthHero>
+        <AuthReveal>
+          <AuthHero style={styles.hero}>
+            <BrandLockup badgeSize={rs(52)} />
+            <AuthFloat>
+              <PersonIllustration width={rs(150)} height={rs(161)} />
+            </AuthFloat>
+          </AuthHero>
+        </AuthReveal>
 
-        <Text style={styles.title}>{t('723')}</Text>
-        <Text style={styles.subtitle}>{t('879').slice(0, -1)}</Text>
+        <AuthReveal delay={140}>
+          <Text style={styles.title}>{t('723')}</Text>
+          <Text style={styles.subtitle}>{t('879').slice(0, -1)}</Text>
+        </AuthReveal>
 
         {/* Til tanlash kartalari */}
+        <AuthReveal delay={230}>
         <View style={styles.list}>
           {options.map(option => {
             const selected = lang === option.value;
@@ -136,6 +149,7 @@ const SelectLanguageScreen = () => {
           }}
           style={styles.continueBtn}
         />
+        </AuthReveal>
       </ScrollView>
     </View>
   );

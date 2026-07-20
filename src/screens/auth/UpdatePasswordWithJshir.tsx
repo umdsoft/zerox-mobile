@@ -23,7 +23,13 @@ import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 // Eski ilovada bu ekranda telefon-kiritish illyustratsiyasi bor edi.
 import PhoneIllustration from '../../images/changeNumber';
-import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
+import {
+  AuthFloat,
+  AuthHero,
+  AuthPrimaryButton,
+  AuthReveal,
+  authStyles,
+} from './authKit';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -173,13 +179,20 @@ const UpdatePasswordWithJshir = () => {
           </TouchableOpacity>
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthHero style={styles.hero}>
-            <PhoneIllustration width={rs(198)} height={rs(148)} />
-          </AuthHero>
+          <AuthReveal>
+            <AuthHero style={styles.hero}>
+              <AuthFloat>
+                <PhoneIllustration width={rs(206)} height={rs(154)} />
+              </AuthFloat>
+            </AuthHero>
+          </AuthReveal>
 
-          <Text style={styles.title}>{t('729')}</Text>
-          <Text style={styles.subtitle}>{t('42')}</Text>
+          <AuthReveal delay={140}>
+            <Text style={styles.title}>{t('729')}</Text>
+            <Text style={styles.subtitle}>{t('42')}</Text>
+          </AuthReveal>
 
+          <AuthReveal delay={230}>
           {/* Telefon raqami — tiklash shu raqam bo'yicha aniqlanadi */}
           <Text style={styles.label}>{t('Telefon raqami')}</Text>
           <InputMask
@@ -199,6 +212,7 @@ const UpdatePasswordWithJshir = () => {
             }}
             style={styles.submitBtn}
           />
+          </AuthReveal>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

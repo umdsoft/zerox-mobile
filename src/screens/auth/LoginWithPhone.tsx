@@ -24,8 +24,10 @@ import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi kirish illyustratsiyasi — redizaynda tushib qolgandi, qaytarildi.
 import PhoneLoginImage from '../../images/phoneloginimage.svg';
 import {
+  AuthFloat,
   AuthHero,
   AuthPrimaryButton,
+  AuthReveal,
   AuthTrustNote,
   authStyles,
 } from './authKit';
@@ -232,17 +234,25 @@ const LoginWithPhone = () => {
           {/* Brend hero: logotip + illyustratsiya. Logotip 88 -> 60 ga
               kichraytirildi, chunki endi asosiy vizual illyustratsiya. */}
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthHero style={styles.hero}>
-            <BrandLockup badgeSize={rs(56)} wordSize={rs(26)} />
-            <PhoneLoginImage width={rs(200)} height={rs(121)} />
-          </AuthHero>
+          <AuthReveal>
+            <AuthHero style={styles.hero}>
+              <BrandLockup badgeSize={rs(56)} wordSize={rs(26)} />
+              <AuthFloat>
+                <PhoneLoginImage width={rs(210)} height={rs(127)} />
+              </AuthFloat>
+            </AuthHero>
+          </AuthReveal>
 
           {/* Ko'rsatma — varaqdan tashqarida, formaga kirish so'zi */}
-          <Text style={styles.title}>Xush kelibsiz</Text>
-          <Text style={styles.subtitle}>
-            Hisobingizga kirish uchun ma’lumotlarni kiriting
-          </Text>
+          <AuthReveal delay={140}>
+            <Text style={styles.title}>Xush kelibsiz</Text>
+            <Text style={styles.subtitle}>
+              Hisobingizga kirish uchun ma’lumotlarni kiriting
+            </Text>
+          </AuthReveal>
 
+          {/* Forma — hero va sarlavhadan keyin paydo bo'ladi */}
+          <AuthReveal delay={230}>
           {/* Telefon */}
           <Text style={styles.label}>Telefon raqam</Text>
           <View
@@ -332,7 +342,10 @@ const LoginWithPhone = () => {
             }}
             style={styles.loginBtn}
           />
+          </AuthReveal>
 
+          {/* Pastki qism — oxirgi qadam */}
+          <AuthReveal delay={340}>
           {/* Ro'yxatdan o'tish */}
           <View style={styles.registerRow}>
             <Text style={styles.registerHint}>Hisobingiz yo‘qmi?</Text>
@@ -349,6 +362,7 @@ const LoginWithPhone = () => {
 
           {/* "Ishonch kafolati" shiorining amaliy ifodasi */}
           <AuthTrustNote text="Ma’lumotlaringiz shifrlangan holda uzatiladi" />
+          </AuthReveal>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
