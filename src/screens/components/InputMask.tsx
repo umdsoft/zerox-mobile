@@ -16,7 +16,6 @@ const InputMask = ({ onChangeText, value, icon = false }) => {
           <Text style={styles.phoneNumberText} allowFontScaling={false}>
             +998
           </Text>
-          <View style={styles.divider} />
         </View>
       )}
       <View style={{ flex: 1 }}>
@@ -56,24 +55,22 @@ const styles = StyleSheet.create({
     paddingLeft: rs(14),
     height: rs(52),
   },
+  // "+998" va terilgan raqam BITTA telefon raqami — shuning uchun shrift
+  // oilasi ham, o'lchami ham bir xil. Ilgari prefiks semibold, raqam esa
+  // medium edi: bir maydon ichida ikki xil ovoz eshitilardi.
   phoneNumberText: {
     fontFamily: rd.font.semibold,
     fontSize: rs(15),
     color: rd.color.text,
     marginLeft: rs(6),
   },
-  divider: {
-    width: 1,
-    height: rs(22),
-    backgroundColor: rd.color.border,
-    marginLeft: rs(10),
-  },
   input: {
     width: '100%',
     height: rs(52),
-    paddingLeft: rs(12),
+    // Prefiks bilan raqam orasidagi ochiq joy kichik: ular bir butun.
+    paddingLeft: rs(8),
     fontSize: rs(15),
-    fontFamily: rd.font.medium,
+    fontFamily: rd.font.semibold,
     color: rd.color.text,
   },
 });

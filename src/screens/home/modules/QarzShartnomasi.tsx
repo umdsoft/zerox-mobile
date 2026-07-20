@@ -26,6 +26,7 @@ import { useSelector } from 'react-redux';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
+import { compactUsd, compactUzs } from '../../../helper/money';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
 import { getDueMeta, sortText } from '../../components/StatisticCard';
@@ -71,8 +72,8 @@ const sumCur = (rows: Row[] | undefined, cur: string) =>
 
 // UZS + (ixtiyoriy) USD matni.
 const money = (uzs: number, usd: number) => {
-  const parts: string[] = [`${sortText(Math.round(uzs))} so‘m`];
-  if (usd > 0) parts.push(`${sortText(Math.round(usd))} $`);
+  const parts: string[] = [compactUzs(uzs)];
+  if (usd > 0) parts.push(compactUsd(usd));
   return parts;
 };
 
@@ -87,16 +88,6 @@ const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
     </Defs>
     <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
   </Svg>
-);
-
-// ---------- Hero statistika ----------
-const HeroStat = ({ value, label }: { value: number | string; label: string }) => (
-  <View style={styles.heroStat}>
-    <Text style={styles.heroStatValue}>{value}</Text>
-    <Text style={styles.heroStatLabel} numberOfLines={2}>
-      {label}
-    </Text>
-  </View>
 );
 
 // ---------- Statistika kartasi (donut + legend) ----------
@@ -323,20 +314,6 @@ const QarzShartnomasi = () => {
   const deb: MyData = (debitor.data as any)?.data || {};
   const cred: MyData = (creditor.data as any)?.data || {};
 
-  // Debitor/Kreditor — JORIY (jarayondagi) shartnomalar soni.
-  // Ilgari `data.length` ishlatilardi, lekin u sahifalangan ro'yxatning yuklangan
-  // uzunligi (limit bilan cheklangan) — shu sabab "debitorda 2 / kreditorda 2,
-  // lekin faol shartnomalarda 16" nomuvofiqligi chiqardi. chart.jarayon esa
-  // backend hisoblagan haqiqiy joriy shartnomalar soni.
-  const debCount = num(deb.chart?.jarayon);
-  const credCount = num(cred.chart?.jarayon);
-  // Eski "Faol shartnomalar" = debCount + credCount bo'lgani uchun endi takror
-  // bo'lardi. O'rniga tugallangan shartnomalar soni ko'rsatiladi — natijada
-  // to'liq hayot-sikl: joriy (debitor/kreditor) -> tugallangan -> muddati o'tgan.
-  const completedCount =
-    num(deb.chart?.tugallangan) + num(cred.chart?.tugallangan);
-  const expiredCount = (deb.expired?.length || 0) + (cred.expired?.length || 0);
-
   // Karta bosilganda qarzlar ro'yxatiga (SearchDebitor) o'tish.
   // `tab` mavjud filtrni darhol ochadi: 'overdue' — muddati o'tganlar,
   // 'near' — muddati oz qolganlar, 'all' — barchasi.
@@ -405,21 +382,15 @@ const QarzShartnomasi = () => {
               <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>Qarz olish</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.heroStats}>
-            <HeroStat value={debCount} label="Debitor qarzdorlik" />
-            <HeroStat value={credCount} label="Kreditor qarzdorlik" />
-            <HeroStat value={completedCount} label="Tugallangan" />
-            <HeroStat value={expiredCount} label="Muddati o‘tgan" />
-          </View>
+          {/* Hero ostidagi 4 ta raqam olib tashlandi: aynan shu ko'rsatkichlar
+              pastdagi diagramma va kartalarda batafsil takrorlanadi. Kartochka
+              endi faqat IKKI AMALNI taklif qiladi. */}
         </View>
 
-        {/* 2. Shartnomalar statistikasi */}
-        <Text style={styles.blockTitle}>Shartnomalar statistikasi</Text>
+        {/* Sarlavhasiz: diagrammalarning o'z nomi bor. */}
         <StatCard title="Debitor qarzdorlik" chart={deb.chart} />
         <StatCard title="Kreditor qarzdorlik" chart={cred.chart} />
 
-        {/* 3. Qarzdorliklar */}
-        <Text style={styles.blockTitle}>Qarzdorliklar</Text>
         <View style={styles.debtGrid}>
           <DebtCard
             accent={rd.color.primary}
@@ -435,7 +406,7 @@ const QarzShartnomasi = () => {
           <DebtCard
             accent={rd.color.error}
             Icon={ClockIcon}
-            label="Muddati o‘tgan (debitor)"
+            label="Berilgan qarz"
             badge="Muddati o‘tgan"
             badgeBg={rd.color.errorBg}
             badgeColor={rd.color.error}
@@ -457,7 +428,7 @@ const QarzShartnomasi = () => {
           <DebtCard
             accent={rd.color.error}
             Icon={ClockIcon}
-            label="Muddati o‘tgan (kreditor)"
+            label="Olingan qarz"
             badge="Muddati o‘tgan"
             badgeBg={rd.color.errorBg}
             badgeColor={rd.color.error}
@@ -468,14 +439,13 @@ const QarzShartnomasi = () => {
         </View>
 
         {/* 4. Muddati oz qolgan */}
-        <Text style={styles.blockTitle}>Muddati oz qolgan qarzdorliklar</Text>
         <NearCard
-          title="Muddati oz qolgan debitor qarzdorliklar"
+          title="Muddati oz qolgan berilgan qarzlar"
           five={deb.five}
           onPress={() => goList('debitor', 'near', 'Muddati oz qolgan (debitor)')}
         />
         <NearCard
-          title="Muddati oz qolgan kreditor qarzdorliklar"
+          title="Muddati oz qolgan olingan qarzlar"
           five={cred.five}
           onPress={() => goList('creditor', 'near', 'Muddati oz qolgan (kreditor)')}
         />
@@ -535,15 +505,6 @@ const styles = StyleSheet.create({
   },
   heroBtnLight: { backgroundColor: rd.color.surface },
   heroBtnText: { fontFamily: rd.font.semibold, fontSize: rs(12.5) },
-  heroStats: { flexDirection: 'row', flexWrap: 'wrap', marginTop: rs(14), gap: rs(10) },
-  heroStat: { width: '45%', flexGrow: 1 },
-  heroStatValue: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
-  heroStatLabel: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(10.5),
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: rs(2),
-  },
 
   // Blok sarlavhasi
   blockTitle: {

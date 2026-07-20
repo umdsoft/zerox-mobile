@@ -30,7 +30,7 @@ const RdHeader = ({ title, subtitle, onBack, right, showBack = true }: Props) =>
       <View style={styles.side}>
         {showBack ? (
           <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={back}>
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
+            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -63,13 +63,15 @@ const styles = StyleSheet.create({
   },
   side: { width: rs(44), justifyContent: 'center' },
   sideRight: { alignItems: 'flex-end' },
+  // TO'LDIRILGAN KO'K. Ilgari oq doira + kulrang chevron edi va oq/och fonda
+  // deyarli sezilmasdi — foydalanuvchi buni bir necha ekranda ko'rsatdi.
+  // Bu header barcha modul ekranlarida umumiy, shuning uchun tuzatish
+  // bir joyda — hamma joyda amal qiladi.
   iconBtn: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

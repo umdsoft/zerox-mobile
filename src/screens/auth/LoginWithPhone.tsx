@@ -20,7 +20,6 @@ import { storage } from '../../store/api/token/getToken';
 import Uzbekistan from '../../images/Uzbekistan';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
-import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi kirish illyustratsiyasi — redizaynda tushib qolgandi, qaytarildi.
 import PhoneLoginImage from '../../images/phoneloginimage.svg';
 import {
@@ -28,6 +27,7 @@ import {
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
+  AuthTopBar,
   AuthReveal,
   AuthTrustNote,
   authStyles,
@@ -36,7 +36,7 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
 import { checkPhoneTime } from '../../helper/timeChecker';
 import { rd, rs } from '../../theme/rd';
-import { ChevronLeft, LockIcon } from '../home/redesign/icons';
+import { LockIcon } from '../home/redesign/icons';
 
 const LoginWithPhone = () => {
   const dispatch = useDispatch();
@@ -225,39 +225,26 @@ const LoginWithPhone = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
-          </TouchableOpacity>
+          <AuthTopBar onBack={() => navigation.goBack()} />
 
-          {/* Brend hero: logotip + illyustratsiya. Logotip 88 -> 60 ga
-              kichraytirildi, chunki endi asosiy vizual illyustratsiya. */}
-          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+          {/*
+            Ekranning yagona vizual markazi — illyustratsiya. Logotip, sarlavha
+            va tavsif olib tashlandi: ular ekranni uzaytirib, asosiy amalni
+            (raqam + parol) pastga surib yuborardi. Ilova nomi va maqsadi
+            foydalanuvchiga allaqachon ma'lum.
+          */}
           <AuthReveal>
             <AuthHero style={styles.hero}>
-              <BrandLockup badgeSize={rs(56)} wordSize={rs(26)} />
               <AuthFloat>
-                <PhoneLoginImage width={rs(210)} height={rs(127)} />
+                <PhoneLoginImage width={rs(272)} height={rs(165)} />
               </AuthFloat>
             </AuthHero>
           </AuthReveal>
 
-          {/* Ko'rsatma — varaqdan tashqarida, formaga kirish so'zi */}
-          <AuthReveal delay={140}>
-            <Text style={styles.title}>Xush kelibsiz</Text>
-            <Text style={styles.subtitle}>
-              Hisobingizga kirish uchun ma’lumotlarni kiriting
-            </Text>
-          </AuthReveal>
-
           {/* Forma — hero va sarlavhadan keyin paydo bo'ladi */}
           <AuthReveal delay={230}>
-          {/* Telefon */}
-          <Text style={styles.label}>Telefon raqam</Text>
+          {/* Telefon — yorliqsiz: bayroq + "+998" maydonning o'zi nima
+              so'ralayotganini aytadi, ortiqcha sarlavha shovqin. */}
           <View
             style={[
               styles.field,
@@ -268,7 +255,6 @@ const LoginWithPhone = () => {
               <Uzbekistan />
               <Text style={styles.prefix}>+998</Text>
             </View>
-            <View style={styles.divider} />
             <MaskedTextInput
               allowFontScaling={false}
               value={phone}
@@ -284,10 +270,11 @@ const LoginWithPhone = () => {
           </View>
 
           {/* Parol */}
-          <Text style={[styles.label, { marginTop: rs(16) }]}>Parol</Text>
+          {/* Parol — yorliqsiz: qulf ikonasi va placeholder yetarli. */}
           <View
             style={[
               styles.field,
+              styles.fieldGap,
               focused === 'password' && styles.fieldFocused,
             ]}
           >
@@ -381,49 +368,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
-  backBtn: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(8),
-  },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },
-  title: { ...authStyles.title, marginTop: rs(10) },
-  subtitle: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
-    color: rd.color.textSecondary,
-    textAlign: 'center',
-    marginTop: rs(8),
-    // Ko'rsatma va formaning birinchi yorlig'i orasida nafas: ularsiz
-    // matn "TELEFON RAQAM"ga yopishib qolardi (ritm buzilardi).
-    marginBottom: rs(26),
-    lineHeight: rs(20),
-    paddingHorizontal: rs(20),
-  },
 
   // Rasmiy blank tili: KATTA HARF + keng traking (authKit'dan).
-  label: authStyles.label,
   field: authStyles.field,
   fieldFocused: authStyles.fieldFocused,
-  flagBox: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  // Yorliqlar olib tashlangani uchun maydonlar orasidagi ritm shu yerda.
+  fieldGap: { marginTop: rs(14) },
+  // Bayroq + "+998" va raqam bitta butun bo'lib o'qilishi kerak: ular
+  // orasidagi ochiq joy kichik, ajratuvchi ustun esa YO'Q (u ikkalasini
+  // sun'iy ravishda ikki alohida qiymatga bo'lib ko'rsatardi).
+  flagBox: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginRight: rs(8) },
   prefix: {
     fontFamily: rd.font.semibold,
     fontSize: rs(15),
     color: rd.color.text,
-  },
-  divider: {
-    width: 1,
-    height: rs(22),
-    backgroundColor: rd.color.border,
-    marginHorizontal: rs(12),
   },
   phoneInput: {
     flex: 1,

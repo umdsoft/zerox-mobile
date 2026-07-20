@@ -24,6 +24,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { HomeApi } from '../../../store/api/home';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
+import { compactMoney, compactUsd, compactUzs } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
 import { DEBT_NAV } from './debtNav';
@@ -142,15 +143,18 @@ const Header = ({
   onProfile: () => void;
 }) => (
   <View style={styles.headerRow}>
-    <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
-      <MenuIcon color={rd.color.text} size={rs(18)} />
-    </TouchableOpacity>
-
-    <View style={styles.headerRight}>
-      <TouchableOpacity activeOpacity={0.8} style={styles.avatar} onPress={onProfile}>
-        <GradientBg />
-        <UserIcon color={rd.color.onPrimary} size={rs(20)} />
+    {/* Chapda: menyu + ilova nomi — foydalanuvchi qayerdaligini biladi. */}
+    <View style={styles.headerLeft}>
+      <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
+        <MenuIcon color={rd.color.text} size={rs(18)} />
       </TouchableOpacity>
+      <Text style={styles.brandWord}>
+        Zero<Text style={styles.brandWordAccent}>X</Text>
+      </Text>
+    </View>
+
+    {/* O'ngda: qo'ng'iroq, keyin avatar (eski ilovadagi tartib). */}
+    <View style={styles.headerRight}>
       <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onBell}>
         <BellIcon color={rd.color.text} size={rs(24)} />
         {badge > 0 && (
@@ -158,6 +162,10 @@ const Header = ({
             <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
           </View>
         )}
+      </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.8} style={styles.avatar} onPress={onProfile}>
+        <GradientBg />
+        <UserIcon color={rd.color.onPrimary} size={rs(20)} />
       </TouchableOpacity>
     </View>
   </View>
@@ -505,7 +513,7 @@ const sumUZS = (rows?: any[], usd = 1) =>
       return s + (isUsd ? amt * (usd || 1) : amt);
     }, 0),
   );
-const toMln = (n: number) => `${(n / 1e6).toFixed(1)} mln`;
+const toMln = (n: number) => compactMoney(n);
 
 // Bitta valyuta bo'yicha yig'indi (konvertatsiyasiz — USD'ni alohida ko'rsatish uchun).
 const sumCur = (rows: any[] | undefined, cur: string) =>
@@ -516,13 +524,8 @@ const sumCur = (rows: any[] | undefined, cur: string) =>
     }, 0),
   );
 
-// Ixcham summa: mln/ming/xom.
-const shortAmt = (n: number) => {
-  const abs = Math.abs(n);
-  if (abs >= 1e6) return `${(n / 1e6).toFixed(1)} mln`;
-  if (abs >= 1e3) return `${Math.round(n / 1e3)} ming`;
-  return String(Math.round(n));
-};
+// Ixcham summa — yagona manba (src/helper/money.ts).
+const shortAmt = (n: number) => compactMoney(n);
 
 // ALL CAPS ismni "Jamshid Quramboyev" ko'rinishiga keltiramiz.
 const titleCase = (s: string) =>
@@ -636,8 +639,8 @@ const HomeRedesign = () => {
   const debUSD = useReal ? sumCur(deb?.data, 'USD') : 0;
 
   // Karta summa matnlari: UZS (asosiy) + USD (ikkilamchi, faqat > 0 bo'lsa).
-  const uzsText = (n: number) => `${shortAmt(n)} so‘m`;
-  const usdText = (n: number) => (n > 0 ? `${sortText(n)} $` : '');
+  const uzsText = (n: number) => compactUzs(n);
+  const usdText = (n: number) => (n > 0 ? compactUsd(n) : '');
 
   // Qarzdorlik shartnomalari soni (real bo'lsa massiv uzunligi, aks holda demo).
   const credCount = useReal ? (Array.isArray(cred?.data) ? cred.data.length : 0) : 12;
@@ -740,26 +743,26 @@ const HomeRedesign = () => {
         {/* Hero banner — moliyaviy sog'liq */}
         <HeroBanner name={name} score={healthScore} status={healthStatus} />
 
-        {/* Asosiy ko'rsatkichlar */}
-        <Text style={styles.blockTitle}>Asosiy ko‘rsatkichlar</Text>
+        {/* Sarlavhasiz: kartalarning o'zi nimani ko'rsatayotganini aytadi,
+            ustidagi umumiy nom qo'shimcha ma'lumot bermasdi. */}
         <View style={styles.metricGrid}>
-          <MetricCard
-            accent={rd.color.error}
-            accentBg={rd.color.errorBg}
-            Icon={ArrowDownLeft}
-            label="Jami olingan qarz"
-            uzs={uzsText(credUZS)}
-            usd={usdText(credUSD)}
-            onPress={() => nav('SearchDebitor', DEBT_NAV.creditor)}
-          />
           <MetricCard
             accent={rd.color.success}
             accentBg={rd.color.successBg}
             Icon={ArrowUpRight}
-            label="Jami berilgan qarz"
+            label="Berilgan qarz"
             uzs={uzsText(debUZS)}
             usd={usdText(debUSD)}
             onPress={() => nav('SearchDebitor', DEBT_NAV.debitor)}
+          />
+          <MetricCard
+            accent={rd.color.error}
+            accentBg={rd.color.errorBg}
+            Icon={ArrowDownLeft}
+            label="Olingan qarz"
+            uzs={uzsText(credUZS)}
+            usd={usdText(credUSD)}
+            onPress={() => nav('SearchDebitor', DEBT_NAV.creditor)}
           />
           <MetricCard
             accent={rd.color.primary}
@@ -779,8 +782,6 @@ const HomeRedesign = () => {
           />
         </View>
 
-        {/* Modullar */}
-        <Text style={styles.blockTitle}>Modullar</Text>
         <ModuleContract
           debUzs={uzsText(debUZS)}
           debUsd={usdText(debUSD)}
@@ -819,6 +820,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   // Avatar + qo'ng'iroq o'ng tomonda yonma-yon (ilgari chapda headerLeft edi).
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  brandWord: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(20),
+    color: rd.color.text,
+    letterSpacing: 0.2,
+  },
+  // Logotipdagi kabi oxirgi harf brend qizilida.
+  brandWordAccent: { color: rd.color.error },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   iconBtn: {
     width: rs(40),

@@ -39,6 +39,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { rd, rs } from '../../theme/rd';
+import { ChevronLeft } from '../home/redesign/icons';
 
 /**
  * HARAKAT.
@@ -205,6 +206,33 @@ export const AuthHero = ({
   <View style={[styles.hero, style]}>
     <AuthSeal size={rs(300)} top={rs(-56)} />
     {children}
+  </View>
+);
+
+/**
+ * Auth sarlavha qatori — orqaga knopkasi va (ixtiyoriy) ekran nomi.
+ *
+ * Orqaga knopkasi TO'LDIRILGAN KO'K. Ilgari u oq doira + kulrang chevron edi
+ * va oq/och fonda deyarli sezilmasdi — foydalanuvchi aynan shuni ko'rsatdi.
+ * Ekran nomi esa markazdagi katta sarlavha emas, shu qatorda kichik yozuv:
+ * ekran ochilganda birinchi navbatda ILLYUSTRATSIYA va amal ko'rinsin.
+ *
+ * To'rt ekranda bir xil kod nusxalangandi — bitta manbaga yig'ildi.
+ */
+export const AuthTopBar = ({
+  onBack,
+  title,
+  style,
+}: {
+  onBack: () => void;
+  title?: string;
+  style?: ViewStyle | ViewStyle[];
+}) => (
+  <View style={[styles.topBar, style]}>
+    <TouchableOpacity activeOpacity={0.85} style={styles.backBtn} onPress={onBack}>
+      <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
+    </TouchableOpacity>
+    {title ? <Text style={styles.topBarTitle}>{title}</Text> : null}
   </View>
 );
 
@@ -440,6 +468,25 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.surfaceAlt,
     borderWidth: 1,
     borderColor: rd.color.border,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(12),
+    marginTop: rs(8),
+  },
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
   },
   btnText: {
     fontFamily: rd.font.bold,

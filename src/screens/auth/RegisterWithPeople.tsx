@@ -21,7 +21,6 @@ import { storage } from '../../store/api/token/getToken';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
 import InputMask from '../components/InputMask';
-import { ChevronLeft } from '../home/redesign/icons';
 // Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
 import PhoneIllustration from '../../images/changeNumber';
 import {
@@ -29,6 +28,7 @@ import {
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
+  AuthTopBar,
   AuthReveal,
   authStyles,
 } from './authKit';
@@ -222,20 +222,13 @@ const RegisterWithPeople = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
-          </TouchableOpacity>
+          <AuthTopBar onBack={() => navigation.goBack()} />
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
           <AuthReveal>
             <AuthHero style={styles.hero}>
               <AuthFloat>
-                <PhoneIllustration width={rs(206)} height={rs(154)} />
+                <PhoneIllustration width={rs(268)} height={rs(200)} />
               </AuthFloat>
             </AuthHero>
           </AuthReveal>
@@ -247,7 +240,7 @@ const RegisterWithPeople = () => {
           {/* Forma kartasi */}
           <AuthReveal delay={230}>
           <View style={styles.card}>
-            <Text style={styles.label}>Telefon raqam</Text>
+            {/* Yorliqsiz: bayroq + "+998" maydonning vazifasini o'zi aytadi. */}
             <InputMask
               onChangeText={(formatted, extracted) => {
                 setPhone(extracted);
@@ -293,23 +286,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
-  backBtn: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(8),
-  },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },
+  // Sarlavha emas, IZOH darajasida: ekranning vizual markazi illyustratsiya,
+  // matn esa uni bir jumla bilan tushuntiradi. Ilgari u katta sarlavha edi va
+  // ikki qatorga sinib, formani pastga surib yuborardi.
   title: {
-    ...authStyles.title,
-    marginBottom: rs(24),
+    fontFamily: rd.font.semibold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginBottom: rs(22),
     paddingHorizontal: rs(16),
   },
 
@@ -320,7 +308,6 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     padding: rs(20),
   },
-  label: authStyles.label,
 
   // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya).
   enterButton: { marginTop: rs(24) },

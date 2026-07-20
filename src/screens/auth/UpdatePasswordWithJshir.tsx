@@ -20,7 +20,6 @@ import { UpdatePasswordWithJshirApi } from '../../store/api/auth';
 import { useDispatch } from 'react-redux';
 import InputMask from '../components/InputMask';
 import { rd, rs } from '../../theme/rd';
-import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 // Eski ilovada bu ekranda telefon-kiritish illyustratsiyasi bor edi.
 import PhoneIllustration from '../../images/changeNumber';
 import {
@@ -28,6 +27,7 @@ import {
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
+  AuthTopBar,
   AuthReveal,
   authStyles,
 } from './authKit';
@@ -172,32 +172,26 @@ const UpdatePasswordWithJshir = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
-          </TouchableOpacity>
+          {/* Ekran nomi markazdagi katta sarlavha emas, shu qatorda kichik
+              yozuv — vizual markaz illyustratsiyaga qoladi. */}
+          <AuthTopBar onBack={() => navigation.goBack()} title={t('729')} />
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
           <AuthReveal>
             <AuthHero style={styles.hero}>
               <AuthFloat>
-                <PhoneIllustration width={rs(206)} height={rs(154)} />
+                <PhoneIllustration width={rs(268)} height={rs(200)} />
               </AuthFloat>
             </AuthHero>
           </AuthReveal>
 
+          {/* Sarlavha tepaga ko'chdi; bu yerda faqat ko'rsatma qoladi. */}
           <AuthReveal delay={140}>
-            <Text style={styles.title}>{t('729')}</Text>
             <Text style={styles.subtitle}>{t('42')}</Text>
           </AuthReveal>
 
           <AuthReveal delay={230}>
-          {/* Telefon raqami — tiklash shu raqam bo'yicha aniqlanadi */}
-          <Text style={styles.label}>{t('Telefon raqami')}</Text>
+          {/* Telefon raqami — yorliqsiz: bayroq + "+998" o'zi tushuntiradi. */}
           <InputMask
             onChangeText={(formatted, extracted) => {
               setPhone(extracted);
@@ -231,17 +225,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
-  backBtn: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(8),
-  },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },
@@ -254,7 +237,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(18),
   },
-  title: authStyles.title,
   subtitle: {
     fontFamily: rd.font.regular,
     fontSize: rs(13.5),
@@ -267,7 +249,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(12),
   },
 
-  label: authStyles.label,
 
   // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya).
   submitBtn: { marginTop: rs(24) },

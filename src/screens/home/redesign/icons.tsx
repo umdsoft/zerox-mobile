@@ -31,10 +31,12 @@ const Base = ({
   </Svg>
 );
 
+// O'rtadagi tayoqcha o'ngga surilgan — eski ilovadagi menyu ikonasi shakli.
+// Uch teng chiziq neytral, bu esa taniladigan detal.
 export const MenuIcon = (p: IconProps) => (
   <Base {...p} size={p.size ?? 18} strokeWidth={p.strokeWidth ?? 2.2}>
     <Line x1="3" y1="6" x2="21" y2="6" />
-    <Line x1="3" y1="12" x2="21" y2="12" />
+    <Line x1="9" y1="12" x2="21" y2="12" />
     <Line x1="3" y1="18" x2="21" y2="18" />
   </Base>
 );

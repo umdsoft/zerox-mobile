@@ -124,7 +124,12 @@ const DrawerNavigator = () => {
     <DrawerStack.Navigator
       initialRouteName="StackNavigator"
       screenOptions={{
-        swipeEnabled: false,
+        // Menyu OCHIQ bo'lganda uni barmoq bilan chapga surib yopish mumkin
+        // bo'lishi kerak. `swipeEnabled: false` da bu imkoniyat ham o'chib
+        // qolardi — foydalanuvchi menyudan chiqolmay qolardi. `swipeEdgeWidth`
+        // kichik bo'lgani uchun yopiq holatda tasodifan ochilib ketmaydi:
+        // ochish uchun aynan chekkadan surish kerak.
+        swipeEnabled: true,
         headerShown: false,
         drawerType: 'front',
         swipeEdgeWidth: 30,

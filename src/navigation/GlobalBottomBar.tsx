@@ -11,23 +11,36 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  ArrowDown,
-  ArrowUp,
   BarChartIcon,
+  GridIcon,
   HomeIcon,
   IconProps,
+  TransferIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
 import { navigationRef } from './NavigationRef';
 
+/**
+ * `tab` — BottomTabNavigator ichidagi tab nomi.
+ * `route` — to'g'ridan-to'g'ri stack ekrani (menyudagi bo'lim).
+ */
 const TABS: {
   label: string;
   Icon: (p: IconProps) => JSX.Element;
   tab: string;
+  route?: string;
 }[] = [
   { label: 'Asosiy', Icon: HomeIcon, tab: 'Home' },
-  { label: 'Olish', Icon: ArrowDown, tab: 'TakeDebt' },
-  { label: 'Berish', Icon: ArrowUp, tab: 'GiveDebt' },
+  // Pastki panel endi AMALGA emas, BO'LIMGA olib boradi: "Olish"/"Berish"
+  // bitta amalni bildirardi, foydalanuvchi esa bu yerdan modulning o'ziga
+  // (menyudagi bo'limlarga) o'tishni kutadi. Ikonalar menyudagilar bilan bir xil.
+  {
+    label: 'Qarz shartnomasi',
+    Icon: TransferIcon,
+    tab: 'QarzShartnomasi',
+    route: 'QarzShartnomasi',
+  },
+  { label: 'Qarz daftari', Icon: GridIcon, tab: 'QarzDaftari', route: 'QarzDaftari' },
   { label: 'Statistika', Icon: BarChartIcon, tab: 'Statistic' },
 ];
 
@@ -42,16 +55,21 @@ const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => (
             activeOpacity={0.8}
             style={styles.item}
             onPress={() =>
-              (navigationRef.current as any)?.navigate('BottomTabNavigator', {
-                screen: item.tab,
-              })
+              item.route
+                ? (navigationRef.current as any)?.navigate(item.route)
+                : (navigationRef.current as any)?.navigate('BottomTabNavigator', {
+                    screen: item.tab,
+                  })
             }
           >
             <item.Icon
               size={rs(24)}
               color={active ? rd.color.primary : rd.color.textTertiary}
             />
-            <Text style={[styles.label, active && styles.labelActive]}>
+            <Text
+              numberOfLines={2}
+              style={[styles.label, active && styles.labelActive]}
+            >
               {item.label}
             </Text>
           </TouchableOpacity>
@@ -71,7 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.page,
   },
   bar: {
-    height: rs(64),
+    height: rs(70),
     paddingHorizontal: rs(8),
     flexDirection: 'row',
     alignItems: 'center',
@@ -80,10 +98,12 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     borderRadius: rs(22),
   },
-  item: { flex: 1, alignItems: 'center', gap: rs(4), paddingBottom: rs(2) },
+  item: { flex: 1, alignItems: 'center', gap: rs(3), paddingHorizontal: rs(2) },
   label: {
     fontFamily: rd.font.medium,
-    fontSize: rs(11),
+    fontSize: rs(9.5),
+    lineHeight: rs(12),
+    textAlign: 'center',
     color: rd.color.textTertiary,
   },
   labelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },

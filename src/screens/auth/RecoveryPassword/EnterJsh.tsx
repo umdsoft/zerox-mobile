@@ -21,7 +21,7 @@ import { checkPhoneTime } from '../../../helper/timeChecker';
 import Loading from '../../components/Loading';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
-import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
+import { UserIcon } from '../../home/redesign/icons';
 // Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
 import RecoveryIllustration from '../../../images/RecoveryPassword';
 import {
@@ -29,6 +29,7 @@ import {
   AuthFloat,
   AuthHero,
   AuthPrimaryButton,
+  AuthTopBar,
   AuthReveal,
   authStyles,
 } from '../authKit';
@@ -143,26 +144,15 @@ const EnterJsh = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
-          </TouchableOpacity>
+          <AuthTopBar onBack={() => navigation.goBack()} title={t('729')} />
 
           {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
           <AuthReveal>
             <AuthHero style={styles.hero}>
               <AuthFloat>
-                <RecoveryIllustration width={rs(206)} height={rs(155)} />
+                <RecoveryIllustration width={rs(268)} height={rs(201)} />
               </AuthFloat>
             </AuthHero>
-          </AuthReveal>
-
-          <AuthReveal delay={140}>
-            <Text style={styles.title}>{t('729')}</Text>
           </AuthReveal>
 
           <AuthReveal delay={230}>
@@ -242,17 +232,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
-  backBtn: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(8),
-  },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },
@@ -265,11 +244,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(18),
   },
-  title: { ...authStyles.title, marginBottom: rs(26) },
 
   label: authStyles.label,
   field: {
-    height: rs(56),
+    height: rs(60),
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
@@ -280,11 +258,15 @@ const styles = StyleSheet.create({
   },
   fieldFocused: { borderColor: rd.color.primary },
   leadIcon: { marginRight: rs(10) },
+  // JShShIR — 14 xonali raqam. rs(15) da u kartaning yarmini ham to'ldirmay,
+  // maydon bo'sh ko'rinardi. Kattaroq shrift raqamni o'qilishi oson qiladi va
+  // kartani muvozanatlaydi.
   input: {
     flex: 1,
     height: '100%',
     fontFamily: rd.font.semibold,
-    fontSize: rs(15),
+    fontSize: rs(19),
+    letterSpacing: 0.4,
     color: rd.color.text,
     padding: 0,
   },

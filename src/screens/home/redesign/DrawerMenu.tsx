@@ -3,12 +3,12 @@
  * Figma: ZeroX Mobile App — UI/UX (node 390:622).
  *
  * Real ma'lumot: state.HomeReducer.user (ism, telefon, balans).
- * Har menyu tugmasi tegishli ekranga o'tadi; "Chiqish" — tizimdan chiqadi.
+ * Har menyu tugmasi tegishli ekranga o'tadi. Tizimdan chiqish bu yerda EMAS —
+ * u profil (avatar) sahifasida; menyu pastida esa ijtimoiy tarmoqlar turadi.
  */
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,25 +16,61 @@ import {
   View,
 } from 'react-native';
 import { t } from 'i18next';
+import i18n from '../../../i18n';
+import { Linking } from 'react-native';
 import { getVersion } from 'react-native-device-info';
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '../../../store/reducers/HomeReducer';
-import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
-import BrandLockup from '../../components/BrandLockup';
+// Eski ilovadagi logotip + shior — shior SVG'ning O'ZIDA, tilga qarab
+// alohida aktiv. Alohida <Text> bilan yozilgan shior harf oralig'i va
+// joylashuvi bo'yicha aslidan farq qilardi.
+import LogoAndShior from '../../../images/LogoAndShior';
+import LogoKR from '../../../images/drawer/KrLogo';
+import LogoRU from '../../../images/drawer/RuLogo';
+import Facebook from '../../../images/social/facebook.svg';
+import Instagram from '../../../images/social/instagram.svg';
+import Telegram from '../../../images/social/telegram.svg';
+import Youtube from '../../../images/social/youtube.svg';
+import TwitterIcon from '../../../images/twitter';
 import {
   CoinIcon,
   GridIcon,
   HelpIcon,
   HomeIcon,
   IconProps,
-  LogOutIcon,
   MessageIcon,
   PlusIcon,
   SearchIcon,
   TransferIcon,
 } from './icons';
+
+/**
+ * Ijtimoiy tarmoqlar — havolalar eski ilovaning drawer ekranidan 1:1 olindi
+ * (o'ylab topilmagan). X/Twitter ikonasi yagona monoxrom shakl bo'lgani uchun
+ * brend rangli doira ichida beriladi, qolganlari o'z rangida.
+ */
+const SOCIALS: {
+  key: string;
+  url: string;
+  Icon: any;
+  filled?: boolean;
+}[] = [
+  { key: 'fb', url: 'https://m.facebook.com/ZeroxUZ/?wtsid=rdr_0l15a0hwRSQsgzZtE', Icon: Facebook },
+  { key: 'ig', url: 'https://www.instagram.com/zeroxuz', Icon: Instagram },
+  { key: 'tg', url: 'https://t.me/zeroxuz', Icon: Telegram },
+  { key: 'x', url: 'https://x.com/zeroxuz', Icon: TwitterIcon, filled: true },
+  { key: 'yt', url: 'https://www.youtube.com/@zeroxuz', Icon: Youtube },
+];
+
+/** Logotip + shior — interfeys tiliga mos aktiv (eski ilovadagi kabi). */
+const BrandMark = () => {
+  const lang = i18n.language;
+  if (lang === 'kr') return <LogoKR width={rs(150)} height={rs(140)} />;
+  if (lang === 'ru') return <LogoRU width={rs(150)} height={rs(140)} />;
+  return <LogoAndShior width={rs(126)} height={rs(116)} />;
+};
 
 type Item = {
   key: string;
@@ -110,32 +146,7 @@ const DrawerMenu = () => {
     }
   };
 
-  const doLogout = () => {
-    storage.clearAll();
-    // Menyuni YANA yopamiz va reset'ni animatsiya tugagach bajaramiz.
-    // Sababi: `reset` drawer yopilib ulgurmasdan ishga tushsa, menyu yangi
-    // ekran (til tanlash) USTIDA ochiq qolib ketardi — emulyator testida
-    // aynan shu holat aniqlandi.
-    close();
-    setTimeout(() => {
-      navigation.reset({ index: 0, routes: [{ name: 'SelectLanguageScreen' }] });
-    }, 280);
-  };
 
-  const logout = () => {
-    // Avval menyuni yopamiz, so'ng tasdiq so'raymiz — foydalanuvchi tasodifan
-    // chiqib ketmasin (oldin so'ramasdan darhol chiqarardi).
-    close();
-    Alert.alert(
-      t('Chiqish'),
-      t('Profildan chiqmoqchimisiz?'),
-      [
-        { text: t('Bekor qilish'), style: 'cancel' },
-        { text: t('Chiqish'), style: 'destructive', onPress: doLogout },
-      ],
-      { cancelable: true },
-    );
-  };
 
   return (
     <View style={styles.panel}>
@@ -146,8 +157,7 @@ const DrawerMenu = () => {
           barcha auth ekranlarida ham logotip aynan och fonda ko'rsatiladi,
           shuning uchun brend ko'rinishi bir xil bo'ladi. */}
       <View style={styles.brandHeader}>
-        <BrandLockup width={rs(128)} />
-        <Text style={styles.brandTagline}>ishonch kafolati</Text>
+        <BrandMark />
       </View>
 
       {/* Mobil hisob */}
@@ -197,15 +207,25 @@ const DrawerMenu = () => {
         })}
       </ScrollView>
 
-      {/* Pastki blok: Chiqish + versiya (Sozlamalar avatar sahifasiga ko'chdi) */}
+      {/*
+        Pastki blok: ijtimoiy tarmoqlar + versiya.
+        "Chiqish" bu yerdan olib tashlandi — u profil sahifasida (avatar)
+        allaqachon bor, ya'ni funksiya yo'qolmadi, faqat menyu tugadi.
+      */}
       <View style={styles.bottom}>
         <View style={styles.divider} />
-        <TouchableOpacity activeOpacity={0.8} style={styles.row} onPress={logout}>
-          <View style={[styles.chip, { backgroundColor: rd.color.errorBg }]}>
-            <LogOutIcon size={rs(22)} color={rd.color.error} />
-          </View>
-          <Text style={[styles.rowLabel, { color: rd.color.error }]}>Chiqish</Text>
-        </TouchableOpacity>
+        <View style={styles.socialRow}>
+          {SOCIALS.map(item => (
+            <TouchableOpacity
+              key={item.key}
+              activeOpacity={0.8}
+              style={[styles.socialBtn, item.filled && styles.socialBtnFilled]}
+              onPress={() => Linking.openURL(item.url)}
+            >
+              <item.Icon width={rs(item.filled ? 18 : 30)} height={rs(item.filled ? 18 : 30)} />
+            </TouchableOpacity>
+          ))}
+        </View>
         <Text style={styles.version}>ZeroX · {getVersion()}</Text>
       </View>
     </View>
@@ -228,6 +248,20 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.surface,
     borderBottomWidth: 1,
     borderBottomColor: rd.color.border,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: rs(4),
+    paddingVertical: rs(10),
+  },
+  socialBtn: { alignItems: 'center', justifyContent: 'center' },
+  socialBtnFilled: {
+    width: rs(30),
+    height: rs(30),
+    borderRadius: rs(15),
+    backgroundColor: rd.color.primary,
   },
   brandTagline: {
     fontFamily: rd.font.medium,
