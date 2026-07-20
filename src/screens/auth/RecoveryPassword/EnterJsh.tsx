@@ -24,6 +24,7 @@ import { rd, rs } from '../../../theme/rd';
 import { ChevronLeft, UserIcon } from '../../home/redesign/icons';
 // Eski ilovadagi parol-tiklash illyustratsiyasi — redizaynda tushib qolgandi.
 import RecoveryIllustration from '../../../images/RecoveryPassword';
+import { AuthHero, AuthPrimaryButton, authStyles } from '../authKit';
 
 const EnterJsh = () => {
   const navigation = useNavigation();
@@ -142,12 +143,12 @@ const EnterJsh = () => {
             <ChevronLeft size={rs(22)} color={rd.color.text} />
           </TouchableOpacity>
 
-          {/* Hero */}
-          {/* Kichik ikonka-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
-          <View style={styles.hero}>
-            <RecoveryIllustration width={rs(206)} height={rs(155)} />
-            <Text style={styles.title}>{t('729')}</Text>
-          </View>
+          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+          <AuthHero style={styles.hero}>
+            <RecoveryIllustration width={rs(198)} height={rs(149)} />
+          </AuthHero>
+
+          <Text style={styles.title}>{t('729')}</Text>
 
           {/* JSHSHIR */}
           <Text style={styles.label}>{t('732').slice(0, -1)}</Text>
@@ -178,21 +179,12 @@ const EnterJsh = () => {
             <Text style={styles.helpText}>{t('735')}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          <AuthPrimaryButton
+            label={t('45')}
             disabled={disabled}
-            activeOpacity={0.85}
             onPress={onHandle}
-            style={[styles.button, disabled && styles.buttonDisabled]}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                disabled && { color: rd.color.textTertiary },
-              ]}
-            >
-              {t('45')}
-            </Text>
-          </TouchableOpacity>
+            style={styles.button}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
       <ModalView hide={hide} setHide={setHide} />
@@ -245,7 +237,8 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(20), marginBottom: rs(28) },
+  // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
+  hero: { marginTop: rs(10), marginBottom: rs(18) },
   heroCircle: {
     width: rs(72),
     height: rs(72),
@@ -255,19 +248,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(18),
   },
-  title: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(24),
-    color: rd.color.text,
-    textAlign: 'center',
-  },
+  title: { ...authStyles.title, marginBottom: rs(26) },
 
-  label: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(8),
-  },
+  label: authStyles.label,
   field: {
     height: rs(56),
     flexDirection: 'row',
@@ -296,24 +279,9 @@ const styles = StyleSheet.create({
     color: rd.color.primary,
   },
 
-  button: {
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(24),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  buttonDisabled: {
-    backgroundColor: rd.color.surfaceAlt,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
+  // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya) — bu yerda
+  // faqat joylashuv qoladi. Eski to'liq stil uzatilsa gradientni bosib qo'yardi.
+  button: { marginTop: rs(24) },
   buttonText: {
     fontFamily: rd.font.semibold,
     fontSize: rs(16),

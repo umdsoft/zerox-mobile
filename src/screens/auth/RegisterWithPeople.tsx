@@ -25,6 +25,7 @@ import { ChevronLeft } from '../home/redesign/icons';
 import BrandLockup from '../components/BrandLockup';
 // Eski ilovada telefon-kiritish ekranlarida ishlatilgan illyustratsiya.
 import PhoneIllustration from '../../images/changeNumber';
+import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -222,13 +223,13 @@ const RegisterWithPeople = () => {
             <ChevronLeft size={rs(22)} color={rd.color.text} />
           </TouchableOpacity>
 
-          {/* Brend hero */}
-          {/* Brend hero: kichik logotip + illyustratsiya (eski ilovadagidek) */}
-          <View style={styles.hero}>
-            <BrandLockup width={rs(112)} />
-            <PhoneIllustration width={rs(206)} height={rs(154)} />
-            <Text style={styles.title}>{t('42')}</Text>
-          </View>
+          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+          <AuthHero style={styles.hero}>
+            <BrandLockup width={rs(108)} />
+            <PhoneIllustration width={rs(198)} height={rs(148)} />
+          </AuthHero>
+
+          <Text style={styles.title}>{t('42')}</Text>
 
           {/* Forma kartasi */}
           <View style={styles.card}>
@@ -242,23 +243,14 @@ const RegisterWithPeople = () => {
             />
 
             {/* Ro'yxatdan o'tish */}
-            <TouchableOpacity
+            <AuthPrimaryButton
+              label={t('45')}
               disabled={disabled}
-              activeOpacity={0.85}
               onPress={() => {
                 PostData();
               }}
-              style={[styles.enterButton, disabled && styles.enterButtonDisabled]}
-            >
-              <Text
-                style={[
-                  styles.enterText,
-                  disabled && { color: rd.color.textTertiary },
-                ]}
-              >
-                {t('45')}
-              </Text>
-            </TouchableOpacity>
+              style={styles.enterButton}
+            />
           </View>
 
           {/* Yordam */}
@@ -298,13 +290,11 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(30) },
+  // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
+  hero: { marginTop: rs(10), marginBottom: rs(18) },
   title: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(23),
-    color: rd.color.text,
-    textAlign: 'center',
-    marginTop: rs(16),
+    ...authStyles.title,
+    marginBottom: rs(24),
     paddingHorizontal: rs(16),
   },
 
@@ -315,36 +305,10 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     padding: rs(20),
   },
-  label: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(8),
-  },
+  label: authStyles.label,
 
-  enterButton: {
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(24),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  enterButtonDisabled: {
-    backgroundColor: rd.color.surfaceAlt,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  enterText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(16),
-    color: rd.color.onPrimary,
-  },
+  // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya).
+  enterButton: { marginTop: rs(24) },
 
   supportBtn: { alignSelf: 'flex-end', marginTop: rs(20) },
   supportText: {

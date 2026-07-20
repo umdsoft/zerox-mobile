@@ -11,6 +11,7 @@ import { storage, prefsStorage } from '../../store/api/token/getToken';
 import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi illyustratsiya — redizaynda tushib qolgandi, qaytarildi.
 import PersonIllustration from '../../images/Person';
+import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
 
 const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
   <Svg
@@ -79,15 +80,14 @@ const SelectLanguageScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Brend hero: kichik logotip + illyustratsiya (eski ilovadagidek).
-            Logotip kichraytirildi (80 -> 56), chunki endi asosiy vizual
-            illyustratsiya — ikkalasi ham katta bo'lsa ekran to'lib ketardi. */}
-        <View style={styles.hero}>
-          <BrandLockup badgeSize={rs(56)} />
-          <PersonIllustration width={rs(150)} height={rs(161)} />
-          <Text style={styles.title}>{t('723')}</Text>
-          <Text style={styles.subtitle}>{t('879').slice(0, -1)}</Text>
-        </View>
+        {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+        <AuthHero style={styles.hero}>
+          <BrandLockup badgeSize={rs(52)} />
+          <PersonIllustration width={rs(142)} height={rs(152)} />
+        </AuthHero>
+
+        <Text style={styles.title}>{t('723')}</Text>
+        <Text style={styles.subtitle}>{t('879').slice(0, -1)}</Text>
 
         {/* Til tanlash kartalari */}
         <View style={styles.list}>
@@ -125,8 +125,8 @@ const SelectLanguageScreen = () => {
         </View>
 
         {/* Davom etish */}
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <AuthPrimaryButton
+          label={t('45')}
           onPress={() => {
             // `lang` ni ikkalasiga: prefsStorage (i18n modul-yuklanishda sinxron o'qiydi)
             // + storage (boshqa ekran o'quvchilari uchun moslik).
@@ -135,9 +135,7 @@ const SelectLanguageScreen = () => {
             navigation.navigate('LoginWithPhone');
           }}
           style={styles.continueBtn}
-        >
-          <Text style={styles.continueText}>{t('45')}</Text>
-        </TouchableOpacity>
+        />
       </ScrollView>
     </View>
   );
@@ -155,7 +153,7 @@ const styles = StyleSheet.create({
   },
 
   // Illyustratsiya qo'shilgani uchun hero'ning pastki bo'shlig'i kamaytirildi.
-  hero: { alignItems: 'center', marginBottom: rs(24) },
+  hero: { marginBottom: rs(20) },
   // Sarlavha va tagidagi matn KICHRAYTIRILDI (talab bo'yicha) — bu bir vaqtda
   // illyustratsiya uchun vertikal joy ham bo'shatadi.
   title: {
@@ -171,6 +169,9 @@ const styles = StyleSheet.create({
     color: rd.color.textSecondary,
     textAlign: 'center',
     marginTop: rs(6),
+    // Matn va til kartalari orasida nafas. Busiz kartalar (elevation bilan)
+    // matn ustiga chiqib ketardi — emulyatorda aynan shu ko'rindi.
+    marginBottom: rs(24),
     lineHeight: rs(17.5),
     paddingHorizontal: rs(16),
   },
@@ -220,22 +221,6 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.primary,
   },
 
-  continueBtn: {
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(28),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  continueText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(16),
-    color: rd.color.onPrimary,
-  },
+  // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya).
+  continueBtn: { marginTop: rs(28) },
 });

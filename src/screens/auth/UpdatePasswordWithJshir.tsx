@@ -23,6 +23,7 @@ import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 // Eski ilovada bu ekranda telefon-kiritish illyustratsiyasi bor edi.
 import PhoneIllustration from '../../images/changeNumber';
+import { AuthHero, AuthPrimaryButton, authStyles } from './authKit';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -171,13 +172,13 @@ const UpdatePasswordWithJshir = () => {
             <ChevronLeft size={rs(22)} color={rd.color.text} />
           </TouchableOpacity>
 
-          {/* Hero */}
-          <View style={styles.hero}>
-            {/* Kichik qulf-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
-            <PhoneIllustration width={rs(206)} height={rs(154)} />
-            <Text style={styles.title}>{t('729')}</Text>
-            <Text style={styles.subtitle}>{t('42')}</Text>
-          </View>
+          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+          <AuthHero style={styles.hero}>
+            <PhoneIllustration width={rs(198)} height={rs(148)} />
+          </AuthHero>
+
+          <Text style={styles.title}>{t('729')}</Text>
+          <Text style={styles.subtitle}>{t('42')}</Text>
 
           {/* Telefon raqami — tiklash shu raqam bo'yicha aniqlanadi */}
           <Text style={styles.label}>{t('Telefon raqami')}</Text>
@@ -190,23 +191,14 @@ const UpdatePasswordWithJshir = () => {
           />
 
           {/* Davom etish */}
-          <TouchableOpacity
+          <AuthPrimaryButton
+            label={t('45')}
             disabled={disabled}
-            activeOpacity={0.85}
             onPress={() => {
               PostData();
             }}
-            style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
-          >
-            <Text
-              style={[
-                styles.submitText,
-                disabled && { color: rd.color.textTertiary },
-              ]}
-            >
-              {t('45')}
-            </Text>
-          </TouchableOpacity>
+            style={styles.submitBtn}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -234,7 +226,8 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(28) },
+  // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
+  hero: { marginTop: rs(10), marginBottom: rs(18) },
   heroCircle: {
     width: rs(72),
     height: rs(72),
@@ -244,50 +237,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(18),
   },
-  title: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(22),
-    color: rd.color.text,
-    textAlign: 'center',
-  },
+  title: authStyles.title,
   subtitle: {
     fontFamily: rd.font.regular,
     fontSize: rs(13.5),
     color: rd.color.textSecondary,
     textAlign: 'center',
     marginTop: rs(8),
+    // Ko'rsatma va forma yorlig'i orasida nafas (ritm).
+    marginBottom: rs(26),
     lineHeight: rs(20),
     paddingHorizontal: rs(12),
   },
 
-  label: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(8),
-  },
+  label: authStyles.label,
 
-  submitBtn: {
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(24),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  submitBtnDisabled: {
-    backgroundColor: rd.color.surfaceAlt,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  submitText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(16),
-    color: rd.color.onPrimary,
-  },
+  // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya).
+  submitBtn: { marginTop: rs(24) },
 });

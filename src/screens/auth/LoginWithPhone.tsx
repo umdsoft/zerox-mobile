@@ -23,6 +23,12 @@ import EyeClose from '../../images/auth/CloseEye';
 import BrandLockup from '../components/BrandLockup';
 // Eski ilovadagi kirish illyustratsiyasi — redizaynda tushib qolgandi, qaytarildi.
 import PhoneLoginImage from '../../images/phoneloginimage.svg';
+import {
+  AuthHero,
+  AuthPrimaryButton,
+  AuthTrustNote,
+  authStyles,
+} from './authKit';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
 import { checkPhoneTime } from '../../helper/timeChecker';
@@ -225,14 +231,17 @@ const LoginWithPhone = () => {
 
           {/* Brend hero: logotip + illyustratsiya. Logotip 88 -> 60 ga
               kichraytirildi, chunki endi asosiy vizual illyustratsiya. */}
-          <View style={styles.hero}>
-            <BrandLockup badgeSize={rs(60)} wordSize={rs(26)} />
-            <PhoneLoginImage width={rs(210)} height={rs(127)} />
-            <Text style={styles.title}>Xush kelibsiz</Text>
-            <Text style={styles.subtitle}>
-              Hisobingizga kirish uchun ma’lumotlarni kiriting
-            </Text>
-          </View>
+          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
+          <AuthHero style={styles.hero}>
+            <BrandLockup badgeSize={rs(56)} wordSize={rs(26)} />
+            <PhoneLoginImage width={rs(200)} height={rs(121)} />
+          </AuthHero>
+
+          {/* Ko'rsatma — varaqdan tashqarida, formaga kirish so'zi */}
+          <Text style={styles.title}>Xush kelibsiz</Text>
+          <Text style={styles.subtitle}>
+            Hisobingizga kirish uchun ma’lumotlarni kiriting
+          </Text>
 
           {/* Telefon */}
           <Text style={styles.label}>Telefon raqam</Text>
@@ -314,24 +323,15 @@ const LoginWithPhone = () => {
           </TouchableOpacity>
 
           {/* Kirish */}
-          <TouchableOpacity
+          <AuthPrimaryButton
+            label={t('24')}
             disabled={disabled}
-            activeOpacity={0.85}
             onPress={() => {
               setError(false);
               SendLogin();
             }}
-            style={[styles.loginBtn, disabled && styles.loginBtnDisabled]}
-          >
-            <Text
-              style={[
-                styles.loginText,
-                disabled && { color: rd.color.textTertiary },
-              ]}
-            >
-              {t('24')}
-            </Text>
-          </TouchableOpacity>
+            style={styles.loginBtn}
+          />
 
           {/* Ro'yxatdan o'tish */}
           <View style={styles.registerRow}>
@@ -346,6 +346,9 @@ const LoginWithPhone = () => {
               <Text style={styles.registerLink}>{t('36')}</Text>
             </TouchableOpacity>
           </View>
+
+          {/* "Ishonch kafolati" shiorining amaliy ifodasi */}
+          <AuthTrustNote text="Ma’lumotlaringiz shifrlangan holda uzatiladi" />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -373,42 +376,26 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
 
-  // Illyustratsiya qo'shilgani uchun hero bo'shliqlari qisqartirildi
-  // (vertikal balans saqlanadi, ekran cho'zilib ketmaydi).
-  hero: { alignItems: 'center', marginTop: rs(10), marginBottom: rs(22) },
-  title: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(22),
-    color: rd.color.text,
-    marginTop: rs(10),
-  },
+  // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
+  hero: { marginTop: rs(10), marginBottom: rs(18) },
+  title: { ...authStyles.title, marginTop: rs(10) },
   subtitle: {
     fontFamily: rd.font.regular,
     fontSize: rs(13.5),
     color: rd.color.textSecondary,
     textAlign: 'center',
     marginTop: rs(8),
+    // Ko'rsatma va formaning birinchi yorlig'i orasida nafas: ularsiz
+    // matn "TELEFON RAQAM"ga yopishib qolardi (ritm buzilardi).
+    marginBottom: rs(26),
     lineHeight: rs(20),
     paddingHorizontal: rs(20),
   },
 
-  label: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(8),
-  },
-  field: {
-    height: rs(56),
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: rd.color.surface,
-    borderRadius: rd.radius.lg,
-    borderWidth: 1.5,
-    borderColor: rd.color.border,
-    paddingHorizontal: rs(14),
-  },
-  fieldFocused: { borderColor: rd.color.primary },
+  // Rasmiy blank tili: KATTA HARF + keng traking (authKit'dan).
+  label: authStyles.label,
+  field: authStyles.field,
+  fieldFocused: authStyles.fieldFocused,
   flagBox: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
   prefix: {
     fontFamily: rd.font.semibold,
@@ -447,29 +434,9 @@ const styles = StyleSheet.create({
     color: rd.color.primary,
   },
 
-  loginBtn: {
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: rs(24),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  loginBtnDisabled: {
-    backgroundColor: rd.color.surfaceAlt,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  loginText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(16),
-    color: rd.color.onPrimary,
-  },
+  // Tugmaning o'zi AuthPrimaryButton (gradient + rangli soya) — bu yerda
+  // faqat joylashuv qoladi.
+  loginBtn: { marginTop: rs(24) },
 
   registerRow: {
     flexDirection: 'row',
