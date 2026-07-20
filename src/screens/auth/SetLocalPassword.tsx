@@ -12,7 +12,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalize, style } from '../../theme/style';
 
 import SetCode from '../../images/SetCode';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  DrawerActions,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
@@ -67,10 +71,19 @@ const SetLocalPassword = () => {
   useFocusEffect(
     useCallback(() => {
       CaptureProtection.prevent().catch(() => {});
+
+      // QULF EKRANIDA MENYU OCHIQ QOLMASIN.
+      // Drawer BUTUN ilovani o'raydi (DrawerNavigator > StackNavigator), shuning
+      // uchun menyu ochiq holatda ilova qulflansa, u PIN ekrani USTIDA osilib
+      // qolardi: kontent o'ngga surilib ko'rinardi va — muhimi — PIN kiritmasdan
+      // menyu bandlariga (Qarz daftari, Tariflar, Chiqish...) o'tish mumkin edi.
+      // Fokusda majburan yopamiz.
+      navigation.dispatch(DrawerActions.closeDrawer());
+
       return () => {
         CaptureProtection.allow().catch(() => {});
       };
-    }, []),
+    }, [navigation]),
   );
 
   const onFingerScan = useCallback(async () => {

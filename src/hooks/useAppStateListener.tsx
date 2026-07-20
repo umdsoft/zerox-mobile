@@ -1,7 +1,7 @@
 import {AppState, AppStateStatus} from 'react-native';
 import {useEffect, useCallback} from 'react';
 import {useDispatch} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import {DrawerActions, useNavigation} from '@react-navigation/native';
 
 import {setAppState} from '../store/reducers/HomeReducer';
 import {storage} from '../store/api/token/getToken';
@@ -26,6 +26,12 @@ export default function useAppStateListener() {
           if (diff >= LOCK_TIMEOUT) {
             console.log('More than 30 seconds in background, lock the app');
             storage.set('appLocked', true);
+
+            // Menyuni PIN ekranidan OLDIN yopamiz. `reset` faqat Stack'ga
+            // ta'sir qiladi, ota Drawer esa ochiq qolaveradi — natijada menyu
+            // qulf ekrani ustida osilib qolardi (kontent o'ngga surilardi va
+            // PIN kiritmasdan menyu bandlariga o'tish mumkin edi).
+            navigation.dispatch(DrawerActions.closeDrawer());
 
             navigation.reset({
               index: 0,
