@@ -29,7 +29,6 @@ import {
   AuthPrimaryButton,
   AuthTopBar,
   AuthReveal,
-  AuthTrustNote,
   authStyles,
 } from './authKit';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
@@ -228,19 +227,23 @@ const LoginWithPhone = () => {
           <AuthTopBar onBack={() => navigation.goBack()} />
 
           {/*
-            Ekranning yagona vizual markazi — illyustratsiya. Logotip, sarlavha
-            va tavsif olib tashlandi: ular ekranni uzaytirib, asosiy amalni
-            (raqam + parol) pastga surib yuborardi. Ilova nomi va maqsadi
-            foydalanuvchiga allaqachon ma'lum.
+            YARIM-YARIM kompozitsiya. Illyustratsiya ekranning TEPA yarmida
+            (markazda), forma esa PASTKI yarmida — ular bir-biriga yopishmasin.
+            Ilgari hamma narsa yuqoriga to'planib, cardlar ikonkaga tiqilib
+            qolardi. Ilova nomi/maqsadi ma'lum bo'lgani uchun logotip, sarlavha
+            va tavsif yo'q — yagona vizual markaz illyustratsiya.
           */}
-          <AuthReveal>
-            <AuthHero style={styles.hero}>
-              <AuthFloat>
-                <PhoneLoginImage width={rs(272)} height={rs(165)} />
-              </AuthFloat>
-            </AuthHero>
-          </AuthReveal>
+          <View style={styles.topHalf}>
+            <AuthReveal>
+              <AuthHero style={styles.hero}>
+                <AuthFloat>
+                  <PhoneLoginImage width={rs(272)} height={rs(165)} />
+                </AuthFloat>
+              </AuthHero>
+            </AuthReveal>
+          </View>
 
+          <View style={styles.bottomHalf}>
           {/* Forma — hero va sarlavhadan keyin paydo bo'ladi */}
           <AuthReveal delay={230}>
           {/* Telefon — yorliqsiz: bayroq + "+998" maydonning o'zi nima
@@ -253,7 +256,13 @@ const LoginWithPhone = () => {
           >
             <View style={styles.flagBox}>
               <Uzbekistan />
-              <Text style={styles.prefix}>+998</Text>
+              {/* allowFontScaling={false} — ILDIZ SABAB: usiz "+998" qurilma
+                  shrift kattalashtirilganda (Samsung "katta shrift") kattalashib,
+                  raqam (u allowFontScaling={false}) o'z holida qolib, ikkisi
+                  turli o'lchamda chiqardi. Endi ikkisi ham qat'iy bir xil. */}
+              <Text style={styles.prefix} allowFontScaling={false}>
+                +998
+              </Text>
             </View>
             <MaskedTextInput
               allowFontScaling={false}
@@ -349,10 +358,9 @@ const LoginWithPhone = () => {
               <Text style={styles.registerLink}>{t('36')}</Text>
             </TouchableOpacity>
           </View>
-
-          {/* "Ishonch kafolati" shiorining amaliy ifodasi */}
-          <AuthTrustNote text="Ma’lumotlaringiz shifrlangan holda uzatiladi" />
+          {/* "Ma'lumotlaringiz shifrlangan..." qatori olib tashlandi (so'rov bo'yicha). */}
           </AuthReveal>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -368,6 +376,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
+
+  // Ekranni ikkiga bo'lish: illyustratsiya tepa yarmda (markazda), forma
+  // pastki yarmda. Shu bilan cardlar ikonkaga tiqilib qolmaydi.
+  topHalf: { flex: 1, justifyContent: 'center' },
+  bottomHalf: { flex: 1 },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },

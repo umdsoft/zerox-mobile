@@ -17,8 +17,7 @@ import {
 } from 'react-native';
 import { t } from 'i18next';
 import i18n from '../../../i18n';
-import { Linking } from 'react-native';
-import { getVersion } from 'react-native-device-info';
+import { Linking, Platform, Share } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '../../../store/reducers/HomeReducer';
 import { rd, rs } from '../../../theme/rd';
@@ -36,14 +35,14 @@ import Youtube from '../../../images/social/youtube.svg';
 import TwitterIcon from '../../../images/twitter';
 import {
   CoinIcon,
-  GridIcon,
   HelpIcon,
-  HomeIcon,
   IconProps,
+  InfoIcon,
   MessageIcon,
   PlusIcon,
-  SearchIcon,
-  TransferIcon,
+  QrIcon,
+  ShareIcon,
+  WalletIcon,
 } from './icons';
 
 /**
@@ -81,6 +80,7 @@ type Item = {
   tab?: string; // pastki tab'ga o'tish (BottomTabNavigator ichidagi ekran)
   gated?: boolean; // is_active tekshiruvi + {user} param (aks holda modal)
   needsUser?: boolean; // {user} param kerak, lekin is_active gate'siz (har doim ochiladi)
+  action?: 'share'; // navigatsiya emas, amal (masalan ilovani ulashish)
   active?: boolean;
   soon?: boolean; // "Tez kunda" — bosilmaydi, o'ngda badge
 };
@@ -90,18 +90,17 @@ type Item = {
 //  - needsUser: {user} param (UserScreen), gate'siz
 //  - soon: "Tez kunda" — disabled, o'ngda badge
 //  - aks holda: param-free ekran (route bo'yicha navigatsiya)
+// ESKI ILOVA MENYUSIGA MOSLANDI. Qarz shartnomasi / Qarz daftari / Shaxsiy
+// moliya / Bosh sahifa endi PASTKI PANELDA — shuning uchun menyudan olib
+// tashlandi. Menyuda faqat yordamchi bo'limlar qoladi (eski ilovadagidek).
 const MENU: Item[] = [
-  { key: 'home', label: 'Bosh sahifa', Icon: HomeIcon, tab: 'Home', active: true },
-  { key: 'qarz-shartnoma', label: 'Qarz shartnomasi', Icon: TransferIcon, route: 'QarzShartnomasi' },
-  { key: 'qarz-daftari', label: 'Qarz daftari', Icon: GridIcon, route: 'QarzDaftari' },
-  { key: 'moliya', label: 'Shaxsiy moliya', Icon: CoinIcon, route: 'ShaxsiyMoliya' },
-  { key: 'qr', label: 'QR-kod', Icon: SearchIcon, route: 'QrCode' },
+  { key: 'qr', label: 'QR-kod', Icon: QrIcon, route: 'QrCode' },
   { key: 'yoriqnoma', label: "Foydalanish yo'riqnomasi", Icon: HelpIcon, route: 'UseTerm' },
+  { key: 'share', label: 'Ilovani ulashish', Icon: ShareIcon, action: 'share' },
   { key: 'support', label: "Qo'llab-quvvatlash xizmati", Icon: MessageIcon, route: 'Support' },
-  // Tariflar saytda ishlaydi -> ilovada ham OCHIQ. Ilgari `soon: true` edi va
-  // "Tez kunda" badge bilan bloklangan edi. `Types` ekrani tarif PDF'ini
-  // (pdf.zerox.uz/tarif_<til>.pdf) ko'rsatadi.
+  // Tariflar `Types` ekrani tarif PDF'ini (pdf.zerox.uz/tarif_<til>.pdf) ochadi.
   { key: 'tariflar', label: 'Tariflar', Icon: CoinIcon, route: 'Types' },
+  { key: 'about', label: 'Ilova haqida', Icon: InfoIcon, route: 'AboutMe' },
 ];
 
 // SOZLAMALAR menyudan olib tashlandi — uning barcha funksiyalari endi bosh
@@ -123,8 +122,26 @@ const DrawerMenu = () => {
 
   const close = () => navigation.closeDrawer?.();
 
+  // Ilovani ulashish — havolalar eski ilovadan (o'ylab topilmagan).
+  const onShare = async () => {
+    try {
+      const link =
+        Platform.OS === 'android'
+          ? 'https://play.google.com/store/apps/details?id=com.zeroxuz'
+          : 'https://apps.apple.com/uz/app/zerox/id6446497826';
+      await Share.share({ message: link, url: link, title: 'Ishonch kafolati' });
+    } catch (e) {
+      // ulashish bekor qilindi — jim o'tamiz.
+    }
+  };
+
   const go = (item: Item) => {
     close();
+    // Amal (navigatsiya emas) — masalan ilovani ulashish.
+    if (item.action === 'share') {
+      onShare();
+      return;
+    }
     // Pastki tab (masalan Statistika) — BottomTabNavigator ichidagi ekranga o'tamiz.
     if (item.tab) {
       navigation.navigate('BottomTabNavigator', { screen: item.tab });
@@ -168,11 +185,12 @@ const DrawerMenu = () => {
           onPress={() => go({ key: 'acc', label: '', Icon: CoinIcon, route: 'UserMoneyResult', gated: true })}
         >
           <View style={styles.coinChip}>
-            <CoinIcon size={rs(20)} color={rd.color.primary} />
+            <WalletIcon size={rs(20)} color={rd.color.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.accountLabel}>Mobil hisob</Text>
-            <Text style={styles.accountValue}>{balance} so‘m</Text>
+            {/* "so'm" -> "UZS"; shrift kichraytirildi (juda katta edi). */}
+            <Text style={styles.accountValue}>{balance} UZS</Text>
           </View>
           <View style={styles.topup}>
             <PlusIcon size={rs(16)} color={rd.color.onPrimary} />
@@ -208,9 +226,8 @@ const DrawerMenu = () => {
       </ScrollView>
 
       {/*
-        Pastki blok: ijtimoiy tarmoqlar + versiya.
-        "Chiqish" bu yerdan olib tashlandi — u profil sahifasida (avatar)
-        allaqachon bor, ya'ni funksiya yo'qolmadi, faqat menyu tugadi.
+        Pastki blok: FAQAT ijtimoiy tarmoqlar (versiya matni olib tashlandi).
+        "Chiqish" bu yerdan olib tashlangan — u profil (avatar) sahifasida bor.
       */}
       <View style={styles.bottom}>
         <View style={styles.divider} />
@@ -226,7 +243,6 @@ const DrawerMenu = () => {
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={styles.version}>ZeroX · {getVersion()}</Text>
       </View>
     </View>
   );
@@ -257,11 +273,13 @@ const styles = StyleSheet.create({
     paddingVertical: rs(10),
   },
   socialBtn: { alignItems: 'center', justifyContent: 'center' },
+  // X (Twitter) doirasi qolgan 4 ta ikona bilan BIR XIL ko'k (#4e91d2) —
+  // ilgari brend ko'ki (primary) edi va farq qilib turardi.
   socialBtnFilled: {
     width: rs(30),
     height: rs(30),
     borderRadius: rs(15),
-    backgroundColor: rd.color.primary,
+    backgroundColor: '#4e91d2',
   },
   brandTagline: {
     fontFamily: rd.font.medium,
@@ -288,7 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   accountLabel: { fontFamily: rd.font.medium, fontSize: rs(11), color: rd.color.textSecondary },
-  accountValue: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text, marginTop: 2 },
+  accountValue: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text, marginTop: 2 },
   topup: {
     width: rs(36),
     height: rs(36),

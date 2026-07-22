@@ -28,6 +28,10 @@ import { compactMoney, compactUsd, compactUzs } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
 import { DEBT_NAV } from './debtNav';
+// Rasmiy "ZeroX" wordmark (logotipning matn qismi) — header uchun.
+import ZeroXWordmark from '../../../images/TextAndLogo';
+import { useFetch } from '../../../hooks/useFetch';
+import { URL } from '../../constants';
 import Donut from './Donut';
 import {
   ArrowDownLeft,
@@ -37,9 +41,11 @@ import {
   ChevronRight,
   ClockIcon,
   CoinIcon,
+  ContractIcon,
   GridIcon,
   HelpIcon,
   IconProps,
+  LedgerIcon,
   MenuIcon,
   PlusIcon,
   SearchIcon,
@@ -148,9 +154,10 @@ const Header = ({
       <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
         <MenuIcon color={rd.color.text} size={rs(18)} />
       </TouchableOpacity>
-      <Text style={styles.brandWord}>
-        Zero<Text style={styles.brandWordAccent}>X</Text>
-      </Text>
+      {/* Rasmiy "ZeroX" wordmark (logotip shrifti va rangi) — matnli taqlid
+          emas: eski ilovadagi logotip bilan bir xil ko'rinadi. Zero = ko'k
+          (fill), X = qizil (color). */}
+      <ZeroXWordmark width={rs(80)} height={rs(20)} fill="#0063B6" color="#FF2D2D" />
     </View>
 
     {/* O'ngda: qo'ng'iroq, keyin avatar (eski ilovadagi tartib). */}
@@ -425,13 +432,19 @@ const MetricCard = ({
 );
 
 // Modul kartasi — "Qarz shartnomasi" (Debitor + Kreditor qiymatlari bilan).
-const ModuleContract = ({
+// Modul kartasi — sarlavha + ikona + IKKI sub-summa (Debitor / Kreditor).
+// Qarz shartnomasi VA Qarz daftari uchun bitta shakl (faqat ikona/nom/summa farq).
+const ModuleWithSubs = ({
+  title,
+  Icon,
   debUzs,
   debUsd,
   credUzs,
   credUsd,
   onPress,
 }: {
+  title: string;
+  Icon: (p: IconProps) => JSX.Element;
   debUzs: string;
   debUsd: string;
   credUzs: string;
@@ -441,9 +454,9 @@ const ModuleContract = ({
   <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
     <View style={styles.moduleHead}>
       <CircleIcon size={rs(38)} bg={rd.color.primaryTint}>
-        <TransferIcon size={rs(20)} color={rd.color.primary} />
+        <Icon size={rs(20)} color={rd.color.primary} />
       </CircleIcon>
-      <Text style={styles.moduleTitle}>Qarz shartnomasi</Text>
+      <Text style={styles.moduleTitle}>{title}</Text>
       <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
     </View>
     <View style={styles.moduleSubRow}>
@@ -638,6 +651,34 @@ const HomeRedesign = () => {
   const debUZS = useReal ? sumCur(deb?.data, 'UZS') : 42_500_000;
   const debUSD = useReal ? sumCur(deb?.data, 'USD') : 0;
 
+  // ── Qarz shartnomasi + Qarz daftari birgalikdagi summalar (web dashboard bilan
+  //    bir xil manba). `/qarz-daftari/dashboard` HAM shartnoma, HAM daftar
+  //    summalarini qaytaradi:
+  //      berilgan_qarz.{shartnoma,daftari}.{uzs,usd}  → DEBITOR (menga qarzdor)
+  //      olingan_qarz.{shartnoma,daftari}.{uzs,usd}   → KREDITOR (men qarzdor)
+  //    Yuqoridagi metrik kartalar = shartnoma + daftar (birlashgan).
+  //    Modul kartalari esa har biri O'Z modulini ko'rsatadi.
+  const daftariDash = useFetch({ url: `${URL}/qarz-daftari/dashboard`, method: 'GET' });
+  const dd: any = (daftariDash.data as any)?.data || daftariDash.data || {};
+  const numv = (v: any) => Number(v || 0);
+  const bqDash = dd?.berilgan_qarz;
+  const oqDash = dd?.olingan_qarz;
+  // Shartnoma (dashboard bo'lsa undan, aks holda mavjud redux summasiga qaytamiz).
+  const shDebUZS = bqDash ? numv(bqDash?.shartnoma?.uzs) : debUZS;
+  const shDebUSD = bqDash ? numv(bqDash?.shartnoma?.usd) : debUSD;
+  const shCredUZS = oqDash ? numv(oqDash?.shartnoma?.uzs) : credUZS;
+  const shCredUSD = oqDash ? numv(oqDash?.shartnoma?.usd) : credUSD;
+  // Daftar (dashboard yuklanmagunicha 0).
+  const dfDebUZS = numv(bqDash?.daftari?.uzs);
+  const dfDebUSD = numv(bqDash?.daftari?.usd);
+  const dfCredUZS = numv(oqDash?.daftari?.uzs);
+  const dfCredUSD = numv(oqDash?.daftari?.usd);
+  // Birlashgan (yuqori metrik kartalar).
+  const totDebUZS = shDebUZS + dfDebUZS;
+  const totDebUSD = shDebUSD + dfDebUSD;
+  const totCredUZS = shCredUZS + dfCredUZS;
+  const totCredUSD = shCredUSD + dfCredUSD;
+
   // Karta summa matnlari: UZS (asosiy) + USD (ikkilamchi, faqat > 0 bo'lsa).
   const uzsText = (n: number) => compactUzs(n);
   const usdText = (n: number) => (n > 0 ? compactUsd(n) : '');
@@ -746,13 +787,14 @@ const HomeRedesign = () => {
         {/* Sarlavhasiz: kartalarning o'zi nimani ko'rsatayotganini aytadi,
             ustidagi umumiy nom qo'shimcha ma'lumot bermasdi. */}
         <View style={styles.metricGrid}>
+          {/* BIRLASHGAN summa: qarz shartnomasi + qarz daftari (web bilan bir xil). */}
           <MetricCard
             accent={rd.color.success}
             accentBg={rd.color.successBg}
             Icon={ArrowUpRight}
             label="Berilgan qarz"
-            uzs={uzsText(debUZS)}
-            usd={usdText(debUSD)}
+            uzs={uzsText(totDebUZS)}
+            usd={usdText(totDebUSD)}
             onPress={() => nav('SearchDebitor', DEBT_NAV.debitor)}
           />
           <MetricCard
@@ -760,8 +802,8 @@ const HomeRedesign = () => {
             accentBg={rd.color.errorBg}
             Icon={ArrowDownLeft}
             label="Olingan qarz"
-            uzs={uzsText(credUZS)}
-            usd={usdText(credUSD)}
+            uzs={uzsText(totCredUZS)}
+            usd={usdText(totCredUSD)}
             onPress={() => nav('SearchDebitor', DEBT_NAV.creditor)}
           />
           <MetricCard
@@ -782,14 +824,26 @@ const HomeRedesign = () => {
           />
         </View>
 
-        <ModuleContract
-          debUzs={uzsText(debUZS)}
-          debUsd={usdText(debUSD)}
-          credUzs={uzsText(credUZS)}
-          credUsd={usdText(credUSD)}
+        {/* Qarz shartnomasi — FAQAT shartnoma summasi + shartnoma ikonasi. */}
+        <ModuleWithSubs
+          title="Qarz shartnomasi"
+          Icon={ContractIcon}
+          debUzs={uzsText(shDebUZS)}
+          debUsd={usdText(shDebUSD)}
+          credUzs={uzsText(shCredUZS)}
+          credUsd={usdText(shCredUSD)}
           onPress={() => nav('QarzShartnomasi')}
         />
-        <ModuleSoon Icon={GridIcon} title="Qarz daftari" onPress={() => nav('QarzDaftari')} />
+        {/* Qarz daftari — FAQAT daftar summasi + daftar ikonasi + debitor/kreditor. */}
+        <ModuleWithSubs
+          title="Qarz daftari"
+          Icon={LedgerIcon}
+          debUzs={uzsText(dfDebUZS)}
+          debUsd={usdText(dfDebUSD)}
+          credUzs={uzsText(dfCredUZS)}
+          credUsd={usdText(dfCredUSD)}
+          onPress={() => nav('QarzDaftari')}
+        />
         <ModuleSoon Icon={CoinIcon} title="Shaxsiy moliya" onPress={() => nav('ShaxsiyMoliya')} />
 
         {/* Ogohlantirishlar */}

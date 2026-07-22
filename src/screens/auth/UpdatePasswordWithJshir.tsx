@@ -176,40 +176,44 @@ const UpdatePasswordWithJshir = () => {
               yozuv — vizual markaz illyustratsiyaga qoladi. */}
           <AuthTopBar onBack={() => navigation.goBack()} title={t('729')} />
 
-          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthReveal>
-            <AuthHero style={styles.hero}>
-              <AuthFloat>
-                <PhoneIllustration width={rs(268)} height={rs(200)} />
-              </AuthFloat>
-            </AuthHero>
-          </AuthReveal>
+          {/* Illyustratsiya TEPA yarmda (markazda) — forma bilan yopishmasin. */}
+          <View style={styles.topHalf}>
+            <AuthReveal>
+              <AuthHero style={styles.hero}>
+                <AuthFloat>
+                  <PhoneIllustration width={rs(268)} height={rs(200)} />
+                </AuthFloat>
+              </AuthHero>
+            </AuthReveal>
+          </View>
 
-          {/* Sarlavha tepaga ko'chdi; bu yerda faqat ko'rsatma qoladi. */}
-          <AuthReveal delay={140}>
-            <Text style={styles.subtitle}>{t('42')}</Text>
-          </AuthReveal>
+          {/* Ko'rsatma + forma PASTKI yarmda. */}
+          <View style={styles.bottomHalf}>
+            <AuthReveal delay={140}>
+              <Text style={styles.subtitle}>{t('42')}</Text>
+            </AuthReveal>
 
-          <AuthReveal delay={230}>
-          {/* Telefon raqami — yorliqsiz: bayroq + "+998" o'zi tushuntiradi. */}
-          <InputMask
-            onChangeText={(formatted, extracted) => {
-              setPhone(extracted);
-            }}
-            value={phone}
-            icon={true}
-          />
+            <AuthReveal delay={230}>
+            {/* Telefon raqami — yorliqsiz: bayroq + "+998" o'zi tushuntiradi. */}
+            <InputMask
+              onChangeText={(formatted, extracted) => {
+                setPhone(extracted);
+              }}
+              value={phone}
+              icon={true}
+            />
 
-          {/* Davom etish */}
-          <AuthPrimaryButton
-            label={t('45')}
-            disabled={disabled}
-            onPress={() => {
-              PostData();
-            }}
-            style={styles.submitBtn}
-          />
-          </AuthReveal>
+            {/* Davom etish */}
+            <AuthPrimaryButton
+              label={t('45')}
+              disabled={disabled}
+              onPress={() => {
+                PostData();
+              }}
+              style={styles.submitBtn}
+            />
+            </AuthReveal>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -225,6 +229,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
+
+  // Illyustratsiya tepa yarmda, forma pastki yarmda.
+  topHalf: { flex: 1, justifyContent: 'center' },
+  bottomHalf: { flex: 1 },
 
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },

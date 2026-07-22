@@ -53,23 +53,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: rs(14),
-    height: rs(52),
+    height: rs(56),
   },
-  // "+998" va terilgan raqam BITTA telefon raqami — shuning uchun shrift
-  // oilasi ham, o'lchami ham bir xil. Ilgari prefiks semibold, raqam esa
-  // medium edi: bir maydon ichida ikki xil ovoz eshitilardi.
+  // "+998" va terilgan raqam BITTA telefon raqami — shrift oilasi va o'lchami
+  // bir xil. rs(17): kichik shriftda karta yarim bo'sh ko'rinardi; kattaroq
+  // shrift raqamni kartaga to'ldiradi.
   phoneNumberText: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(15),
+    fontSize: rs(17),
     color: rd.color.text,
     marginLeft: rs(6),
   },
   input: {
     width: '100%',
-    height: rs(52),
+    height: rs(56),
     // Prefiks bilan raqam orasidagi ochiq joy kichik: ular bir butun.
     paddingLeft: rs(8),
-    fontSize: rs(15),
+    fontSize: rs(17),
+    letterSpacing: 0.5,
     fontFamily: rd.font.semibold,
     color: rd.color.text,
   },

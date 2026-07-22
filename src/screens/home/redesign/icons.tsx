@@ -153,6 +153,68 @@ export const TransferIcon = (p: IconProps) => (
   </Base>
 );
 
+// Shartnoma — burchagi bukilgan hujjat + matn qatorlari (rasmiy varaq).
+export const ContractIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <Polyline points="14 3 14 9 20 9" />
+    <Line x1="8" y1="13" x2="15" y2="13" />
+    <Line x1="8" y1="17" x2="12" y2="17" />
+  </Base>
+);
+
+// Daftar — muqovali daftar (chap tomonda tikuv chizig'i + varaq qatorlari).
+export const LedgerIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M6 3h13a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+    <Line x1="8" y1="3" x2="8" y2="21" />
+    <Line x1="11" y1="8" x2="17" y2="8" />
+    <Line x1="11" y1="12" x2="17" y2="12" />
+  </Base>
+);
+
+// Hamyon — mobil hisob balansi uchun.
+export const WalletIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" />
+    <Path d="M4 6v12a2 2 0 0 0 2 2h14v-4" />
+    <Path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
+  </Base>
+);
+
+// Ulashish.
+export const ShareIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="18" cy="5" r="3" />
+    <Circle cx="6" cy="12" r="3" />
+    <Circle cx="18" cy="19" r="3" />
+    <Line x1="8.6" y1="13.5" x2="15.4" y2="17.5" />
+    <Line x1="15.4" y1="6.5" x2="8.6" y2="10.5" />
+  </Base>
+);
+
+// QR-kod.
+export const QrIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="3" width="7" height="7" rx="1" />
+    <Rect x="14" y="3" width="7" height="7" rx="1" />
+    <Rect x="3" y="14" width="7" height="7" rx="1" />
+    <Line x1="14" y1="14" x2="14" y2="17.5" />
+    <Line x1="14" y1="21" x2="17.5" y2="21" />
+    <Line x1="21" y1="14" x2="21" y2="21" />
+    <Line x1="17.5" y1="17.5" x2="21" y2="17.5" />
+  </Base>
+);
+
+// Ilova haqida — ma'lumot.
+export const InfoIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="12" r="9" />
+    <Line x1="12" y1="11" x2="12" y2="16" />
+    <Line x1="12" y1="7.6" x2="12" y2="7.7" />
+  </Base>
+);
+
 export const SunSettingsIcon = (p: IconProps) => (
   <Base {...p}>
     <Circle cx="12" cy="12" r="4.5" />

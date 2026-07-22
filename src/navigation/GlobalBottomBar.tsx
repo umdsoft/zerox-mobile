@@ -12,10 +12,10 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   BarChartIcon,
-  GridIcon,
+  ContractIcon,
   HomeIcon,
   IconProps,
-  TransferIcon,
+  LedgerIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
 import { navigationRef } from './NavigationRef';
@@ -35,12 +35,12 @@ const TABS: {
   // bitta amalni bildirardi, foydalanuvchi esa bu yerdan modulning o'ziga
   // (menyudagi bo'limlarga) o'tishni kutadi. Ikonalar menyudagilar bilan bir xil.
   {
-    label: 'Qarz shartnomasi',
-    Icon: TransferIcon,
+    label: 'Qarz\nshartnomasi',
+    Icon: ContractIcon,
     tab: 'QarzShartnomasi',
     route: 'QarzShartnomasi',
   },
-  { label: 'Qarz daftari', Icon: GridIcon, tab: 'QarzDaftari', route: 'QarzDaftari' },
+  { label: 'Qarz\ndaftari', Icon: LedgerIcon, tab: 'QarzDaftari', route: 'QarzDaftari' },
   { label: 'Statistika', Icon: BarChartIcon, tab: 'Statistic' },
 ];
 

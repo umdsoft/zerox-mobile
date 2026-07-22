@@ -146,17 +146,21 @@ const EnterJsh = () => {
         >
           <AuthTopBar onBack={() => navigation.goBack()} title={t('729')} />
 
-          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthReveal>
-            <AuthHero style={styles.hero}>
-              <AuthFloat>
-                <RecoveryIllustration width={rs(268)} height={rs(201)} />
-              </AuthFloat>
-            </AuthHero>
-          </AuthReveal>
+          {/* Illyustratsiya TEPA yarmda — forma bilan yopishmasin, pastki yarm bo'sh qolmasin. */}
+          <View style={styles.topHalf}>
+            <AuthReveal>
+              <AuthHero style={styles.hero}>
+                <AuthFloat>
+                  <RecoveryIllustration width={rs(268)} height={rs(201)} />
+                </AuthFloat>
+              </AuthHero>
+            </AuthReveal>
+          </View>
 
+          <View style={styles.bottomHalf}>
           <AuthReveal delay={230}>
-          {/* JSHSHIR */}
+          {/* JSHSHIR — yorliq KICHIK HARF (KATTA HARF emas: rasmiy blank emas,
+              oddiy ko'rsatma). */}
           <Text style={styles.label}>{t('732').slice(0, -1)}</Text>
           <View style={[styles.field, focused && styles.fieldFocused]}>
             <View style={styles.leadIcon}>
@@ -192,6 +196,7 @@ const EnterJsh = () => {
             style={styles.button}
           />
           </AuthReveal>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
       <ModalView hide={hide} setHide={setHide} />
@@ -245,9 +250,20 @@ const styles = StyleSheet.create({
     marginBottom: rs(18),
   },
 
-  label: authStyles.label,
+  // Illyustratsiya tepa yarmda, forma pastki yarmda.
+  topHalf: { flex: 1, justifyContent: 'center' },
+  bottomHalf: { flex: 1 },
+
+  // KICHIK HARF yorliq (authStyles.label KATTA HARF edi). Bu ekran rasmiy
+  // blank emas — oddiy ko'rsatma, shuning uchun jumla ko'rinishida yoziladi.
+  label: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
+    marginBottom: rs(8),
+  },
   field: {
-    height: rs(60),
+    height: rs(62),
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
@@ -258,15 +274,15 @@ const styles = StyleSheet.create({
   },
   fieldFocused: { borderColor: rd.color.primary },
   leadIcon: { marginRight: rs(10) },
-  // JShShIR — 14 xonali raqam. rs(15) da u kartaning yarmini ham to'ldirmay,
-  // maydon bo'sh ko'rinardi. Kattaroq shrift raqamni o'qilishi oson qiladi va
-  // kartani muvozanatlaydi.
+  // JShShIR — 14 xonali raqam. Kichik shriftda karta yarim bo'sh ko'rinardi.
+  // Kattaroq shrift + harf oralig'i bilan 14 raqam kartani deyarli to'ldiradi
+  // va o'qilishi oson bo'ladi.
   input: {
     flex: 1,
     height: '100%',
     fontFamily: rd.font.semibold,
-    fontSize: rs(19),
-    letterSpacing: 0.4,
+    fontSize: rs(22),
+    letterSpacing: 2,
     color: rd.color.text,
     padding: 0,
   },

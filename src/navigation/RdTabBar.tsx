@@ -7,10 +7,10 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   BarChartIcon,
-  GridIcon,
+  ContractIcon,
   HomeIcon,
   IconProps,
-  TransferIcon,
+  LedgerIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
 
@@ -30,9 +30,11 @@ const TABS: {
   Icon: (p: IconProps) => JSX.Element;
   route?: string;
 }[] = [
+  // Yorliqda so'z aynan MANTIQIY joyda sinadi ("Qarz" tepada, moduli pastda) —
+  // avtomatik sinishi so'z o'rtasidan uzardi ("shartn / omasi").
   { label: 'Asosiy', Icon: HomeIcon },
-  { label: 'Qarz shartnomasi', Icon: TransferIcon, route: 'QarzShartnomasi' },
-  { label: 'Qarz daftari', Icon: GridIcon, route: 'QarzDaftari' },
+  { label: 'Qarz\nshartnomasi', Icon: ContractIcon, route: 'QarzShartnomasi' },
+  { label: 'Qarz\ndaftari', Icon: LedgerIcon, route: 'QarzDaftari' },
   { label: 'Statistika', Icon: BarChartIcon },
 ];
 
@@ -71,7 +73,8 @@ const RdTabBar = ({ state, navigation }: any) => (
             >
               {tab.label}
             </Text>
-            <View style={[styles.dot, active && { backgroundColor: rd.color.primary }]} />
+            {/* Doiracha olib tashlandi (so'rov bo'yicha) — faol holat endi FAQAT
+                ikona va yorliq rangi bilan bildiriladi. */}
           </TouchableOpacity>
         );
       })}

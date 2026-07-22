@@ -286,8 +286,19 @@ const StackNavigator = () => {
       }
     >
       {AllNavigators.map((val, index) => {
+        // Pastki paneldagi "Qarz shartnomasi" va "Qarz daftari" — TAB kabi
+        // ishlashi kerak: ular stack ekrani bo'lsa-da, o'tishda SLAYD
+        // animatsiyasi ko'rinib qolmasin (foydalanuvchi "yangi sahifaga
+        // o'tayotganini" sezmasin). Shu ikki ekran DARHOL (animatsiyasiz) ochiladi.
+        const instant =
+          val.name === 'QarzShartnomasi' || val.name === 'QarzDaftari';
         return (
-          <Stack.Screen name={val.name} component={val.component} key={index} />
+          <Stack.Screen
+            name={val.name}
+            component={val.component}
+            key={index}
+            options={instant ? { animation: 'none' } : undefined}
+          />
         );
       })}
     </Stack.Navigator>

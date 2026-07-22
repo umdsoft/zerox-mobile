@@ -224,53 +224,62 @@ const RegisterWithPeople = () => {
         >
           <AuthTopBar onBack={() => navigation.goBack()} />
 
-          {/* Brend zonasi — "hujjat varag'i" (muhr yog'dusi ichida) */}
-          <AuthReveal>
-            <AuthHero style={styles.hero}>
-              <AuthFloat>
-                <PhoneIllustration width={rs(268)} height={rs(200)} />
-              </AuthFloat>
-            </AuthHero>
-          </AuthReveal>
-
-          <AuthReveal delay={140}>
-            <Text style={styles.title}>{t('42')}</Text>
-          </AuthReveal>
-
-          {/* Forma kartasi */}
-          <AuthReveal delay={230}>
-          <View style={styles.card}>
-            {/* Yorliqsiz: bayroq + "+998" maydonning vazifasini o'zi aytadi. */}
-            <InputMask
-              onChangeText={(formatted, extracted) => {
-                setPhone(extracted);
-              }}
-              value={phone}
-              icon={true}
-            />
-
-            {/* Ro'yxatdan o'tish */}
-            <AuthPrimaryButton
-              label={t('45')}
-              disabled={disabled}
-              onPress={() => {
-                PostData();
-              }}
-              style={styles.enterButton}
-            />
+          {/* Illyustratsiya TEPA yarmda (markazda) — forma bilan yopishmasin. */}
+          <View style={styles.topHalf}>
+            <AuthReveal>
+              <AuthHero style={styles.hero}>
+                <AuthFloat>
+                  <PhoneIllustration width={rs(268)} height={rs(200)} />
+                </AuthFloat>
+              </AuthHero>
+            </AuthReveal>
           </View>
-          </AuthReveal>
 
-          {/* Yordam */}
-          <TouchableOpacity
-            style={styles.supportBtn}
-            onPress={() => {
-              Linking.openURL('https://t.me/zeroxuz_bot');
-            }}
-            activeOpacity={0.6}
-          >
-            <Text style={styles.supportText}>{t('support')}</Text>
-          </TouchableOpacity>
+          {/* Sarlavha + forma PASTKI yarmda. */}
+          <View style={styles.bottomHalf}>
+            <AuthReveal delay={140}>
+              {/* Bir qatorda, kichikroq shrift — ikki qatorga sinib formani
+                  pastga surmasin. */}
+              <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>
+                {t('42')}
+              </Text>
+            </AuthReveal>
+
+            {/* Forma kartasi */}
+            <AuthReveal delay={230}>
+            <View style={styles.card}>
+              {/* Yorliqsiz: bayroq + "+998" maydonning vazifasini o'zi aytadi. */}
+              <InputMask
+                onChangeText={(formatted, extracted) => {
+                  setPhone(extracted);
+                }}
+                value={phone}
+                icon={true}
+              />
+
+              {/* Ro'yxatdan o'tish */}
+              <AuthPrimaryButton
+                label={t('45')}
+                disabled={disabled}
+                onPress={() => {
+                  PostData();
+                }}
+                style={styles.enterButton}
+              />
+            </View>
+            </AuthReveal>
+
+            {/* Yordam */}
+            <TouchableOpacity
+              style={styles.supportBtn}
+              onPress={() => {
+                Linking.openURL('https://t.me/zeroxuz_bot');
+              }}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.supportText}>{t('support')}</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -287,18 +296,19 @@ const styles = StyleSheet.create({
     paddingBottom: rs(28),
   },
 
+  // Illyustratsiya tepa yarmda, forma pastki yarmda.
+  topHalf: { flex: 1, justifyContent: 'center' },
+  bottomHalf: { flex: 1 },
+
   // Panelning o'zi AuthHero'da — bu yerda faqat joylashuv.
   hero: { marginTop: rs(10), marginBottom: rs(18) },
-  // Sarlavha emas, IZOH darajasida: ekranning vizual markazi illyustratsiya,
-  // matn esa uni bir jumla bilan tushuntiradi. Ilgari u katta sarlavha edi va
-  // ikki qatorga sinib, formani pastga surib yuborardi.
+  // Sarlavha emas, IZOH darajasida: bir qatorda, kichik shrift.
   title: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(16),
+    fontSize: rs(15),
     color: rd.color.text,
     textAlign: 'center',
-    marginBottom: rs(22),
-    paddingHorizontal: rs(16),
+    marginBottom: rs(20),
   },
 
   card: {
