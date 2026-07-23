@@ -1,10 +1,11 @@
 import {
-  Alert,
   Linking,
+  Modal,
   Platform,
   Pressable,
   StatusBar,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -45,9 +46,14 @@ const rnBiometrics = new ReactNativeBiometrics();
 // manba aralashgani uchun planshetda 3 ta tugma sig'may, panel 2 ustunga tushib qolardi
 // (415.8dp kerak edi, 422.4dp bor — yaxlitlash bilan yetmay qolgan).
 // YECHIM: panel kengligi TUGMA o'lchamidan hisoblanadi -> har qanday ekranda aynan 3 ustun.
-const PIN_BTN_SIZE = heightPercentageToDP(7.5);
+// Tugmalar KATTAROQ (7.5 -> 8.4): ekran o'rtasida kichkina bo'lmasin.
+// DIQQAT: `flexWrap` da grid kengligi 3 tugmaga AYNAN teng bo'lsa, sub-piksel
+// yaxlitlash oxirgi tugmani pastga o'raydi (2 ustun bo'lib qoladi — 8.6% da
+// aynan shu bo'lgan). Shuning uchun grid kengligiga BUFER (+14dp) qo'shamiz:
+// 3 ustun har doim sig'adi, lekin ekran enidan oshmaydi.
+const PIN_BTN_SIZE = heightPercentageToDP(8.4);
 const PIN_BTN_MARGIN = scale(10);
-const PIN_GRID_WIDTH = (PIN_BTN_SIZE + PIN_BTN_MARGIN * 2) * 3;
+const PIN_GRID_WIDTH = (PIN_BTN_SIZE + PIN_BTN_MARGIN * 2) * 3 + 14;
 
 const SetLocalPassword = () => {
   const [supportScan, setSupportScan] = useState(false);
@@ -63,6 +69,11 @@ const SetLocalPassword = () => {
     }
   });
   const [count, setCount] = useState(3);
+  // Biometrik OPT-IN — native Alert o'rniga CHIROYLI maxsus modal.
+  const [bioModal, setBioModal] = useState<{
+    visible: boolean;
+    onDone: () => void;
+  }>({ visible: false, onDone: () => {} });
 
   const navigation = useNavigation();
 
@@ -150,33 +161,24 @@ const SetLocalPassword = () => {
         onDone();
         return;
       }
-      Alert.alert(
-        t('Biometrik kirish'),
-        t('Keyingi kirishlarda Touch ID / Face ID dan foydalanasizmi?'),
-        [
-          {
-            text: t("Yo'q"),
-            style: 'cancel',
-            onPress: () => {
-              storage.set('touch', false);
-              onDone();
-            },
-          },
-          {
-            text: t('Ha'),
-            onPress: () => {
-              storage.set('touch', true);
-              onDone();
-            },
-          },
-        ],
-        { cancelable: false },
-      );
+      // Native Alert emas — maxsus, brendlangan modal (pastda render qilinadi).
+      setBioModal({ visible: true, onDone });
     } catch {
       storage.set('touch', false);
       onDone();
     }
   }, []);
+
+  // Modal tugmalari: tanlovni saqlab, davom etadi.
+  const onBioChoose = useCallback(
+    (yes: boolean) => {
+      storage.set('touch', yes);
+      const done = bioModal.onDone;
+      setBioModal({ visible: false, onDone: () => {} });
+      done();
+    },
+    [bioModal],
+  );
 
   const onSetCode = val => {
     if (isLocal) {
@@ -412,28 +414,17 @@ const SetLocalPassword = () => {
       {count !== 0 ? (
         <View style={{ flex: 1 }}>
           {!isLocal && (
-            <View
-              style={{ alignItems: 'center', marginLeft: 10, marginTop: 10 }}
-            >
+            // "PIN-kodni tiklash" — burchakka tiqilib qolmasin: MARKAZDA,
+            // ko'rinadigan pill (tint fon) ko'rinishida.
+            <View style={{ alignItems: 'center', marginTop: rs(16) }}>
               <TouchableOpacity
                 onPress={() => {
-                  // 0 bulsa parol garakmidi dagani
-                  // navigation.navigate('UpdatePasswordWithJshir');
-                  navigation.navigate('ResetPassCode', {
-                    isLocal: true,
-                  });
+                  navigation.navigate('ResetPassCode', { isLocal: true });
                 }}
                 activeOpacity={0.8}
-                style={
-                  (styles.notSetPasswordButton,
-                  {
-                    alignSelf: 'flex-start',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  })
-                }
+                style={styles.resetPill}
               >
-                <MainText color={rd.color.primary} size={fontSize[13]} ft={rd.font.medium}>
+                <MainText color={rd.color.primary} size={fontSize[13]} ft={rd.font.semibold}>
                   {t('PIN-kodni tiklash')}
                 </MainText>
               </TouchableOpacity>
@@ -566,9 +557,9 @@ const SetLocalPassword = () => {
                               style={styles.codeButton}
                             >
                               <MainText
-                                // ft={font.bold}
+                                ft={rd.font.medium}
                                 color={rd.color.text}
-                                size={fontSize[21]}
+                                size={fontSize[23]}
                               >
                                 0
                               </MainText>
@@ -614,7 +605,7 @@ const SetLocalPassword = () => {
                             <MainText
                               ft={rd.font.medium}
                               color={rd.color.text}
-                              size={fontSize[21]}
+                              size={fontSize[23]}
                             >
                               {i + 1}
                             </MainText>
@@ -632,7 +623,48 @@ const SetLocalPassword = () => {
         renderSeeWhenYouPasswordWrong
       )}
 
-      {/* <Toast config={toastConfig} /> */}
+      {/* Biometrik kirish — brendlangan modal (native Alert o'rniga). */}
+      <Modal
+        transparent
+        visible={bioModal.visible}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => onBioChoose(false)}
+      >
+        <View style={styles.bioOverlay}>
+          <View style={styles.bioCard}>
+            <View style={styles.bioIcon}>
+              <FingerprintIcon size={rs(38)} color={rd.color.primary} />
+            </View>
+            <Text style={styles.bioTitle} allowFontScaling={false}>
+              {t('Biometrik kirish')}
+            </Text>
+            <Text style={styles.bioDesc} allowFontScaling={false}>
+              {t('Keyingi kirishlarda Touch ID / Face ID dan foydalanasizmi?')}
+            </Text>
+            <View style={styles.bioBtns}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[styles.bioBtn, styles.bioBtnGhost]}
+                onPress={() => onBioChoose(false)}
+              >
+                <Text style={styles.bioBtnGhostText} allowFontScaling={false}>
+                  {t("Yo'q")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[styles.bioBtn, styles.bioBtnPrimary]}
+                onPress={() => onBioChoose(true)}
+              >
+                <Text style={styles.bioBtnPrimaryText} allowFontScaling={false}>
+                  {t('Ha')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -660,15 +692,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // KONTRAST: och-kulrang page fonida oq tugma + chegara + yengil soya bilan
+  // aniq ajralib turadi (ilgari surfaceAlt fon bilan deyarli qo'shilib ketgandi).
   codeButton: {
     width: PIN_BTN_SIZE,
     height: PIN_BTN_SIZE,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: rd.color.surfaceAlt,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
     margin: PIN_BTN_MARGIN,
     overflow: 'hidden',
+    shadowColor: '#0b1220',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   fourItem: {
     flexDirection: 'row',
@@ -676,13 +717,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   codeItem: {
-    width: 15,
-    height: 15,
+    width: 18,
+    height: 18,
     backgroundColor: rd.color.primary,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 5,
+    margin: 6,
   },
   codeContainer: {
     flex: 1,
@@ -707,6 +748,83 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginRight: 20,
     marginTop: 10,
+  },
+  resetPill: {
+    paddingHorizontal: rs(16),
+    paddingVertical: rs(9),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.primaryTint,
+  },
+
+  // Biometrik modal
+  bioOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11,18,32,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(28),
+  },
+  bioCard: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(24),
+    paddingHorizontal: rs(22),
+    paddingTop: rs(26),
+    paddingBottom: rs(18),
+    alignItems: 'center',
+  },
+  bioIcon: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(16),
+  },
+  bioTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    textAlign: 'center',
+  },
+  bioDesc: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    lineHeight: rs(20),
+    marginTop: rs(8),
+    paddingHorizontal: rs(6),
+  },
+  bioBtns: {
+    flexDirection: 'row',
+    gap: rs(12),
+    marginTop: rs(22),
+    width: '100%',
+  },
+  bioBtn: {
+    flex: 1,
+    height: rs(50),
+    borderRadius: rs(14),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bioBtnGhost: {
+    backgroundColor: rd.color.surfaceAlt,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
+  bioBtnGhostText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.textSecondary,
+  },
+  bioBtnPrimary: { backgroundColor: rd.color.primary },
+  bioBtnPrimaryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
   },
   text: {
     fontSize: style.fontSize.xx,

@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   center: { flex: 1, alignItems: 'center' },
-  title: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.text },
+  title: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
   subtitle: {
     fontFamily: rd.font.regular,
     fontSize: rs(12),

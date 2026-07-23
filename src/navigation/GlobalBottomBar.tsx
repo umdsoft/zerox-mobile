@@ -34,13 +34,8 @@ const TABS: {
   // Pastki panel endi AMALGA emas, BO'LIMGA olib boradi: "Olish"/"Berish"
   // bitta amalni bildirardi, foydalanuvchi esa bu yerdan modulning o'ziga
   // (menyudagi bo'limlarga) o'tishni kutadi. Ikonalar menyudagilar bilan bir xil.
-  {
-    label: 'Qarz\nshartnomasi',
-    Icon: ContractIcon,
-    tab: 'QarzShartnomasi',
-    route: 'QarzShartnomasi',
-  },
-  { label: 'Qarz\ndaftari', Icon: LedgerIcon, tab: 'QarzDaftari', route: 'QarzDaftari' },
+  { label: 'Qarz\nshartnomasi', Icon: ContractIcon, tab: 'QarzShartnomasi' },
+  { label: 'Qarz\ndaftari', Icon: LedgerIcon, tab: 'QarzDaftari' },
   { label: 'Statistika', Icon: BarChartIcon, tab: 'Statistic' },
 ];
 

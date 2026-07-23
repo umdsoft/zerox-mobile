@@ -39,7 +39,6 @@ import {
   IconProps,
   InfoIcon,
   MessageIcon,
-  PlusIcon,
   QrIcon,
   ShareIcon,
   WalletIcon,
@@ -192,9 +191,7 @@ const DrawerMenu = () => {
             {/* "so'm" -> "UZS"; shrift kichraytirildi (juda katta edi). */}
             <Text style={styles.accountValue}>{balance} UZS</Text>
           </View>
-          <View style={styles.topup}>
-            <PlusIcon size={rs(16)} color={rd.color.onPrimary} />
-          </View>
+          {/* "+" (to'ldirish) ikonasi OLIB TASHLANDI (so'rov bo'yicha). */}
         </TouchableOpacity>
       </View>
 
@@ -230,7 +227,7 @@ const DrawerMenu = () => {
         "Chiqish" bu yerdan olib tashlangan — u profil (avatar) sahifasida bor.
       */}
       <View style={styles.bottom}>
-        <View style={styles.divider} />
+        {/* Ijtimoiy ikonalar ustidagi ajratuvchi chiziq OLIB TASHLANDI. */}
         <View style={styles.socialRow}>
           {SOCIALS.map(item => (
             <TouchableOpacity
@@ -239,7 +236,7 @@ const DrawerMenu = () => {
               style={[styles.socialBtn, item.filled && styles.socialBtnFilled]}
               onPress={() => Linking.openURL(item.url)}
             >
-              <item.Icon width={rs(item.filled ? 18 : 30)} height={rs(item.filled ? 18 : 30)} />
+              <item.Icon width={rs(item.filled ? 22 : 38)} height={rs(item.filled ? 22 : 38)} />
             </TouchableOpacity>
           ))}
         </View>
@@ -255,6 +252,7 @@ const styles = StyleSheet.create({
 
   // Brend sarlavha — och fon (rasmiy logotip aynan shunday fonda to'g'ri
   // ko'rinadi; eski gradient + avatar + ism/telefon bloki olib tashlandi).
+  // Logotip ostidagi ajratuvchi chiziq OLIB TASHLANDI (so'rov bo'yicha).
   brandHeader: {
     paddingHorizontal: rs(22),
     paddingTop: rs(26),
@@ -262,23 +260,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: rs(4),
     backgroundColor: rd.color.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: rd.color.border,
   },
+  // Ijtimoiy ikonalar KATTAROQ va zichroq — ular orasidagi katta bo'shliq yo'qoladi.
   socialRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: rs(4),
+    justifyContent: 'space-around',
+    paddingHorizontal: rs(10),
     paddingVertical: rs(10),
   },
   socialBtn: { alignItems: 'center', justifyContent: 'center' },
   // X (Twitter) doirasi qolgan 4 ta ikona bilan BIR XIL ko'k (#4e91d2) —
   // ilgari brend ko'ki (primary) edi va farq qilib turardi.
   socialBtnFilled: {
-    width: rs(30),
-    height: rs(30),
-    borderRadius: rs(15),
+    width: rs(38),
+    height: rs(38),
+    borderRadius: rs(19),
     backgroundColor: '#4e91d2',
   },
   brandTagline: {
@@ -316,13 +313,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Menyu
-  menuList: { padding: rs(14), gap: rs(4) },
+  // Menyu — bandlar orasi kattaroq, butun bo'sh joyni to'ldiradi (flexGrow +
+  // space-between): mobil hisob va socials orasida ortiqcha bo'shliq qolmaydi.
+  menuList: {
+    paddingHorizontal: rs(14),
+    paddingVertical: rs(16),
+    flexGrow: 1,
+    justifyContent: 'space-between',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: rs(14),
-    height: rs(50),
+    height: rs(54),
     paddingHorizontal: rs(12),
     borderRadius: rs(14),
   },
@@ -336,7 +339,9 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: rd.color.primary },
   chipInactive: { backgroundColor: rd.color.surfaceAlt },
-  rowLabel: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(15), color: rd.color.text },
+  // Matn KO'K (so'rov bo'yicha). Shrift biroz kichraytirildi — "Qo'llab-
+  // quvvatlash xizmati" so'z o'rtasidan sinmasdan, so'z chegarasida yopishsin.
+  rowLabel: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.primary },
   rowLabelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },
   rowLabelSoon: { color: rd.color.textTertiary },
   badge: {

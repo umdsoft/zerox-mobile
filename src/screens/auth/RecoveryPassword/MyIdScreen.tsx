@@ -1,5 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import i18n from '@src/i18n';
@@ -159,20 +167,18 @@ const MyIdScreen = () => {
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-      {/* Orqaga */}
+      {/* Orqaga — TO'LDIRILGAN KO'K (oq/kulrang sezilmasdi). */}
       <TouchableOpacity
         activeOpacity={0.8}
         style={styles.backBtn}
         onPress={() => navigation.goBack()}
       >
-        <ChevronLeft size={rs(22)} color={rd.color.text} />
+        <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
       </TouchableOpacity>
 
-      {/* Hero */}
+      {/* Hero — animatsiyali "skaner" ikonasi (barmoq izi + tarqaluvchi halqalar). */}
       <View style={styles.body}>
-        <View style={styles.heroCircle}>
-          <FingerprintIcon size={rs(44)} color={rd.color.primary} />
-        </View>
+        <BiometricHero />
         <Text allowFontScaling={false} style={styles.title}>
           {t('747')}
         </Text>
@@ -208,6 +214,46 @@ const MyIdScreen = () => {
 
 export default MyIdScreen;
 
+/**
+ * BiometricHero — barmoq izi ikonasi ORTIDA tarqaluvchi ikki halqa (skaner
+ * pulsi). Statik ikona o'rniga "tirik"/gif-simon ta'sir beradi.
+ *
+ * Worklet qoidasi: o'lchamlar worklet TASHQARISIDA (RING_SCALE) — worklet
+ * ichida faqat arifmetika. `useReducedMotion()` bilan a11y hurmat qilinadi.
+ */
+const RING_SCALE = 0.9;
+const BiometricHero = () => {
+  const reduce = useReducedMotion();
+  const p = useSharedValue(0);
+  useEffect(() => {
+    if (reduce) return;
+    p.value = withRepeat(
+      withTiming(1, { duration: 1900, easing: Easing.out(Easing.ease) }),
+      -1,
+      false,
+    );
+  }, [reduce, p]);
+
+  const ring1 = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + p.value * RING_SCALE }],
+    opacity: 0.35 * (1 - p.value),
+  }));
+  const ring2 = useAnimatedStyle(() => {
+    const q = (p.value + 0.5) % 1;
+    return { transform: [{ scale: 1 + q * RING_SCALE }], opacity: 0.35 * (1 - q) };
+  });
+
+  return (
+    <View style={styles.heroWrap}>
+      <Animated.View style={[styles.ring, ring1]} />
+      <Animated.View style={[styles.ring, ring2]} />
+      <View style={styles.heroCircle}>
+        <FingerprintIcon size={rs(58)} color={rd.color.primary} />
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -220,9 +266,7 @@ const styles = StyleSheet.create({
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -231,14 +275,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Ikona + tarqaluvchi halqalar bir markazda.
+  heroWrap: {
+    width: rs(120),
+    height: rs(120),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(28),
+  },
+  ring: {
+    position: 'absolute',
+    width: rs(110),
+    height: rs(110),
+    borderRadius: rs(55),
+    backgroundColor: rd.color.primaryTint,
+  },
   heroCircle: {
-    width: rs(96),
-    height: rs(96),
-    borderRadius: rs(48),
+    width: rs(110),
+    height: rs(110),
+    borderRadius: rs(55),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(24),
   },
   title: {
     fontFamily: rd.font.bold,

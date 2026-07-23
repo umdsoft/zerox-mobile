@@ -15,7 +15,8 @@ export type DebtRole = 'debitor' | 'creditor';
 
 export const DEBT_NAV = {
   creditor: {
-    title: 'Kreditor qarzdorlik',
+    // "Kreditor qarzdorlik" -> "Olingan qarz" (so'rov bo'yicha).
+    title: 'Olingan qarz',
     type: 3,
     person: 'creditor',
     isHave: false,
@@ -24,7 +25,8 @@ export const DEBT_NAV = {
     iconType: 3,
   },
   debitor: {
-    title: 'Debitor qarzdorlik',
+    // "Debitor qarzdorlik" -> "Berilgan qarz" (so'rov bo'yicha).
+    title: 'Berilgan qarz',
     type: 1,
     person: 'debitor',
     isHave: false,

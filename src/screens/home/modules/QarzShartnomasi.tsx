@@ -333,11 +333,10 @@ const QarzShartnomasi = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+      {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
       <RdHeader
         title="Qarz shartnomasi"
-        onBack={() =>
-          navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Home')
-        }
+        onBack={() => navigation.navigate('Home')}
       />
 
       <ScrollView

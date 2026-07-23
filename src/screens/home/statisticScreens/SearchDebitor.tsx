@@ -84,9 +84,27 @@ const SearchDebitor = () => {
     }, 400);
   };
 
-  // Muddat bo'yicha filtr (bo'limlar) + saralash (eng shoshilinch — o'tgan/yaqin — tepada).
-  const rawList: any[] =
+  // FAQAT JARAYONDAGI shartnomalar (tugallangan/rad etilgan — faqat hisobotda).
+  // Backend maydon nomini aniq bilmasak ham xavfsiz: mos maydon bo'lsa filtrlaydi,
+  // bo'lmasa — ro'yxat o'zgarmaydi (regressiya yo'q).
+  const isDoneContract = (it: any) => {
+    const s = it?.state ?? it?.status ?? it?.contract_status ?? it?.contract_state;
+    if (
+      s === 2 || s === 3 || s === '2' || s === '3' ||
+      s === 'tugallangan' || s === 'rad_etildi' || s === 'rad etildi' ||
+      s === 'completed' || s === 'rejected' || s === 'finished'
+    ) {
+      return true;
+    }
+    // Ba'zi javoblarda alohida bayroq bo'lishi mumkin.
+    if (it?.is_completed === true || it?.is_finished === true || it?.completed === true) {
+      return true;
+    }
+    return false;
+  };
+  const rawListAll: any[] =
     (searchData.length === 0 && !isCheck ? data?.data : searchData) || [];
+  const rawList: any[] = rawListAll.filter((it: any) => !isDoneContract(it));
   const counts = {all: rawList.length, active: 0, near: 0, overdue: 0};
   rawList.forEach((it: any) => {
     counts[getDueMeta(it?.end_date).cat] += 1;

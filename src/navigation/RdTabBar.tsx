@@ -15,26 +15,18 @@ import {
 import { rd, rs } from '../theme/rd';
 
 /**
- * Tab tartibi BottomTabNavigator ekranlari bilan pozitsion mos: Home, TakeDebt,
- * GiveDebt, Statistic.
- *
- * O'RTADAGI IKKI TAB — YORLIQ, TAB EMAS. Ilgari ular "Olish"/"Berish" degan
- * bitta AMALGA olib borardi; foydalanuvchi esa bu yerdan menyudagi BO'LIMning
- * o'ziga o'tishni kutadi. Shuning uchun ular `route` orqali stack ekraniga
- * yo'naltiriladi — tab komponentini almashtirmaymiz, chunki bu ekranlar o'z
- * orqaga knopkasi bilan stack ekrani sifatida loyihalangan va tab ichida
- * qaytish joyi bo'lmay qolardi. Ikonalar menyudagilar bilan bir xil.
+ * Tab tartibi BottomTabNavigator ekranlari bilan POZITSION mos:
+ * Home, QarzShartnomasi, QarzDaftari, Statistic — barchasi HAQIQIY TAB
+ * (darhol almashadi, slayd yo'q).
  */
 const TABS: {
   label: string;
   Icon: (p: IconProps) => JSX.Element;
-  route?: string;
 }[] = [
-  // Yorliqda so'z aynan MANTIQIY joyda sinadi ("Qarz" tepada, moduli pastda) —
-  // avtomatik sinishi so'z o'rtasidan uzardi ("shartn / omasi").
+  // Yorliqda so'z MANTIQIY joyda sinadi ("Qarz" tepada, moduli pastda).
   { label: 'Asosiy', Icon: HomeIcon },
-  { label: 'Qarz\nshartnomasi', Icon: ContractIcon, route: 'QarzShartnomasi' },
-  { label: 'Qarz\ndaftari', Icon: LedgerIcon, route: 'QarzDaftari' },
+  { label: 'Qarz\nshartnomasi', Icon: ContractIcon },
+  { label: 'Qarz\ndaftari', Icon: LedgerIcon },
   { label: 'Statistika', Icon: BarChartIcon },
 ];
 
@@ -45,11 +37,6 @@ const RdTabBar = ({ state, navigation }: any) => (
         const active = state.index === index;
         const tab = TABS[index] ?? TABS[0];
         const onPress = () => {
-          // Bo'limga yo'naltiruvchi tab — tab almashtirmaydi, stack ekranini ochadi.
-          if (tab.route) {
-            navigation.navigate(tab.route);
-            return;
-          }
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,

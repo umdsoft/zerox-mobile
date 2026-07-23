@@ -151,13 +151,19 @@ const Header = ({
   <View style={styles.headerRow}>
     {/* Chapda: menyu + ilova nomi — foydalanuvchi qayerdaligini biladi. */}
     <View style={styles.headerLeft}>
-      <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={onMenu}>
-        <MenuIcon color={rd.color.text} size={rs(18)} />
+      {/* Menyu tugmasi — DOIRASIZ (so'rov bo'yicha): faqat 3 ta tayoqcha. */}
+      <TouchableOpacity activeOpacity={0.7} style={styles.menuBtn} onPress={onMenu}>
+        <MenuIcon color={rd.color.text} size={rs(24)} />
       </TouchableOpacity>
-      {/* Rasmiy "ZeroX" wordmark (logotip shrifti va rangi) — matnli taqlid
-          emas: eski ilovadagi logotip bilan bir xil ko'rinadi. Zero = ko'k
-          (fill), X = qizil (color). */}
-      <ZeroXWordmark width={rs(80)} height={rs(20)} fill="#0063B6" color="#FF2D2D" />
+      {/* Rasmiy "ZeroX" wordmark (logotip shrifti va rangi). viewBox kengroq +
+          balandroq render — pastki qismi kesilmasin (Samsung'da kesilib turgandi). */}
+      <ZeroXWordmark
+        width={rs(90)}
+        height={rs(30)}
+        viewBox="0 250 4000 1300"
+        fill="#0063B6"
+        color="#FF2D2D"
+      />
     </View>
 
     {/* O'ngda: qo'ng'iroq, keyin avatar (eski ilovadagi tartib). */}
@@ -874,7 +880,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   // Avatar + qo'ng'iroq o'ng tomonda yonma-yon (ilgari chapda headerLeft edi).
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  // Menyu tugmasi — doirasiz, faqat teginish maydoni.
+  menuBtn: {
+    width: rs(40),
+    height: rs(40),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   brandWord: {
     fontFamily: rd.font.bold,
     fontSize: rs(20),

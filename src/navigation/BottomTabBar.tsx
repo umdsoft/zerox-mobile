@@ -5,10 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { Dimensions, StyleSheet } from 'react-native';
 
 import { style } from '../theme/style';
-import { GiveDebt, Statistic, TakeDebt } from './Index';
+import { Statistic } from './Index';
 import MainBottomTab from './MainBottomTab';
 import RdTabBar from './RdTabBar';
 import HomeRedesign from '../screens/home/redesign/HomeRedesign';
+// Qarz shartnomasi / Qarz daftari endi HAQIQIY TAB (avval stack ekrani edi).
+// Sabab: pastki paneldan o'tishda SLAYD animatsiyasi ko'rinardi va Asosiyga
+// qaytganda sahifa qayta yuklanib summalar sakrardi. Tab bo'lgach — darhol
+// almashadi va Home mount holatida qoladi (qayta yuklanmaydi).
+import QarzShartnomasi from '../screens/home/modules/QarzShartnomasi';
+import QarzDaftari from '../screens/home/modules/QarzDaftari';
 let width = Dimensions.get('window').width;
 let indicatorWidth = width / 4;
 const BottomTabStack = createBottomTabNavigator();
@@ -31,20 +37,16 @@ export const BottomTabNavigator = () => {
         component={HomeRedesign}
       />
       <BottomTabStack.Screen
-        key={'TakeDebt'}
-        options={{
-          title: t('qarzberish'),
-        }}
-        name="TakeDebt"
-        component={TakeDebt}
+        key={'QarzShartnomasi'}
+        options={{ title: 'Qarz shartnomasi' }}
+        name="QarzShartnomasi"
+        component={QarzShartnomasi}
       />
       <BottomTabStack.Screen
-        key={'GiveDebt'}
-        options={{
-          title: t('qarzolish'),
-        }}
-        name="GiveDebt"
-        component={GiveDebt}
+        key={'QarzDaftari'}
+        options={{ title: 'Qarz daftari' }}
+        name="QarzDaftari"
+        component={QarzDaftari}
       />
       <BottomTabStack.Screen
         key={'Statistic'}

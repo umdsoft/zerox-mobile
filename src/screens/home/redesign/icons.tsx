@@ -31,12 +31,12 @@ const Base = ({
   </Svg>
 );
 
-// O'rtadagi tayoqcha o'ngga surilgan — eski ilovadagi menyu ikonasi shakli.
-// Uch teng chiziq neytral, bu esa taniladigan detal.
+// Uch teng, TO'LIQ tayoqcha (o'rtadagisi ham to'liq ko'rinadi). Ilgari o'rta
+// chiziq kalta (o'ngga surilgan) edi va "yarim" ko'rinardi.
 export const MenuIcon = (p: IconProps) => (
-  <Base {...p} size={p.size ?? 18} strokeWidth={p.strokeWidth ?? 2.2}>
+  <Base {...p} size={p.size ?? 24} strokeWidth={p.strokeWidth ?? 2.2}>
     <Line x1="3" y1="6" x2="21" y2="6" />
-    <Line x1="9" y1="12" x2="21" y2="12" />
+    <Line x1="3" y1="12" x2="21" y2="12" />
     <Line x1="3" y1="18" x2="21" y2="18" />
   </Base>
 );
@@ -203,6 +203,22 @@ export const QrIcon = (p: IconProps) => (
     <Line x1="14" y1="21" x2="17.5" y2="21" />
     <Line x1="21" y1="14" x2="21" y2="21" />
     <Line x1="17.5" y1="17.5" x2="21" y2="17.5" />
+  </Base>
+);
+
+// Erkak avatar — bosh + yelka (neytral odam siluети).
+export const ManIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="8" r="3.6" />
+    <Path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+  </Base>
+);
+
+// Ayol avatar — bosh + ko'ylak (uchburchak siluети) bilan ajraladi.
+export const WomanIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="7.5" r="3.4" />
+    <Path d="M12 11 L7.5 20 h9 Z" />
   </Base>
 );
 

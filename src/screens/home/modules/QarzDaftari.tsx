@@ -487,7 +487,8 @@ const QarzDaftari = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarz daftari" />
+      {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
+      <RdHeader title="Qarz daftari" onBack={() => navigation.navigate('Home')} />
 
       <ScrollView
         style={styles.scroll}

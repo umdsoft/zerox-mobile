@@ -4,7 +4,17 @@ import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
-import { ClockIcon } from '../home/redesign/icons';
+import { ClockIcon, ManIcon, WomanIcon } from '../home/redesign/icons';
+
+// O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
+// signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
+// Undan keyin familiya oxiri: "-ova/-eva" (ayol). Signal bo'lmasa — erkak.
+const isFemaleName = (name?: string) => {
+  const n = (name || '').toLowerCase();
+  if (/qizi/.test(n)) return true;
+  if (/o.?g.?li|ug.?li/.test(n)) return false;
+  return /(ova|eva|yeva)(\s|$)/.test(n);
+};
 
 // REDIZAYN: eski spreadsheet-jadval (style.blue chiziq, MainText) o'rniga zamonaviy
 // avatar-ro'yxat (har qator: initial-avatar + ism + summa). Navigatsiya, ma'lumot va
@@ -65,8 +75,11 @@ const StatisticCard = ({
 }) => {
   const navigation = useNavigation();
   const isDebitor = person === 'debitor';
-  const dirColor = isDebitor ? rd.color.error : rd.color.success;
-  const dirBg = isDebitor ? rd.color.errorBg : rd.color.successBg;
+  // RANG: qizil/yashil O'RNIGA — Berilgan (debitor) KO'K, Olingan (creditor)
+  // BINAFSHA. Sabab: qatorlarning "muddati o'tgan" chegarasi ham qizil edi va
+  // summa rangi u bilan qo'shilib ketardi.
+  const dirColor = isDebitor ? rd.color.primary : '#6d5ae6';
+  const dirBg = isDebitor ? rd.color.primaryTint : '#efe9fd';
 
   let checkType = type => {
     if (type === 1 || type === 3) {
@@ -107,7 +120,9 @@ const StatisticCard = ({
     const name = renderName(
       isDebitor ? item?.creditor_name : item?.debitor_name,
     );
-    const initial = (name?.trim()?.[0] || '?').toUpperCase();
+    const female = isFemaleName(
+      isDebitor ? item?.creditor_name : item?.debitor_name,
+    );
     const due = getDueMeta(item?.end_date);
     return (
       <TouchableOpacity
@@ -134,10 +149,13 @@ const StatisticCard = ({
         }}
         style={[styles.row, due.cat === 'overdue' && styles.rowOverdue]}
       >
+        {/* FISH bosh harfi O'RNIGA — jinsga mos odam avatari (erkak/ayol). */}
         <View style={[styles.avatar, { backgroundColor: dirBg }]}>
-          <Text allowFontScaling={false} style={[styles.avatarText, { color: dirColor }]}>
-            {initial}
-          </Text>
+          {female ? (
+            <WomanIcon size={rs(22)} color={dirColor} />
+          ) : (
+            <ManIcon size={rs(22)} color={dirColor} />
+          )}
         </View>
 
         <View style={styles.rowMid}>

@@ -254,8 +254,8 @@ const AllNavigators = [
   },
   { name: 'UpdateLocalPassCode', component: UpdateLocalPassCode },
   { name: 'RecoverySmsReset', component: RecoverySmsReset },
-  { name: 'QarzShartnomasi', component: QarzShartnomasi },
-  { name: 'QarzDaftari', component: QarzDaftari },
+  // QarzShartnomasi / QarzDaftari endi BottomTabNavigator ichida TAB — bu yerda
+  // (stack'da) qayta ro'yxatga olinmaydi (aks holda ikki nusxa bo'lardi).
   { name: 'ShaxsiyMoliya', component: ShaxsiyMoliya },
   { name: 'QarzDaftariKiritish', component: QarzDaftariKiritish },
   { name: 'QarzDaftariQarzlar', component: QarzDaftariQarzlar },
@@ -286,19 +286,8 @@ const StackNavigator = () => {
       }
     >
       {AllNavigators.map((val, index) => {
-        // Pastki paneldagi "Qarz shartnomasi" va "Qarz daftari" — TAB kabi
-        // ishlashi kerak: ular stack ekrani bo'lsa-da, o'tishda SLAYD
-        // animatsiyasi ko'rinib qolmasin (foydalanuvchi "yangi sahifaga
-        // o'tayotganini" sezmasin). Shu ikki ekran DARHOL (animatsiyasiz) ochiladi.
-        const instant =
-          val.name === 'QarzShartnomasi' || val.name === 'QarzDaftari';
         return (
-          <Stack.Screen
-            name={val.name}
-            component={val.component}
-            key={index}
-            options={instant ? { animation: 'none' } : undefined}
-          />
+          <Stack.Screen name={val.name} component={val.component} key={index} />
         );
       })}
     </Stack.Navigator>

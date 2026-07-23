@@ -105,8 +105,9 @@ const UpdatePassword = () => {
           position: 'bottom',
           type: 'omad',
           props: {
-            title: t('243'),
-            desc: t('Parol tiklandi'),
+            // FAQAT "Parol tiklandi" (so'rov bo'yicha) — "Muvaffaqiyatli
+            // bajarildi" sarlavhasi olib tashlandi.
+            title: t('Parol tiklandi'),
           },
         });
         setLoading(false);
@@ -233,7 +234,7 @@ const UpdatePassword = () => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
+            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
           </TouchableOpacity>
 
           {/* Hero */}
@@ -361,13 +362,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
+  // TO'LDIRILGAN KO'K orqaga knopkasi (oq/kulrang sezilmasdi).
   backBtn: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: rs(8),
