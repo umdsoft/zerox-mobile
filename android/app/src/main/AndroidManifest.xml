@@ -55,6 +55,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="com.dieam.reactnativepushnotification.notification_color"
