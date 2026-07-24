@@ -42,7 +42,7 @@ import Person from '../../images/home/person';
 import Juridic from '../../images/home/juridic';
 import ScreenLayout from '../components/ScreenLayout';
 import RdHeader from '../home/redesign/RdHeader';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {
   checkUpdate,
   setEmptyUser,
@@ -65,7 +65,21 @@ import {expire_passport_check} from '../../helper/timeChecker';
 
 const UserScreen = () => {
   const route = useRoute();
-  const {user} = route.params || {};
+  const {user: routeUser} = route.params || {};
+  // Redux — ishonchli manba (asosiy sahifada foydalanuvchi allaqachon yuklangan).
+  const reduxUser = useSelector((state: any) => state.HomeReducer?.user);
+  // SHAKL NORMALIZATSIYASI. Bu ekran `user = {data: {...}}` shaklini kutadi,
+  // lekin chaqiruvchilar turlicha uzatadi:
+  //   - Header: {data:{...}}  (to'g'ri)
+  //   - Asosiy sahifa: storeUser.data = {...}  (ICHKI data — .data yo'q edi ->
+  //     ism/ma'lumot bo'sh chiqardi)
+  //   - ChangeEmail/ChangePasswordRetry: umuman uzatmaydi
+  // Barchasini bitta ko'rinishga keltiramiz (aks holda redux'dan olamiz).
+  const user = routeUser?.data
+    ? routeUser
+    : routeUser
+    ? {data: routeUser}
+    : reduxUser;
   const dispatch = useDispatch();
   const {t} = useTranslation();
   const [hide, setHide] = useState(false);
