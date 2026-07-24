@@ -534,6 +534,14 @@ const sumUZS = (rows?: any[], usd = 1) =>
   );
 const toMln = (n: number) => compactMoney(n);
 
+// Qarz-daftari dashboard KESHI (modul darajasida — komponent remount bo'lsa ham
+// saqlanadi). Fon->oldinga qaytganda ilova qulflanib (PIN), unlock'dan keyin
+// BottomTabNavigator QAYTA MOUNT bo'ladi -> home dashboard'ni qayta yuklaydi va
+// bir lahza bo'sh bo'ladi. Kesh bo'lmasa debitor/kreditor summasi shartnoma+
+// daftar'dan faqat shartnomaga "sakrab", keyin qaytadi. Kesh bilan remount'da
+// darhol oldingi BIRLASHGAN qiymat ko'rsatiladi (sakrash yo'q).
+let dashboardCache: any = null;
+
 // Bitta valyuta bo'yicha yig'indi (konvertatsiyasiz — USD'ni alohida ko'rsatish uchun).
 const sumCur = (rows: any[] | undefined, cur: string) =>
   Math.round(
@@ -665,7 +673,14 @@ const HomeRedesign = () => {
   //    Yuqoridagi metrik kartalar = shartnoma + daftar (birlashgan).
   //    Modul kartalari esa har biri O'Z modulini ko'rsatadi.
   const daftariDash = useFetch({ url: `${URL}/qarz-daftari/dashboard`, method: 'GET' });
-  const dd: any = (daftariDash.data as any)?.data || daftariDash.data || {};
+  const dashFresh: any = (daftariDash.data as any)?.data || daftariDash.data || {};
+  // Yangi javob TO'LIQ kelgan bo'lsa keshni yangilaymiz; aks holda (remount'da
+  // bo'sh bo'lganda) oldingi keshdan foydalanamiz -> summalar sakramaydi.
+  const dashValid = !!(dashFresh?.berilgan_qarz || dashFresh?.olingan_qarz);
+  if (dashValid) {
+    dashboardCache = dashFresh;
+  }
+  const dd: any = dashValid ? dashFresh : dashboardCache || {};
   const numv = (v: any) => Number(v || 0);
   const bqDash = dd?.berilgan_qarz;
   const oqDash = dd?.olingan_qarz;
