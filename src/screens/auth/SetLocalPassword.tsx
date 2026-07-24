@@ -507,6 +507,10 @@ const SetLocalPassword = () => {
                   flex: 1,
                   alignSelf: 'center',
                   width: PIN_GRID_WIDTH,
+                  // Raqamlar panelini PASTGA suramiz — telefonni bir qo'lda
+                  // ushlaganda bosh barmoq bilan yetish oson bo'lsin.
+                  justifyContent: 'flex-end',
+                  paddingBottom: rs(40),
                 }}
               >
                 <View style={styles.codeNumberContainer}>

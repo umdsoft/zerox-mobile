@@ -27,7 +27,7 @@ import { rd, rs } from '../../../theme/rd';
 import { compactMoney, compactUsd, compactUzs } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
-import { DEBT_NAV } from './debtNav';
+import { DEBT_NAV, debtNav } from './debtNav';
 // Rasmiy "ZeroX" wordmark (logotipning matn qismi) — header uchun.
 import ZeroXWordmark from '../../../images/TextAndLogo';
 import { useFetch } from '../../../hooks/useFetch';
@@ -852,10 +852,16 @@ const HomeRedesign = () => {
         />
         <ModuleSoon Icon={CoinIcon} title="Shaxsiy moliya" onPress={() => nav('ShaxsiyMoliya')} />
 
-        {/* Ogohlantirishlar */}
+        {/* Ogohlantirishlar — "Barchasi" endi BILDIRISHNOMALAR emas, MUDDATI
+            YAQINLASHAYOTGAN qarz shartnomalari ro'yxatini ochadi (so'rov bo'yicha). */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Ogohlantirishlar</Text>
-          <TouchableOpacity activeOpacity={0.7} onPress={() => nav('Notification')}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() =>
+              nav('SearchDebitor', debtNav('debitor', 'near', 'Muddati yaqin qarzlar'))
+            }
+          >
             <Text style={styles.sectionLink}>Barchasi</Text>
           </TouchableOpacity>
         </View>

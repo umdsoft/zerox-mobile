@@ -209,7 +209,8 @@ const DrawerMenu = () => {
               onPress={() => (active ? close() : go(item))}
             >
               <View style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}>
-                <item.Icon size={rs(22)} color={active ? rd.color.onPrimary : soon ? rd.color.textTertiary : rd.color.textSecondary} />
+                {/* Ikonalar ham KO'K (matn bilan bir xil) — so'rov bo'yicha. */}
+                <item.Icon size={rs(22)} color={active ? rd.color.onPrimary : soon ? rd.color.textTertiary : rd.color.primary} />
               </View>
               <Text style={[styles.rowLabel, active && styles.rowLabelActive, soon && styles.rowLabelSoon]}>{item.label}</Text>
               {soon ? (

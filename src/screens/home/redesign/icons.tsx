@@ -31,12 +31,12 @@ const Base = ({
   </Svg>
 );
 
-// Uch teng, TO'LIQ tayoqcha (o'rtadagisi ham to'liq ko'rinadi). Ilgari o'rta
-// chiziq kalta (o'ngga surilgan) edi va "yarim" ko'rinardi.
+// Uch tayoqcha: tepa va past TO'LIQ, o'rtadagisi biroz O'NGGA surilgan
+// (chapdan qisqaroq) — so'rov bo'yicha. Doira yo'q (header'da menuBtn).
 export const MenuIcon = (p: IconProps) => (
   <Base {...p} size={p.size ?? 24} strokeWidth={p.strokeWidth ?? 2.2}>
     <Line x1="3" y1="6" x2="21" y2="6" />
-    <Line x1="3" y1="12" x2="21" y2="12" />
+    <Line x1="8" y1="12" x2="21" y2="12" />
     <Line x1="3" y1="18" x2="21" y2="18" />
   </Base>
 );

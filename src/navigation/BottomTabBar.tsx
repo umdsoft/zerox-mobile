@@ -27,6 +27,14 @@ export const BottomTabNavigator = () => {
       tabBar={props => <RdTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        // Tab o'tishida SLAYD/animatsiya yo'q (darhol).
+        animation: 'none',
+        // lazy:false — barcha tablar ilova ochilishida MOUNT bo'ladi va
+        // ma'lumot oldindan yuklanadi. Shunda "Qarz shartnomasi"/"Qarz
+        // daftari"ga o'tishda aylanuvchi ZeroX yuklagichi (LottieView)
+        // CHIQMAYDI — ekran darhol tayyor. Keyin ular mount holatida qoladi
+        // (qayta yuklanmaydi).
+        lazy: false,
       }}>
       <BottomTabStack.Screen
         key={'Home'}

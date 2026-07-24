@@ -84,23 +84,16 @@ const SearchDebitor = () => {
     }, 400);
   };
 
-  // FAQAT JARAYONDAGI shartnomalar (tugallangan/rad etilgan — faqat hisobotda).
-  // Backend maydon nomini aniq bilmasak ham xavfsiz: mos maydon bo'lsa filtrlaydi,
-  // bo'lmasa — ro'yxat o'zgarmaydi (regressiya yo'q).
+  // FAQAT JARAYONDAGI shartnomalar. Backend `status` maydoni (emulyator
+  // diagnostikasi bilan ANIQLANDI):
+  //   status 2 = Tugallangan (debitor 4=chart 4, kreditor 11=chart 11 — aniq)
+  //   status 3 = Jarayonda   (debitor 1=chart Jarayonda 1)
+  //   status 4 = Rad etildi
+  // Demak Tugallangan(2) va Rad etildi(4) YASHIRILADI (faqat hisobotда),
+  // Jarayonda(3) esa QOLADI — shu bilan near/overdue tablar ham to'g'ri to'ladi.
   const isDoneContract = (it: any) => {
-    const s = it?.state ?? it?.status ?? it?.contract_status ?? it?.contract_state;
-    if (
-      s === 2 || s === 3 || s === '2' || s === '3' ||
-      s === 'tugallangan' || s === 'rad_etildi' || s === 'rad etildi' ||
-      s === 'completed' || s === 'rejected' || s === 'finished'
-    ) {
-      return true;
-    }
-    // Ba'zi javoblarda alohida bayroq bo'lishi mumkin.
-    if (it?.is_completed === true || it?.is_finished === true || it?.completed === true) {
-      return true;
-    }
-    return false;
+    const s = it?.status;
+    return s === 2 || s === 4 || s === '2' || s === '4';
   };
   const rawListAll: any[] =
     (searchData.length === 0 && !isCheck ? data?.data : searchData) || [];

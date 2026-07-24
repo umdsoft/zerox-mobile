@@ -52,6 +52,11 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   'TakeDebt',
   'GiveDebt',
   'Statistic',
+  // QarzShartnomasi/QarzDaftari endi BottomTabNavigator ICHIDAGI tab —
+  // ular o'zining RdTabBar'ini ko'rsatadi. Global bar ham chiqsa IKKI pastki
+  // menyu bo'lib qolardi (ustma-ust). Shu sabab bu yerda ham yashiriladi.
+  'QarzShartnomasi',
+  'QarzDaftari',
   'SelectLanguageScreen',
   'LoginWithPhone',
   'SetLocalPassword',
