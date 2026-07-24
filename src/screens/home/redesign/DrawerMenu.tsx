@@ -28,11 +28,14 @@ import { sortText } from '../../components/StatisticCard';
 import LogoAndShior from '../../../images/LogoAndShior';
 import LogoKR from '../../../images/drawer/KrLogo';
 import LogoRU from '../../../images/drawer/RuLogo';
-import Facebook from '../../../images/social/facebook.svg';
-import Instagram from '../../../images/social/instagram.svg';
-import Telegram from '../../../images/social/telegram.svg';
-import Youtube from '../../../images/social/youtube.svg';
-import TwitterIcon from '../../../images/twitter';
+// Yangi, professional ijtimoiy ikonalar — har biri O'Z BREND RANGIDA (squircle).
+import {
+  FacebookIcon,
+  InstagramIcon,
+  TelegramIcon,
+  XIcon,
+  YoutubeIcon,
+} from './SocialIcons';
 import {
   CoinIcon,
   HelpIcon,
@@ -52,14 +55,13 @@ import {
 const SOCIALS: {
   key: string;
   url: string;
-  Icon: any;
-  filled?: boolean;
+  Icon: (p: { size?: number }) => JSX.Element;
 }[] = [
-  { key: 'fb', url: 'https://m.facebook.com/ZeroxUZ/?wtsid=rdr_0l15a0hwRSQsgzZtE', Icon: Facebook },
-  { key: 'ig', url: 'https://www.instagram.com/zeroxuz', Icon: Instagram },
-  { key: 'tg', url: 'https://t.me/zeroxuz', Icon: Telegram },
-  { key: 'x', url: 'https://x.com/zeroxuz', Icon: TwitterIcon, filled: true },
-  { key: 'yt', url: 'https://www.youtube.com/@zeroxuz', Icon: Youtube },
+  { key: 'fb', url: 'https://m.facebook.com/ZeroxUZ/?wtsid=rdr_0l15a0hwRSQsgzZtE', Icon: FacebookIcon },
+  { key: 'ig', url: 'https://www.instagram.com/zeroxuz', Icon: InstagramIcon },
+  { key: 'tg', url: 'https://t.me/zeroxuz', Icon: TelegramIcon },
+  { key: 'x', url: 'https://x.com/zeroxuz', Icon: XIcon },
+  { key: 'yt', url: 'https://www.youtube.com/@zeroxuz', Icon: YoutubeIcon },
 ];
 
 /** Logotip + shior — interfeys tiliga mos aktiv (eski ilovadagi kabi). */
@@ -234,10 +236,11 @@ const DrawerMenu = () => {
             <TouchableOpacity
               key={item.key}
               activeOpacity={0.8}
-              style={[styles.socialBtn, item.filled && styles.socialBtnFilled]}
+              style={styles.socialBtn}
               onPress={() => Linking.openURL(item.url)}
             >
-              <item.Icon width={rs(item.filled ? 22 : 38)} height={rs(item.filled ? 22 : 38)} />
+              {/* Har ikona o'z brend rangi + squircle bilan keladi. */}
+              <item.Icon size={rs(42)} />
             </TouchableOpacity>
           ))}
         </View>
@@ -271,14 +274,6 @@ const styles = StyleSheet.create({
     paddingVertical: rs(10),
   },
   socialBtn: { alignItems: 'center', justifyContent: 'center' },
-  // X (Twitter) doirasi qolgan 4 ta ikona bilan BIR XIL ko'k (#4e91d2) —
-  // ilgari brend ko'ki (primary) edi va farq qilib turardi.
-  socialBtnFilled: {
-    width: rs(38),
-    height: rs(38),
-    borderRadius: rs(19),
-    backgroundColor: '#4e91d2',
-  },
   brandTagline: {
     fontFamily: rd.font.medium,
     fontSize: rs(12.5),
