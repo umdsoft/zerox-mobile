@@ -21,6 +21,7 @@ import {
   CoinIcon,
   ManIcon,
   WomanIcon,
+  CheckIcon,
 } from '../home/redesign/icons';
 
 // O'zbek ismidan jinsni taxmin qilish (profil avatari uchun).
@@ -172,14 +173,22 @@ const UserScreen = () => {
             <Text style={styles.profileName} numberOfLines={1}>
               {displayName}
             </Text>
-            {!!displaySub && (
-              <Text style={styles.profileSub} numberOfLines={1}>
-                {displaySub}
-              </Text>
-            )}
-            {user?.data?.is_active === 0 && (
-              <View style={styles.statusChip}>
-                <Text style={styles.statusChipText}>
+            {/* OTCHESTVA (middle_name) O'RNIGA — tasdiq holati belgisi:
+                identifikatsiyadan o'tgan (is_active === 1) bo'lsa YASHIL
+                "Tasdiqlangan foydalanuvchi" (galochka bilan), aks holda sariq
+                "Tasdiqlanmagan foydalanuvchi". */}
+            {user?.data?.is_active === 1 ? (
+              <View style={[styles.verifyChip, styles.verifyChipOk]}>
+                <View style={styles.verifyDot}>
+                  <CheckIcon size={rs(11)} color={rd.color.onPrimary} />
+                </View>
+                <Text style={[styles.verifyText, styles.verifyTextOk]} numberOfLines={1}>
+                  {t('Tasdiqlangan foydalanuvchi')}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.verifyChip, styles.verifyChipWarn]}>
+                <Text style={[styles.verifyText, styles.verifyTextWarn]} numberOfLines={1}>
                   {t('Tasdiqlanmagan foydalanuvchi')}
                 </Text>
               </View>
@@ -411,6 +420,34 @@ const styles = StyleSheet.create({
     color: rd.color.textSecondary,
     marginTop: rs(3),
   },
+  // Tasdiq holati belgisi (yashil = tasdiqlangan, sariq = tasdiqlanmagan).
+  verifyChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+    marginTop: rs(7),
+    borderRadius: rd.radius.pill,
+    paddingLeft: rs(5),
+    paddingRight: rs(12),
+    paddingVertical: rs(4),
+  },
+  verifyChipOk: { backgroundColor: rd.color.successBg },
+  verifyChipWarn: {
+    backgroundColor: rd.color.warningBg,
+    paddingLeft: rs(12),
+  },
+  verifyDot: {
+    width: rs(18),
+    height: rs(18),
+    borderRadius: rs(9),
+    backgroundColor: rd.color.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyText: { fontFamily: rd.font.semibold, fontSize: rs(12) },
+  verifyTextOk: { color: rd.color.success },
+  verifyTextWarn: { color: rd.color.warning },
   statusChip: {
     alignSelf: 'flex-start',
     marginTop: rs(8),

@@ -222,6 +222,13 @@ export const WomanIcon = (p: IconProps) => (
   </Base>
 );
 
+// Belgi (checkmark) — tasdiqlangan holat uchun.
+export const CheckIcon = (p: IconProps) => (
+  <Base {...p} strokeWidth={p.strokeWidth ?? 3}>
+    <Polyline points="20 6 9 17 4 12" />
+  </Base>
+);
+
 // Ilova haqida — ma'lumot.
 export const InfoIcon = (p: IconProps) => (
   <Base {...p}>
