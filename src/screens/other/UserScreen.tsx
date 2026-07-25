@@ -164,9 +164,9 @@ const UserScreen = () => {
             {isFemaleUser(
               `${displayName} ${user?.data?.middle_name || ''}`,
             ) ? (
-              <WomanIcon size={rs(34)} color={rd.color.primary} />
+              <WomanIcon size={rs(48)} color={rd.color.primary} />
             ) : (
-              <ManIcon size={rs(34)} color={rd.color.primary} />
+              <ManIcon size={rs(48)} color={rd.color.primary} />
             )}
           </View>
           <View style={styles.profileMeta}>
@@ -382,37 +382,41 @@ const styles = StyleSheet.create({
     paddingTop: rs(12),
     paddingBottom: rs(28),
   },
+  // VERTIKAL: avatar TEPADA (katta, markazda), ism/tasdiq PASTDA.
   profileCard: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(16),
+    paddingVertical: rs(22),
+    paddingHorizontal: rs(16),
     marginBottom: rs(16),
   },
   avatar: {
-    width: rs(64),
-    height: rs(64),
-    borderRadius: rs(32),
+    width: rs(92),
+    height: rs(92),
+    borderRadius: rs(46),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontFamily: rd.font.bold,
-    fontSize: rs(22),
+    fontSize: rs(30),
     color: rd.color.primary,
   },
   profileMeta: {
-    flex: 1,
-    marginLeft: rs(14),
+    alignItems: 'center',
+    marginTop: rs(14),
   },
+  // Ism KICHIKROQ (ilgari rs(18) — uzun FISH sig'masdi).
   profileName: {
     fontFamily: rd.font.bold,
-    fontSize: rs(18),
+    fontSize: rs(15.5),
     color: rd.color.text,
+    textAlign: 'center',
   },
   profileSub: {
     fontFamily: rd.font.regular,
@@ -422,11 +426,11 @@ const styles = StyleSheet.create({
   },
   // Tasdiq holati belgisi (yashil = tasdiqlangan, sariq = tasdiqlanmagan).
   verifyChip: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: rs(6),
-    marginTop: rs(7),
+    marginTop: rs(9),
     borderRadius: rd.radius.pill,
     paddingLeft: rs(5),
     paddingRight: rs(12),
@@ -445,7 +449,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  verifyText: { fontFamily: rd.font.semibold, fontSize: rs(12) },
+  verifyText: { fontFamily: rd.font.semibold, fontSize: rs(11) },
   verifyTextOk: { color: rd.color.success },
   verifyTextWarn: { color: rd.color.warning },
   statusChip: {

@@ -901,7 +901,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   // Avatar + qo'ng'iroq o'ng tomonda yonma-yon (ilgari chapda headerLeft edi).
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  // gap rs(14): ZeroX wordmark menyu ikonasidan yetarlicha uzoqda — o'rta
+  // tayoqchani to'smaydi (ilgari juda yaqin edi).
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(14) },
   // Menyu tugmasi — doirasiz, faqat teginish maydoni.
   menuBtn: {
     width: rs(40),

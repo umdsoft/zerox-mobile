@@ -18,7 +18,49 @@ import {storage} from '../../../store/api/token/getToken';
 import {t} from 'i18next';
 import {rd, rs} from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
-import {SearchIcon} from '../redesign/icons';
+import {
+  SearchIcon,
+  ContractIcon,
+  LedgerIcon,
+  ChevronRight,
+  CloseIcon,
+} from '../redesign/icons';
+import {compactUsd, compactUzs} from '../../../helper/money';
+
+// Qarz daftari uslubidagi ikkilamchi (binafsha) urg'u — manba kartalarini
+// bir-biridan ajratib ko'rsatish uchun (shartnoma = ko'k, daftar = binafsha).
+const LEDGER_ACCENT = '#6d5ae6';
+const LEDGER_TINT = '#efe9fd';
+
+// Bitta manba mini-kartasi (Qarz shartnomasi / Qarz daftari) — summa + bo'limga
+// o'tish havolasi. Saytdagi "manbalar bo'yicha" taqsimotining mobil ko'rinishi.
+const SourceMini = ({Icon, label, uzs, usd, onPress, ledger}: any) => (
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.mini}>
+    <View
+      style={[styles.miniIcon, ledger && {backgroundColor: LEDGER_TINT}]}>
+      <Icon size={rs(18)} color={ledger ? LEDGER_ACCENT : rd.color.primary} />
+    </View>
+    <Text allowFontScaling={false} numberOfLines={1} style={styles.miniLabel}>
+      {label}
+    </Text>
+    <Text allowFontScaling={false} numberOfLines={1} style={styles.miniUzs}>
+      {compactUzs(uzs)}
+    </Text>
+    {usd > 0 ? (
+      <Text allowFontScaling={false} numberOfLines={1} style={styles.miniUsd}>
+        {compactUsd(usd)}
+      </Text>
+    ) : null}
+    <View style={styles.miniLink}>
+      <Text
+        allowFontScaling={false}
+        style={[styles.miniLinkTx, ledger && {color: LEDGER_ACCENT}]}>
+        Bo‘limga o‘tish
+      </Text>
+      <ChevronRight size={rs(13)} color={ledger ? LEDGER_ACCENT : rd.color.primary} />
+    </View>
+  </TouchableOpacity>
+);
 
 const SearchDebitor = () => {
   // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
@@ -30,6 +72,8 @@ const SearchDebitor = () => {
   const [searchData, setSearchData] = useState([]);
   const [isCheck, setIsCheck] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Manba (shartnoma/daftar) taqsimot kartasini yopish holati (X tugmasi).
+  const [showSources, setShowSources] = useState(true);
   // Boshlang'ich filtr tab'i chaqiruvchidan keladi: masalan "Muddati o'tgan"
   // kartasi bosilsa darhol 'overdue', "Muddati oz qolgan" bosilsa 'near' ochiladi.
   // Berilmasa — eski xatti-harakat saqlanadi ('all').
@@ -46,6 +90,24 @@ const SearchDebitor = () => {
     method: 'GET',
     url: URL + url,
   });
+
+  // Manbalar bo'yicha taqsimot (Qarz shartnomasi + Qarz daftari) — web dashboard
+  // bilan bir xil manba: /qarz-daftari/dashboard HAM shartnoma, HAM daftar
+  // summalarini qaytaradi. person='debitor' -> berilgan_qarz, 'creditor' -> olingan.
+  const isDebitorRole = person === 'debitor';
+  const dash = useFetch({method: 'GET', url: URL + '/qarz-daftari/dashboard'});
+  const dashData: any = (dash.data as any)?.data || dash.data || {};
+  const srcRoot: any = isDebitorRole
+    ? dashData?.berilgan_qarz
+    : dashData?.olingan_qarz;
+  const num = (v: any) => Number(v || 0);
+  const shUZS = num(srcRoot?.shartnoma?.uzs);
+  const shUSD = num(srcRoot?.shartnoma?.usd);
+  const dfUZS = num(srcRoot?.daftari?.uzs);
+  const dfUSD = num(srcRoot?.daftari?.usd);
+  const totUZS = shUZS + dfUZS;
+  const totUSD = shUSD + dfUSD;
+  const hasSources = !!srcRoot && (totUZS > 0 || totUSD > 0);
 
   if (loading) {
     return <Loading />;
@@ -124,6 +186,56 @@ const SearchDebitor = () => {
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={title} />
 
+      {showSources && hasSources ? (
+        <View style={styles.sourceCard}>
+          <View style={styles.sourceHead}>
+            <View style={{flex: 1}}>
+              <Text allowFontScaling={false} style={styles.sourceTitle}>
+                {isDebitorRole ? 'Jami berilgan qarz' : 'Jami olingan qarz'}
+              </Text>
+              <Text allowFontScaling={false} numberOfLines={1} style={styles.sourceTotal}>
+                {compactUzs(totUZS)}
+                {totUSD > 0 ? ` · ${compactUsd(totUSD)}` : ''}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowSources(false)}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+              style={styles.sourceClose}>
+              <CloseIcon size={rs(18)} color={rd.color.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <Text allowFontScaling={false} style={styles.sourceSub}>
+            Manbalar bo‘yicha
+          </Text>
+          <View style={styles.sourceRow}>
+            <SourceMini
+              Icon={ContractIcon}
+              label="Qarz shartnomasi"
+              uzs={shUZS}
+              usd={shUSD}
+              onPress={() =>
+                navigation.navigate('BottomTabNavigator', {
+                  screen: 'QarzShartnomasi',
+                })
+              }
+            />
+            <SourceMini
+              Icon={LedgerIcon}
+              label="Qarz daftari"
+              uzs={dfUZS}
+              usd={dfUSD}
+              ledger
+              onPress={() =>
+                navigation.navigate('BottomTabNavigator', {
+                  screen: 'QarzDaftari',
+                })
+              }
+            />
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.searchWrap}>
         <View style={[styles.searchBox, focused && styles.searchBoxFocused]}>
           <SearchIcon
@@ -194,6 +306,96 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: rd.color.page,
+  },
+  // ── Manbalar bo'yicha taqsimot kartasi (SS2 — saytdagidek).
+  sourceCard: {
+    marginHorizontal: rs(16),
+    marginTop: rs(6),
+    marginBottom: rs(4),
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(14),
+  },
+  sourceHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  sourceTitle: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
+  },
+  sourceTotal: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    marginTop: rs(2),
+  },
+  sourceClose: {
+    width: rs(28),
+    height: rs(28),
+    borderRadius: rs(14),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  sourceSub: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+    marginTop: rs(10),
+    marginBottom: rs(8),
+  },
+  sourceRow: {
+    flexDirection: 'row',
+    gap: rs(10),
+  },
+  mini: {
+    flex: 1,
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.md,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(12),
+  },
+  miniIcon: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(10),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(9),
+  },
+  miniLabel: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+    color: rd.color.text,
+  },
+  miniUzs: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(13.5),
+    color: rd.color.text,
+    marginTop: rs(5),
+  },
+  miniUsd: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(11.5),
+    color: rd.color.textSecondary,
+    marginTop: rs(1),
+  },
+  miniLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(2),
+    marginTop: rs(9),
+  },
+  miniLinkTx: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(11.5),
+    color: rd.color.primary,
   },
   searchWrap: {
     paddingHorizontal: rs(16),

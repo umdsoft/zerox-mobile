@@ -79,7 +79,16 @@ const Security = () => {
   });
 
   return (
-    <ScreenLayout title={t('816')}>
+    <ScreenLayout title={t('816')} scroll={false} contentStyle={styles.content}>
+      {/* Ikona TEPADA (deyarli yarim sahifa), bandlar PASTKI yarmda —
+          bir qo'lda qulay boshqarish uchun. */}
+      <View style={styles.top}>
+        <LottieView
+          autoPlay
+          source={require('../../images/lottie/list/8tdue8bgdH.json')}
+          style={styles.lottie}
+        />
+      </View>
       <View style={styles.card}>
         <TouchableOpacity
           activeOpacity={0.7}
@@ -117,13 +126,6 @@ const Security = () => {
         </TouchableOpacity>
         {support ? renderSwitch : null}
       </View>
-      <View style={{ alignSelf: 'center', marginTop: normalize(100) }}>
-        <LottieView
-          autoPlay
-          source={require('../../images/lottie/list/8tdue8bgdH.json')}
-          style={{ width: normalize(120), height: normalize(120) }}
-        />
-      </View>
     </ScreenLayout>
   );
 };
@@ -131,6 +133,9 @@ const Security = () => {
 export default Security;
 
 const styles = StyleSheet.create({
+  content: { flex: 1, paddingHorizontal: rs(16), paddingBottom: rs(20) },
+  top: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  lottie: { width: rs(150), height: rs(150) },
   card: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,

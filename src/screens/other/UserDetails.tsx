@@ -1,9 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 
 import { useNavigation } from '@react-navigation/native';
@@ -14,19 +9,43 @@ import ScreenLayout from '../components/ScreenLayout';
 import { t } from 'i18next';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
-import { UserIcon } from '../home/redesign/icons';
+import { ManIcon, WomanIcon } from '../home/redesign/icons';
 
-const InfoRow = ({ label, value, divider, right }) => (
+// O'zbek ismidan jinsni taxmin qilish (avatar uchun).
+const isFemaleName = (name?: string) => {
+  const n = (name || '').toLowerCase();
+  if (/qizi/.test(n)) return true;
+  if (/o.?g.?li|ug.?li/.test(n)) return false;
+  return /(ova|eva|yeva)(\s|$)/.test(n);
+};
+
+// FISH ni ketma-ket, kichik harflar bilan: "Quramboyev Jamshid Rashid o'g'li".
+const titleCaseName = (s?: string) =>
+  (s || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => {
+      const lw = w.toLowerCase();
+      if (/^(o.?g.?li|qizi|ug.?li)$/.test(lw)) return lw;
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
+    .join(' ');
+
+const STATUS_UZ: Record<string, string> = {
+  excellent: 'A’lo',
+  good: 'Yaxshi',
+  fair: 'O‘rtacha',
+  poor: 'Past',
+};
+
+const InfoRow = ({ label, value, divider, right }: any) => (
   <View style={[styles.infoRow, divider && styles.infoDivider]}>
     <View style={styles.infoTextWrap}>
       <Text allowFontScaling={false} style={styles.label}>
         {label}
       </Text>
-      <Text
-        allowFontScaling={false}
-        numberOfLines={1}
-        style={styles.value}
-      >
+      <Text allowFontScaling={false} numberOfLines={1} style={styles.value}>
         {value}
       </Text>
     </View>
@@ -37,66 +56,61 @@ const InfoRow = ({ label, value, divider, right }) => (
 const UserDetails = () => {
   const navigation = useNavigation();
 
-  const { user } = useSelector(state => state.HomeReducer);
+  const { user, analytics } = useSelector((state: any) => state.HomeReducer);
+  const d = user?.data || {};
+  const isPerson = d?.type === 2;
 
-  const isPerson = user?.data?.type === 2;
+  // FISH ketma-ket (familiya + ism + otasining ismi), kichik harflar bilan.
+  const fullNameRaw = isPerson
+    ? `${d?.last_name ?? ''} ${d?.first_name ?? ''} ${d?.middle_name ?? ''}`
+    : d?.company || '';
+  const fullName = isPerson ? titleCaseName(fullNameRaw) : fullNameRaw;
+  const female = isFemaleName(`${d?.first_name} ${d?.middle_name}`);
 
-  const fullName = isPerson
-    ? `${user?.data?.last_name ?? ''} ${user?.data?.first_name ?? ''}`.trim()
-    : user?.data?.company;
-
-  const initials = (() => {
-    if (isPerson) {
-      const a = user?.data?.first_name?.[0] ?? '';
-      const b = user?.data?.last_name?.[0] ?? '';
-      return (b + a).toUpperCase();
-    }
-    return (user?.data?.company?.[0] ?? '').toUpperCase();
-  })();
+  // Reyting (Moliyaviy sog'liq bali — home bilan bir xil manba).
+  const score = analytics?.health?.score;
+  const statusKey = analytics?.health?.status;
+  const statusTx = statusKey ? STATUS_UZ[statusKey] : '';
+  const scoreColor =
+    typeof score === 'number'
+      ? score >= 85
+        ? rd.color.success
+        : score >= 70
+        ? rd.color.primary
+        : score >= 50
+        ? rd.color.warning
+        : rd.color.error
+      : rd.color.textTertiary;
 
   return (
-    <ScreenLayout title={t('810')}>
+    <ScreenLayout title={t('810')} scroll={false} contentStyle={styles.content}>
+      {/* Sarlavha kartasi — avatar + FISH + reyting (telefon/ID olib tashlandi). */}
       <View style={styles.headerCard}>
         <View style={styles.avatar}>
-          {initials ? (
-            <Text allowFontScaling={false} style={styles.avatarTx}>
-              {initials}
-            </Text>
+          {female ? (
+            <WomanIcon size={rs(46)} color={rd.color.primary} />
           ) : (
-            <UserIcon size={rs(30)} color={rd.color.primary} />
+            <ManIcon size={rs(46)} color={rd.color.primary} />
           )}
         </View>
         <Text allowFontScaling={false} numberOfLines={2} style={styles.headerName}>
           {fullName}
         </Text>
-        <Text allowFontScaling={false} style={styles.headerSub}>
-          {phoneSort(user?.data?.phone)}
-        </Text>
-        <Text allowFontScaling={false} style={styles.headerSub}>
-          {t('120')}: {user?.data?.uid}
-        </Text>
+        {typeof score === 'number' ? (
+          <View style={[styles.ratingChip, { backgroundColor: scoreColor + '1A' }]}>
+            <Text style={[styles.ratingScore, { color: scoreColor }]}>{score}</Text>
+            <Text style={[styles.ratingLabel, { color: scoreColor }]}>
+              Reyting {statusTx ? `· ${statusTx}` : ''}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
+      {/* Ma'lumotlar — Familiya/Ism/Ota qatorlari OLIB TASHLANDI (ular sarlavhada). */}
       <View style={styles.card}>
-        {isPerson ? (
-          <>
-            <InfoRow label={t('familiya')} value={user?.data?.last_name} />
-            <InfoRow label={t('ism')} value={user?.data?.first_name} divider />
-            <InfoRow label={t('ota')} value={user?.data?.middle_name} divider />
-            <InfoRow label={t('684')} value={user?.data?.brithday} divider />
-          </>
-        ) : (
-          <>
-            <InfoRow label="Direktor" value={user?.data?.director} />
-            <InfoRow label="Kompaniya" value={user?.data?.company} divider />
-            <InfoRow label={t('786') as string} value={user?.data?.address} divider />
-          </>
-        )}
-
         <InfoRow
           label={t('27')}
-          value={phoneSort(user?.data?.phone)}
-          divider
+          value={phoneSort(d?.phone)}
           right={
             <TouchableOpacity
               onPress={() => {
@@ -108,15 +122,17 @@ const UserDetails = () => {
             </TouchableOpacity>
           }
         />
-
         {isPerson ? (
-          <InfoRow label={t('687')} value={user?.data?.pinfl} divider />
+          <InfoRow label={t('687')} value={d?.pinfl} divider />
         ) : null}
-
-        <InfoRow label={t('120')} value={user?.data?.uid} divider />
+        {isPerson ? (
+          <InfoRow label={t('684')} value={d?.brithday} divider />
+        ) : null}
+        {/* "ID raqami" -> "Tizimdagi ID raqami" (so'rov bo'yicha). */}
+        <InfoRow label="Tizimdagi ID raqami" value={d?.uid} divider />
         <InfoRow
           label={t('255')}
-          value={settingDate(user?.data?.created_at)}
+          value={settingDate(d?.created_at)}
           divider
         />
       </View>
@@ -158,43 +174,43 @@ export const phoneSort = text => {
 };
 
 const styles = StyleSheet.create({
+  content: { paddingHorizontal: rs(16), paddingBottom: rs(20) },
   headerCard: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,
     borderColor: rd.color.border,
     borderRadius: rd.radius.lg,
     alignItems: 'center',
-    paddingVertical: rs(20),
+    paddingVertical: rs(22),
     paddingHorizontal: rs(16),
     marginBottom: rs(12),
   },
   avatar: {
-    width: rs(64),
-    height: rs(64),
-    borderRadius: rs(32),
+    width: rs(88),
+    height: rs(88),
+    borderRadius: rs(44),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: rs(12),
   },
-  avatarTx: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(22),
-    color: rd.color.primary,
-  },
   headerName: {
     fontFamily: rd.font.bold,
-    fontSize: rs(18),
+    fontSize: rs(16),
     color: rd.color.text,
     textAlign: 'center',
   },
-  headerSub: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginTop: rs(3),
-    textAlign: 'center',
+  ratingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(5),
+    marginTop: rs(10),
   },
+  ratingScore: { fontFamily: rd.font.bold, fontSize: rs(15) },
+  ratingLabel: { fontFamily: rd.font.medium, fontSize: rs(12) },
   card: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,
@@ -206,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: rs(12),
+    paddingVertical: rs(13),
   },
   infoDivider: {
     borderTopWidth: 1,

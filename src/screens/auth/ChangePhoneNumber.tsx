@@ -8,8 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import axios from 'axios';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
@@ -22,6 +30,38 @@ import InputMask from '../components/InputMask';
 import { storage } from '../../store/api/token/getToken';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, PhoneIcon } from '../home/redesign/icons';
+
+// Animatsiyali "telefon" ikonasi — ortida tarqaluvchi ikki halqa (tirik ko'rinish).
+const RING_SCALE = 0.9;
+const PhoneHero = () => {
+  const reduce = useReducedMotion();
+  const p = useSharedValue(0);
+  useEffect(() => {
+    if (reduce) return;
+    p.value = withRepeat(
+      withTiming(1, { duration: 1900, easing: Easing.out(Easing.ease) }),
+      -1,
+      false,
+    );
+  }, [reduce, p]);
+  const ring1 = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + p.value * RING_SCALE }],
+    opacity: 0.35 * (1 - p.value),
+  }));
+  const ring2 = useAnimatedStyle(() => {
+    const q = (p.value + 0.5) % 1;
+    return { transform: [{ scale: 1 + q * RING_SCALE }], opacity: 0.35 * (1 - q) };
+  });
+  return (
+    <View style={styles.heroWrap}>
+      <Animated.View style={[styles.ring, ring1]} />
+      <Animated.View style={[styles.ring, ring2]} />
+      <View style={styles.heroCircle}>
+        <PhoneIcon size={rs(50)} color={rd.color.primary} />
+      </View>
+    </View>
+  );
+};
 
 const ChangePhoneNumber = () => {
   const [phone, setPhone] = useState('');
@@ -51,7 +91,6 @@ const ChangePhoneNumber = () => {
           },
         },
       );
-      console.log(data, 'response');
 
       if (data.success) {
         setLoading(false);
@@ -60,15 +99,13 @@ const ChangePhoneNumber = () => {
         });
       } else {
         setLoading(false);
+        // "Xatolik" sarlavhasi YO'Q — faqat qizil xabar (so'rov bo'yicha).
         Toast.show({
           autoHide: true,
-          visibilityTime: 2000,
+          visibilityTime: 2500,
           position: 'bottom',
           type: 'error2',
-          props: {
-            title: 'Xatolik',
-            desc: t('708'),
-          },
+          props: { title: t('708') },
         });
       }
     } catch (error) {
@@ -97,49 +134,54 @@ const ChangePhoneNumber = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
+          {/* Orqaga — TO'LDIRILGAN KO'K. */}
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
+            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
           </TouchableOpacity>
 
-          {/* Hero */}
-          <View style={styles.hero}>
-            <View style={styles.heroCircle}>
-              <PhoneIcon size={rs(34)} color={rd.color.primary} />
-            </View>
-            <Text style={styles.title}>{t('702')}</Text>
+          {/* Ikona TEPA yarmda (markazda), forma PASTKI yarmda — bir qo'lda
+              terish oson bo'lsin. */}
+          <View style={styles.topHalf}>
+            <PhoneHero />
+            <Text
+              style={styles.title}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {t('702')}
+            </Text>
           </View>
 
-          {/* Telefon */}
-          <Text style={styles.label}>{t('705')}</Text>
-          <InputMask
-            onChangeText={(formatted, extracted) => {
-              setPhone(extracted);
-            }}
-            value={phone}
-            icon={true}
-          />
+          <View style={styles.bottomHalf}>
+            <Text style={styles.label}>{t('705')}</Text>
+            <InputMask
+              onChangeText={(formatted, extracted) => {
+                setPhone(extracted);
+              }}
+              value={phone}
+              icon={true}
+            />
 
-          {/* Davom etish */}
-          <TouchableOpacity
-            disabled={disabled}
-            activeOpacity={0.85}
-            onPress={onPress}
-            style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
-          >
-            <Text
-              style={[
-                styles.submitText,
-                disabled && { color: rd.color.textTertiary },
-              ]}
+            <TouchableOpacity
+              disabled={disabled}
+              activeOpacity={0.85}
+              onPress={onPress}
+              style={[styles.submitBtn, disabled && styles.submitBtnDisabled]}
             >
-              {t('45')}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.submitText,
+                  disabled && { color: rd.color.textTertiary },
+                ]}
+              >
+                {t('45')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -159,30 +201,44 @@ const styles = StyleSheet.create({
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(32) },
+  // Ikona tepa yarmda (markazda), forma pastki yarmda.
+  topHalf: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  bottomHalf: { flex: 1 },
+
+  heroWrap: {
+    width: rs(120),
+    height: rs(120),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(22),
+  },
+  ring: {
+    position: 'absolute',
+    width: rs(104),
+    height: rs(104),
+    borderRadius: rs(52),
+    backgroundColor: rd.color.primaryTint,
+  },
   heroCircle: {
-    width: rs(72),
-    height: rs(72),
-    borderRadius: rs(36),
+    width: rs(104),
+    height: rs(104),
+    borderRadius: rs(52),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(18),
   },
+  // Bir qatorda, kichikroq shrift (ilgari rs(22) — 2 qatorga sinardi).
   title: {
     fontFamily: rd.font.bold,
-    fontSize: rs(22),
+    fontSize: rs(18),
     color: rd.color.text,
     textAlign: 'center',
-    paddingHorizontal: rs(16),
   },
 
   label: {
@@ -198,7 +254,7 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(28),
+    marginTop: rs(20),
     shadowColor: rd.color.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,

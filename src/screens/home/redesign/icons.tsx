@@ -101,6 +101,13 @@ export const ChevronRight = (p: IconProps) => (
   </Base>
 );
 
+export const CloseIcon = (p: IconProps) => (
+  <Base {...p} strokeWidth={p.strokeWidth ?? 2.2}>
+    <Line x1="18" y1="6" x2="6" y2="18" />
+    <Line x1="6" y1="6" x2="18" y2="18" />
+  </Base>
+);
+
 export const ArrowDown = (p: IconProps) => (
   <Base {...p}>
     <Line x1="12" y1="5" x2="12" y2="19" />
