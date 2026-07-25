@@ -26,6 +26,7 @@ import { colors } from '../../../../theme/colors';
 import { t } from 'i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { ArrowDown, ArrowUpRight } from '../../../home/redesign/icons';
+import ZeroXWordmark from '../../../../images/TextAndLogo';
 
 import RNBlobUtil from 'react-native-blob-util';
 
@@ -283,6 +284,9 @@ const QrCode = () => {
   return (
     <ScreenLayout title={t('qrcode')}>
       <View style={styles.page}>
+        {/* ESKI ILOVADAGIDEK joylashuv: ZeroX logo TEPADA, QR o'rtada,
+            "ID raqami" QR OSTIDA, ism eng pastda — hammasi bitta kartada
+            (ViewShot bilan ulashiladigan/yuklab olinadigan rasmga to'liq tushadi). */}
         <ViewShot
           ref={viewShootRef}
           options={{
@@ -292,25 +296,13 @@ const QrCode = () => {
           }}
         >
           <View style={styles.qrCard}>
-            <View style={styles.identityRow}>
-              <View style={styles.avatar}>
-                <Text allowFontScaling={false} style={styles.avatarText}>
-                  {initials}
-                </Text>
-              </View>
-              <View style={styles.identityInfo}>
-                <Text
-                  allowFontScaling={false}
-                  style={styles.nameText}
-                  numberOfLines={2}
-                >
-                  {fullName}
-                </Text>
-                <Text allowFontScaling={false} style={styles.uidText}>
-                  {t('idNumber')}: {user?.data?.uid}
-                </Text>
-              </View>
-            </View>
+            <ZeroXWordmark
+              width={rs(120)}
+              height={rs(40)}
+              viewBox="0 0 4000 1300"
+              fill="#0063B6"
+              color="#FF2D2D"
+            />
 
             <View style={styles.qrWrap}>
               <QRCode
@@ -318,12 +310,24 @@ const QrCode = () => {
                 ecl="M"
                 color={rd.color.text}
                 backgroundColor={rd.color.surface}
-                size={rs(200)}
+                size={rs(210)}
                 logoBorderRadius={5}
                 logo={require('../../../../images/iconapp.jpg')}
                 value={item}
               />
             </View>
+
+            <Text allowFontScaling={false} style={styles.uidText}>
+              {t('idNumber')}: {user?.data?.uid}
+            </Text>
+
+            <Text
+              allowFontScaling={false}
+              style={styles.nameText}
+              numberOfLines={2}
+            >
+              {fullName}
+            </Text>
           </View>
         </ViewShot>
 
@@ -331,17 +335,8 @@ const QrCode = () => {
           {t('123')}
         </Text>
 
+        {/* Tugmalar YONMA-YON (eski ilovadagidek): Yuklab olish + Ulashish. */}
         <View style={styles.buttons}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => onShare()}
-            style={styles.primaryBtn}
-          >
-            <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
-            <Text allowFontScaling={false} style={styles.primaryBtnText}>
-              {t('129')}
-            </Text>
-          </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => onDownload()}
@@ -350,6 +345,16 @@ const QrCode = () => {
             <ArrowDown size={rs(18)} color={rd.color.textSecondary} />
             <Text allowFontScaling={false} style={styles.secondaryBtnText}>
               {t('126')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => onShare()}
+            style={styles.primaryBtn}
+          >
+            <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
+            <Text allowFontScaling={false} style={styles.primaryBtnText}>
+              {t('129')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -372,7 +377,8 @@ const styles = StyleSheet.create({
     borderRadius: rd.radius.huge,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(24),
+    paddingVertical: rs(26),
+    paddingHorizontal: rs(24),
     alignItems: 'center',
     alignSelf: 'center',
     shadowColor: '#0f1b3d',
@@ -381,45 +387,29 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 3,
   },
-  identityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    marginBottom: rs(20),
-  },
-  avatar: {
-    width: rs(56),
-    height: rs(56),
-    borderRadius: rs(28),
-    backgroundColor: rd.color.primaryTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: rs(14),
-  },
-  avatarText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(18),
-    color: rd.color.primary,
-  },
-  identityInfo: {
-    flex: 1,
-  },
-  nameText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(16),
-    color: rd.color.text,
-  },
-  uidText: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginTop: rs(2),
-  },
   qrWrap: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
     padding: rs(8),
     alignSelf: 'center',
+    marginTop: rs(18),
+  },
+  // "ID raqami" — QR OSTIDA (eski ilovadagidek).
+  uidText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(14),
+    color: rd.color.textSecondary,
+    marginTop: rs(16),
+  },
+  // Ism — eng pastda, quyuq va markazda (eski ilovadagidek).
+  nameText: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(6),
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   helperText: {
     fontFamily: rd.font.regular,
@@ -430,13 +420,16 @@ const styles = StyleSheet.create({
     marginHorizontal: rs(24),
     lineHeight: rs(19),
   },
+  // Tugmalar YONMA-YON (eski ilovadagidek).
   buttons: {
-    marginTop: rs(24),
+    marginTop: rs(22),
+    flexDirection: 'row',
     alignSelf: 'stretch',
     paddingHorizontal: rs(16),
     gap: rs(12),
   },
   primaryBtn: {
+    flex: 1,
     height: rs(52),
     borderRadius: rd.radius.lg,
     backgroundColor: rd.color.primary,
@@ -451,6 +444,7 @@ const styles = StyleSheet.create({
     color: rd.color.onPrimary,
   },
   secondaryBtn: {
+    flex: 1,
     height: rs(52),
     borderRadius: rd.radius.lg,
     backgroundColor: rd.color.surfaceAlt,

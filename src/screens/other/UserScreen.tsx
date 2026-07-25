@@ -1,12 +1,14 @@
 import {
   ActivityIndicator,
   Image,
+  Modal as RNModal,
   Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
@@ -51,7 +53,6 @@ import {
   showModal,
 } from '../../store/reducers/HomeReducer';
 import Famale from '../../images/Famale';
-import {Modal} from 'react-native-paper';
 import MainText from '../components/MainText';
 import {colors} from '../../theme/colors';
 import {fontSize} from '../../theme/font';
@@ -322,47 +323,58 @@ const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
   }, [deleteToken, navigation, setHide]);
 
   return (
-    <Modal
-      onDismiss={() => {
-        setHide(false);
-      }}
-      visible={hide}>
-      <View style={styles.modal}>
-        <View>
-          <MainText size={fontSize[14]}>{t('675')}</MainText>
-          <View style={styles.brnCn}>
-            <TouchableOpacity
-              onPress={() => {
-                setHide(false);
-              }}
-              style={styles.btn}>
-              <MainText color={colors.white} size={fontSize[14]}>
-                {t('21')}
-              </MainText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              disabled={loading}
-              onPress={onLogOut}
-              style={[
-                styles.btn,
-                {
-                  backgroundColor: loading
-                    ? colors.disabledButtonColor
-                    : style.blue,
-                },
-              ]}>
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <MainText color={colors.white} size={fontSize[14]}>
-                  {t('672')}
-                </MainText>
-              )}
-            </TouchableOpacity>
-          </View>
+    <RNModal
+      visible={hide}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={() => setHide(false)}>
+      {/* Qorong'i (xira) backdrop — orqa fon aniq ko'rinmasin. Tashqariga bosilsa yopiladi. */}
+      <TouchableWithoutFeedback onPress={() => setHide(false)}>
+        <View style={styles.exitBackdrop}>
+          {/* Ichki bosishlar backdrop'ni yopmasin. */}
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={styles.exitCard}>
+              <View style={styles.exitIcon}>
+                <LogOutIcon size={rs(26)} color={rd.color.error} />
+              </View>
+              <Text allowFontScaling={false} style={styles.exitTitle}>
+                {t('672')}
+              </Text>
+              <Text allowFontScaling={false} style={styles.exitDesc}>
+                {t('675')}
+              </Text>
+              <View style={styles.exitBtns}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setHide(false)}
+                  style={styles.exitCancelBtn}>
+                  <Text allowFontScaling={false} style={styles.exitCancelText}>
+                    {t('21')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={loading}
+                  activeOpacity={0.85}
+                  onPress={onLogOut}
+                  style={[
+                    styles.exitConfirmBtn,
+                    loading && styles.exitConfirmBtnDisabled,
+                  ]}>
+                  {loading ? (
+                    <ActivityIndicator size="small" color={rd.color.onPrimary} />
+                  ) : (
+                    <Text allowFontScaling={false} style={styles.exitConfirmText}>
+                      {t('672')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
-    </Modal>
+      </TouchableWithoutFeedback>
+    </RNModal>
   );
 };
 
@@ -552,6 +564,93 @@ const styles = StyleSheet.create({
 
     // height: normalize(110),
     // maxHeight: normalize(110),
+  },
+  // ── Chiqish (logout) modali — professional, xira backdrop.
+  exitBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(9,14,26,0.62)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(28),
+  },
+  exitCard: {
+    width: '100%',
+    maxWidth: rs(360),
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    paddingHorizontal: rs(22),
+    paddingTop: rs(24),
+    paddingBottom: rs(20),
+    alignItems: 'center',
+    shadowColor: '#0b1220',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.28,
+    shadowRadius: 28,
+    elevation: 12,
+  },
+  exitIcon: {
+    width: rs(58),
+    height: rs(58),
+    borderRadius: rs(29),
+    backgroundColor: rd.color.errorBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(16),
+  },
+  exitTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    marginBottom: rs(6),
+  },
+  exitDesc: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(14),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    lineHeight: rs(20),
+    marginBottom: rs(22),
+  },
+  exitBtns: {
+    flexDirection: 'row',
+    alignSelf: 'stretch',
+    gap: rs(12),
+  },
+  exitCancelBtn: {
+    flex: 1,
+    height: rs(52),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.surfaceAlt,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  exitCancelText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.textSecondary,
+  },
+  exitConfirmBtn: {
+    flex: 1,
+    height: rs(52),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: rd.color.error,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  exitConfirmBtnDisabled: {
+    opacity: 0.6,
+  },
+  exitConfirmText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(15),
+    color: rd.color.onPrimary,
   },
   active: {
     backgroundColor: style.blue,
