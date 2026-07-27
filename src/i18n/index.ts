@@ -3,6 +3,8 @@ import {initReactI18next} from 'react-i18next';
 import kr from './new/kr.json';
 import uz from './new/uz.json';
 import ru from './new/ru.json';
+import en from './new/en.json';
+import kaa from './new/kaa.json';
 import {prefsStorage} from '../store/api/token/getToken';
 // `lang` maxfiy emas va shifrlangan `storage` async tayyor bo'lgani uchun bu yerda
 // (modul-yuklanish paytida) SINXRON prefsStorage'dan o'qiymiz.
@@ -15,6 +17,9 @@ i18n.use(initReactI18next).init({
     uz: uz,
     ru: ru,
     kr: kr,
+    // en/kaa — asosiy UI tarjima qilingan; qolgan kalitlar uz'ga fallback bo'ladi.
+    en: en,
+    kaa: kaa,
   },
   interpolation: {
     escapeValue: false, // react already safes from xss

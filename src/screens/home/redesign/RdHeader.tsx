@@ -36,7 +36,13 @@ const RdHeader = ({ title, subtitle, onBack, right, showBack = true }: Props) =>
       </View>
 
       <View style={styles.center}>
-        <Text style={styles.title} numberOfLines={1}>
+        {/* Uzun sarlavhalar (masalan "Foydalanish yo'riqnomasi") qirqilmasin —
+            avtomatik biroz kichrayadi (qisqa sarlavhalarga ta'sir qilmaydi). */}
+        <Text
+          style={styles.title}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}>
           {title}
         </Text>
         {subtitle ? (

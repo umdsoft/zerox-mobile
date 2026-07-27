@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import FileViewer from 'react-native-file-viewer';
 
 import { useRoute } from '@react-navigation/native';
-import ShareIcon from '../../../images/home/share.svg';
+import { ShareIcon } from '../redesign/icons';
 import DownloadIcon from '../../../images/home/download.svg';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Toast from 'react-native-toast-message';
@@ -200,7 +200,8 @@ const DownloadStatistic = () => {
             activeOpacity={0.85}
             style={styles.share}
           >
-            <ShareIcon width={rs(18)} height={rs(18)} />
+            {/* Ko'rinadigan share ikonasi (ilgari oq svg oq tugmada ko'rinmasdi). */}
+            <ShareIcon size={rs(18)} color={rd.color.text} />
             <Text style={styles.shareText} allowFontScaling={false}>
               {t('129')}
             </Text>

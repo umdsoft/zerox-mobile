@@ -17,7 +17,7 @@ const ToastCard = ({
 }) => {
   const isError = variant === 'error';
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isError && styles.cardError]}>
       <View
         style={[
           styles.iconCircle,
@@ -32,7 +32,10 @@ const ToastCard = ({
       </View>
       <View style={styles.textWrap}>
         {!!title && (
-          <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
+          <Text
+            allowFontScaling={false}
+            style={[styles.title, isError && styles.titleError]}
+            numberOfLines={2}>
             {title}
           </Text>
         )}
@@ -101,6 +104,11 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
+  // Xato toasti — QIZG'ISH fon + qizil chegara (eski ilovadagidek, e'tiborni tortadi).
+  cardError: {
+    backgroundColor: rd.color.errorBg,
+    borderColor: rd.color.error,
+  },
   accent: {
     position: 'absolute',
     left: 0,
@@ -121,10 +129,13 @@ const styles = StyleSheet.create({
   textWrap: { flex: 1, justifyContent: 'center' },
   title: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(14),
+    // Kichraytirildi (rs14 -> rs12.5) — "Bunday raqamli foydalanuvchi mavjud"
+    // to'liq sig'sin ("mavjud" qirqilmasin).
+    fontSize: rs(12.5),
     color: rd.color.text,
     marginBottom: 2,
   },
+  titleError: { color: rd.color.error },
   desc: {
     fontFamily: rd.font.regular,
     fontSize: rs(13),

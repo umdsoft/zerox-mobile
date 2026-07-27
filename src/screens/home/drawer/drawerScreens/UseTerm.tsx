@@ -118,11 +118,13 @@ const UseTerm = () => {
       <RdHeader title={t('foydalanishyoriqnomasi')} />
 
       <View style={styles.content}>
+        {/* Ixcham (kontent kengligi) — ilgari to'liq kenglik, juda uzun edi. */}
         <Button
           title={t('126')}
           onPress={onDownload}
           loading={downloadLoading}
           disabled={downloadLoading}
+          fullWidth={false}
           leftIcon={<DownloadIcon width={rs(18)} height={rs(18)} />}
           style={styles.download}
         />
@@ -174,7 +176,10 @@ const styles = StyleSheet.create({
     paddingBottom: rs(16),
   },
   download: {
+    marginTop: rs(6),
     marginBottom: rs(14),
+    paddingHorizontal: rs(28),
+    height: rs(46),
   },
   card: {
     flex: 1,

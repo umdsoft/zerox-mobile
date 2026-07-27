@@ -25,6 +25,8 @@ import {
   CloseIcon,
   WalletIcon,
   ChevronRight,
+  StarIcon,
+  MessageIcon,
 } from '../../redesign/icons';
 
 // Qarz daftari uslubidagi ikkilamchi (binafsha) urg'u — Premium karta uchun.
@@ -123,98 +125,41 @@ const Types = () => {
           Qarz daftari va qarz shartnomasi bo‘yicha narxlar
         </Text>
 
-        {/* ══ Qarz shartnomasi tariflari (mobil hisobdan yechiladi) ══ */}
-        <View style={styles.card}>
-          <View style={styles.cardHead}>
-            <View style={styles.headIcon}>
-              <ContractIcon size={rs(20)} color={rd.color.primary} />
+        {/* ══ SMS balans (ENG TEPADA — saytdagidek) ══ */}
+        <View style={styles.smsCard}>
+          <View style={styles.smsTop}>
+            <View style={styles.smsStar}>
+              <StarIcon size={rs(16)} color="#f5a623" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text allowFontScaling={false} style={styles.cardTitle}>
-                Qarz shartnomasi tariflari
+              <Text allowFontScaling={false} style={styles.smsLabel}>
+                Joriy tarif
               </Text>
-              <Text allowFontScaling={false} style={styles.cardSub}>
-                Har bir shartnoma uchun · Mobil hisobdan yechiladi
+              <Text allowFontScaling={false} style={styles.smsPlan}>
+                Free
+              </Text>
+            </View>
+            <View style={styles.smsCountWrap}>
+              <Text allowFontScaling={false} style={styles.smsCount}>
+                100
+              </Text>
+              <Text allowFontScaling={false} style={styles.smsCountLabel}>
+                SMS
               </Text>
             </View>
           </View>
-
-          <View style={styles.contractRow}>
-            <View style={styles.contractDot}>
-              <CheckIcon size={rs(15)} color={rd.color.success} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text allowFontScaling={false} style={styles.contractLabel}>
-                Bepul shartnomalar
-              </Text>
-              <Text
-                allowFontScaling={false}
-                style={[styles.contractValue, { color: rd.color.success }]}>
-                Mutlaqo bepul
-              </Text>
-              <Text allowFontScaling={false} style={styles.contractNote}>
-                Barcha foydalanuvchilarga qarz berishda
-              </Text>
-            </View>
+          <View style={styles.smsBarTrack}>
+            <View style={styles.smsBarFill} />
           </View>
-
-          <View style={styles.contractRow}>
-            <View style={[styles.contractDot, { backgroundColor: rd.color.primaryTint }]}>
-              <CoinIcon size={rs(15)} color={rd.color.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text allowFontScaling={false} style={styles.contractLabel}>
-                Shartnoma narxi
-              </Text>
-              <View style={styles.priceLine}>
-                <Text allowFontScaling={false} style={styles.priceTerm}>
-                  1 mln so‘mgacha
-                </Text>
-                <Text allowFontScaling={false} style={styles.priceVal}>
-                  1 000 UZS
-                </Text>
-              </View>
-              <View style={styles.priceLine}>
-                <Text allowFontScaling={false} style={styles.priceTerm}>
-                  1 mln – 100 mln so‘m
-                </Text>
-                <Text allowFontScaling={false} style={styles.priceVal}>
-                  0.1%
-                </Text>
-              </View>
-              <View style={styles.priceLine}>
-                <Text allowFontScaling={false} style={styles.priceTerm}>
-                  100 mln so‘mdan ortiq
-                </Text>
-                <Text allowFontScaling={false} style={styles.priceVal}>
-                  100 000 UZS
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Mobil hisob balansi (REAL) + to'ldirish. */}
-          <View style={styles.balanceBar}>
-            <View style={styles.balanceLeft}>
-              <WalletIcon size={rs(18)} color={rd.color.primary} />
-              <View style={{ marginLeft: rs(10) }}>
-                <Text allowFontScaling={false} style={styles.balanceLabel}>
-                  Mobil hisob balansingiz
-                </Text>
-                <Text allowFontScaling={false} style={styles.balanceValue}>
-                  {groupDigits(balance)} so‘m
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate('PayScreen')}
-              style={styles.topUpBtn}>
-              <Text allowFontScaling={false} style={styles.topUpText}>
-                To‘ldirish
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text allowFontScaling={false} style={styles.smsHint}>
+            SMS bildirishnomalar uchun Start yoki Premium tarifni tanlang
+          </Text>
+          <TouchableOpacity activeOpacity={0.7} onPress={soon} style={styles.smsHistoryBtn}>
+            <MessageIcon size={rs(15)} color={rd.color.primary} />
+            <Text allowFontScaling={false} style={styles.smsHistoryText}>
+              SMS xabarlar tarixi
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* ══ Qarz daftari tariflari (obuna) ══ */}
@@ -346,6 +291,97 @@ const Types = () => {
             </View>
           ))}
         </View>
+
+        {/* ══ Qarz shartnomasi tariflari (ENG PASTDA — subtitle OLIB TASHLANDI) ══ */}
+        <View style={[styles.card, { marginTop: rs(18) }]}>
+          <View style={styles.cardHead}>
+            <View style={styles.headIcon}>
+              <ContractIcon size={rs(20)} color={rd.color.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text allowFontScaling={false} style={styles.cardTitle}>
+                Qarz shartnomasi tariflari
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.contractRow}>
+            <View style={styles.contractDot}>
+              <CheckIcon size={rs(15)} color={rd.color.success} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text allowFontScaling={false} style={styles.contractLabel}>
+                Bepul shartnomalar
+              </Text>
+              <Text
+                allowFontScaling={false}
+                style={[styles.contractValue, { color: rd.color.success }]}>
+                Mutlaqo bepul
+              </Text>
+              <Text allowFontScaling={false} style={styles.contractNote}>
+                Barcha foydalanuvchilarga qarz berishda
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.contractRow}>
+            <View style={[styles.contractDot, { backgroundColor: rd.color.primaryTint }]}>
+              <CoinIcon size={rs(15)} color={rd.color.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text allowFontScaling={false} style={styles.contractLabel}>
+                Shartnoma narxi
+              </Text>
+              <View style={styles.priceLine}>
+                <Text allowFontScaling={false} style={styles.priceTerm}>
+                  1 mln so‘mgacha
+                </Text>
+                <Text allowFontScaling={false} style={styles.priceVal}>
+                  1 000 UZS
+                </Text>
+              </View>
+              <View style={styles.priceLine}>
+                <Text allowFontScaling={false} style={styles.priceTerm}>
+                  1 mln – 100 mln so‘m
+                </Text>
+                <Text allowFontScaling={false} style={styles.priceVal}>
+                  0.1%
+                </Text>
+              </View>
+              <View style={styles.priceLine}>
+                <Text allowFontScaling={false} style={styles.priceTerm}>
+                  100 mln so‘mdan ortiq
+                </Text>
+                <Text allowFontScaling={false} style={styles.priceVal}>
+                  100 000 UZS
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Mobil hisob balansi (REAL) + to'ldirish. */}
+          <View style={styles.balanceBar}>
+            <View style={styles.balanceLeft}>
+              <WalletIcon size={rs(18)} color={rd.color.primary} />
+              <View style={{ marginLeft: rs(10) }}>
+                <Text allowFontScaling={false} style={styles.balanceLabel}>
+                  Mobil hisob balansingiz
+                </Text>
+                <Text allowFontScaling={false} style={styles.balanceValue}>
+                  {groupDigits(balance)} so‘m
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('PayScreen')}
+              style={styles.topUpBtn}>
+              <Text allowFontScaling={false} style={styles.topUpText}>
+                To‘ldirish
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -365,6 +401,80 @@ const styles = StyleSheet.create({
     fontSize: rs(13),
     color: rd.color.textSecondary,
     marginBottom: rs(14),
+  },
+
+  // ── SMS balans kartasi (eng tepada, saytdagidek).
+  smsCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(16),
+    marginBottom: rs(18),
+  },
+  smsTop: { flexDirection: 'row', alignItems: 'center' },
+  smsStar: {
+    width: rs(38),
+    height: rs(38),
+    borderRadius: rs(12),
+    backgroundColor: '#fdf2df',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
+  },
+  smsLabel: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+  },
+  smsPlan: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    marginTop: rs(1),
+  },
+  smsCountWrap: { alignItems: 'flex-end' },
+  smsCount: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.primary,
+  },
+  smsCountLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(10.5),
+    color: rd.color.textTertiary,
+    marginTop: -rs(2),
+  },
+  smsBarTrack: {
+    height: rs(7),
+    borderRadius: rs(4),
+    backgroundColor: rd.color.surfaceAlt,
+    marginTop: rs(14),
+    overflow: 'hidden',
+  },
+  smsBarFill: {
+    height: '100%',
+    width: '100%',
+    borderRadius: rs(4),
+    backgroundColor: rd.color.primary,
+  },
+  smsHint: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+    marginTop: rs(10),
+  },
+  smsHistoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+    marginTop: rs(12),
+    alignSelf: 'flex-start',
+  },
+  smsHistoryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+    color: rd.color.primary,
   },
 
   // Umumiy karta

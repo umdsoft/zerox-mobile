@@ -1,479 +1,461 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {rd, rs} from '../../../theme/rd';
-import {sortText} from '../StatisticCard';
-import {ChevronRight} from '../../home/redesign/icons';
-import {checkDate, settingDate} from '../../../helper';
-// StatisticDebitor historically imported settingDate from UserDetails. Both
-// implementations are byte-for-byte equivalent (DD.MM.YYYY), so the shared
-// helper version below produces identical output for every variant.
-import {t} from 'i18next';
+import { useNavigation } from '@react-navigation/native';
+import { rd, rs } from '../../../theme/rd';
+import { sortText } from '../StatisticCard';
+import {
+  AvatarPersonIcon,
+  ArrowDownLeft,
+  CalendarIcon,
+  CheckIcon,
+  ChevronRight,
+  ClockIcon,
+  CloseIcon,
+  ContractIcon,
+  IconProps,
+  InfoIcon,
+  WalletIcon,
+} from '../../home/redesign/icons';
+import { checkDate, settingDate } from '../../../helper';
+import { t } from 'i18next';
 
 /**
- * DebtDetailList — qarz tafsiloti / statistika kartasi (4 ta eski komponent o'rnida 1 ta).
+ * DebtDetailList — qarz tafsiloti kartasi (REDIZAYN v2).
  *
- * Eski komponentlar:
- *   CreditorList     => role="creditor" variant="detail"
- *   DebitorList      => role="debitor"  variant="detail"
- *   StatisticCreditor=> role="creditor" variant="statistic"
- *   StatisticDebitor => role="debitor"  variant="statistic"
- *
- * REDIZAYN: eski ko'k-chiziqli spreadsheet-jadval (colors/style/MainText/Border)
- * o'rniga zamonaviy oq `rd.color.surface` karta — har qator "belgi chapda, qiymat
- * o'ngda", yengil `rd.color.border` ajratgich, summalar `rd.font.bold` va yo'nalish
- * bo'yicha rangli (debitor=qizil, creditor=yashil). Har bir qator (field, t() kaliti,
- * navigatsiya, shartli ko'rinish, hisob-kitob) eski fayldagidek AYNAN saqlangan.
+ * So'rov bo'yicha: FISH + qarz miqdori TEPADA alohida (FISH KO'K, summa QORA);
+ * qolgan qatorlar HAR BIRIGA MOS IKONA bilan. 4 variant (detail/statistic ×
+ * creditor/debitor) va ularning maydonlari/navigatsiyasi/shartli ko'rinishi
+ * eski fayldagidek AYNAN saqlangan — faqat vizual qatlam yangilandi.
  */
-
-const DebtDetailList = ({role = 'creditor', variant = 'detail', ...props}: any) => {
+const DebtDetailList = ({ role = 'creditor', variant = 'detail', ...props }: any) => {
   const isDetail = variant === 'detail';
   const isCreditor = role === 'creditor';
-
-  if (isCreditor && isDetail) {
-    return <CreditorDetail {...props} />;
-  }
-  if (!isCreditor && isDetail) {
-    return <DebitorDetail {...props} />;
-  }
-  if (isCreditor && !isDetail) {
-    return <CreditorStatistic {...props} />;
-  }
+  if (isCreditor && isDetail) return <CreditorDetail {...props} />;
+  if (!isCreditor && isDetail) return <DebitorDetail {...props} />;
+  if (isCreditor && !isDetail) return <CreditorStatistic {...props} />;
   return <DebitorStatistic {...props} />;
 };
 
 export default DebtDetailList;
 
-/* =========================================================================
- * Umumiy REDIZAYN qatlami — faqat vizual (belgi/qiymat qatori, ajratgich, karta).
- * ===================================================================== */
-const Divider = () => <View style={styles.divider} />;
+/* ── Umumiy qatlam ─────────────────────────────────────────────── */
 
-const Row = ({
+// FISH (ko'k, bosiladigan) + Qarz miqdori (qora) — TEPA karta.
+const PartyHeader = ({
   label,
-  value,
-  valueColor,
-  bold,
+  name,
+  amount,
   onPress,
-  link,
 }: {
   label: string;
-  value: React.ReactNode;
+  name?: string;
+  amount: string;
+  onPress?: () => void;
+}) => (
+  <View style={styles.headerCard}>
+    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.partyRow}>
+      <View style={styles.partyAvatar}>
+        <AvatarPersonIcon size={rs(26)} color={rd.color.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text allowFontScaling={false} style={styles.partyLabel}>
+          {label}
+        </Text>
+        <Text allowFontScaling={false} numberOfLines={2} style={styles.partyName}>
+          {name}
+        </Text>
+      </View>
+      {onPress ? <ChevronRight size={rs(18)} color={rd.color.textTertiary} /> : null}
+    </TouchableOpacity>
+    <View style={styles.amountBlock}>
+      <Text allowFontScaling={false} style={styles.amountLabel}>
+        {t('327')}
+      </Text>
+      <Text allowFontScaling={false} numberOfLines={1} style={styles.amountValue}>
+        {amount}
+      </Text>
+    </View>
+  </View>
+);
+
+// Ikonali qator (chapda mos ikona, o'ngda qiymat).
+const IconRow = ({
+  Icon,
+  label,
+  value,
+  valueNode,
+  valueColor,
+  onPress,
+  link,
+  divider,
+}: {
+  Icon: (p: IconProps) => JSX.Element;
+  label: string;
+  value?: string;
+  valueNode?: React.ReactNode;
   valueColor?: string;
-  bold?: boolean;
   onPress?: () => void;
   link?: boolean;
+  divider?: boolean;
 }) => {
-  const valueStyle = [
-    styles.value,
-    bold && styles.valueBold,
-    valueColor ? {color: valueColor} : null,
-  ];
-
-  const valueNode =
-    typeof value === 'string' || typeof value === 'number' ? (
-      <Text allowFontScaling={false} style={valueStyle} numberOfLines={2}>
+  const node =
+    valueNode ??
+    (
+      <Text
+        allowFontScaling={false}
+        numberOfLines={2}
+        style={[styles.rowValue, valueColor ? { color: valueColor } : null]}>
         {value}
       </Text>
-    ) : (
-      value
     );
-
   return (
-    <View style={styles.row}>
-      <Text allowFontScaling={false} style={styles.label}>
+    <View style={[styles.row, divider && styles.rowDivider]}>
+      <View style={styles.rowIcon}>
+        <Icon size={rs(17)} color={rd.color.primary} />
+      </View>
+      <Text allowFontScaling={false} style={styles.rowLabel}>
         {label}
       </Text>
       {onPress ? (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={onPress}
-          style={styles.valueTouch}>
-          {valueNode}
-          {link ? (
-            <ChevronRight size={rs(15)} color={rd.color.primary} />
-          ) : null}
+        <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.rowRight}>
+          {node}
+          {link ? <ChevronRight size={rs(15)} color={rd.color.primary} /> : null}
         </TouchableOpacity>
       ) : (
-        <View style={styles.valueTouch}>{valueNode}</View>
+        <View style={styles.rowRight}>{node}</View>
       )}
     </View>
   );
 };
 
-const StatusValue = ({ok, okLabel, noLabel}: {ok: boolean; okLabel: string; noLabel: string}) => (
+const StatusValue = ({ ok, okLabel, noLabel }: any) => (
   <Text
     allowFontScaling={false}
-    style={[styles.value, {color: ok ? rd.color.success : rd.color.error}]}>
+    style={[styles.rowValue, { color: ok ? rd.color.success : rd.color.error }]}>
     {ok ? okLabel : noLabel}
   </Text>
 );
 
-const Card = ({children, gap}: {children: React.ReactNode; gap?: boolean}) => (
-  <View style={[styles.card, gap && styles.cardGap]}>{children}</View>
+const Contract = ({ number, onPress, label }: any) => (
+  <IconRow
+    Icon={ContractIcon}
+    label={label}
+    value={number}
+    valueColor={rd.color.primary}
+    link
+    divider
+    onPress={onPress}
+  />
 );
 
-/* =========================================================================
- * role="creditor" variant="detail"  (eski CreditorList)
- * ===================================================================== */
-const CreditorDetail = ({type, item, status}) => {
-  const navigation = useNavigation();
-
+/* ── role="creditor" variant="detail" (eski CreditorList) ───────── */
+const CreditorDetail = ({ item }: any) => {
+  const navigation = useNavigation<any>();
+  const cur = item?.currency;
   return (
-    <Card>
-      <Row
+    <View>
+      <PartyHeader
         label={t('273')}
-        value={item?.debitor_name}
-        valueColor={rd.color.success}
-        onPress={() => {
-          navigation.navigate('ShowUserDetails', {id: item.duid, type: 1});
-        }}
+        name={item?.debitor_name}
+        amount={`${sortText(item?.amount)} ${cur}`}
+        onPress={() => navigation.navigate('ShowUserDetails', { id: item.duid, type: 1 })}
       />
-      <Divider />
-      <Row
-        label={t('327')}
-        value={`${sortText(item?.amount)} ${item?.currency}`}
-        valueColor={rd.color.success}
-        bold
-      />
-      <Divider />
-      <Row
-        label={t('330')}
-        value={`${sortText(item?.inc == null ? 0 : item?.inc)} ${item?.currency}`}
-      />
-      {item?.residual_amount == null ? null : (
-        <>
-          <Divider />
-          <Row
+      <View style={styles.detailCard}>
+        <IconRow
+          Icon={ArrowDownLeft}
+          label={t('330')}
+          value={`${sortText(item?.inc == null ? 0 : item?.inc)} ${cur}`}
+        />
+        {item?.residual_amount == null ? null : (
+          <IconRow
+            Icon={WalletIcon}
             label={t('420')}
-            value={`${sortText(item?.residual_amount)} ${item?.currency}`}
+            value={`${sortText(item?.residual_amount)} ${cur}`}
+            divider
           />
-        </>
-      )}
-      <Divider />
-      <Row label={t('390')} value={settingDate(item?.created_at)} />
-      <Divider />
-      <Row label={t('396')} value={settingDate(item?.end_date)} />
-
-      {item?.vos_summa == null && item.status == null ? null : (
-        <>
-          <Divider />
-          <Row
+        )}
+        <IconRow
+          Icon={CalendarIcon}
+          label={t('390')}
+          value={settingDate(item?.created_at)}
+          divider
+        />
+        <IconRow
+          Icon={ClockIcon}
+          label={t('396')}
+          value={settingDate(item?.end_date)}
+          divider
+        />
+        {item?.vos_summa == null && item?.status == null ? null : (
+          <IconRow
+            Icon={CloseIcon}
             label={t('333')}
-            value={`${item?.vos_summa !== null ? sortText(item?.vos_summa) : 0} ${item?.currency}`}
+            value={`${item?.vos_summa !== null ? sortText(item?.vos_summa) : 0} ${cur}`}
+            divider
           />
-        </>
-      )}
-
-      {item?.status == null ? null : (
-        <>
-          <Divider />
-          <Row
+        )}
+        {item?.status == null ? null : (
+          <IconRow
+            Icon={InfoIcon}
             label={t('339')}
-            value={
-              <StatusValue
-                ok={item?.status === 2}
-                okLabel={t('198')}
-                noLabel={t('201')}
-              />
-            }
+            divider
+            valueNode={<StatusValue ok={item?.status === 2} okLabel={t('198')} noLabel={t('201')} />}
           />
-        </>
-      )}
-      <Divider />
-      <Row
-        label={t('324')}
-        value={item?.number}
-        valueColor={rd.color.primary}
-        link
-        onPress={() => {
-          navigation.navigate('DownloadStatistic', {item: item, id: item.uid});
-        }}
-      />
-    </Card>
+        )}
+        <Contract
+          label={t('324')}
+          number={item?.number}
+          onPress={() => navigation.navigate('DownloadStatistic', { item, id: item.uid })}
+        />
+      </View>
+    </View>
   );
 };
 
-/* =========================================================================
- * role="debitor" variant="detail"  (eski DebitorList)
- * ===================================================================== */
-const DebitorDetail = ({isHave, item, type, status, person}) => {
-  const navigation = useNavigation();
-
+/* ── role="debitor" variant="detail" (eski DebitorList) ─────────── */
+const DebitorDetail = ({ item, isHave }: any) => {
+  const navigation = useNavigation<any>();
+  const cur = item?.currency;
   return (
-    <Card gap>
-      <Row
+    <View>
+      <PartyHeader
         label={t('270')}
-        value={item?.creditor_name}
-        valueColor={rd.color.error}
-        onPress={() => {
-          navigation.navigate('ShowUserDetails', {id: item.cuid, type: 0});
-        }}
+        name={item?.creditor_name}
+        amount={`${sortText(item?.amount)} ${cur}`}
+        onPress={() => navigation.navigate('ShowUserDetails', { id: item.cuid, type: 0 })}
       />
-      <Divider />
-      <Row
-        label={t('327')}
-        value={`${sortText(item?.amount)} ${item?.currency}`}
-        valueColor={rd.color.error}
-        bold
-      />
-      <Divider />
-      <Row
-        label={t('330')}
-        value={`${sortText(item?.inc)} ${item?.currency}`}
-      />
-      {isHave ? (
-        <>
-          <Divider />
-          <Row
+      <View style={styles.detailCard}>
+        <IconRow Icon={ArrowDownLeft} label={t('330')} value={`${sortText(item?.inc)} ${cur}`} />
+        {isHave ? (
+          <IconRow
+            Icon={WalletIcon}
             label={t('420')}
-            value={`${sortText(item?.residual_amount)} ${item?.currency}`}
+            value={`${sortText(item?.residual_amount)} ${cur}`}
+            divider
           />
-        </>
-      ) : null}
-      <Divider />
-      <Row label={t('303')} value={settingDate(item?.created_at)} />
-      <Divider />
-      <Row label={t('396')} value={checkDate(item?.end_date)} />
-
-      {item?.vos_summa == null ? null : (
-        <>
-          <Divider />
-          <Row label={t('333')} value={item?.vos_summa} />
-        </>
-      )}
-      {item?.status && (
-        <>
-          <Divider />
-          <Row
+        ) : null}
+        <IconRow Icon={CalendarIcon} label={t('303')} value={settingDate(item?.created_at)} divider />
+        <IconRow Icon={ClockIcon} label={t('396')} value={checkDate(item?.end_date)} divider />
+        {item?.vos_summa == null ? null : (
+          <IconRow Icon={CloseIcon} label={t('333')} value={`${item?.vos_summa}`} divider />
+        )}
+        {item?.status ? (
+          <IconRow
+            Icon={InfoIcon}
             label={t('339')}
-            value={
-              <StatusValue
-                ok={item?.status === 2}
-                okLabel={t('198')}
-                noLabel={t('261')}
-              />
-            }
+            divider
+            valueNode={<StatusValue ok={item?.status === 2} okLabel={t('198')} noLabel={t('261')} />}
           />
-        </>
-      )}
-      <Divider />
-      <Row
-        label={t('306')}
-        value={item?.number}
-        valueColor={rd.color.primary}
-        link
-        onPress={() => {
-          navigation.navigate('DownloadStatistic', {item: item, id: item.id});
-        }}
-      />
-    </Card>
+        ) : null}
+        <Contract
+          label={t('306')}
+          number={item?.number}
+          onPress={() => navigation.navigate('DownloadStatistic', { item, id: item.id })}
+        />
+      </View>
+    </View>
   );
 };
 
-/* =========================================================================
- * role="creditor" variant="statistic"  (eski StatisticCreditor)
- * ===================================================================== */
-const CreditorStatistic = ({type, item, status}) => {
-  const navigation = useNavigation();
-
+/* ── role="creditor" variant="statistic" (eski StatisticCreditor) ─ */
+const CreditorStatistic = ({ item }: any) => {
+  const navigation = useNavigation<any>();
+  const cur = item?.currency;
   return (
-    <Card>
-      <Row
+    <View>
+      <PartyHeader
         label={t('273')}
-        value={item?.debitor_name}
-        valueColor={rd.color.success}
-        onPress={() => {
-          navigation.navigate('ShowUserDetails', {id: item.duid, type: 1});
-        }}
+        name={item?.debitor_name}
+        amount={`${sortText(item?.amount)} ${cur}`}
+        onPress={() => navigation.navigate('ShowUserDetails', { id: item.duid, type: 1 })}
       />
-      <Divider />
-      <Row
-        label={t('327')}
-        value={`${sortText(item?.amount)} ${item?.currency}`}
-        valueColor={rd.color.success}
-        bold
-      />
-      <Divider />
-      <Row
-        label={t('330')}
-        value={
-          item?.inc == null ? '-' : sortText(item?.inc) + ' ' + item?.currency
-        }
-      />
-      {item?.vos_summa == null && item.status == null ? null : (
-        <>
-          <Divider />
-          <Row
+      <View style={styles.detailCard}>
+        <IconRow
+          Icon={ArrowDownLeft}
+          label={t('330')}
+          value={item?.inc == null ? '-' : `${sortText(item?.inc)} ${cur}`}
+        />
+        {item?.vos_summa == null && item?.status == null ? null : (
+          <IconRow
+            Icon={CloseIcon}
             label={t('333')}
-            value={
-              item?.vos_summa !== null
-                ? sortText(item?.vos_summa) + ' ' + item?.currency
-                : ' - '
-            }
+            value={item?.vos_summa !== null ? `${sortText(item?.vos_summa)} ${cur}` : ' - '}
+            divider
           />
-        </>
-      )}
-      <Divider />
-      <Row
-        label={item.status === 2 ? t('390') : t('336')}
-        value={settingDate(item?.created_at)}
-      />
-      {item.status === 2 ? (
-        <>
-          <Divider />
-          <Row label={t('321')} value={settingDate(item?.sana)} />
-        </>
-      ) : null}
-      <Divider />
-      <Row
-        label={t('339')}
-        value={
-          <StatusValue
-            ok={item?.status === 2}
-            okLabel={t('198')}
-            noLabel={t('201')}
-          />
-        }
-      />
-      <Divider />
-      <Row
-        label={t('324')}
-        value={item?.number}
-        valueColor={rd.color.primary}
-        link
-        onPress={() => {
-          navigation.navigate('DownloadStatistic', {item: item, id: item.uid});
-        }}
-      />
-    </Card>
+        )}
+        <IconRow
+          Icon={CalendarIcon}
+          label={item?.status === 2 ? t('390') : t('336')}
+          value={settingDate(item?.created_at)}
+          divider
+        />
+        {item?.status === 2 ? (
+          <IconRow Icon={CheckIcon} label={t('321')} value={settingDate(item?.sana)} divider />
+        ) : null}
+        <IconRow
+          Icon={InfoIcon}
+          label={t('339')}
+          divider
+          valueNode={<StatusValue ok={item?.status === 2} okLabel={t('198')} noLabel={t('201')} />}
+        />
+        <Contract
+          label={t('324')}
+          number={item?.number}
+          onPress={() => navigation.navigate('DownloadStatistic', { item, id: item.uid })}
+        />
+      </View>
+    </View>
   );
 };
 
-/* =========================================================================
- * role="debitor" variant="statistic"  (eski StatisticDebitor)
- * ===================================================================== */
-const DebitorStatistic = ({isHave, item}) => {
-  const navigation = useNavigation();
-
+/* ── role="debitor" variant="statistic" (eski StatisticDebitor) ─── */
+const DebitorStatistic = ({ item }: any) => {
+  const navigation = useNavigation<any>();
+  const cur = item?.currency;
   return (
-    <Card gap>
-      <Row
+    <View>
+      <PartyHeader
         label={t('270')}
-        value={item?.creditor_name}
-        valueColor={rd.color.error}
-        onPress={() => {
-          navigation.navigate('ShowUserDetails', {id: item.cuid, type: 0});
-        }}
+        name={item?.creditor_name}
+        amount={`${sortText(item?.amount)} ${cur}`}
+        onPress={() => navigation.navigate('ShowUserDetails', { id: item.cuid, type: 0 })}
       />
-      <Divider />
-      <Row
-        label={t('327')}
-        value={sortText(item?.amount) + ' ' + item?.currency}
-        valueColor={rd.color.error}
-        bold
-      />
-      <Divider />
-      <Row
-        label={t('330')}
-        value={
-          item.inc === null
-            ? '-'
-            : sortText(item?.inc) + ' ' + `${item?.currency}`
-        }
-      />
-      <Divider />
-      <Row
-        label={t('333')}
-        value={
-          item.vos_summa === null
-            ? '-'
-            : sortText(item?.vos_summa) + ' ' + `${item?.currency}`
-        }
-      />
-      <Divider />
-      <Row
-        label={item.status === 2 ? t('303') : t('336')}
-        value={settingDate(item?.created_at)}
-      />
-      {item.status === 2 ? (
-        <>
-          <Divider />
-          <Row label={t('321')} value={settingDate(item?.sana)} />
-        </>
-      ) : null}
-      {item?.status && (
-        <>
-          <Divider />
-          <Row
+      <View style={styles.detailCard}>
+        <IconRow
+          Icon={ArrowDownLeft}
+          label={t('330')}
+          value={item?.inc === null ? '-' : `${sortText(item?.inc)} ${cur}`}
+        />
+        <IconRow
+          Icon={CloseIcon}
+          label={t('333')}
+          value={item?.vos_summa === null ? '-' : `${sortText(item?.vos_summa)} ${cur}`}
+          divider
+        />
+        <IconRow
+          Icon={CalendarIcon}
+          label={item?.status === 2 ? t('303') : t('336')}
+          value={settingDate(item?.created_at)}
+          divider
+        />
+        {item?.status === 2 ? (
+          <IconRow Icon={CheckIcon} label={t('321')} value={settingDate(item?.sana)} divider />
+        ) : null}
+        {item?.status ? (
+          <IconRow
+            Icon={InfoIcon}
             label={t('339')}
-            value={
-              <StatusValue
-                ok={item?.status === 2}
-                okLabel={t('198')}
-                noLabel={t('201')}
-              />
-            }
+            divider
+            valueNode={<StatusValue ok={item?.status === 2} okLabel={t('198')} noLabel={t('201')} />}
           />
-        </>
-      )}
-      <Divider />
-      <Row
-        label={t('306')}
-        value={item?.number}
-        valueColor={rd.color.primary}
-        link
-        onPress={() => {
-          navigation.navigate('DownloadStatistic', {item: item, id: item.id});
-        }}
-      />
-    </Card>
+        ) : null}
+        <Contract
+          label={t('306')}
+          number={item?.number}
+          onPress={() => navigation.navigate('DownloadStatistic', { item, id: item.id })}
+        />
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
+  // ── TEPA karta: FISH (ko'k) + summa (qora).
+  headerCard: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    overflow: 'hidden',
-    paddingHorizontal: rs(4),
+    marginTop: rs(8),
+    padding: rs(14),
   },
-  cardGap: {marginTop: rs(16)},
-
-  row: {
+  partyRow: { flexDirection: 'row', alignItems: 'center' },
+  partyAvatar: {
+    width: rs(46),
+    height: rs(46),
+    borderRadius: rs(23),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: rs(12),
+  },
+  partyLabel: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
+  },
+  // FISH — KO'K (so'rov bo'yicha).
+  partyName: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(15),
+    color: rd.color.primary,
+    marginTop: rs(2),
+  },
+  amountBlock: {
+    marginTop: rs(14),
+    paddingTop: rs(12),
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: rs(13),
-    paddingHorizontal: rs(12),
-    gap: rs(12),
   },
-  label: {
+  amountLabel: {
     fontFamily: rd.font.medium,
     fontSize: rs(13),
     color: rd.color.textSecondary,
+  },
+  // Qarz miqdori — QORA (so'rov bo'yicha).
+  amountValue: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+    marginLeft: rs(10),
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+
+  // ── Pastki karta: ikonali qatorlar.
+  detailCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    marginTop: rs(14),
+    paddingHorizontal: rs(12),
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: rs(13),
+    gap: rs(10),
+  },
+  rowDivider: { borderTopWidth: 1, borderTopColor: rd.color.border },
+  rowIcon: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(11),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
     flexShrink: 0,
   },
-  valueTouch: {
+  rowRight: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: rs(4),
   },
-  value: {
+  rowValue: {
     fontFamily: rd.font.semibold,
     fontSize: rs(13.5),
     color: rd.color.text,
     textAlign: 'right',
-  },
-  valueBold: {fontFamily: rd.font.bold},
-
-  divider: {
-    height: 1,
-    backgroundColor: rd.color.border,
-    marginHorizontal: rs(12),
   },
 });

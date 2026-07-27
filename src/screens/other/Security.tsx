@@ -126,6 +126,8 @@ const Security = () => {
         </TouchableOpacity>
         {support ? renderSwitch : null}
       </View>
+      {/* Menyu bandlari juda pastga tushmasin — ozgina bo'sh joy qoldiramiz. */}
+      <View style={styles.bottomGap} />
     </ScreenLayout>
   );
 };
@@ -134,7 +136,9 @@ export default Security;
 
 const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: rs(16), paddingBottom: rs(20) },
+  // Ikona yuqori qismda (biroz yuqoriroq) — top flex:1, past bo'sh joy flex:0.45.
   top: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  bottomGap: { flex: 0.45 },
   lottie: { width: rs(150), height: rs(150) },
   card: {
     backgroundColor: rd.color.surface,

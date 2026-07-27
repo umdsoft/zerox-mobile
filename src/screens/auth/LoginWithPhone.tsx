@@ -90,8 +90,13 @@ const LoginWithPhone = () => {
           setLoading(false);
           return;
         }
+        // Xato telefon/parol — backend {success:false, message:'invalid-credentials',
+        // attemptsLeft: N} (HTTP 200) qaytaradi. Ilgari 'invalid-password' tekshirilardi
+        // (mos kelmasdi) => notification umuman chiqmasdi. Endi to'g'ri xabar +
+        // qolgan urinishlar soni; urinishlar tugasa 30 daqiqalik blok xabari.
         if (
-          response.message === 'invalid-password' &&
+          (response.message === 'invalid-credentials' ||
+            response.message === 'invalid-password') &&
           response.success === false
         ) {
           Toast.show({
@@ -100,7 +105,10 @@ const LoginWithPhone = () => {
             position: 'bottom',
             type: 'error2',
             props: {
-              desc: t('10001', { count: response.attemptsLeft }),
+              desc:
+                response.attemptsLeft > 0
+                  ? t('10001', { count: response.attemptsLeft })
+                  : t('10003'),
             },
           });
 
@@ -158,30 +166,37 @@ const LoginWithPhone = () => {
         }
       }
     } catch (e) {
-      if (e.message === 'error') {
+      // Xato telefon/parol (agar kelajakda non-200 bo'lib throw qilinsa ham) —
+      // qolgan urinishlar soni; urinishlar tugasa 30 daqiqalik blok xabari.
+      if (
+        e?.message === 'error' ||
+        e?.message === 'user-not-found' ||
+        e?.message === 'invalid-credentials' ||
+        e?.message === 'invalid-password'
+      ) {
         Toast.show({
           autoHide: true,
           visibilityTime: 4000,
           position: 'bottom',
           type: 'error2',
           props: {
-            desc: t('10001', { count: e.attemptsLeft || 0 }),
+            desc:
+              (e?.attemptsLeft ?? 0) > 0
+                ? t('10001', { count: e.attemptsLeft })
+                : t('10003'),
           },
         });
-
         setLoading(false);
         return;
       }
 
-      if (e.message === 'user-not-found') {
+      if (e?.message === 'account-blocked') {
         Toast.show({
           autoHide: true,
           visibilityTime: 4000,
           position: 'bottom',
           type: 'error2',
-          props: {
-            desc: t('10001', { count: e.attemptsLeft || 0 }),
-          },
+          props: { desc: t('10003') },
         });
         setLoading(false);
         return;

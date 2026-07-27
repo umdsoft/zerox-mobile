@@ -274,12 +274,11 @@ const QrCode = () => {
     });
   };
 
-  const fullName = `${user?.data?.last_name ?? ''} ${
+  // FISH: familiya + ism BIR qatorda, otasining ismi PASTKI qatorda (so'rov bo'yicha).
+  const nameLine1 = `${user?.data?.last_name ?? ''} ${
     user?.data?.first_name ?? ''
-  } ${user?.data?.middle_name ?? ''}`.trim();
-  const initials = `${user?.data?.last_name?.[0] ?? ''}${
-    user?.data?.first_name?.[0] ?? ''
-  }`.toUpperCase();
+  }`.trim();
+  const nameLine2 = `${user?.data?.middle_name ?? ''}`.trim();
 
   return (
     <ScreenLayout title={t('qrcode')}>
@@ -296,10 +295,12 @@ const QrCode = () => {
           }}
         >
           <View style={styles.qrCard}>
+            {/* viewBox — komponentning DEFAULT (0 350 4000 1000) framing'i:
+                "ZeroX" TO'LIQ ko'rinadi (ilgari 0 0 4000 1300 override "Z"ni qirqardi). */}
             <ZeroXWordmark
-              width={rs(120)}
-              height={rs(40)}
-              viewBox="0 0 4000 1300"
+              width={rs(140)}
+              height={rs(38)}
+              viewBox="0 350 4000 1000"
               fill="#0063B6"
               color="#FF2D2D"
             />
@@ -308,7 +309,7 @@ const QrCode = () => {
               <QRCode
                 getRef={c => setProductQRref(c)}
                 ecl="M"
-                color={rd.color.text}
+                color={rd.color.primary}
                 backgroundColor={rd.color.surface}
                 size={rs(210)}
                 logoBorderRadius={5}
@@ -321,13 +322,14 @@ const QrCode = () => {
               {t('idNumber')}: {user?.data?.uid}
             </Text>
 
-            <Text
-              allowFontScaling={false}
-              style={styles.nameText}
-              numberOfLines={2}
-            >
-              {fullName}
+            <Text allowFontScaling={false} numberOfLines={1} style={styles.nameText}>
+              {nameLine1}
             </Text>
+            {nameLine2 ? (
+              <Text allowFontScaling={false} numberOfLines={1} style={styles.nameText2}>
+                {nameLine2}
+              </Text>
+            ) : null}
           </View>
         </ViewShot>
 
@@ -408,6 +410,16 @@ const styles = StyleSheet.create({
     color: rd.color.text,
     textAlign: 'center',
     marginTop: rs(6),
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  // Otasining ismi — pastki qator.
+  nameText2: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(16),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(1),
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },

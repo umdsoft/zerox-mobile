@@ -109,6 +109,43 @@ export const CloseIcon = (p: IconProps) => (
   </Base>
 );
 
+// Kalendar (tug'ilgan sana).
+export const CalendarIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="4.5" width="18" height="16" rx="2.5" />
+    <Line x1="3" y1="9" x2="21" y2="9" />
+    <Line x1="8" y1="2.5" x2="8" y2="6" />
+    <Line x1="16" y1="2.5" x2="16" y2="6" />
+  </Base>
+);
+
+// Joylashuv nuqtasi (manzil).
+export const LocationIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M20 10.5c0 5-8 11-8 11s-8-6-8-11a8 8 0 0 1 16 0Z" />
+    <Circle cx="12" cy="10.5" r="2.6" />
+  </Base>
+);
+
+// ID karta (tizimdagi ID raqami).
+export const IdCardIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <Circle cx="8.5" cy="11.5" r="2" />
+    <Line x1="13" y1="10" x2="18" y2="10" />
+    <Line x1="13" y1="13.5" x2="17" y2="13.5" />
+    <Path d="M5.4 16.2c.5-1.4 1.8-2.1 3.1-2.1s2.6.7 3.1 2.1" />
+  </Base>
+);
+
+// Telefon qilish (dumaloq tugma ichida — call).
+export const PhoneCallIcon = (p: IconProps) => (
+  <Base {...p} strokeWidth={p.strokeWidth ?? 2}>
+    <Path d="M15.5 3.5a5 5 0 0 1 5 5M14.5 6.8a2.3 2.3 0 0 1 1.9 1.9" />
+    <Path d="M6.5 4h2l1.2 3.2-1.6 1.1a11 11 0 0 0 4.6 4.6l1.1-1.6L17 12.5v2a1.5 1.5 0 0 1-1.6 1.5A12 12 0 0 1 5 5.6 1.5 1.5 0 0 1 6.5 4Z" />
+  </Base>
+);
+
 // Biometrik: Face ID ramkasi (burchak qavslar) + ichida barmoq izi (Touch ID).
 // Android'da Touch ID, iOS'da Face ID ni bildiruvchi UMUMLASHTIRILGAN ikona.
 export const FaceTouchIdIcon = (p: IconProps) => (

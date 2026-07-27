@@ -1,4 +1,11 @@
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import {
+  Linking,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { useRoute } from '@react-navigation/native';
@@ -16,18 +23,28 @@ import Famale from '../../images/Famale';
 import { settingDate } from '../../helper';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
-import { ClockIcon, IconProps, PhoneIcon, ShieldIcon } from '../home/redesign/icons';
+import {
+  CalendarIcon,
+  ClockIcon,
+  IconProps,
+  IdCardIcon,
+  LocationIcon,
+  PhoneIcon,
+  PhoneCallIcon,
+} from '../home/redesign/icons';
 
 const InfoRow = ({
   Icon,
   label,
   value,
   divider,
+  right,
 }: {
   Icon: (p: IconProps) => JSX.Element;
   label: string;
   value?: string;
   divider?: boolean;
+  right?: React.ReactNode;
 }) => (
   <View style={[styles.infoRow, divider && styles.infoDivider]}>
     <View style={styles.infoIcon}>
@@ -41,6 +58,7 @@ const InfoRow = ({
         {value}
       </Text>
     </View>
+    {right}
   </View>
 );
 
@@ -97,11 +115,12 @@ const ShowUserDetails = () => {
         </Text>
       </View>
 
+      {/* Har qatorda MOS ikona (takrorlanmaydi). */}
       <View style={styles.infoCard}>
-        <InfoRow Icon={ClockIcon} label={t('684')} value={data?.brithday} />
+        <InfoRow Icon={CalendarIcon} label={t('684')} value={data?.brithday} />
         <InfoRow
-          Icon={ShieldIcon}
-          label={t('786')}
+          Icon={LocationIcon}
+          label="Manzili"
           value={`${data?.region ?? ''} ${data?.district ?? ''}`.trim()}
           divider
         />
@@ -111,8 +130,28 @@ const ShowUserDetails = () => {
           value={settingDate(data?.created_at)}
           divider
         />
-        <InfoRow Icon={ShieldIcon} label={t('120')} value={data?.uid} divider />
-        <InfoRow Icon={PhoneIcon} label={t('27')} value={data?.phone} divider />
+        <InfoRow
+          Icon={IdCardIcon}
+          label="Tizimdagi ID raqami"
+          value={data?.uid}
+          divider
+        />
+        <InfoRow
+          Icon={PhoneIcon}
+          label={t('27')}
+          value={data?.phone}
+          divider
+          right={
+            data?.phone ? (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => Linking.openURL(`tel:${data?.phone}`)}
+                style={styles.callBtn}>
+                <PhoneCallIcon size={rs(18)} color={rd.color.onPrimary} />
+              </TouchableOpacity>
+            ) : null
+          }
+        />
       </View>
     </ScreenLayout>
   );
@@ -185,5 +224,15 @@ const styles = StyleSheet.create({
     fontSize: rs(14.5),
     color: rd.color.text,
     marginTop: 3,
+  },
+  // Telefon qilish tugmasi (yashil, telefon raqami o'ng tomonida).
+  callBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: rs(8),
   },
 });
