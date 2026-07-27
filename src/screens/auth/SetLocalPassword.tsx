@@ -33,6 +33,7 @@ import { heightPercentageToDP } from 'react-native-responsive-screen';
 import { rd, rs } from '../../theme/rd';
 import {
   BackspaceIcon,
+  FaceTouchIdIcon,
   FingerprintIcon,
   ShieldIcon,
 } from '../home/redesign/icons';
@@ -516,9 +517,14 @@ const SetLocalPassword = () => {
                 <View style={styles.codeNumberContainer}>
                   {Array.from({ length: 12 }, (_v, i) => {
                     if (i === 9) {
+                      // 0 ning CHAP tomonidagi tugma — biometrik (Face ID / Touch ID).
+                      // PIN KIRITISH (unlock, !isLocal) rejimida DOIM ko'rinadi:
+                      // bosilganda Android'da barmoq izi, iOS'da Face ID ishga tushadi
+                      // (onFingerScan platformani o'zi aniqlaydi). PIN O'RNATISHDA
+                      // (isLocal) biometrik tegishli emas -> bo'sh joy.
                       return (
                         <View key={i} style={[styles.codeNumberContainer]}>
-                          {supportScan ? (
+                          {!isLocal ? (
                             <Pressable
                               android_ripple={{
                                 color: rd.color.primary,
@@ -530,7 +536,7 @@ const SetLocalPassword = () => {
                               }}
                               style={styles.codeButton}
                             >
-                              <FingerprintIcon
+                              <FaceTouchIdIcon
                                 size={rs(30)}
                                 color={rd.color.primary}
                               />

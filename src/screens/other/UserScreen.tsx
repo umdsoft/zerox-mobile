@@ -21,18 +21,10 @@ import {
   HelpIcon,
   LogOutIcon,
   CoinIcon,
-  ManIcon,
-  WomanIcon,
+  AvatarPersonIcon,
   CheckIcon,
 } from '../home/redesign/icons';
 
-// O'zbek ismidan jinsni taxmin qilish (profil avatari uchun).
-const isFemaleUser = (name?: string) => {
-  const n = (name || '').toLowerCase();
-  if (/qizi/.test(n)) return true;
-  if (/o.?g.?li|ug.?li/.test(n)) return false;
-  return /(ova|eva|yeva)(\s|$)/.test(n);
-};
 import messaging from '@react-native-firebase/messaging';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {storage} from '../../store/api/token/getToken';
@@ -159,16 +151,9 @@ const UserScreen = () => {
         showsVerticalScrollIndicator={false}>
         {/* Profile header card */}
         <View style={styles.profileCard}>
-          {/* "Z" bosh harfi O'RNIGA — jinsga mos odam avatari (ism qo'shimchasi:
-              "qizi"->ayol, "o'g'li"->erkak, "-ova/eva"->ayol; aks holda erkak). */}
+          {/* Neytral to'ldirilgan odam avatari (so'rov bo'yicha — bitta ikona). */}
           <View style={styles.avatar}>
-            {isFemaleUser(
-              `${displayName} ${user?.data?.middle_name || ''}`,
-            ) ? (
-              <WomanIcon size={rs(48)} color={rd.color.primary} />
-            ) : (
-              <ManIcon size={rs(48)} color={rd.color.primary} />
-            )}
+            <AvatarPersonIcon size={rs(52)} color={rd.color.primary} />
           </View>
           <View style={styles.profileMeta}>
             <Text style={styles.profileName} numberOfLines={1}>

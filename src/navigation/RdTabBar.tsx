@@ -6,11 +6,11 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  BarChartIcon,
   ContractIcon,
   HomeIcon,
   IconProps,
   LedgerIcon,
+  WalletIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
 
@@ -27,7 +27,8 @@ const TABS: {
   { label: 'Asosiy', Icon: HomeIcon },
   { label: 'Qarz\nshartnomasi', Icon: ContractIcon },
   { label: 'Qarz\ndaftari', Icon: LedgerIcon },
-  { label: 'Statistika', Icon: BarChartIcon },
+  // "Statistika" -> "Shaxsiy moliya" (so'rov bo'yicha) — moliya/hamyon ikonasi.
+  { label: 'Shaxsiy\nmoliya', Icon: WalletIcon },
 ];
 
 const RdTabBar = ({ state, navigation }: any) => (
@@ -84,12 +85,24 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     borderRadius: rs(22),
   },
-  item: { flex: 1, alignItems: 'center', gap: rs(3), paddingHorizontal: rs(2) },
+  // justifyContent:flex-start + labelга QAT'IY 2-qatorlik balandlik — 1-qatorli
+  // ("Asosiy"/"Shaxsiy moliya") va 2-qatorli yorliqlar bir xil joy egallaydi,
+  // shu bois BARCHA ikonalar bir chiziqda turadi (siljimaydi).
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: rs(4),
+    paddingHorizontal: rs(2),
+    paddingTop: rs(11),
+  },
   label: {
     fontFamily: rd.font.medium,
     fontSize: rs(9.5),
     lineHeight: rs(12),
+    height: rs(24),
     textAlign: 'center',
+    textAlignVertical: 'top',
     color: rd.color.textTertiary,
   },
   labelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },

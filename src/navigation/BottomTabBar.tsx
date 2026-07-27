@@ -15,6 +15,10 @@ import HomeRedesign from '../screens/home/redesign/HomeRedesign';
 // almashadi va Home mount holatida qoladi (qayta yuklanmaydi).
 import QarzShartnomasi from '../screens/home/modules/QarzShartnomasi';
 import QarzDaftari from '../screens/home/modules/QarzDaftari';
+// "Statistika" tab -> "Shaxsiy moliya" (so'rov bo'yicha): tab kontenti endi
+// shaxsiy moliya dashboard'i (ShaxsiyMoliya). `tab:true` param bilan RdHeader'da
+// orqaga tugma yashiriladi (tab — top-level, orqaga tugma kerak emas).
+import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
 let width = Dimensions.get('window').width;
 let indicatorWidth = width / 4;
 const BottomTabStack = createBottomTabNavigator();
@@ -59,10 +63,11 @@ export const BottomTabNavigator = () => {
       <BottomTabStack.Screen
         key={'Statistic'}
         options={{
-          title: t('hisobot'),
+          title: 'Shaxsiy moliya',
         }}
         name="Statistic"
-        component={Statistic}
+        component={ShaxsiyMoliya}
+        initialParams={{ tab: true }}
       />
     </BottomTabStack.Navigator>
   );

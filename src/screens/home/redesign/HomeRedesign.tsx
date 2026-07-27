@@ -816,7 +816,10 @@ const HomeRedesign = () => {
             label="Berilgan qarz"
             uzs={uzsText(totDebUZS)}
             usd={usdText(totDebUSD)}
-            onPress={() => nav('SearchDebitor', DEBT_NAV.debitor)}
+            // Home drill-down -> manba TANLASH sahifasi (2 vertikal karta), ro'yxatsiz.
+            onPress={() =>
+              nav('SearchDebitor', { ...DEBT_NAV.debitor, view: 'select' })
+            }
           />
           <MetricCard
             accent={rd.color.error}
@@ -825,7 +828,9 @@ const HomeRedesign = () => {
             label="Olingan qarz"
             uzs={uzsText(totCredUZS)}
             usd={usdText(totCredUSD)}
-            onPress={() => nav('SearchDebitor', DEBT_NAV.creditor)}
+            onPress={() =>
+              nav('SearchDebitor', { ...DEBT_NAV.creditor, view: 'select' })
+            }
           />
           <MetricCard
             accent={rd.color.primary}

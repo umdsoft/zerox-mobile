@@ -31,13 +31,14 @@ const Base = ({
   </Svg>
 );
 
-// Uch tayoqcha: tepa va past TO'LIQ, o'rtadagisi biroz O'NGGA surilgan
-// (chapdan qisqaroq) — so'rov bo'yicha. Doira yo'q (header'da menuBtn).
+// Uch tayoqcha BIR XIL uzunlikda (15). O'rtadagisi O'NGGA surilgan — chap uchi
+// ichkarida, o'ng uchi qolgan ikkitadan biroz chiqib turadi (so'rov bo'yicha).
+// Doira yo'q (header'da menuBtn).
 export const MenuIcon = (p: IconProps) => (
   <Base {...p} size={p.size ?? 24} strokeWidth={p.strokeWidth ?? 2.2}>
-    <Line x1="3" y1="6" x2="21" y2="6" />
-    <Line x1="8" y1="12" x2="21" y2="12" />
-    <Line x1="3" y1="18" x2="21" y2="18" />
+    <Line x1="3" y1="6" x2="18" y2="6" />
+    <Line x1="6" y1="12" x2="21" y2="12" />
+    <Line x1="3" y1="18" x2="18" y2="18" />
   </Base>
 );
 
@@ -107,6 +108,49 @@ export const CloseIcon = (p: IconProps) => (
     <Line x1="6" y1="6" x2="18" y2="18" />
   </Base>
 );
+
+// Biometrik: Face ID ramkasi (burchak qavslar) + ichida barmoq izi (Touch ID).
+// Android'da Touch ID, iOS'da Face ID ni bildiruvchi UMUMLASHTIRILGAN ikona.
+export const FaceTouchIdIcon = (p: IconProps) => (
+  <Base {...p} strokeWidth={p.strokeWidth ?? 1.8}>
+    {/* Face ID burchak qavslari */}
+    <Path d="M5 9V7a2 2 0 0 1 2-2h2" />
+    <Path d="M15 5h2a2 2 0 0 1 2 2v2" />
+    <Path d="M19 15v2a2 2 0 0 1-2 2h-2" />
+    <Path d="M9 19H7a2 2 0 0 1-2-2v-2" />
+    {/* Touch ID barmoq izi (markazda) */}
+    <Path d="M8.4 11.6a4.3 4.3 0 0 1 7.2 0" />
+    <Path d="M9.9 13.2a2.5 2.5 0 0 1 4.2 0" />
+    <Path d="M12 12.6v2.4" />
+  </Base>
+);
+
+// To'ldirilgan yulduz — foydalanuvchi reytingi (sayt: "Reyting ★ 0.00").
+export const StarIcon = (p: IconProps) => {
+  const c = p.color ?? '#f5a623';
+  const s = p.size ?? 24;
+  return (
+    <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2.5l2.9 5.9 6.5 0.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.3l6.5-0.9L12 2.5Z"
+        fill={c}
+      />
+    </Svg>
+  );
+};
+
+// To'ldirilgan (solid) odam avatari — profil/shaxsiy ma'lumotlar sarlavhasida.
+// Jinsdan qat'i nazar bitta neytral ikona (so'rov bo'yicha).
+export const AvatarPersonIcon = (p: IconProps) => {
+  const c = p.color ?? '#2f6fed';
+  const s = p.size ?? 24;
+  return (
+    <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="8" r="4" fill={c} />
+      <Path d="M12 13.4c-4.1 0-7.2 2.4-7.2 6V20h14.4v-0.6c0-3.6-3.1-6-7.2-6Z" fill={c} />
+    </Svg>
+  );
+};
 
 export const ArrowDown = (p: IconProps) => (
   <Base {...p}>

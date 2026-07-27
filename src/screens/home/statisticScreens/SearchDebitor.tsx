@@ -1,4 +1,5 @@
 import {
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -14,6 +15,9 @@ import {useFetch} from '../../../hooks/useFetch';
 import Loading from '../../components/Loading';
 import {URL} from '../../constants';
 import axios from 'axios';
+import RNBlobUtil from 'react-native-blob-util';
+import FileViewer from 'react-native-file-viewer';
+import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {storage} from '../../../store/api/token/getToken';
 import {t} from 'i18next';
 import {rd, rs} from '../../../theme/rd';
@@ -23,77 +27,71 @@ import {
   ContractIcon,
   LedgerIcon,
   ChevronRight,
-  CloseIcon,
+  ArrowDown,
 } from '../redesign/icons';
 import {compactUsd, compactUzs} from '../../../helper/money';
 
-// Qarz daftari uslubidagi ikkilamchi (binafsha) urg'u — manba kartalarini
-// bir-biridan ajratib ko'rsatish uchun (shartnoma = ko'k, daftar = binafsha).
+// Qarz daftari uslubidagi ikkilamchi (binafsha) urg'u.
 const LEDGER_ACCENT = '#6d5ae6';
 const LEDGER_TINT = '#efe9fd';
+const EXCEL_GREEN = '#1d7a45';
 
-// Bitta manba mini-kartasi (Qarz shartnomasi / Qarz daftari) — summa + bo'limga
-// o'tish havolasi. Saytdagi "manbalar bo'yicha" taqsimotining mobil ko'rinishi.
-const SourceMini = ({Icon, label, uzs, usd, onPress, ledger}: any) => (
-  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.mini}>
-    <View
-      style={[styles.miniIcon, ledger && {backgroundColor: LEDGER_TINT}]}>
-      <Icon size={rs(18)} color={ledger ? LEDGER_ACCENT : rd.color.primary} />
+// Manba tanlash kartasi — TO'LIQ KENGLIK (vertikal joylashadi: shartnoma tepada,
+// daftar pastda). Bosilganda tegishli ro'yxat/bo'lim ochiladi.
+const SourceCardWide = ({Icon, label, uzs, usd, onPress, ledger}: any) => (
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.wideCard}>
+    <View style={[styles.wideIcon, ledger && {backgroundColor: LEDGER_TINT}]}>
+      <Icon size={rs(22)} color={ledger ? LEDGER_ACCENT : rd.color.primary} />
     </View>
-    <Text allowFontScaling={false} numberOfLines={1} style={styles.miniLabel}>
-      {label}
-    </Text>
-    <Text allowFontScaling={false} numberOfLines={1} style={styles.miniUzs}>
-      {compactUzs(uzs)}
-    </Text>
-    {usd > 0 ? (
-      <Text allowFontScaling={false} numberOfLines={1} style={styles.miniUsd}>
-        {compactUsd(usd)}
+    <View style={{flex: 1}}>
+      <Text allowFontScaling={false} style={styles.wideLabel}>
+        {label}
       </Text>
-    ) : null}
-    <View style={styles.miniLink}>
-      <Text
-        allowFontScaling={false}
-        style={[styles.miniLinkTx, ledger && {color: LEDGER_ACCENT}]}>
-        Bo‘limga o‘tish
+      <Text allowFontScaling={false} numberOfLines={1} style={styles.wideUzs}>
+        {compactUzs(uzs)}
       </Text>
-      <ChevronRight size={rs(13)} color={ledger ? LEDGER_ACCENT : rd.color.primary} />
+      {usd > 0 ? (
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.wideUsd}>
+          {compactUsd(usd)}
+        </Text>
+      ) : null}
     </View>
+    <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
   </TouchableOpacity>
 );
 
 const SearchDebitor = () => {
   // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
-  // Generic'siz `route.params` = `object | undefined` bo'lib, har bir maydon
-  // destrukturizatsiyasi TS xatosi berardi. <any> bilan hammasi tozalanadi.
   const route = useRoute<any>();
-  const {title, color, type, url, person, isHave, searchUrl, iconType, initialTab} =
-    route.params;
+  const {
+    title,
+    color,
+    type,
+    url,
+    person,
+    isHave,
+    searchUrl,
+    iconType,
+    initialTab,
+    view, // 'select' -> 2 vertikal manba kartasi; aks holda -> qarzlar ro'yxati
+  } = route.params;
+  const isSelect = view === 'select';
+
   const [searchData, setSearchData] = useState([]);
   const [isCheck, setIsCheck] = useState(false);
   const [focused, setFocused] = useState(false);
-  // Manba (shartnoma/daftar) taqsimot kartasini yopish holati (X tugmasi).
-  const [showSources, setShowSources] = useState(true);
-  // Boshlang'ich filtr tab'i chaqiruvchidan keladi: masalan "Muddati o'tgan"
-  // kartasi bosilsa darhol 'overdue', "Muddati oz qolgan" bosilsa 'near' ochiladi.
-  // Berilmasa — eski xatti-harakat saqlanadi ('all').
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'near' | 'overdue'>(
     initialTab ?? 'all',
   );
   const [token] = useState(() => {
     return storage.getString('token');
   });
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const {data, loading} = useFetch({
-    method: 'GET',
-    url: URL + url,
-  });
 
-  // Manbalar bo'yicha taqsimot (Qarz shartnomasi + Qarz daftari) — web dashboard
-  // bilan bir xil manba: /qarz-daftari/dashboard HAM shartnoma, HAM daftar
-  // summalarini qaytaradi. person='debitor' -> berilgan_qarz, 'creditor' -> olingan.
+  // Ro'yxat (faqat list rejimda ishlatiladi) va dashboard (select rejim summalari).
+  const {data, loading} = useFetch({method: 'GET', url: URL + url});
   const isDebitorRole = person === 'debitor';
   const dash = useFetch({method: 'GET', url: URL + '/qarz-daftari/dashboard'});
   const dashData: any = (dash.data as any)?.data || dash.data || {};
@@ -107,19 +105,73 @@ const SearchDebitor = () => {
   const dfUSD = num(srcRoot?.daftari?.usd);
   const totUZS = shUZS + dfUZS;
   const totUSD = shUSD + dfUSD;
-  const hasSources = !!srcRoot && (totUZS > 0 || totUSD > 0);
 
-  if (loading) {
+  // Rejimga mos yuklanish holati (select — dashboard, list — ro'yxat).
+  if (isSelect ? dash.loading : loading) {
     return <Loading />;
   }
 
+  // ══════════ SELECT REJIMI: 2 vertikal manba kartasi (ro'yxatsiz) ══════════
+  if (isSelect) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+        <RdHeader title={title} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.selectContent}>
+          <View style={styles.totalCard}>
+            <Text allowFontScaling={false} style={styles.totalLabel}>
+              {isDebitorRole ? 'Jami berilgan qarz' : 'Jami olingan qarz'}
+            </Text>
+            <Text allowFontScaling={false} numberOfLines={1} style={styles.totalValue}>
+              {compactUzs(totUZS)}
+              {totUSD > 0 ? ` · ${compactUsd(totUSD)}` : ''}
+            </Text>
+          </View>
+
+          <Text allowFontScaling={false} style={styles.selectSub}>
+            Manbalar bo‘yicha
+          </Text>
+
+          {/* Qarz shartnomasi — TEPADA. Bosilsa -> shartnoma qarzlari ro'yxati. */}
+          <SourceCardWide
+            Icon={ContractIcon}
+            label="Qarz shartnomasi"
+            uzs={shUZS}
+            usd={shUSD}
+            onPress={() =>
+              navigation.push('SearchDebitor', {
+                ...route.params,
+                view: 'list',
+              })
+            }
+          />
+
+          {/* Qarz daftari — PASTDA. Bosilsa -> Qarz daftari bo'limi. */}
+          <SourceCardWide
+            Icon={LedgerIcon}
+            label="Qarz daftari"
+            uzs={dfUZS}
+            usd={dfUSD}
+            ledger
+            onPress={() =>
+              navigation.navigate('BottomTabNavigator', {
+                screen: 'QarzDaftari',
+              })
+            }
+          />
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ══════════ LIST REJIMI: izlash + tablar + ro'yxat + Excel ══════════
   const searchUser = (text: string) => {
     if (!token) {
       navigation.navigate('LoginWithPhone');
       return;
     }
-    // C-008: TO'G'RI debounce — oldingi timer'ni tozalaymiz (har harfda yangi so'rov
-    // o'rniga) + in-flight so'rovni AbortController bilan bekor qilamiz (race yo'q).
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortRef.current) abortRef.current.abort();
 
@@ -140,19 +192,13 @@ const SearchDebitor = () => {
           setSearchData(res.data?.data);
         })
         .catch(err => {
-          if (axios.isCancel(err)) return; // bekor qilingan — xato emas
+          if (axios.isCancel(err)) return;
           console.log(err, 'error search');
         });
     }, 400);
   };
 
-  // FAQAT JARAYONDAGI shartnomalar. Backend `status` maydoni (emulyator
-  // diagnostikasi bilan ANIQLANDI):
-  //   status 2 = Tugallangan (debitor 4=chart 4, kreditor 11=chart 11 — aniq)
-  //   status 3 = Jarayonda   (debitor 1=chart Jarayonda 1)
-  //   status 4 = Rad etildi
-  // Demak Tugallangan(2) va Rad etildi(4) YASHIRILADI (faqat hisobotда),
-  // Jarayonda(3) esa QOLADI — shu bilan near/overdue tablar ham to'g'ri to'ladi.
+  // FAQAT JARAYONDAGI shartnomalar (status 2=Tugallangan, 4=Rad etildi yashiriladi).
   const isDoneContract = (it: any) => {
     const s = it?.status;
     return s === 2 || s === 4 || s === '2' || s === '4';
@@ -181,61 +227,83 @@ const SearchDebitor = () => {
     {key: 'overdue', label: 'Muddati o‘tgan'},
   ];
 
+  // ── Excel (CSV) eksport — hozir ko'rinayotgan ro'yxatni faylga saqlaydi.
+  //    Server excel endpoint'i yo'q, shu bois CSV klientda yaratiladi (Excel
+  //    CSV'ni to'g'ridan-to'g'ri ochadi). UTF-8 BOM — kirill/o'zbek harflari uchun.
+  const statusTx = (s: any) =>
+    s === 3 || s === '3'
+      ? 'Jarayonda'
+      : s === 2 || s === '2'
+      ? 'Tugallangan'
+      : s === 4 || s === '4'
+      ? 'Rad etildi'
+      : '';
+  const onExcel = async () => {
+    try {
+      if (!shown.length) {
+        Toast.show({
+          type: 'omad',
+          position: 'bottom',
+          props: {title: 'Ro‘yxat bo‘sh', desc: 'Yuklab olish uchun ma’lumot yo‘q'},
+        });
+        return;
+      }
+      const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const header = ['№', 'F.I.Sh', 'Shartnoma', 'Summa', 'Valyuta', 'Sana', 'Holat'];
+      const lines = [header.map(esc).join(',')];
+      shown.forEach((it: any, i: number) => {
+        const fish = isDebitorRole ? it?.creditor_name : it?.debitor_name;
+        lines.push(
+          [
+            i + 1,
+            fish,
+            it?.number,
+            it?.amount,
+            it?.currency,
+            it?.contract_date || (it?.sana || '').slice(0, 10),
+            statusTx(it?.status),
+          ]
+            .map(esc)
+            .join(','),
+        );
+      });
+      const csv = '﻿' + lines.join('\r\n');
+      const fileName = `${isDebitorRole ? 'berilgan' : 'olingan'}_qarzlar_${Date.now()}.csv`;
+      const cachePath = `${RNBlobUtil.fs.dirs.CacheDir}/${fileName}`;
+      await RNBlobUtil.fs.writeFile(cachePath, csv, 'utf8');
+
+      if (Platform.OS === 'android') {
+        await RNBlobUtil.MediaCollection.copyToMediaStore(
+          {name: fileName, parentFolder: 'Zerox', mimeType: 'text/csv'},
+          'Download',
+          cachePath,
+        );
+      }
+      Toast.show({
+        type: 'omad',
+        position: 'bottom',
+        visibilityTime: 2500,
+        props: {
+          title: 'Excel yuklab olindi',
+          desc:
+            Platform.OS === 'android'
+              ? 'Download/Zerox papkasiga saqlandi'
+              : fileName,
+        },
+      });
+      // Excel/Sheets ilovasida ochishga urinamiz (bo'lmasa — jimgina o'tkazamiz).
+      FileViewer.open(cachePath, {showOpenWithDialog: true}).catch(() => {});
+    } catch (e) {
+      console.log('excel export error', e);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={title} />
 
-      {showSources && hasSources ? (
-        <View style={styles.sourceCard}>
-          <View style={styles.sourceHead}>
-            <View style={{flex: 1}}>
-              <Text allowFontScaling={false} style={styles.sourceTitle}>
-                {isDebitorRole ? 'Jami berilgan qarz' : 'Jami olingan qarz'}
-              </Text>
-              <Text allowFontScaling={false} numberOfLines={1} style={styles.sourceTotal}>
-                {compactUzs(totUZS)}
-                {totUSD > 0 ? ` · ${compactUsd(totUSD)}` : ''}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowSources(false)}
-              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-              style={styles.sourceClose}>
-              <CloseIcon size={rs(18)} color={rd.color.textTertiary} />
-            </TouchableOpacity>
-          </View>
-          <Text allowFontScaling={false} style={styles.sourceSub}>
-            Manbalar bo‘yicha
-          </Text>
-          <View style={styles.sourceRow}>
-            <SourceMini
-              Icon={ContractIcon}
-              label="Qarz shartnomasi"
-              uzs={shUZS}
-              usd={shUSD}
-              onPress={() =>
-                navigation.navigate('BottomTabNavigator', {
-                  screen: 'QarzShartnomasi',
-                })
-              }
-            />
-            <SourceMini
-              Icon={LedgerIcon}
-              label="Qarz daftari"
-              uzs={dfUZS}
-              usd={dfUSD}
-              ledger
-              onPress={() =>
-                navigation.navigate('BottomTabNavigator', {
-                  screen: 'QarzDaftari',
-                })
-              }
-            />
-          </View>
-        </View>
-      ) : null}
-
+      {/* Izlash (FISH/telefon/summa/mahsulot — server tomonda) + Excel yuklash. */}
       <View style={styles.searchWrap}>
         <View style={[styles.searchBox, focused && styles.searchBoxFocused]}>
           <SearchIcon
@@ -252,6 +320,15 @@ const SearchDebitor = () => {
             allowFontScaling={false}
           />
         </View>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onExcel}
+          style={styles.excelBtn}>
+          <ArrowDown size={rs(16)} color={rd.color.onPrimary} />
+          <Text allowFontScaling={false} style={styles.excelText}>
+            Excel
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabsWrap}>
@@ -307,102 +384,86 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: rd.color.page,
   },
-  // ── Manbalar bo'yicha taqsimot kartasi (SS2 — saytdagidek).
-  sourceCard: {
-    marginHorizontal: rs(16),
-    marginTop: rs(6),
-    marginBottom: rs(4),
+
+  // ── Select rejim (2 vertikal manba kartasi)
+  selectContent: {
+    paddingHorizontal: rs(16),
+    paddingTop: rs(6),
+    paddingBottom: rs(24),
+  },
+  totalCard: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(14),
+    padding: rs(16),
   },
-  sourceHead: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  sourceTitle: {
+  totalLabel: {
     fontFamily: rd.font.medium,
     fontSize: rs(12.5),
     color: rd.color.textSecondary,
   },
-  sourceTotal: {
+  totalValue: {
     fontFamily: rd.font.bold,
-    fontSize: rs(18),
+    fontSize: rs(20),
     color: rd.color.text,
-    marginTop: rs(2),
+    marginTop: rs(3),
   },
-  sourceClose: {
-    width: rs(28),
-    height: rs(28),
-    borderRadius: rs(14),
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: rd.color.surfaceAlt,
-  },
-  sourceSub: {
+  selectSub: {
     fontFamily: rd.font.medium,
-    fontSize: rs(11.5),
+    fontSize: rs(12.5),
     color: rd.color.textTertiary,
-    marginTop: rs(10),
-    marginBottom: rs(8),
+    marginTop: rs(16),
+    marginBottom: rs(10),
   },
-  sourceRow: {
+  wideCard: {
     flexDirection: 'row',
-    gap: rs(10),
-  },
-  mini: {
-    flex: 1,
-    backgroundColor: rd.color.surfaceAlt,
-    borderRadius: rd.radius.md,
+    alignItems: 'center',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(12),
+    padding: rs(16),
+    marginBottom: rs(12),
   },
-  miniIcon: {
-    width: rs(34),
-    height: rs(34),
-    borderRadius: rs(10),
+  wideIcon: {
+    width: rs(46),
+    height: rs(46),
+    borderRadius: rs(14),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(9),
+    marginRight: rs(14),
   },
-  miniLabel: {
+  wideLabel: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(12.5),
+    fontSize: rs(14.5),
     color: rd.color.text,
   },
-  miniUzs: {
+  wideUzs: {
     fontFamily: rd.font.bold,
-    fontSize: rs(13.5),
+    fontSize: rs(16),
     color: rd.color.text,
-    marginTop: rs(5),
+    marginTop: rs(4),
   },
-  miniUsd: {
+  wideUsd: {
     fontFamily: rd.font.medium,
-    fontSize: rs(11.5),
+    fontSize: rs(12.5),
     color: rd.color.textSecondary,
     marginTop: rs(1),
   },
-  miniLink: {
+
+  // ── List rejim (izlash + Excel + tablar + ro'yxat)
+  searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: rs(2),
-    marginTop: rs(9),
-  },
-  miniLinkTx: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(11.5),
-    color: rd.color.primary,
-  },
-  searchWrap: {
+    gap: rs(10),
     paddingHorizontal: rs(16),
     paddingTop: rs(4),
     paddingBottom: rs(12),
   },
   searchBox: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
@@ -414,6 +475,20 @@ const styles = StyleSheet.create({
   },
   searchBoxFocused: {
     borderColor: rd.color.primary,
+  },
+  excelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(5),
+    height: rs(50),
+    paddingHorizontal: rs(14),
+    borderRadius: rd.radius.pill,
+    backgroundColor: EXCEL_GREEN,
+  },
+  excelText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13),
+    color: rd.color.onPrimary,
   },
   tabsWrap: {
     paddingBottom: rs(12),

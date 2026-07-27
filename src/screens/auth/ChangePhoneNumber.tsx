@@ -15,7 +15,9 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import axios from 'axios';
@@ -52,12 +54,36 @@ const PhoneHero = () => {
     const q = (p.value + 0.5) % 1;
     return { transform: [{ scale: 1 + q * RING_SCALE }], opacity: 0.35 * (1 - q) };
   });
+
+  // Telefon go'shagi NOZIK "qo'ng'iroq" tebranishi — o'ngga/chapga qiyshayadi,
+  // markazga qaytadi, so'ng biroz to'xtab yana takrorlanadi (jonli ko'rinish).
+  const w = useSharedValue(0);
+  useEffect(() => {
+    if (reduce) return;
+    w.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 110, easing: Easing.out(Easing.ease) }),
+        withTiming(-1, { duration: 220, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 220, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 110, easing: Easing.out(Easing.ease) }),
+        withDelay(1500, withTiming(0, { duration: 1 })),
+      ),
+      -1,
+      false,
+    );
+  }, [reduce, w]);
+  const phoneStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${w.value * 12}deg` }],
+  }));
+
   return (
     <View style={styles.heroWrap}>
       <Animated.View style={[styles.ring, ring1]} />
       <Animated.View style={[styles.ring, ring2]} />
       <View style={styles.heroCircle}>
-        <PhoneIcon size={rs(50)} color={rd.color.primary} />
+        <Animated.View style={phoneStyle}>
+          <PhoneIcon size={rs(50)} color={rd.color.primary} />
+        </Animated.View>
       </View>
     </View>
   );

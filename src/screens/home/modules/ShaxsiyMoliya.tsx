@@ -15,7 +15,7 @@
  *
  * Dizayn: FAQAT rd/rs tokenlari; literal hex faqat gradient/bar/kategoriya ranglarida.
  */
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import {
   ScrollView,
@@ -239,6 +239,10 @@ const BudgetCard = ({
 const ShaxsiyMoliya = () => {
   const navigation = useNavigation<any>();
   const nav: Nav = (route, params) => navigation.navigate(route, params);
+  // Pastki TAB sifatida ochilganda orqaga tugma kerak emas (top-level).
+  // Home'dan PUSH qilinganda (tab param yo'q) — orqaga tugma ko'rinadi.
+  const route = useRoute<any>();
+  const isTab = !!route?.params?.tab;
 
   // REAL backend — dashboard + moliyaviy sog'liq.
   const dashboard = useFetch({ url: `${URL}/finance/dashboard`, method: 'GET' });
@@ -281,7 +285,7 @@ const ShaxsiyMoliya = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Shaxsiy moliya" />
+      <RdHeader title="Shaxsiy moliya" showBack={!isTab} />
 
       <ScrollView
         style={styles.scroll}

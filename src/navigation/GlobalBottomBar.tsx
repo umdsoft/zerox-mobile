@@ -11,11 +11,11 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  BarChartIcon,
   ContractIcon,
   HomeIcon,
   IconProps,
   LedgerIcon,
+  WalletIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
 import { navigationRef } from './NavigationRef';
@@ -36,7 +36,8 @@ const TABS: {
   // (menyudagi bo'limlarga) o'tishni kutadi. Ikonalar menyudagilar bilan bir xil.
   { label: 'Qarz\nshartnomasi', Icon: ContractIcon, tab: 'QarzShartnomasi' },
   { label: 'Qarz\ndaftari', Icon: LedgerIcon, tab: 'QarzDaftari' },
-  { label: 'Statistika', Icon: BarChartIcon, tab: 'Statistic' },
+  // "Statistika" -> "Shaxsiy moliya" (RdTabBar bilan bir xil).
+  { label: 'Shaxsiy\nmoliya', Icon: WalletIcon, tab: 'Statistic' },
 ];
 
 const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => (
@@ -93,12 +94,22 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     borderRadius: rs(22),
   },
-  item: { flex: 1, alignItems: 'center', gap: rs(3), paddingHorizontal: rs(2) },
+  // Ikonalar bir chiziqda (label'ga qat'iy 2-qatorlik balandlik — RdTabBar bilan bir xil).
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: rs(4),
+    paddingHorizontal: rs(2),
+    paddingTop: rs(11),
+  },
   label: {
     fontFamily: rd.font.medium,
     fontSize: rs(9.5),
     lineHeight: rs(12),
+    height: rs(24),
     textAlign: 'center',
+    textAlignVertical: 'top',
     color: rd.color.textTertiary,
   },
   labelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },
