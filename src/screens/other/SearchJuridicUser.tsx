@@ -78,7 +78,7 @@ const SearchJuridicUser = () => {
         <View style={styles.card}>
           {/* STIR */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>STIRni kiriting</Text>
+            <Text style={styles.label}>{t('STIRni kiriting')}</Text>
             <View
               style={[
                 styles.inputWrap,
@@ -89,7 +89,7 @@ const SearchJuridicUser = () => {
               <TextInput
                 value={stir}
                 maxLength={9}
-                placeholder="STIRni kiriting"
+                placeholder={t('STIRni kiriting')}
                 onChangeText={text => setStir(text)}
                 onFocus={() => setFocused('stir')}
                 onBlur={() => setFocused(null)}
@@ -103,7 +103,7 @@ const SearchJuridicUser = () => {
 
           {/* ID raqami */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>ID raqamini kiriting</Text>
+            <Text style={styles.label}>{t('ID raqamini kiriting')}</Text>
             <View
               style={[
                 styles.inputWrap,
@@ -113,7 +113,7 @@ const SearchJuridicUser = () => {
               <UserIcon size={rs(18)} color={rd.color.textTertiary} />
               <MaskedTextInput
                 value={userID}
-                placeholder="ID raqamini kiriting"
+                placeholder={t('ID raqamini kiriting')}
                 autoCapitalize="characters"
                 allowFontScaling={false}
                 onChangeText={(formatted, extracted) => {
@@ -130,7 +130,7 @@ const SearchJuridicUser = () => {
           </View>
 
           {error && (
-            <Text style={styles.errorText}>Bunday foydalanuvchi topilmadi!</Text>
+            <Text style={styles.errorText}>{t('Bunday foydalanuvchi topilmadi!')}</Text>
           )}
 
           <TouchableOpacity
@@ -148,7 +148,7 @@ const SearchJuridicUser = () => {
                 disabled && styles.primaryButtonTextDisabled,
               ]}
             >
-              Izlash
+              {t('Izlash')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -218,17 +218,17 @@ const UserInfo = ({ user, navigation }) => {
       <View style={styles.divider} />
 
       <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>FISH</Text>
+        <Text style={styles.infoLabel}>{t('FISH')}</Text>
         <Text style={styles.infoValue} numberOfLines={2}>
           {`${user?.last_name} ${user?.first_name} ${user?.middle_name}`}
         </Text>
       </View>
       <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Ro`yxatdan o`tgan</Text>
+        <Text style={styles.infoLabel}>{t('Ro`yxatdan o`tgan')}</Text>
         <Text style={styles.infoValue}>{user?.createdAt.slice(0, 10)}</Text>
       </View>
       <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>ID raqami</Text>
+        <Text style={styles.infoLabel}>{t('ID raqami')}</Text>
         <Text style={styles.infoValue}>{user?.uid}</Text>
       </View>
 
@@ -239,7 +239,7 @@ const UserInfo = ({ user, navigation }) => {
         activeOpacity={0.8}
         style={[styles.primaryButton, styles.actionButton]}
       >
-        <Text style={styles.primaryButtonText}>Ma’lumotlarni ko‘rish</Text>
+        <Text style={styles.primaryButtonText}>{t('Ma’lumotlarni ko‘rish')}</Text>
         <ChevronRight size={rs(18)} color={rd.color.onPrimary} />
       </TouchableOpacity>
     </View>

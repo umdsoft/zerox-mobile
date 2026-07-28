@@ -1,22 +1,24 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Checkbox } from 'react-native-paper';
 import ScreenLayout from '../components/ScreenLayout';
 import { rd, rs } from '../../theme/rd';
 import { CoinIcon } from '../home/redesign/icons';
 
 const PartDebtBack = () => {
+  const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
 
   return (
-    <ScreenLayout title={'Qarzni qisman qaytarishni talab qilish'} scroll>
+    <ScreenLayout title={t('Qarzni qisman qaytarishni talab qilish')} scroll>
       <View style={styles.content}>
         <View style={styles.hero}>
           <View style={styles.heroCircle}>
             <CoinIcon size={rs(30)} color={rd.color.primary} />
           </View>
           <Text style={styles.heroTitle} allowFontScaling={false}>
-            Qarzni qisman qaytarish
+            {t('Qarzni qisman qaytarish')}
           </Text>
         </View>
 
@@ -28,7 +30,7 @@ const PartDebtBack = () => {
         </View>
 
         <Text style={styles.label} allowFontScaling={false}>
-          Summani kiriting
+          {t('Summani kiriting')}
         </Text>
         <View style={[styles.amountField, focused && styles.amountFieldFocused]}>
           <TextInput
@@ -48,14 +50,15 @@ const PartDebtBack = () => {
         <View style={styles.checkRow}>
           <Checkbox color={rd.color.primary} status="checked" />
           <Text style={styles.checkText} allowFontScaling={false}>
-            Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
-            tanishdim
+            {t(
+              'Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan tanishdim',
+            )}
           </Text>
         </View>
 
         <TouchableOpacity activeOpacity={0.85} style={styles.primaryBtn}>
           <Text style={styles.primaryBtnText} allowFontScaling={false}>
-            Tasdiqlash
+            {t('Tasdiqlash')}
           </Text>
         </TouchableOpacity>
       </View>

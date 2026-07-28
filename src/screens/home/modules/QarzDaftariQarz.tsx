@@ -11,6 +11,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StatusBar,
@@ -152,6 +153,7 @@ const QarzDaftariQarz = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const id = route.params?.id;
+  const { t } = useTranslation();
 
   const { data, loading } = useFetch({
     url: `${URL}/qarz-daftari/qarz/${id}`,
@@ -168,12 +170,12 @@ const QarzDaftariQarz = () => {
     return (
       <View style={styles.screen}>
         <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-        <RdHeader title="Qarz tafsiloti" />
+        <RdHeader title={t('Qarz tafsiloti')} />
         <View style={styles.notFound}>
           <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
             <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
           </CircleIcon>
-          <Text style={styles.notFoundText}>Topilmadi</Text>
+          <Text style={styles.notFoundText}>{t('Topilmadi')}</Text>
         </View>
       </View>
     );
@@ -185,7 +187,7 @@ const QarzDaftariQarz = () => {
   const valyuta = qarz?.valyuta || 'UZS';
 
   const st = statusMeta(qarz?.status);
-  const roleLabel = turi === 'olish' ? 'Qarz beruvchi' : 'Qarz oluvchi';
+  const roleLabel = turi === 'olish' ? t('Qarz beruvchi') : t('Qarz oluvchi');
 
   const tolovlar: any[] = Array.isArray(qarz?.tolovlar) ? qarz.tolovlar : [];
   const mijozId = qarz?.mijoz_id ?? qarz?.mijoz?.id;
@@ -201,10 +203,10 @@ const QarzDaftariQarz = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      Toast.show({ type: 'omad', text1: 'SMS yuborildi' });
+      Toast.show({ type: 'omad', text1: t('SMS yuborildi') });
     } catch (error: any) {
       const code = error?.response?.data?.code;
-      Toast.show({ type: 'error', text1: talabErrorText(code) });
+      Toast.show({ type: 'error', text1: t(talabErrorText(code)) });
     } finally {
       setTalabLoading(false);
     }
@@ -213,7 +215,7 @@ const QarzDaftariQarz = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarz tafsiloti" />
+      <RdHeader title={t('Qarz tafsiloti')} />
 
       <ScrollView
         style={styles.scroll}
@@ -236,7 +238,7 @@ const QarzDaftariQarz = () => {
             </View>
             <View style={[styles.pill, { backgroundColor: st.color + '1A' }]}>
               <Text style={[styles.pillText, { color: st.color }]} numberOfLines={1}>
-                {st.label}
+                {t(st.label)}
               </Text>
             </View>
           </View>
@@ -256,7 +258,7 @@ const QarzDaftariQarz = () => {
               }
             >
               <TransferIcon size={rs(15)} color={rd.color.textSecondary} />
-              <Text style={styles.ghostText}>Amaliyotlar tarixi</Text>
+              <Text style={styles.ghostText}>{t('Amaliyotlar tarixi')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -264,25 +266,25 @@ const QarzDaftariQarz = () => {
               onPress={() => navigation.navigate('QarzDaftariKvitansiya', { id })}
             >
               <ShieldIcon size={rs(15)} color={rd.color.textSecondary} />
-              <Text style={styles.ghostText}>Kvitansiya</Text>
+              <Text style={styles.ghostText}>{t('Kvitansiya')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* 2. Statistik qutilar (2x2) */}
         <View style={styles.statGrid}>
-          <StatBox label="Jami qarz" value={`${sortMoneyText(qarz?.miqdor) || 0} ${valyuta}`} />
+          <StatBox label={t('Jami qarz')} value={`${sortMoneyText(qarz?.miqdor) || 0} ${valyuta}`} />
           <StatBox
-            label="Qoldiq"
+            label={t('Qoldiq')}
             value={`${sortMoneyText(qarz?.qoldiq) || 0} ${valyuta}`}
             valueColor={accent}
           />
-          <StatBox label="Berilgan sana" value={ddmmyyyy(qarz?.berilgan_sana)} />
+          <StatBox label={t('Berilgan sana')} value={ddmmyyyy(qarz?.berilgan_sana)} />
           <StatBox
-            label="Qaytarish sanasi"
+            label={t('Qaytarish sanasi')}
             value={
               qarz?.bolib_tolash
-                ? `Bo‘lib to‘lash: ${qarz?.oylar_soni || 0} oy`
+                ? t('Bo‘lib to‘lash: {{oy}} oy', { oy: qarz?.oylar_soni || 0 })
                 : ddmmyyyy(qarz?.qaytarish_sanasi)
             }
           />
@@ -291,13 +293,13 @@ const QarzDaftariQarz = () => {
         {/* 3. Bo'lib to'lash jadvali */}
         {tolovlar.length > 0 && (
           <>
-            <Text style={styles.blockTitle}>Bo‘lib to‘lash jadvali</Text>
+            <Text style={styles.blockTitle}>{t('Bo‘lib to‘lash jadvali')}</Text>
             <View style={styles.card}>
               <View style={styles.trHead}>
                 <Text style={[styles.thText, styles.colNo]}>#</Text>
-                <Text style={[styles.thText, styles.colDate]}>To‘lov sanasi</Text>
-                <Text style={[styles.thText, styles.colAmt]}>Summa</Text>
-                <Text style={[styles.thText, styles.colStatus]}>Holat</Text>
+                <Text style={[styles.thText, styles.colDate]}>{t('To‘lov sanasi')}</Text>
+                <Text style={[styles.thText, styles.colAmt]}>{t('Summa')}</Text>
+                <Text style={[styles.thText, styles.colStatus]}>{t('Holat')}</Text>
               </View>
               {tolovlar.map((t, i) => {
                 const tm = tolovMeta(t?.status);
@@ -316,7 +318,7 @@ const QarzDaftariQarz = () => {
                     <View style={styles.colStatus}>
                       <View style={[styles.tPill, { backgroundColor: tm.color + '1A' }]}>
                         <Text style={[styles.tPillText, { color: tm.color }]} numberOfLines={1}>
-                          {tm.label}
+                          {t(tm.label)}
                         </Text>
                       </View>
                     </View>
@@ -328,12 +330,12 @@ const QarzDaftariQarz = () => {
         )}
 
         {/* 4. Amallar */}
-        <Text style={styles.blockTitle}>Amallar</Text>
+        <Text style={styles.blockTitle}>{t('Amallar')}</Text>
         {qarz?.status !== 'aktiv' ? (
           <View style={styles.infoPill}>
             <ClockIcon size={rs(18)} color={rd.color.textTertiary} />
             <Text style={styles.infoPillText}>
-              {qarz?.status === 'voz_kechilgan' ? 'Voz kechilgan' : 'Qarz yopilgan'}
+              {qarz?.status === 'voz_kechilgan' ? t('Voz kechilgan') : t('Qarz yopilgan')}
             </Text>
           </View>
         ) : turi === 'olish' ? (
@@ -344,7 +346,7 @@ const QarzDaftariQarz = () => {
             onPress={() => navigation.navigate('QarzDaftariYopish', { id })}
           >
             <ArrowDownLeft size={rs(18)} color="#fff" />
-            <Text style={styles.btnSolidText}>Qarzni qaytarish</Text>
+            <Text style={styles.btnSolidText}>{t('Qarzni qaytarish')}</Text>
           </TouchableOpacity>
         ) : (
           // Menga qarzdor — talab / yopish / voz kechish.
@@ -357,7 +359,7 @@ const QarzDaftariQarz = () => {
             >
               <ClockIcon size={rs(18)} color={AMBER} />
               <Text style={[styles.btnOutlineText, { color: AMBER }]}>
-                {talabLoading ? 'Yuborilmoqda...' : 'Qaytarishni talab qilish'}
+                {talabLoading ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
               </Text>
             </TouchableOpacity>
 
@@ -367,7 +369,7 @@ const QarzDaftariQarz = () => {
               onPress={() => navigation.navigate('QarzDaftariYopish', { id })}
             >
               <ArrowDownLeft size={rs(18)} color="#fff" />
-              <Text style={styles.btnSolidText}>Qarzni yopish</Text>
+              <Text style={styles.btnSolidText}>{t('Qarzni yopish')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -376,7 +378,7 @@ const QarzDaftariQarz = () => {
               onPress={() => navigation.navigate('QarzDaftariVozKechish', { id })}
             >
               <ArrowUpRight size={rs(18)} color={RED} />
-              <Text style={[styles.btnOutlineText, { color: RED }]}>Qarzdan voz kechish</Text>
+              <Text style={[styles.btnOutlineText, { color: RED }]}>{t('Qarzdan voz kechish')}</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -1,8 +1,10 @@
 import {StyleSheet, Text, TextInput, View} from 'react-native';
 import React from 'react';
+import {useTranslation} from 'react-i18next';
 import {style} from '../../theme/style';
 
 const SearchUserInput = ({onChangeText, value}) => {
+  const {t} = useTranslation();
   const validateValue = text => {
     let a = text;
 
@@ -19,7 +21,7 @@ const SearchUserInput = ({onChangeText, value}) => {
   return (
     <View style={styles.TextInputLabelContainer}>
       <View style={styles.inputTitle}>
-        <Text allowFontScaling={false} style={styles.phoneText}>Mobil hisob raqamini kiriting</Text>
+        <Text allowFontScaling={false} style={styles.phoneText}>{t('Mobil hisob raqamini kiriting')}</Text>
       </View>
       <View style={{flex: 1, width: '90%'}}>
         <TextInput
@@ -27,7 +29,7 @@ const SearchUserInput = ({onChangeText, value}) => {
           maxLength={10}
           keyboardType="numeric"
           placeholderTextColor={style.placeHolderColor}
-          placeholder="ID kiriting"
+          placeholder={t('ID kiriting')}
           onChangeText={onChangeText}
           style={styles.TextInput}
           allowFontScaling={false} />

@@ -10,6 +10,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StatusBar,
@@ -164,6 +165,7 @@ const QarzRow = ({
 const QarzDaftariMijoz = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const id = route.params?.id;
   const turi: 'berish' | 'olish' = route.params?.turi === 'olish' ? 'olish' : 'berish';
   const fishParam: string = route.params?.fish || '';
@@ -196,30 +198,30 @@ const QarzDaftariMijoz = () => {
   // Rol va holat.
   const role =
     turi === 'olish'
-      ? { label: 'Qarz beruvchi', color: GREEN }
-      : { label: 'Qarz oluvchi', color: BLUE };
+      ? { label: t('Qarz beruvchi'), color: GREEN }
+      : { label: t('Qarz oluvchi'), color: BLUE };
   const statusPill =
     aktivQarzlar > 0
-      ? { label: 'Aktiv', color: AMBER }
-      : { label: 'Barchasi yopilgan', color: GREEN };
+      ? { label: t('Aktiv'), color: AMBER }
+      : { label: t('Barchasi yopilgan'), color: GREEN };
 
   // Faqat shu turdagi qarzlar.
   const visibleQarzlar = qarzlar.filter(q => q?.turi === turi);
 
   // Qarz holat pilli.
   const qarzStatus = (q: any): { label: string; color: string } => {
-    if (isOverdue(q)) return { label: 'Muddati o‘tgan', color: RED };
-    if (q?.status === 'aktiv') return { label: 'Aktiv', color: AMBER };
-    if (q?.status === 'yopilgan') return { label: 'Yopilgan', color: GREEN };
+    if (isOverdue(q)) return { label: t('Muddati o‘tgan'), color: RED };
+    if (q?.status === 'aktiv') return { label: t('Aktiv'), color: AMBER };
+    if (q?.status === 'yopilgan') return { label: t('Yopilgan'), color: GREEN };
     if (q?.status === 'voz_kechilgan')
-      return { label: 'Voz kechilgan', color: rd.color.textTertiary };
-    return { label: 'Aktiv', color: AMBER };
+      return { label: t('Voz kechilgan'), color: rd.color.textTertiary };
+    return { label: t('Aktiv'), color: AMBER };
   };
 
   const qarzMeta = (q: any): string => {
     const base = fmtDate(q?.berilgan_sana);
     if (q?.bolib_tolash) {
-      return `${base} · Bo‘lib to‘lash ${q?.oylar_soni || 0} oy`;
+      return `${base} · ${t('Bo‘lib to‘lash {{oy}} oy', { oy: q?.oylar_soni || 0 })}`;
     }
     if (q?.qaytarish_sanasi) {
       return `${base} · ${fmtDate(q?.qaytarish_sanasi)}`;
@@ -229,7 +231,7 @@ const QarzDaftariMijoz = () => {
 
   const goYangi = () => {
     if (!mijoz?.savdo_faoliyat_id || !mijoz?.id) {
-      Toast.show({ type: 'error', text1: 'Mijoz ma’lumotlari topilmadi' });
+      Toast.show({ type: 'error', text1: t('Mijoz ma’lumotlari topilmadi') });
       return;
     }
     navigation.navigate('QarzDaftariYangi', {
@@ -245,7 +247,7 @@ const QarzDaftariMijoz = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarz tafsiloti" />
+      <RdHeader title={t('Qarz tafsiloti')} />
 
       <ScrollView
         style={styles.scroll}
@@ -287,24 +289,24 @@ const QarzDaftariMijoz = () => {
 
         {/* 2. Statistikalar (2x2) */}
         <View style={styles.sumGrid}>
-          <SumCard accent={accent} label="Jami qarz (UZS)" value={uzsText(qoldiqUzs)} />
+          <SumCard accent={accent} label={t('Jami qarz (UZS)')} value={uzsText(qoldiqUzs)} />
           <SumCard
             accent={GREEN}
-            label="Jami qarz (USD)"
+            label={t('Jami qarz (USD)')}
             value={`${sortMoneyText(qoldiqUsd) || 0} USD`}
           />
-          <SumCard accent={BLUE} label="Jami qarzlar" value={String(jamiQarzlar)} />
-          <SumCard accent={AMBER} label="Aktiv qarzlar" value={String(aktivQarzlar)} />
+          <SumCard accent={BLUE} label={t('Jami qarzlar')} value={String(jamiQarzlar)} />
+          <SumCard accent={AMBER} label={t('Aktiv qarzlar')} value={String(aktivQarzlar)} />
         </View>
 
         {/* 3. Qarzlar */}
-        <Text style={styles.blockTitle}>Qarzlar</Text>
+        <Text style={styles.blockTitle}>{t('Qarzlar')}</Text>
         {visibleQarzlar.length === 0 ? (
           <View style={styles.emptyBox}>
             <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
               <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
             </CircleIcon>
-            <Text style={styles.emptyText}>Qarzlar yo‘q</Text>
+            <Text style={styles.emptyText}>{t('Qarzlar yo‘q')}</Text>
           </View>
         ) : (
           visibleQarzlar.map((q, i) => {
@@ -313,7 +315,7 @@ const QarzDaftariMijoz = () => {
               <QarzRow
                 key={q?.id ?? i}
                 accent={accent}
-                title={q?.mahsulot_nomi || 'Qarz'}
+                title={q?.mahsulot_nomi || t('Qarz')}
                 meta={qarzMeta(q)}
                 amount={`${sortMoneyText(q?.qoldiq) || 0} ${q?.valyuta || 'UZS'}`}
                 pill={st.label}
@@ -333,7 +335,7 @@ const QarzDaftariMijoz = () => {
           onPress={goYangi}
         >
           <PlusIcon size={rs(18)} color={rd.color.onPrimary} />
-          <Text style={styles.addBtnText}>Yangi qarz qo‘shish</Text>
+          <Text style={styles.addBtnText}>{t('Yangi qarz qo‘shish')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

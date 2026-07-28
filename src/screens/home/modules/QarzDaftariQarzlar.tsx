@@ -8,6 +8,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   StatusBar,
@@ -74,6 +75,7 @@ const QarzDaftariQarzlar = () => {
   const route = useRoute<any>();
   const turi: 'berish' | 'olish' | undefined = route.params?.turi;
   const status: string | undefined = route.params?.status;
+  const { t } = useTranslation();
 
   const qs = [
     turi ? `turi=${turi}` : '',
@@ -95,11 +97,11 @@ const QarzDaftariQarzlar = () => {
   const title =
     status === 'muddati-otgan'
       ? turi === 'olish'
-        ? 'Muddati o‘tgan (olingan)'
-        : 'Muddati o‘tgan (berilgan)'
+        ? t('Muddati o‘tgan (olingan)')
+        : t('Muddati o‘tgan (berilgan)')
       : turi === 'olish'
-      ? 'Olingan qarzlar'
-      : 'Berilgan qarzlar';
+      ? t('Olingan qarzlar')
+      : t('Berilgan qarzlar');
 
   // Mijoz bo'yicha guruhlash.
   const groups: Group[] = React.useMemo(() => {
@@ -172,7 +174,7 @@ const QarzDaftariQarzlar = () => {
               {g.fish}
             </Text>
             <Text style={styles.rowMeta} numberOfLines={1}>
-              {g.telefon || '—'} · {g.count} ta qarz
+              {g.telefon || '—'} · {t('{{count}} ta qarz', { count: g.count })}
             </Text>
             <View style={styles.rowAmts}>
               {g.qoldiqUzs > 0 && (
@@ -184,20 +186,20 @@ const QarzDaftariQarzlar = () => {
                 </Text>
               )}
               {g.qoldiqUzs === 0 && g.qoldiqUsd === 0 && (
-                <Text style={styles.rowAmtMuted}>Qoldiq yo‘q</Text>
+                <Text style={styles.rowAmtMuted}>{t('Qoldiq yo‘q')}</Text>
               )}
             </View>
           </View>
           <View style={{ alignItems: 'flex-end', gap: rs(8) }}>
             <View style={[styles.stPill, { backgroundColor: st.color + '1A' }]}>
-              <Text style={[styles.stPillText, { color: st.color }]}>{st.label}</Text>
+              <Text style={[styles.stPillText, { color: st.color }]}>{t(st.label)}</Text>
             </View>
             <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
           </View>
         </TouchableOpacity>
       );
     },
-    [accent, turi, navigation],
+    [accent, turi, navigation, t],
   );
 
   const keyExtractor = React.useCallback(
@@ -229,21 +231,21 @@ const QarzDaftariQarzlar = () => {
           <View style={styles.headerWrap}>
             <View style={styles.statGrid}>
               <View style={[styles.statCard, { borderLeftColor: accent }]}>
-                <Text style={styles.statLabel}>Jami qarzlar</Text>
+                <Text style={styles.statLabel}>{t('Jami qarzlar')}</Text>
                 <Text style={styles.statValue}>{rows.length}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-                <Text style={styles.statLabel}>Aktiv qarzlar</Text>
+                <Text style={styles.statLabel}>{t('Aktiv qarzlar')}</Text>
                 <Text style={styles.statValue}>{totalActive}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: RED }]}>
-                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
                   {sortMoneyText(totalQoldiqUzs) || 0} UZS
                 </Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
                   {sortMoneyText(totalQoldiqUsd) || 0} USD
                 </Text>
@@ -255,12 +257,12 @@ const QarzDaftariQarzlar = () => {
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder="FISH yoki telefon bo‘yicha qidirish..."
+                placeholder={t('FISH yoki telefon bo‘yicha qidirish...')}
                 placeholderTextColor={rd.color.textTertiary}
                 style={styles.searchInput}
               />
             </View>
-            <Text style={styles.countText}>{filtered.length} ta mijoz</Text>
+            <Text style={styles.countText}>{t('{{count}} ta mijoz', { count: filtered.length })}</Text>
           </View>
         }
         ListEmptyComponent={
@@ -268,7 +270,7 @@ const QarzDaftariQarzlar = () => {
             <View style={styles.emptyCircle}>
               <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
-            <Text style={styles.emptyText}>Qarzlar topilmadi.</Text>
+            <Text style={styles.emptyText}>{t('Qarzlar topilmadi.')}</Text>
           </View>
         }
       />

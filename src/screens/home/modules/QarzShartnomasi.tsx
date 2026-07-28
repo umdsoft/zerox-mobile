@@ -13,6 +13,7 @@
  */
 import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   RefreshControl,
   ScrollView,
@@ -92,6 +93,7 @@ const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
 
 // ---------- Statistika kartasi (donut + legend) ----------
 const StatCard = ({ title, chart }: { title: string; chart?: MyData['chart'] }) => {
+  const { t } = useTranslation();
   const jarayon = num(chart?.jarayon);
   const tugallangan = num(chart?.tugallangan);
   const rad = num(chart?.rad);
@@ -109,13 +111,13 @@ const StatCard = ({ title, chart }: { title: string; chart?: MyData['chart'] }) 
           segments={total === 0 ? [{ value: 1, color: rd.color.border }] : legend}
           size={rs(96)}
           centerValue={String(total)}
-          centerLabel="jami"
+          centerLabel={t('jami')}
         />
         <View style={styles.legend}>
           {legend.map(l => (
             <View key={l.label} style={styles.legendRow}>
               <View style={[styles.dot, { backgroundColor: l.color }]} />
-              <Text style={styles.legendLabel}>{l.label}</Text>
+              <Text style={styles.legendLabel}>{t(l.label)}</Text>
               <Text style={styles.legendCount}>{l.value}</Text>
             </View>
           ))}
@@ -187,6 +189,7 @@ const NearCard = ({
   five?: Row[];
   onPress?: () => void;
 }) => {
+  const { t } = useTranslation();
   const [cur, setCur] = useState<'UZS' | 'USD'>('UZS');
   const rows = useMemo(
     () => (five || []).filter(r => isCur(r, cur)),
@@ -227,13 +230,13 @@ const NearCard = ({
 
       {rows.length === 0 ? (
         <Text style={styles.nearEmpty}>
-          Hozircha sizda muddati oz qolgan qarzdorliklar mavjud emas.
+          {t('Hozircha sizda muddati oz qolgan qarzdorliklar mavjud emas.')}
         </Text>
       ) : (
         <View>
           <View style={styles.tableHead}>
-            <Text style={styles.tableHeadCol}>Qolgan vaqt</Text>
-            <Text style={[styles.tableHeadCol, styles.tableRight]}>Qarz miqdori</Text>
+            <Text style={styles.tableHeadCol}>{t('Qolgan vaqt')}</Text>
+            <Text style={[styles.tableHeadCol, styles.tableRight]}>{t('Qarz miqdori')}</Text>
           </View>
           {rows.map((r, i) => {
             const due = getDueMeta(r.end_date);
@@ -254,7 +257,7 @@ const NearCard = ({
       {/* Bosiladigan ekanini bildiruvchi pastki qator */}
       {onPress ? (
         <View style={styles.nearMore}>
-          <Text style={styles.nearMoreText}>Barchasini ko‘rish</Text>
+          <Text style={styles.nearMoreText}>{t('Barchasini ko‘rish')}</Text>
           <ChevronRight size={rs(15)} color={rd.color.primary} />
         </View>
       ) : null}
@@ -301,8 +304,9 @@ const REPORT_NAV = {
 // ---------- Ekran ----------
 const QarzShartnomasi = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { user } = useSelector((s: any) => s.HomeReducer);
-  const name = user?.data?.first_name || 'foydalanuvchi';
+  const name = user?.data?.first_name || t('foydalanuvchi');
 
   const debitor = useFetch({ url: `${URL}/home/my?type=debitor`, method: 'GET' });
   const creditor = useFetch({ url: `${URL}/home/my?type=creditor`, method: 'GET' });
@@ -335,7 +339,7 @@ const QarzShartnomasi = () => {
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
       <RdHeader
-        title="Qarz shartnomasi"
+        title={t('Qarz shartnomasi')}
         onBack={() => navigation.navigate('Home')}
       />
 
@@ -358,10 +362,10 @@ const QarzShartnomasi = () => {
         <View style={styles.hero}>
           <Grad id="qshHero" colors={GRAD_BRAND} />
           <Text style={styles.heroTitle} numberOfLines={2}>
-            Xush kelibsiz, {name}!
+            {t('Xush kelibsiz, {{name}}!', { name })}
           </Text>
           <Text style={styles.heroSub} numberOfLines={2}>
-            Shartnomalarni elektron rasmiylashtiring va oson boshqaring.
+            {t('Shartnomalarni elektron rasmiylashtiring va oson boshqaring.')}
           </Text>
           <View style={styles.heroBtns}>
             <TouchableOpacity
@@ -370,7 +374,7 @@ const QarzShartnomasi = () => {
               onPress={() => navigation.navigate('SearchUserScreen', { type: 1 })}
             >
               <ArrowUpRight size={rs(18)} color={rd.color.primary} />
-              <Text style={[styles.heroBtnText, { color: rd.color.primary }]}>Qarz berish</Text>
+              <Text style={[styles.heroBtnText, { color: rd.color.primary }]}>{t('Qarz berish')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.9}
@@ -378,7 +382,7 @@ const QarzShartnomasi = () => {
               onPress={() => navigation.navigate('SearchUserScreen', { type: 0 })}
             >
               <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
-              <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>Qarz olish</Text>
+              <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>{t('Qarz olish')}</Text>
             </TouchableOpacity>
           </View>
           {/* Hero ostidagi 4 ta raqam olib tashlandi: aynan shu ko'rsatkichlar
@@ -387,15 +391,15 @@ const QarzShartnomasi = () => {
         </View>
 
         {/* Sarlavhasiz: diagrammalarning o'z nomi bor. */}
-        <StatCard title="Debitor qarzdorlik" chart={deb.chart} />
-        <StatCard title="Kreditor qarzdorlik" chart={cred.chart} />
+        <StatCard title={t('Debitor qarzdorlik')} chart={deb.chart} />
+        <StatCard title={t('Kreditor qarzdorlik')} chart={cred.chart} />
 
         <View style={styles.debtGrid}>
           <DebtCard
             accent={rd.color.primary}
             Icon={ArrowUpRight}
-            label="Berilgan qarz"
-            badge="Olish kerak"
+            label={t('Berilgan qarz')}
+            badge={t('Olish kerak')}
             badgeBg={rd.color.primaryTint}
             badgeColor={rd.color.primary}
             amountColor={rd.color.text}
@@ -405,8 +409,8 @@ const QarzShartnomasi = () => {
           <DebtCard
             accent={rd.color.error}
             Icon={ClockIcon}
-            label="Berilgan qarz"
-            badge="Muddati o‘tgan"
+            label={t('Berilgan qarz')}
+            badge={t('Muddati o‘tgan')}
             badgeBg={rd.color.errorBg}
             badgeColor={rd.color.error}
             amountColor={rd.color.error}
@@ -416,8 +420,8 @@ const QarzShartnomasi = () => {
           <DebtCard
             accent={rd.color.success}
             Icon={ArrowDownLeft}
-            label="Olingan qarz"
-            badge="Berish kerak"
+            label={t('Olingan qarz')}
+            badge={t('Berish kerak')}
             badgeBg={rd.color.successBg}
             badgeColor={rd.color.success}
             amountColor={rd.color.text}
@@ -427,8 +431,8 @@ const QarzShartnomasi = () => {
           <DebtCard
             accent={rd.color.error}
             Icon={ClockIcon}
-            label="Olingan qarz"
-            badge="Muddati o‘tgan"
+            label={t('Olingan qarz')}
+            badge={t('Muddati o‘tgan')}
             badgeBg={rd.color.errorBg}
             badgeColor={rd.color.error}
             amountColor={rd.color.error}
@@ -439,24 +443,24 @@ const QarzShartnomasi = () => {
 
         {/* 4. Muddati oz qolgan */}
         <NearCard
-          title="Muddati oz qolgan berilgan qarzlar"
+          title={t('Muddati oz qolgan berilgan qarzlar')}
           five={deb.five}
           onPress={() => goList('debitor', 'near', 'Muddati oz qolgan (debitor)')}
         />
         <NearCard
-          title="Muddati oz qolgan olingan qarzlar"
+          title={t('Muddati oz qolgan olingan qarzlar')}
           five={cred.five}
           onPress={() => goList('creditor', 'near', 'Muddati oz qolgan (kreditor)')}
         />
 
         {/* 5. Hisobotlar */}
-        <Text style={styles.blockTitle}>Hisobotlar</Text>
+        <Text style={styles.blockTitle}>{t('Hisobotlar')}</Text>
         <ReportCard
-          label="Hisobot (debitor qarzdorliklar)"
+          label={t('Hisobot (debitor qarzdorliklar)')}
           onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.debitor)}
         />
         <ReportCard
-          label="Hisobot (kreditor qarzdorliklar)"
+          label={t('Hisobot (kreditor qarzdorliklar)')}
           onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.creditor)}
         />
       </ScrollView>

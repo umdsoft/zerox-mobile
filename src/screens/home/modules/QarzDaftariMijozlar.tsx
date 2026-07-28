@@ -9,6 +9,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   StatusBar,
@@ -54,6 +55,7 @@ const QarzDaftariMijozlar = () => {
   const faoliyat_id = route.params?.faoliyat_id;
   const faoliyat_nomi: string | undefined = route.params?.faoliyat_nomi;
   const turi: 'berish' | 'olish' = route.params?.turi === 'olish' ? 'olish' : 'berish';
+  const { t } = useTranslation();
 
   const { data, loading } = useFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat/${faoliyat_id}/mijozlar?turi=${turi}`,
@@ -64,7 +66,7 @@ const QarzDaftariMijozlar = () => {
 
   const list: any[] = (data as any)?.data || [];
   const accent = turi === 'olish' ? GREEN : BLUE;
-  const title = turi === 'olish' ? 'Qarzga olish' : 'Qarzga berish';
+  const title = turi === 'olish' ? t('Qarzga olish') : t('Qarzga berish');
 
   // Statistikalar.
   const totalActive = list.reduce((s, c) => s + Number(c?.aktiv_qarz_soni || 0), 0);
@@ -83,7 +85,7 @@ const QarzDaftariMijozlar = () => {
   const onYangiMijoz = () =>
     Toast.show({
       type: 'info',
-      props: { title: 'Tez kunda', desc: 'Yangi mijoz qo‘shish tez orada' },
+      props: { title: t('Tez kunda'), desc: t('Yangi mijoz qo‘shish tez orada') },
     });
 
   // FlatList uchun: har bir mijoz qatori (memoizatsiya — qayta render'да funksiya
@@ -96,8 +98,8 @@ const QarzDaftariMijozlar = () => {
       const qoldiqUsd = Number(c?.qoldiq_usd || 0);
       const active = Number(c?.aktiv_qarz_soni || 0) > 0;
       const st = active
-        ? { label: 'Aktiv', color: AMBER }
-        : { label: 'Qarzsiz', color: rd.color.textTertiary };
+        ? { label: t('Aktiv'), color: AMBER }
+        : { label: t('Qarzsiz'), color: rd.color.textTertiary };
       return (
         <TouchableOpacity
           activeOpacity={0.85}
@@ -114,7 +116,7 @@ const QarzDaftariMijozlar = () => {
               {fish}
             </Text>
             <Text style={styles.rowMeta} numberOfLines={1}>
-              {c?.telefon || '—'} · {Number(c?.qarz_soni || 0)} ta qarz
+              {c?.telefon || '—'} · {t('{{count}} ta qarz', { count: Number(c?.qarz_soni || 0) })}
             </Text>
             <View style={styles.rowAmts}>
               {qoldiqUzs > 0 && (
@@ -126,7 +128,7 @@ const QarzDaftariMijozlar = () => {
                 </Text>
               )}
               {qoldiqUzs === 0 && qoldiqUsd === 0 && (
-                <Text style={styles.rowAmtMuted}>Qoldiq yo‘q</Text>
+                <Text style={styles.rowAmtMuted}>{t('Qoldiq yo‘q')}</Text>
               )}
             </View>
           </View>
@@ -139,7 +141,7 @@ const QarzDaftariMijozlar = () => {
         </TouchableOpacity>
       );
     },
-    [accent, turi, navigation],
+    [accent, turi, navigation, t],
   );
 
   const keyExtractor = React.useCallback(
@@ -179,21 +181,21 @@ const QarzDaftariMijozlar = () => {
 
             <View style={styles.statGrid}>
               <View style={[styles.statCard, { borderLeftColor: accent }]}>
-                <Text style={styles.statLabel}>Jami mijozlar</Text>
+                <Text style={styles.statLabel}>{t('Jami mijozlar')}</Text>
                 <Text style={styles.statValue}>{list.length}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-                <Text style={styles.statLabel}>Aktiv qarzlar</Text>
+                <Text style={styles.statLabel}>{t('Aktiv qarzlar')}</Text>
                 <Text style={styles.statValue}>{totalActive}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: RED }]}>
-                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
                   {sortMoneyText(totalQoldiqUzs) || 0} UZS
                 </Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-                <Text style={styles.statLabel}>Jami qoldiq</Text>
+                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
                   {sortMoneyText(totalQoldiqUsd) || 0} USD
                 </Text>
@@ -206,7 +208,7 @@ const QarzDaftariMijozlar = () => {
               onPress={onYangiMijoz}
             >
               <PlusIcon size={rs(18)} color="#fff" />
-              <Text style={styles.newBtnText}>Yangi mijoz</Text>
+              <Text style={styles.newBtnText}>{t('Yangi mijoz')}</Text>
             </TouchableOpacity>
 
             <View style={styles.searchBox}>
@@ -214,12 +216,12 @@ const QarzDaftariMijozlar = () => {
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder="FISH yoki telefon bo‘yicha qidirish..."
+                placeholder={t('FISH yoki telefon bo‘yicha qidirish...')}
                 placeholderTextColor={rd.color.textTertiary}
                 style={styles.searchInput}
               />
             </View>
-            <Text style={styles.countText}>{filtered.length} ta mijoz</Text>
+            <Text style={styles.countText}>{t('{{count}} ta mijoz', { count: filtered.length })}</Text>
           </View>
         }
         ListEmptyComponent={
@@ -227,7 +229,7 @@ const QarzDaftariMijozlar = () => {
             <View style={styles.emptyCircle}>
               <UserIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
-            <Text style={styles.emptyText}>Mijozlar hali qo‘shilmagan.</Text>
+            <Text style={styles.emptyText}>{t('Mijozlar hali qo‘shilmagan.')}</Text>
           </View>
         }
       />

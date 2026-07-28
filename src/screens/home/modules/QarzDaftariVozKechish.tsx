@@ -10,6 +10,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   ScrollView,
@@ -108,6 +109,7 @@ const SummaryRow = ({
 const QarzDaftariVozKechish = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const id = route.params?.id;
 
   const { data, loading } = useFetch({
@@ -152,12 +154,12 @@ const QarzDaftariVozKechish = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      Toast.show({ type: 'omad', text1: 'Voz kechildi' });
+      Toast.show({ type: 'omad', text1: t('Voz kechildi') });
       navigation.goBack();
     } catch (error: any) {
       Toast.show({
         type: 'error2',
-        text1: error?.response?.data?.message || 'Xatolik yuz berdi',
+        text1: error?.response?.data?.message || t('Xatolik yuz berdi'),
       });
     } finally {
       setSubmitting(false);
@@ -167,7 +169,7 @@ const QarzDaftariVozKechish = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarzdan voz kechish" />
+      <RdHeader title={t('Qarzdan voz kechish')} />
 
       <ScrollView
         style={styles.scroll}
@@ -179,7 +181,7 @@ const QarzDaftariVozKechish = () => {
         <View style={styles.warnBox}>
           <ShieldIcon size={rs(20)} color={RED} />
           <Text style={styles.warnText}>
-            Voz kechilgan summani qaytarib talab qila olmaysiz.
+            {t('Voz kechilgan summani qaytarib talab qila olmaysiz.')}
           </Text>
         </View>
 
@@ -193,7 +195,7 @@ const QarzDaftariVozKechish = () => {
               <Text style={styles.clientName} numberOfLines={2}>
                 {titleCase(qarz?.mijoz?.fish)}
               </Text>
-              <Text style={styles.clientSubLabel}>Hozirgi qoldiq</Text>
+              <Text style={styles.clientSubLabel}>{t('Hozirgi qoldiq')}</Text>
               <Text style={styles.clientSubValue} numberOfLines={1} adjustsFontSizeToFit>
                 {`${sortMoneyText(qoldiq) || 0} ${valyuta}`}
               </Text>
@@ -202,10 +204,10 @@ const QarzDaftariVozKechish = () => {
         </View>
 
         {/* 3. Forma */}
-        <Text style={styles.blockTitle}>Voz kechish ma’lumotlari</Text>
+        <Text style={styles.blockTitle}>{t('Voz kechish ma’lumotlari')}</Text>
         <View style={styles.card}>
           {/* Summa */}
-          <Text style={styles.fieldLabel}>Voz kechiladigan summa</Text>
+          <Text style={styles.fieldLabel}>{t('Voz kechiladigan summa')}</Text>
           <View
             style={[
               styles.inputWrap,
@@ -223,7 +225,7 @@ const QarzDaftariVozKechish = () => {
             <Text style={styles.inputSuffix}>{valyuta}</Text>
           </View>
           <Text style={[styles.hint, tooMuch && { color: RED }]}>
-            {`Maksimal: ${sortMoneyText(qoldiq) || 0} ${valyuta}`}
+            {t('Maksimal: {{amount}}', { amount: `${sortMoneyText(qoldiq) || 0} ${valyuta}` })}
           </Text>
 
           {/* Tezkor chiplar */}
@@ -240,21 +242,21 @@ const QarzDaftariVozKechish = () => {
                 style={styles.chip}
                 onPress={() => setChip(c.pct)}
               >
-                <Text style={styles.chipText}>{c.label}</Text>
+                <Text style={styles.chipText}>{c.label === 'Hammasi' ? t('Hammasi') : c.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Izoh */}
           <Text style={[styles.fieldLabel, { marginTop: rs(16) }]}>
-            Izoh (ixtiyoriy)
+            {t('Izoh (ixtiyoriy)')}
           </Text>
           <View style={[styles.inputWrap, styles.inputWrapMultiline]}>
             <TextInput
               style={[styles.input, styles.inputMultiline]}
               value={izoh}
               onChangeText={setIzoh}
-              placeholder="Sabab yoki qo‘shimcha ma’lumot..."
+              placeholder={t('Sabab yoki qo‘shimcha ma’lumot...')}
               placeholderTextColor={rd.color.textTertiary}
               multiline
               textAlignVertical="top"
@@ -263,20 +265,20 @@ const QarzDaftariVozKechish = () => {
         </View>
 
         {/* 4. Hisob-kitob */}
-        <Text style={styles.blockTitle}>Hisob-kitob</Text>
+        <Text style={styles.blockTitle}>{t('Hisob-kitob')}</Text>
         <View style={styles.card}>
           <SummaryRow
-            label="Hozirgi qoldiq"
+            label={t('Hozirgi qoldiq')}
             value={`${sortMoneyText(qoldiq) || 0} ${valyuta}`}
           />
           <SummaryRow
-            label="Voz kechiladi"
+            label={t('Voz kechiladi')}
             value={`− ${sortMoneyText(summa) || 0} ${valyuta}`}
             valueColor={RED}
           />
           <View style={styles.sumDivider} />
           <SummaryRow
-            label="Yangi qoldiq"
+            label={t('Yangi qoldiq')}
             value={`${sortMoneyText(yangiQoldiq) || 0} ${valyuta}`}
             valueColor={yangiQoldiq === 0 ? RED : rd.color.text}
             bold
@@ -285,7 +287,7 @@ const QarzDaftariVozKechish = () => {
             <View style={styles.zeroBanner}>
               <ShieldIcon size={rs(16)} color={RED} />
               <Text style={styles.zeroBannerText}>
-                Qarz to‘liq voz kechiladi
+                {t('Qarz to‘liq voz kechiladi')}
               </Text>
             </View>
           )}
@@ -307,7 +309,7 @@ const QarzDaftariVozKechish = () => {
           ) : (
             <>
               <ClockIcon size={rs(18)} color="#fff" />
-              <Text style={styles.submitBtnText}>Tasdiqlash</Text>
+              <Text style={styles.submitBtnText}>{t('Tasdiqlash')}</Text>
             </>
           )}
         </TouchableOpacity>

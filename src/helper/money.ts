@@ -12,7 +12,14 @@
  *
  * Million/milliarddan KICHIK summalar aynan o'zicha qoladi (mingliklar
  * bo'shliq bilan): u yerda aniq raqam ixchamlikdan muhimroq.
+ *
+ * VALYUTA BIRLIGI ("so'm") tilga qarab o'zgaradi: i18n.t('so‘m') — ingliz/
+ * qoraqalpoq tilida mos birlik chiqadi (uz — kalitning o'zi = "so‘m").
+ * Chaqiruvchi ekranlar useTranslation orqali til o'zgarsa qayta render bo'ladi,
+ * shuning uchun birlik ham darhol yangilanadi. (mln/mlrd — xalqaro qisqartma,
+ * o'zgartirilmaydi.)
  */
+import i18n from '../i18n';
 
 /** Mingliklarni bo'shliq bilan ajratadi: 550000 -> "550 000". */
 export const groupDigits = (n: number) =>
@@ -39,9 +46,9 @@ export const compactMoney = (value: number | string | null | undefined) => {
   return groupDigits(n);
 };
 
-/** Ixcham summa + valyuta belgisi: "10,5 mln so'm". */
+/** Ixcham summa + valyuta belgisi: "10,5 mln so'm" (til bo'yicha birlik). */
 export const compactUzs = (value: number | string | null | undefined) =>
-  `${compactMoney(value)} so‘m`;
+  `${compactMoney(value)} ${i18n.t('so‘m')}`;
 
 /** Ixcham summa + dollar: "1,2 mln $". */
 export const compactUsd = (value: number | string | null | undefined) =>

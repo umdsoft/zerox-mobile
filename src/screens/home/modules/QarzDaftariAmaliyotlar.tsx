@@ -14,6 +14,7 @@
  */
 import { useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   StatusBar,
@@ -105,6 +106,7 @@ const ListSeparator = () => <View style={{ height: rs(12) }} />;
 const QarzDaftariAmaliyotlar = () => {
   const route = useRoute<any>();
   const mijozId = route.params?.mijoz_id;
+  const { t } = useTranslation();
 
   const { data, loading } = useFetch({
     url: `${URL}/qarz-daftari/mijozlar/${mijozId}/history`,
@@ -134,8 +136,8 @@ const QarzDaftariAmaliyotlar = () => {
   );
 
   // FlatList uchun memoizatsiyalangan qator (barcha yordamchilar module-level -> deps []).
-  const renderItem = React.useCallback(({ item: t }: { item: any }) => {
-    const turi: Turi = t?.turi;
+  const renderItem = React.useCallback(({ item: tx }: { item: any }) => {
+    const turi: Turi = tx?.turi;
     const { color, Icon } = iconMeta(turi);
     const sign = turi === 'qaytarish' || turi === 'voz_kechish' ? '−' : '';
     return (
@@ -145,10 +147,10 @@ const QarzDaftariAmaliyotlar = () => {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.rowTitle} numberOfLines={1}>
-            {TITLE_BY_TURI[turi] || 'Amaliyot'}
+            {t(TITLE_BY_TURI[turi] || 'Amaliyot')}
           </Text>
           <Text style={styles.rowMeta} numberOfLines={1}>
-            {fmtDateTime(t?.created_at)}
+            {fmtDateTime(tx?.created_at)}
           </Text>
         </View>
         <Text
@@ -156,11 +158,11 @@ const QarzDaftariAmaliyotlar = () => {
           numberOfLines={1}
         >
           {sign}
-          {sortMoneyText(t?.summa) || 0} {t?.valyuta || 'UZS'}
+          {sortMoneyText(tx?.summa) || 0} {tx?.valyuta || 'UZS'}
         </Text>
       </View>
     );
-  }, []);
+  }, [t]);
 
   const keyExtractor = React.useCallback(
     (t: any, i: number) => String(t?.id ?? i),
@@ -172,7 +174,7 @@ const QarzDaftariAmaliyotlar = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Amaliyotlar tarixi" />
+      <RdHeader title={t('Amaliyotlar tarixi')} />
 
       <FlatList
         style={styles.scroll}
@@ -206,21 +208,21 @@ const QarzDaftariAmaliyotlar = () => {
             {/* 2. Mini statistikalar */}
             <View style={styles.statGrid}>
               <View style={[styles.statCard, { borderLeftColor: BLUE }]}>
-                <Text style={styles.statLabel}>Jami qarzlar</Text>
+                <Text style={styles.statLabel}>{t('Jami qarzlar')}</Text>
                 <Text style={styles.statValue}>{jamiQarzlar}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-                <Text style={styles.statLabel}>Aktiv</Text>
+                <Text style={styles.statLabel}>{t('Aktiv')}</Text>
                 <Text style={styles.statValue}>{aktivQarzlar}</Text>
               </View>
               <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-                <Text style={styles.statLabel}>Amaliyotlar</Text>
+                <Text style={styles.statLabel}>{t('Amaliyotlar')}</Text>
                 <Text style={styles.statValue}>{tranzaksiyalar.length}</Text>
               </View>
             </View>
 
             {/* 3. Amaliyotlar tarixi sarlavhasi */}
-            <Text style={styles.blockTitle}>Amaliyotlar tarixi</Text>
+            <Text style={styles.blockTitle}>{t('Amaliyotlar tarixi')}</Text>
           </View>
         }
         ListEmptyComponent={
@@ -228,7 +230,7 @@ const QarzDaftariAmaliyotlar = () => {
             <View style={styles.emptyCircle}>
               <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
-            <Text style={styles.emptyText}>Hali amaliyotlar yo‘q</Text>
+            <Text style={styles.emptyText}>{t('Hali amaliyotlar yo‘q')}</Text>
           </View>
         }
       />

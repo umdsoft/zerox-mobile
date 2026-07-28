@@ -1,22 +1,24 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CheckBox from '@react-native-community/checkbox';
 import ScreenLayout from '../components/ScreenLayout';
 import { rd, rs } from '../../theme/rd';
 import { CoinIcon } from '../home/redesign/icons';
 
 const FullDebtBack = () => {
+  const { t } = useTranslation();
   const [check, setCheck] = useState(false);
 
   return (
-    <ScreenLayout title={' Qarzni to’liq qaytarishni talab qilish'} scroll>
+    <ScreenLayout title={t(' Qarzni to’liq qaytarishni talab qilish')} scroll>
       <View style={styles.content}>
         <View style={styles.hero}>
           <View style={styles.heroCircle}>
             <CoinIcon size={rs(30)} color={rd.color.primary} />
           </View>
           <Text style={styles.heroTitle} allowFontScaling={false}>
-            Qarzni to’liq qaytarish
+            {t('Qarzni to’liq qaytarish')}
           </Text>
         </View>
 
@@ -40,8 +42,9 @@ const FullDebtBack = () => {
             onValueChange={() => setCheck(!check)}
           />
           <Text style={styles.checkText} allowFontScaling={false}>
-            Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan
-            tanishdim
+            {t(
+              'Ushbu jarayon yuzasidan rasmiylashtirilgan dalolatnoma bilan tanishdim',
+            )}
           </Text>
         </View>
 
@@ -58,7 +61,7 @@ const FullDebtBack = () => {
               !check && styles.primaryBtnTextDisabled,
             ]}
             allowFontScaling={false}>
-            Tasdiqlash
+            {t('Tasdiqlash')}
           </Text>
         </TouchableOpacity>
       </View>

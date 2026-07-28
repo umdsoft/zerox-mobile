@@ -10,6 +10,7 @@
  */
 import { useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
@@ -84,6 +85,7 @@ const Row = ({
 // ---------- Ekran ----------
 const QarzDaftariKvitansiya = () => {
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const id = route.params?.id;
 
   const { data, loading } = useFetch({
@@ -99,12 +101,12 @@ const QarzDaftariKvitansiya = () => {
     return (
       <View style={styles.screen}>
         <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-        <RdHeader title="Kvitansiya" />
+        <RdHeader title={t('Kvitansiya')} />
         <View style={styles.notFound}>
           <View style={styles.notFoundIcon}>
             <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
           </View>
-          <Text style={styles.notFoundText}>Kvitansiya topilmadi</Text>
+          <Text style={styles.notFoundText}>{t('Kvitansiya topilmadi')}</Text>
         </View>
       </View>
     );
@@ -116,7 +118,7 @@ const QarzDaftariKvitansiya = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Kvitansiya" />
+      <RdHeader title={t('Kvitansiya')} />
 
       <ScrollView
         style={styles.scroll}
@@ -129,20 +131,20 @@ const QarzDaftariKvitansiya = () => {
             <View style={styles.docBadge}>
               <ShieldIcon size={rs(20)} color={rd.color.primary} />
             </View>
-            <Text style={styles.docTitle}>Qarz kvitansiyasi</Text>
+            <Text style={styles.docTitle}>{t('Qarz kvitansiyasi')}</Text>
           </View>
           <View style={styles.divider} />
 
           {/* Tomonlar */}
           <View style={styles.parties}>
             <View style={styles.partyBlock}>
-              <Text style={styles.partyLabel}>QARZ OLUVCHI</Text>
+              <Text style={styles.partyLabel}>{t('QARZ OLUVCHI')}</Text>
               <Text style={styles.partyValue} numberOfLines={2}>
                 {titleCase(k?.qarz_oluvchi)}
               </Text>
             </View>
             <View style={styles.partyBlock}>
-              <Text style={styles.partyLabel}>QARZ BERUVCHI</Text>
+              <Text style={styles.partyLabel}>{t('QARZ BERUVCHI')}</Text>
               <Text style={styles.partyValue} numberOfLines={2}>
                 {titleCase(k?.qarz_beruvchi)}
               </Text>
@@ -154,35 +156,35 @@ const QarzDaftariKvitansiya = () => {
           {/* Tafsilotlar */}
           <View style={styles.details}>
             <Row
-              label="Qarz miqdori"
+              label={t('Qarz miqdori')}
               value={`${sortMoneyText(k?.miqdor) || 0} ${valyuta}`}
             />
             {isPos(k?.qaytarilgan) && (
               <Row
-                label="Qaytarilgan"
+                label={t('Qaytarilgan')}
                 value={`${sortMoneyText(k?.qaytarilgan) || 0} ${valyuta}`}
                 valueColor={GREEN}
               />
             )}
             {isPos(k?.qoldiq) && (
               <Row
-                label="Qoldiq qarz"
+                label={t('Qoldiq qarz')}
                 value={`${sortMoneyText(k?.qoldiq) || 0} ${valyuta}`}
                 valueColor={RED}
               />
             )}
             {!!k?.mahsulot_nomi && (
-              <Row label="Mahsulot" value={String(k.mahsulot_nomi)} />
+              <Row label={t('Mahsulot')} value={String(k.mahsulot_nomi)} />
             )}
-            <Row label="Berilgan sana" value={ddmmyyyy(k?.berilgan_sana)} />
+            <Row label={t('Berilgan sana')} value={ddmmyyyy(k?.berilgan_sana)} />
             {!!k?.qaytarish_sanasi && (
               <Row
-                label="Qaytarish sanasi"
+                label={t('Qaytarish sanasi')}
                 value={ddmmyyyy(k?.qaytarish_sanasi)}
               />
             )}
             {isPos(k?.oylar_soni) && (
-              <Row label="Bo‘lib to‘lash" value={`${k?.oylar_soni} oy`} />
+              <Row label={t('Bo‘lib to‘lash')} value={`${k?.oylar_soni} ${t('oy')}`} />
             )}
           </View>
 
@@ -190,12 +192,12 @@ const QarzDaftariKvitansiya = () => {
           {tolovlar.length > 0 && (
             <>
               <View style={styles.divider} />
-              <Text style={styles.tableTitle}>To‘lovlar</Text>
+              <Text style={styles.tableTitle}>{t('To‘lovlar')}</Text>
               <View style={styles.trHead}>
                 <Text style={[styles.thText, styles.colNo]}>#</Text>
-                <Text style={[styles.thText, styles.colDate]}>Sana</Text>
-                <Text style={[styles.thText, styles.colAmt]}>Summa</Text>
-                <Text style={[styles.thText, styles.colStatus]}>Holat</Text>
+                <Text style={[styles.thText, styles.colDate]}>{t('Sana')}</Text>
+                <Text style={[styles.thText, styles.colAmt]}>{t('Summa')}</Text>
+                <Text style={[styles.thText, styles.colStatus]}>{t('Holat')}</Text>
               </View>
               {tolovlar.map((t, i) => {
                 const ts = tolovStatus(t?.status);
@@ -226,7 +228,7 @@ const QarzDaftariKvitansiya = () => {
                       style={[styles.tdStatus, styles.colStatus, { color: ts.color }]}
                       numberOfLines={1}
                     >
-                      {ts.label}
+                      {t(ts.label)}
                     </Text>
                   </View>
                 );
@@ -236,7 +238,7 @@ const QarzDaftariKvitansiya = () => {
 
           <View style={styles.divider} />
           <Text style={styles.footerNote}>
-            Ushbu kvitansiya ma’lumot uchun berilgan.
+            {t('Ushbu kvitansiya ma’lumot uchun berilgan.')}
           </Text>
         </View>
       </ScrollView>

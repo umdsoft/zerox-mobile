@@ -10,6 +10,7 @@
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -33,6 +34,7 @@ const BLUE = '#2f6fed';
 
 const QarzDaftariFaoliyat = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
 
   const [nomi, setNomi] = React.useState('');
   const [region, setRegion] = React.useState('');
@@ -45,7 +47,7 @@ const QarzDaftariFaoliyat = () => {
     if (!nomi.trim()) {
       Toast.show({
         type: 'error2',
-        text1: "Do'kon nomini kiriting",
+        text1: t("Do'kon nomini kiriting"),
       });
       return;
     }
@@ -66,19 +68,19 @@ const QarzDaftariFaoliyat = () => {
       if (res.data?.success) {
         Toast.show({
           type: 'omad',
-          text1: "Do'kon yaratildi",
+          text1: t("Do'kon yaratildi"),
         });
         navigation.goBack();
       } else {
         Toast.show({
           type: 'error2',
-          text1: res.data?.message || 'Xatolik',
+          text1: res.data?.message || t('Xatolik'),
         });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error2',
-        text1: error?.response?.data?.message || 'Xatolik',
+        text1: error?.response?.data?.message || t('Xatolik'),
       });
     } finally {
       setSubmitting(false);
@@ -90,7 +92,7 @@ const QarzDaftariFaoliyat = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Yangi do'kon" />
+      <RdHeader title={t("Yangi do'kon")} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -108,19 +110,19 @@ const QarzDaftariFaoliyat = () => {
               <BuildingIcon size={rs(24)} color={BLUE} />
             </View>
             <Text style={styles.introText}>
-              Qarz daftarini yuritish uchun savdo faoliyati (do‘kon) yarating.
+              {t('Qarz daftarini yuritish uchun savdo faoliyati (do‘kon) yarating.')}
             </Text>
           </View>
 
           {/* Do'kon nomi */}
           <View style={styles.field}>
-            <Text style={styles.label}>Do‘kon nomi</Text>
+            <Text style={styles.label}>{t('Do‘kon nomi')}</Text>
             <View style={styles.inputBox}>
               <TextInput
                 style={styles.input}
                 value={nomi}
                 onChangeText={setNomi}
-                placeholder="Masalan: BBJ Savdo"
+                placeholder={t('Masalan: BBJ Savdo')}
                 placeholderTextColor={rd.color.textTertiary}
               />
             </View>
@@ -128,13 +130,13 @@ const QarzDaftariFaoliyat = () => {
 
           {/* Viloyat */}
           <View style={styles.field}>
-            <Text style={styles.label}>Viloyat (ixtiyoriy)</Text>
+            <Text style={styles.label}>{t('Viloyat (ixtiyoriy)')}</Text>
             <View style={styles.inputBox}>
               <TextInput
                 style={styles.input}
                 value={region}
                 onChangeText={setRegion}
-                placeholder="Masalan: Toshkent"
+                placeholder={t('Masalan: Toshkent')}
                 placeholderTextColor={rd.color.textTertiary}
               />
             </View>
@@ -142,13 +144,13 @@ const QarzDaftariFaoliyat = () => {
 
           {/* Tuman */}
           <View style={styles.field}>
-            <Text style={styles.label}>Tuman (ixtiyoriy)</Text>
+            <Text style={styles.label}>{t('Tuman (ixtiyoriy)')}</Text>
             <View style={styles.inputBox}>
               <TextInput
                 style={styles.input}
                 value={district}
                 onChangeText={setDistrict}
-                placeholder="Masalan: Chilonzor"
+                placeholder={t('Masalan: Chilonzor')}
                 placeholderTextColor={rd.color.textTertiary}
               />
             </View>
@@ -162,7 +164,7 @@ const QarzDaftariFaoliyat = () => {
             disabled={submitting}
           >
             <Text style={styles.submitBtnText}>
-              {submitting ? 'Saqlanmoqda...' : 'Saqlash'}
+              {submitting ? t('Saqlanmoqda...') : t('Saqlash')}
             </Text>
           </TouchableOpacity>
         </ScrollView>

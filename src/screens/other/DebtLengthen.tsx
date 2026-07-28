@@ -1,6 +1,7 @@
 import {ScrollView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import {ClockIcon} from '../home/redesign/icons';
@@ -38,21 +39,22 @@ const InfoRow = ({label, value, date, link, onPress, last}: RowProps) => (
 
 const DebtLengthen = () => {
   const navigation = useNavigation();
+  const {t} = useTranslation();
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarz ma’lumotlari" />
+      <RdHeader title={t('Qarz ma’lumotlari')} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          <InfoRow label="Qarzdor nomi" value="Abdullayev Abdulla" />
-          <InfoRow label="Qarz summasi" value="1,0 mln so’m" />
-          <InfoRow label="Qarz olingan sana " value="22.10.2021" date />
-          <InfoRow label="Qarz qaytarilgan sana" value="22.10.2022" date />
-          <InfoRow label="Qaytarilgan summa " value="1.0 mln so’m" />
+          <InfoRow label={t('Qarzdor nomi')} value="Abdullayev Abdulla" />
+          <InfoRow label={t('Qarz summasi')} value="1,0 mln so’m" />
+          <InfoRow label={t('Qarz olingan sana ')} value="22.10.2021" date />
+          <InfoRow label={t('Qarz qaytarilgan sana')} value="22.10.2022" date />
+          <InfoRow label={t('Qaytarilgan summa ')} value="1.0 mln so’m" />
           <InfoRow
-            label="Hujjatla"
+            label={t('Hujjatla')}
             value="22/10/2021/000001"
             link
             last

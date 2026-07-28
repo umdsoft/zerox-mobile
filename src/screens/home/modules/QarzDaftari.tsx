@@ -19,6 +19,7 @@
  */
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StatusBar,
@@ -131,28 +132,32 @@ const CircleIcon = ({
 );
 
 // B) Hero banner — ko'k gradient, 2 tugma.
-const Hero = ({ onContract, onAdd }: { onContract: () => void; onAdd: () => void }) => (
+const Hero = ({ onContract, onAdd }: { onContract: () => void; onAdd: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.hero}>
     <Grad id="qdHero" colors={GRAD_BRAND} />
-    <Text style={styles.heroTitle}>Qarz daftari</Text>
+    <Text style={styles.heroTitle}>{t('Qarz daftari')}</Text>
     <Text style={styles.heroSub}>
-      Qarz oldi-berdi munosabatlaringizni elektron boshqaring
+      {t('Qarz oldi-berdi munosabatlaringizni elektron boshqaring')}
     </Text>
     <View style={styles.heroBtns}>
       <TouchableOpacity activeOpacity={0.85} style={styles.heroBtn} onPress={onContract}>
         <TransferIcon size={rs(17)} color={rd.color.primary} />
-        <Text style={styles.heroBtnText}>Qarz shartnomasi</Text>
+        <Text style={styles.heroBtnText}>{t('Qarz shartnomasi')}</Text>
       </TouchableOpacity>
       <TouchableOpacity activeOpacity={0.85} style={styles.heroBtn} onPress={onAdd}>
         <PlusIcon size={rs(17)} color={rd.color.primary} />
-        <Text style={styles.heroBtnText}>Daftariga kiritish</Text>
+        <Text style={styles.heroBtnText}>{t('Daftariga kiritish')}</Text>
       </TouchableOpacity>
     </View>
   </View>
-);
+  );
+};
 
 // Nisbat bari — ko'k (shartnoma) + yashil (daftar).
 const RatioBar = ({ contract, ledger }: { contract: number; ledger: number }) => {
+  const { t } = useTranslation();
   const total = contract + ledger;
   const cPct = total > 0 ? Math.round((contract / total) * 100) : 0;
   const lPct = total > 0 ? 100 - cPct : 0;
@@ -165,11 +170,11 @@ const RatioBar = ({ contract, ledger }: { contract: number; ledger: number }) =>
       <View style={styles.barLegend}>
         <View style={styles.barLegendItem}>
           <View style={[styles.barDot, { backgroundColor: BLUE }]} />
-          <Text style={styles.barLegendText}>Shartnoma {cPct}%</Text>
+          <Text style={styles.barLegendText}>{t('Shartnoma {{pct}}%', { pct: cPct })}</Text>
         </View>
         <View style={styles.barLegendItem}>
           <View style={[styles.barDot, { backgroundColor: GREEN }]} />
-          <Text style={styles.barLegendText}>Daftar {lPct}%</Text>
+          <Text style={styles.barLegendText}>{t('Daftar {{pct}}%', { pct: lPct })}</Text>
         </View>
       </View>
     </View>
@@ -197,6 +202,7 @@ const DashboardChartCard = ({
   daftariUzs: number;
   daftariUsd: number;
 }) => {
+  const { t } = useTranslation();
   const rate = usdRate || 0;
   const shartnomaTotalUzs = shartnomaUzs + shartnomaUsd * rate;
   const daftariTotalUzs = daftariUzs + daftariUsd * rate;
@@ -211,17 +217,17 @@ const DashboardChartCard = ({
         </CircleIcon>
         <View style={{ flex: 1 }}>
           <Text style={styles.ovTitle}>{title}</Text>
-          <Text style={styles.ovSubtitle}>Shartnoma va daftari nisbati</Text>
+          <Text style={styles.ovSubtitle}>{t('Shartnoma va daftari nisbati')}</Text>
         </View>
       </View>
 
-      <Text style={styles.ovTotalLabel}>Jami</Text>
+      <Text style={styles.ovTotalLabel}>{t('Jami')}</Text>
       <Text style={styles.ovTotal} numberOfLines={1} adjustsFontSizeToFit>
         {uzsText(Math.round(totalCombined))}
       </Text>
       {rate > 0 && totalUsd > 0 && (
         <Text style={styles.ovRate}>
-          Markaziy bank kursi: 1 USD = {sortText(rate) || 0} UZS
+          {t('Markaziy bank kursi: 1 USD = {{rate}} UZS', { rate: sortText(rate) || 0 })}
         </Text>
       )}
 
@@ -233,7 +239,7 @@ const DashboardChartCard = ({
         <View style={[styles.subCard, { borderColor: BLUE, backgroundColor: '#EFF6FF' }]}>
           <View style={styles.subCardHead}>
             <TransferIcon size={rs(14)} color={BLUE} />
-            <Text style={styles.subCardTitle}>Qarz shartnomasi</Text>
+            <Text style={styles.subCardTitle}>{t('Qarz shartnomasi')}</Text>
           </View>
           <Text style={styles.subCardUzs} numberOfLines={1} adjustsFontSizeToFit>
             {uzsText(shartnomaUzs)}
@@ -243,7 +249,7 @@ const DashboardChartCard = ({
         <View style={[styles.subCard, { borderColor: GREEN, backgroundColor: '#F0FDF4' }]}>
           <View style={styles.subCardHead}>
             <CoinIcon size={rs(14)} color={GREEN} />
-            <Text style={styles.subCardTitle}>Qarz daftari</Text>
+            <Text style={styles.subCardTitle}>{t('Qarz daftari')}</Text>
           </View>
           <Text style={styles.subCardUzs} numberOfLines={1} adjustsFontSizeToFit>
             {uzsText(daftariUzs)}
@@ -345,6 +351,7 @@ const DueTable = ({
   rows: any[];
   onRow: (id: any) => void;
 }) => {
+  const { t } = useTranslation();
   const [cur, setCur] = React.useState<'UZS' | 'USD'>('UZS');
   const filtered: Row[] = (rows || [])
     .filter(r => String(r?.currency || 'UZS').toUpperCase() === cur)
@@ -384,15 +391,15 @@ const DueTable = ({
             <ClockIcon size={rs(22)} color={rd.color.textTertiary} />
           </CircleIcon>
           <Text style={styles.emptyText}>
-            Yaqin orada muddati tugaydigan qarzlar yo‘q.
+            {t('Yaqin orada muddati tugaydigan qarzlar yo‘q.')}
           </Text>
         </View>
       ) : (
         <>
           <View style={styles.trHead}>
-            <Text style={[styles.thText, styles.colName]}>Mijoz</Text>
-            <Text style={[styles.thText, styles.colDate]}>Muddat</Text>
-            <Text style={[styles.thText, styles.colAmt]}>Qarz miqdori</Text>
+            <Text style={[styles.thText, styles.colName]}>{t('Mijoz')}</Text>
+            <Text style={[styles.thText, styles.colDate]}>{t('Muddat')}</Text>
+            <Text style={[styles.thText, styles.colAmt]}>{t('Qarz miqdori')}</Text>
           </View>
           {filtered.map((row, i) => (
             <TouchableOpacity
@@ -425,23 +432,27 @@ const DueTable = ({
 };
 
 // G) Ogohlantirish banneri (yopiladigan).
-const WarningBanner = ({ onClose }: { onClose: () => void }) => (
+const WarningBanner = ({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.warnBox}>
     <ShieldIcon size={rs(20)} color={AMBER} />
     <Text style={styles.warnText}>
-      Qarz oldi-berdi munosabatlaringizni qarz daftariga kiritish orqali qarzlaringizni
-      elektron boshqarish imkoniyatiga ega bo‘lasiz. Biroq bu holatda qarz daftariga
-      kiritilgan qarzlar bo‘yicha qarz shartnomasi rasmiylashtirilmaydi.
+      {t(
+        'Qarz oldi-berdi munosabatlaringizni qarz daftariga kiritish orqali qarzlaringizni elektron boshqarish imkoniyatiga ega bo‘lasiz. Biroq bu holatda qarz daftariga kiritilgan qarzlar bo‘yicha qarz shartnomasi rasmiylashtirilmaydi.',
+      )}
     </Text>
     <TouchableOpacity activeOpacity={0.8} onPress={onClose} style={styles.warnClose}>
-      <Text style={styles.warnCloseText}>Tushundim</Text>
+      <Text style={styles.warnCloseText}>{t('Tushundim')}</Text>
     </TouchableOpacity>
   </View>
-);
+  );
+};
 
 // ---------- Ekran ----------
 const QarzDaftari = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const nav: Nav = (route, params) => navigation.navigate(route, params);
   const [showWarn, setShowWarn] = React.useState(true);
 
@@ -488,7 +499,7 @@ const QarzDaftari = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
-      <RdHeader title="Qarz daftari" onBack={() => navigation.navigate('Home')} />
+      <RdHeader title={t('Qarz daftari')} onBack={() => navigation.navigate('Home')} />
 
       <ScrollView
         style={styles.scroll}
@@ -499,11 +510,11 @@ const QarzDaftari = () => {
         <Hero onContract={() => nav('QarzShartnomasi')} onAdd={() => goKiritish()} />
 
         {/* C. Umumiy ko'rinish */}
-        <Text style={styles.blockTitle}>Umumiy ko‘rinish</Text>
+        <Text style={styles.blockTitle}>{t('Umumiy ko‘rinish')}</Text>
         <DashboardChartCard
           accent={BLUE}
           Icon={ArrowUpRight}
-          title="Berilgan qarz"
+          title={t('Berilgan qarz')}
           usdRate={usdRate}
           shartnomaUzs={bq?.shartnoma?.uzs || 0}
           shartnomaUsd={bq?.shartnoma?.usd || 0}
@@ -513,7 +524,7 @@ const QarzDaftari = () => {
         <DashboardChartCard
           accent={GREEN}
           Icon={ArrowDownLeft}
-          title="Olingan qarz"
+          title={t('Olingan qarz')}
           usdRate={usdRate}
           shartnomaUzs={oq?.shartnoma?.uzs || 0}
           shartnomaUsd={oq?.shartnoma?.usd || 0}
@@ -522,35 +533,35 @@ const QarzDaftari = () => {
         />
 
         {/* D. Tezkor amallar */}
-        <Text style={styles.blockTitle}>Tezkor amallar</Text>
+        <Text style={styles.blockTitle}>{t('Tezkor amallar')}</Text>
         <View style={styles.actionsWrap}>
           <ActionCard
             color={BLUE}
             bg="#EFF6FF"
             Icon={ArrowUpRight}
-            title="Qarzga berish"
-            note="Mijozga qarz bering va to‘lovlarni kuzating"
+            title={t('Qarzga berish')}
+            note={t('Mijozga qarz bering va to‘lovlarni kuzating')}
             onPress={() => goKiritish('berish')}
           />
           <ActionCard
             color={GREEN}
             bg="#F0FDF4"
             Icon={ArrowDownLeft}
-            title="Qarzga olish"
-            note="Olingan qarzni qayd eting va muddatini belgilang"
+            title={t('Qarzga olish')}
+            note={t('Olingan qarzni qayd eting va muddatini belgilang')}
             onPress={() => goKiritish('olish')}
           />
         </View>
 
         {/* E. Qarzdorliklar */}
-        <Text style={styles.blockTitle}>Qarzdorliklar</Text>
+        <Text style={styles.blockTitle}>{t('Qarzdorliklar')}</Text>
         <View style={styles.sumGrid}>
           <DebtSumCard
             accent={BLUE}
             accentBg="#EFF6FF"
             Icon={ArrowUpRight}
-            label="Berilgan qarz"
-            pill="Olish kerak"
+            label={t('Berilgan qarz')}
+            pill={t('Olish kerak')}
             pillColor={BLUE}
             uzs={daftariBerilganUzs}
             usd={daftariBerilganUsd}
@@ -560,8 +571,8 @@ const QarzDaftari = () => {
             accent={RED}
             accentBg="#FEF2F2"
             Icon={ClockIcon}
-            label="Muddati o‘tgan (debitor)"
-            pill="Muddati o‘tgan"
+            label={t('Muddati o‘tgan (debitor)')}
+            pill={t('Muddati o‘tgan')}
             pillColor={RED}
             uzs={overdueBerilganUzs}
             usd={overdueBerilganUsd}
@@ -573,8 +584,8 @@ const QarzDaftari = () => {
             accent={GREEN}
             accentBg="#F0FDF4"
             Icon={ArrowDownLeft}
-            label="Olingan qarz"
-            pill="Berish kerak"
+            label={t('Olingan qarz')}
+            pill={t('Berish kerak')}
             pillColor={GREEN}
             uzs={daftariOlinganUzs}
             usd={daftariOlinganUsd}
@@ -584,8 +595,8 @@ const QarzDaftari = () => {
             accent={RED}
             accentBg="#FEF2F2"
             Icon={ClockIcon}
-            label="Muddati o‘tgan (kreditor)"
-            pill="Muddati o‘tgan"
+            label={t('Muddati o‘tgan (kreditor)')}
+            pill={t('Muddati o‘tgan')}
             pillColor={RED}
             uzs={overdueOlinganUzs}
             usd={overdueOlinganUsd}
@@ -596,15 +607,15 @@ const QarzDaftari = () => {
         </View>
 
         {/* F. Muddati yaqinlashganlar */}
-        <Text style={styles.blockTitle}>Muddati yaqinlashganlar</Text>
+        <Text style={styles.blockTitle}>{t('Muddati yaqinlashganlar')}</Text>
         <DueTable
-          title="Muddati yaqin berilgan qarzlar"
+          title={t('Muddati yaqin berilgan qarzlar')}
           accent={BLUE}
           rows={nearBerilgan}
           onRow={goQarz}
         />
         <DueTable
-          title="Muddati yaqin olingan qarzlar"
+          title={t('Muddati yaqin olingan qarzlar')}
           accent={GREEN}
           rows={nearOlingan}
           onRow={goQarz}

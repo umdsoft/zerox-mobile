@@ -9,6 +9,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StatusBar,
@@ -60,6 +61,7 @@ const CircleIcon = ({
 const QarzDaftariKiritish = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const preTuri: 'berish' | 'olish' | undefined = route.params?.turi;
 
   const { data, loading } = useFetch({
@@ -89,7 +91,7 @@ const QarzDaftariKiritish = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Daftariga kiritish" />
+      <RdHeader title={t('Daftariga kiritish')} />
 
       <ScrollView
         style={styles.scroll}
@@ -99,9 +101,7 @@ const QarzDaftariKiritish = () => {
         {/* Ogohlantirish */}
         <View style={styles.warnBox}>
           <Text style={styles.warnText}>
-            Qarz daftariga kiritilgan qarzlar bo‘yicha qarz shartnomasi
-            rasmiylashtirilmaydi. Rasmiy shartnoma uchun «Qarz shartnomasi» bo‘limidan
-            foydalaning.
+            {t('Qarz daftariga kiritilgan qarzlar bo‘yicha qarz shartnomasi rasmiylashtirilmaydi. Rasmiy shartnoma uchun «Qarz shartnomasi» bo‘limidan foydalaning.')}
           </Text>
         </View>
 
@@ -110,7 +110,7 @@ const QarzDaftariKiritish = () => {
           <View style={styles.stepBadge}>
             <Text style={styles.stepBadgeText}>1</Text>
           </View>
-          <Text style={styles.stepTitle}>Savdo faoliyati (do‘kon)ni tanlang</Text>
+          <Text style={styles.stepTitle}>{t('Savdo faoliyati (do‘kon)ni tanlang')}</Text>
         </View>
 
         {shops.length === 0 ? (
@@ -118,9 +118,9 @@ const QarzDaftariKiritish = () => {
             <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
               <BuildingIcon size={rs(28)} color={rd.color.textTertiary} />
             </CircleIcon>
-            <Text style={styles.emptyTitle}>Savdo faoliyatingiz hali yo‘q</Text>
+            <Text style={styles.emptyTitle}>{t('Savdo faoliyatingiz hali yo‘q')}</Text>
             <Text style={styles.emptySub}>
-              Qarz kiritish uchun avval do‘kon (savdo faoliyati) qo‘shing.
+              {t('Qarz kiritish uchun avval do‘kon (savdo faoliyati) qo‘shing.')}
             </Text>
             <TouchableOpacity
               activeOpacity={0.9}
@@ -128,7 +128,7 @@ const QarzDaftariKiritish = () => {
               onPress={() => navigation.navigate('QarzDaftariFaoliyat')}
             >
               <PlusIcon size={rs(17)} color={rd.color.onPrimary} />
-              <Text style={styles.primaryBtnText}>Savdo faoliyat yaratish</Text>
+              <Text style={styles.primaryBtnText}>{t('Savdo faoliyat yaratish')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -157,11 +157,11 @@ const QarzDaftariKiritish = () => {
                     </Text>
                     {s.is_xodim_role ? (
                       <View style={styles.xodimBadge}>
-                        <Text style={styles.xodimBadgeText}>Xodim</Text>
+                        <Text style={styles.xodimBadgeText}>{t('Xodim')}</Text>
                       </View>
                     ) : (
                       <Text style={styles.shopSub} numberOfLines={1}>
-                        {[s.region, s.district].filter(Boolean).join(', ') || 'Do‘kon'}
+                        {[s.region, s.district].filter(Boolean).join(', ') || t('Do‘kon')}
                       </Text>
                     )}
                   </View>
@@ -178,7 +178,7 @@ const QarzDaftariKiritish = () => {
               onPress={() => navigation.navigate('QarzDaftariFaoliyat')}
             >
               <PlusIcon size={rs(16)} color={BLUE} />
-              <Text style={styles.addShopText}>Yangi do‘kon qo‘shish</Text>
+              <Text style={styles.addShopText}>{t('Yangi do‘kon qo‘shish')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -190,7 +190,7 @@ const QarzDaftariKiritish = () => {
               <View style={styles.stepBadge}>
                 <Text style={styles.stepBadgeText}>2</Text>
               </View>
-              <Text style={styles.stepTitle}>Qarz turini tanlang</Text>
+              <Text style={styles.stepTitle}>{t('Qarz turini tanlang')}</Text>
             </View>
 
             <View style={styles.typeRow}>
@@ -202,8 +202,8 @@ const QarzDaftariKiritish = () => {
                 <CircleIcon size={rs(46)} bg="#EFF6FF">
                   <ArrowUpRight size={rs(22)} color={BLUE} />
                 </CircleIcon>
-                <Text style={styles.typeTitle}>Qarzga berish</Text>
-                <Text style={styles.typeNote}>Mijozga qarz berish</Text>
+                <Text style={styles.typeTitle}>{t('Qarzga berish')}</Text>
+                <Text style={styles.typeNote}>{t('Mijozga qarz berish')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -214,8 +214,8 @@ const QarzDaftariKiritish = () => {
                 <CircleIcon size={rs(46)} bg="#F0FDF4">
                   <ArrowDownLeft size={rs(22)} color={GREEN} />
                 </CircleIcon>
-                <Text style={styles.typeTitle}>Qarzga olish</Text>
-                <Text style={styles.typeNote}>Qarz olishni qayd etish</Text>
+                <Text style={styles.typeTitle}>{t('Qarzga olish')}</Text>
+                <Text style={styles.typeNote}>{t('Qarz olishni qayd etish')}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -223,7 +223,7 @@ const QarzDaftariKiritish = () => {
 
         {/* Qanday ishlaydi? */}
         <View style={styles.guideCard}>
-          <Text style={styles.guideTitle}>Qanday ishlaydi?</Text>
+          <Text style={styles.guideTitle}>{t('Qanday ishlaydi?')}</Text>
           {[
             'Do‘kon (savdo faoliyati)ni tanlang yoki yangisini qo‘shing.',
             'Qarz turini (berish/olish) belgilang va mijozni tanlang.',
@@ -233,7 +233,7 @@ const QarzDaftariKiritish = () => {
               <View style={styles.guideNum}>
                 <Text style={styles.guideNumText}>{i + 1}</Text>
               </View>
-              <Text style={styles.guideText}>{g}</Text>
+              <Text style={styles.guideText}>{t(g)}</Text>
             </View>
           ))}
         </View>

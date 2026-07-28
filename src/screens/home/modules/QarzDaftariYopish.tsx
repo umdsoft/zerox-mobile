@@ -10,6 +10,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   ScrollView,
@@ -120,6 +121,7 @@ const QUICK: { label: string; pct: number }[] = [
 const QarzDaftariYopish = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const id = route.params?.id;
 
   const { data, loading } = useFetch({
@@ -138,12 +140,12 @@ const QarzDaftariYopish = () => {
     return (
       <View style={styles.screen}>
         <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-        <RdHeader title="Qarzni yopish" />
+        <RdHeader title={t('Qarzni yopish')} />
         <View style={styles.notFound}>
           <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
             <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
           </CircleIcon>
-          <Text style={styles.notFoundText}>Topilmadi</Text>
+          <Text style={styles.notFoundText}>{t('Topilmadi')}</Text>
         </View>
       </View>
     );
@@ -176,15 +178,15 @@ const QarzDaftariYopish = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res?.data?.success) {
-        Toast.show({ type: 'omad', text1: 'To‘lov qabul qilindi' });
+        Toast.show({ type: 'omad', text1: t('To‘lov qabul qilindi') });
         navigation.goBack();
       } else {
-        Toast.show({ type: 'error2', text1: 'Xatolik' });
+        Toast.show({ type: 'error2', text1: t('Xatolik') });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error2',
-        text1: error?.response?.data?.message || 'Xatolik',
+        text1: error?.response?.data?.message || t('Xatolik'),
       });
     } finally {
       setSubmitting(false);
@@ -194,7 +196,7 @@ const QarzDaftariYopish = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Qarzni yopish" />
+      <RdHeader title={t('Qarzni yopish')} />
 
       <ScrollView
         style={styles.scroll}
@@ -212,7 +214,7 @@ const QarzDaftariYopish = () => {
               <Text style={styles.clientName} numberOfLines={2}>
                 {titleCase(qarz?.mijoz?.fish)}
               </Text>
-              <Text style={styles.clientSub}>Jami qarz</Text>
+              <Text style={styles.clientSub}>{t('Jami qarz')}</Text>
               <Text style={[styles.clientAmount, { color: GREEN }]} numberOfLines={1} adjustsFontSizeToFit>
                 {`${sortMoneyText(qoldiq) || 0} ${valyuta}`}
               </Text>
@@ -222,10 +224,10 @@ const QarzDaftariYopish = () => {
 
         {/* 2. To'lov ma'lumotlari */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>To‘lov ma’lumotlari</Text>
+          <Text style={styles.cardTitle}>{t('To‘lov ma’lumotlari')}</Text>
 
           {/* Summa input */}
-          <Text style={styles.fieldLabel}>To‘lov summasi</Text>
+          <Text style={styles.fieldLabel}>{t('To‘lov summasi')}</Text>
           <View style={[styles.inputWrap, over && styles.inputWrapError]}>
             <CoinIcon size={rs(18)} color={over ? RED : rd.color.textTertiary} />
             <TextInput
@@ -239,11 +241,11 @@ const QarzDaftariYopish = () => {
             <Text style={styles.inputCur}>{valyuta}</Text>
           </View>
           <Text style={[styles.hint, over && { color: RED }]}>
-            {`Maksimal: ${sortMoneyText(qoldiq) || 0} ${valyuta}`}
+            {t('Maksimal: {{amount}}', { amount: `${sortMoneyText(qoldiq) || 0} ${valyuta}` })}
           </Text>
 
           {/* Tezkor summa */}
-          <Text style={[styles.fieldLabel, { marginTop: rs(16) }]}>Tezkor summa</Text>
+          <Text style={[styles.fieldLabel, { marginTop: rs(16) }]}>{t('Tezkor summa')}</Text>
           <View style={styles.chips}>
             {QUICK.map(q => (
               <TouchableOpacity
@@ -252,7 +254,7 @@ const QarzDaftariYopish = () => {
                 style={styles.chip}
                 onPress={() => setQuick(q.pct)}
               >
-                <Text style={styles.chipText}>{q.label}</Text>
+                <Text style={styles.chipText}>{q.label === 'Hammasi' ? t('Hammasi') : q.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -271,26 +273,26 @@ const QarzDaftariYopish = () => {
             {submitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.btnText}>Tasdiqlash</Text>
+              <Text style={styles.btnText}>{t('Tasdiqlash')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         {/* 3. Hisob-kitob */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Hisob-kitob</Text>
+          <Text style={styles.cardTitle}>{t('Hisob-kitob')}</Text>
           <CalcRow
-            label="Hozirgi qoldiq"
+            label={t('Hozirgi qoldiq')}
             value={`${sortMoneyText(qoldiq) || 0} ${valyuta}`}
           />
           <CalcRow
-            label="To‘lov"
+            label={t('To‘lov')}
             value={`− ${sortMoneyText(summa) || 0} ${valyuta}`}
             valueColor={GREEN}
           />
           <View style={styles.calcDivider} />
           <CalcRow
-            label="Yangi qoldiq"
+            label={t('Yangi qoldiq')}
             value={`${sortMoneyText(newQoldiq) || 0} ${valyuta}`}
             valueColor={newQoldiq === 0 ? GREEN : rd.color.text}
             strong
@@ -301,7 +303,7 @@ const QarzDaftariYopish = () => {
               <CircleIcon size={rs(28)} bg="#fff">
                 <ClockIcon size={rs(15)} color={GREEN} />
               </CircleIcon>
-              <Text style={styles.bannerText}>Qarz to‘liq yopiladi</Text>
+              <Text style={styles.bannerText}>{t('Qarz to‘liq yopiladi')}</Text>
             </View>
           )}
         </View>

@@ -10,6 +10,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -92,6 +93,7 @@ const CircleIcon = ({
 const QarzDaftariYangi = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useTranslation();
 
   const faoliyat_id = route.params?.faoliyat_id;
   const mijoz_id = route.params?.mijoz_id;
@@ -101,7 +103,7 @@ const QarzDaftariYangi = () => {
   const isOlish = turi === 'olish';
   const accent = isOlish ? GREEN : BLUE;
   const accentBg = isOlish ? '#F0FDF4' : '#EFF6FF';
-  const headerTitle = isOlish ? 'Qarzga olish' : 'Qarzga berish';
+  const headerTitle = isOlish ? t('Qarzga olish') : t('Qarzga berish');
   const AccentIcon = isOlish ? ArrowDownLeft : ArrowUpRight;
 
   const token = storage.getString('token');
@@ -150,16 +152,16 @@ const QarzDaftariYangi = () => {
     if (submitting) return;
 
     if (miqdor <= 0) {
-      Toast.show({ type: 'xato', text1: 'Qarz miqdorini kiriting' });
+      Toast.show({ type: 'xato', text1: t('Qarz miqdorini kiriting') });
       return;
     }
     if (bolibTolash) {
       if (oylarNum < 1) {
-        Toast.show({ type: 'xato', text1: 'Oylar sonini kiriting (1–60)' });
+        Toast.show({ type: 'xato', text1: t('Oylar sonini kiriting (1–60)') });
         return;
       }
     } else if (!qaytarishSana) {
-      Toast.show({ type: 'xato', text1: 'Qaytarish sanasini tanlang' });
+      Toast.show({ type: 'xato', text1: t('Qaytarish sanasini tanlang') });
       return;
     }
 
@@ -184,19 +186,19 @@ const QarzDaftariYangi = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.success) {
-        Toast.show({ type: 'omad', text1: 'Qarz saqlandi' });
+        Toast.show({ type: 'omad', text1: t('Qarz saqlandi') });
         navigation.goBack();
       } else {
-        Toast.show({ type: 'xato', text1: 'Xatolik yuz berdi' });
+        Toast.show({ type: 'xato', text1: t('Xatolik yuz berdi') });
       }
     } catch (error: any) {
       const code = error?.response?.data?.code;
       const msg =
         code === 'no-sms-package'
-          ? "SMS paketi yo'q"
+          ? t("SMS paketi yo'q")
           : code === 'required_plan'
-          ? 'Tarif talab qilinadi'
-          : 'Xatolik yuz berdi';
+          ? t('Tarif talab qilinadi')
+          : t('Xatolik yuz berdi');
       Toast.show({ type: 'xato', text1: msg });
     } finally {
       setSubmitting(false);
@@ -228,18 +230,18 @@ const QarzDaftariYangi = () => {
                 {titleCase(fish)}
               </Text>
               <Text style={styles.clientNote}>
-                {isOlish ? 'Ushbu mijozdan qarz olinadi' : 'Ushbu mijozga qarz beriladi'}
+                {isOlish ? t('Ushbu mijozdan qarz olinadi') : t('Ushbu mijozga qarz beriladi')}
               </Text>
             </View>
           </View>
 
           {/* 2) Valyuta */}
-          <Text style={styles.label}>Valyuta</Text>
+          <Text style={styles.label}>{t('Valyuta')}</Text>
           <View style={styles.valyutaRow}>
             {(
               [
-                { key: 'UZS', title: 'UZS', note: "O‘zbek so‘mi" },
-                { key: 'USD', title: 'USD', note: 'AQSh dollari' },
+                { key: 'UZS', title: 'UZS', note: t("O‘zbek so‘mi") },
+                { key: 'USD', title: 'USD', note: t('AQSh dollari') },
               ] as const
             ).map(v => {
               const active = valyuta === v.key;
@@ -265,7 +267,7 @@ const QarzDaftariYangi = () => {
           </View>
 
           {/* 3) Qarz miqdori */}
-          <Text style={styles.label}>Qarz miqdori</Text>
+          <Text style={styles.label}>{t('Qarz miqdori')}</Text>
           <View style={styles.inputWrap}>
             <TextInput
               style={styles.input}
@@ -279,19 +281,19 @@ const QarzDaftariYangi = () => {
           </View>
 
           {/* 4) Mahsulot nomi (ixtiyoriy) */}
-          <Text style={styles.label}>Mahsulot nomi (ixtiyoriy)</Text>
+          <Text style={styles.label}>{t('Mahsulot nomi (ixtiyoriy)')}</Text>
           <View style={styles.inputWrap}>
             <TextInput
               style={styles.input}
               value={mahsulot}
               onChangeText={setMahsulot}
-              placeholder="Masalan: Shifer va taxta"
+              placeholder={t('Masalan: Shifer va taxta')}
               placeholderTextColor={rd.color.textTertiary}
             />
           </View>
 
           {/* 5) Qarz berilgan sana */}
-          <Text style={styles.label}>Qarz berilgan sana</Text>
+          <Text style={styles.label}>{t('Qarz berilgan sana')}</Text>
           <TouchableOpacity
             activeOpacity={0.85}
             style={styles.dateField}
@@ -304,9 +306,9 @@ const QarzDaftariYangi = () => {
           {/* 6) Bo'lib to'lash toggle */}
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.switchTitle}>Bo‘lib to‘lash</Text>
+              <Text style={styles.switchTitle}>{t('Bo‘lib to‘lash')}</Text>
               <Text style={styles.switchNote}>
-                Qarzni bir necha oyda bo‘lib qaytarish
+                {t('Qarzni bir necha oyda bo‘lib qaytarish')}
               </Text>
             </View>
             <Switch
@@ -320,7 +322,7 @@ const QarzDaftariYangi = () => {
           {bolibTolash ? (
             <>
               {/* Necha oyda qaytariladi? */}
-              <Text style={styles.label}>Necha oyda qaytariladi?</Text>
+              <Text style={styles.label}>{t('Necha oyda qaytariladi?')}</Text>
               <View style={styles.inputWrap}>
                 <TextInput
                   style={styles.input}
@@ -330,11 +332,11 @@ const QarzDaftariYangi = () => {
                   placeholder="1"
                   placeholderTextColor={rd.color.textTertiary}
                 />
-                <Text style={styles.inputSuffix}>oy</Text>
+                <Text style={styles.inputSuffix}>{t('oy')}</Text>
               </View>
 
               {/* Boshlang'ich to'lov (ixtiyoriy) */}
-              <Text style={styles.label}>Boshlang‘ich to‘lov (ixtiyoriy)</Text>
+              <Text style={styles.label}>{t('Boshlang‘ich to‘lov (ixtiyoriy)')}</Text>
               <View style={styles.inputWrap}>
                 <TextInput
                   style={styles.input}
@@ -350,7 +352,7 @@ const QarzDaftariYangi = () => {
           ) : (
             <>
               {/* Qarzni qaytarish sanasi */}
-              <Text style={styles.label}>Qarzni qaytarish sanasi</Text>
+              <Text style={styles.label}>{t('Qarzni qaytarish sanasi')}</Text>
               <TouchableOpacity
                 activeOpacity={0.85}
                 style={styles.dateField}
@@ -363,7 +365,7 @@ const QarzDaftariYangi = () => {
                     !qaytarishSana && { color: rd.color.textTertiary },
                   ]}
                 >
-                  {qaytarishSana ? toDisplayDate(qaytarishSana) : 'Sanani tanlang'}
+                  {qaytarishSana ? toDisplayDate(qaytarishSana) : t('Sanani tanlang')}
                 </Text>
               </TouchableOpacity>
             </>
@@ -375,11 +377,11 @@ const QarzDaftariYangi = () => {
               <CircleIcon size={rs(32)} bg={accentBg}>
                 <CoinIcon size={rs(16)} color={accent} />
               </CircleIcon>
-              <Text style={styles.summaryTitle}>Hisob-kitob</Text>
+              <Text style={styles.summaryTitle}>{t('Hisob-kitob')}</Text>
             </View>
 
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Qarz miqdori</Text>
+              <Text style={styles.summaryLabel}>{t('Qarz miqdori')}</Text>
               <Text style={styles.summaryValue}>
                 {`${sortText(miqdor) || 0} ${valyuta}`}
               </Text>
@@ -388,21 +390,21 @@ const QarzDaftariYangi = () => {
             {bolibTolash ? (
               <>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Oylar soni</Text>
+                  <Text style={styles.summaryLabel}>{t('Oylar soni')}</Text>
                   <Text style={styles.summaryValue}>
-                    {oylarNum >= 1 ? `${oylarNum} oy` : '—'}
+                    {oylarNum >= 1 ? `${oylarNum} ${t('oy')}` : '—'}
                   </Text>
                 </View>
                 {boshlangich > 0 && (
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Boshlang‘ich to‘lov</Text>
+                    <Text style={styles.summaryLabel}>{t('Boshlang‘ich to‘lov')}</Text>
                     <Text style={styles.summaryValue}>
                       {`${sortText(boshlangich) || 0} ${valyuta}`}
                     </Text>
                   </View>
                 )}
                 <View style={[styles.summaryRow, styles.summaryTotalRow]}>
-                  <Text style={styles.summaryTotalLabel}>Oylik to‘lov</Text>
+                  <Text style={styles.summaryTotalLabel}>{t('Oylik to‘lov')}</Text>
                   <Text style={[styles.summaryTotalValue, { color: accent }]}>
                     {`${sortText(oylikTolov) || 0} ${valyuta}`}
                   </Text>
@@ -410,7 +412,7 @@ const QarzDaftariYangi = () => {
               </>
             ) : (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Qaytarish sanasi</Text>
+                <Text style={styles.summaryLabel}>{t('Qaytarish sanasi')}</Text>
                 <Text style={styles.summaryValue}>
                   {qaytarishSana ? toDisplayDate(qaytarishSana) : '—'}
                 </Text>
@@ -434,7 +436,7 @@ const QarzDaftariYangi = () => {
             ) : (
               <>
                 <AccentIcon size={rs(18)} color="#fff" />
-                <Text style={styles.submitText}>Saqlash</Text>
+                <Text style={styles.submitText}>{t('Saqlash')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -445,7 +447,7 @@ const QarzDaftariYangi = () => {
       <DateModal
         open={berilganOpen}
         setOpen={setBerilganOpen}
-        title="Qarz berilgan sana"
+        title={t('Qarz berilgan sana')}
         date={berilganSana}
         setDate={setBerilganSana}
         max={today}
@@ -453,7 +455,7 @@ const QarzDaftariYangi = () => {
       <DateModal
         open={qaytarishOpen}
         setOpen={setQaytarishOpen}
-        title="Qaytarish sanasi"
+        title={t('Qaytarish sanasi')}
         date={qaytarishSana || berilganSana}
         setDate={setQaytarishSana}
         min={berilganSana}

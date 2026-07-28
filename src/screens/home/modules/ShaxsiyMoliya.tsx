@@ -17,6 +17,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StatusBar,
@@ -122,36 +123,39 @@ const HealthCard = ({
   status: string;
   totalDebt: number;
   overdue: number;
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.health}>
     <Grad id="fmHealth" colors={GRAD_GREEN} />
     <View style={styles.healthTop}>
       <View style={{ flex: 1 }}>
         <View style={styles.healthLabelRow}>
           <ShieldIcon size={rs(16)} color={rd.color.onPrimary} />
-          <Text style={styles.healthLabel}>Moliyaviy sog‘liq</Text>
+          <Text style={styles.healthLabel}>{t('Moliyaviy sog‘liq')}</Text>
         </View>
         <View style={styles.healthScoreRow}>
           <Text style={styles.healthScore}>{score}</Text>
           <Text style={styles.healthScoreMax}>/100</Text>
         </View>
-        <Text style={styles.healthStatus}>{STATUS_UZ[status] || status}</Text>
+        <Text style={styles.healthStatus}>{t(STATUS_UZ[status] || status)}</Text>
       </View>
     </View>
     <View style={styles.healthChips}>
       <View style={styles.healthChip}>
-        <Text style={styles.healthChipLabel}>Jami qarz</Text>
+        <Text style={styles.healthChipLabel}>{t('Jami qarz')}</Text>
         <Text style={styles.healthChipValue} numberOfLines={1} adjustsFontSizeToFit>
           {uzsText(totalDebt)}
         </Text>
       </View>
       <View style={styles.healthChip}>
-        <Text style={styles.healthChipLabel}>Muddati o‘tgan</Text>
-        <Text style={styles.healthChipValue}>{overdue} ta</Text>
+        <Text style={styles.healthChipLabel}>{t('Muddati o‘tgan')}</Text>
+        <Text style={styles.healthChipValue}>{t('{{overdue}} ta', { overdue })}</Text>
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // Ko'rsatkich kartasi (rangli aksent chizig'i bilan).
 const MetricCard = ({
@@ -204,12 +208,13 @@ const BudgetCard = ({
   remaining: number;
   percentage: number;
 }) => {
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(100, percentage || 0));
   const barColor = pct >= 100 ? RED : pct >= 90 ? '#f59e0b' : GREEN;
   return (
     <View style={styles.card}>
       <View style={styles.budgetHead}>
-        <Text style={styles.cardTitle}>Oylik byudjet</Text>
+        <Text style={styles.cardTitle}>{t('Oylik byudjet')}</Text>
         <Text style={[styles.budgetPct, { color: barColor }]}>{pct}%</Text>
       </View>
       <View style={styles.barTrack}>
@@ -217,15 +222,15 @@ const BudgetCard = ({
       </View>
       <View style={styles.budgetRow}>
         <View>
-          <Text style={styles.budgetSmallLabel}>Sarflandi</Text>
+          <Text style={styles.budgetSmallLabel}>{t('Sarflandi')}</Text>
           <Text style={styles.budgetSmallValue}>{uzsText(spent)}</Text>
         </View>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.budgetSmallLabel}>Reja</Text>
+          <Text style={styles.budgetSmallLabel}>{t('Reja')}</Text>
           <Text style={styles.budgetSmallValue}>{uzsText(planned)}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.budgetSmallLabel}>Qolgan</Text>
+          <Text style={styles.budgetSmallLabel}>{t('Qolgan')}</Text>
           <Text style={[styles.budgetSmallValue, { color: remaining < 0 ? RED : GREEN }]}>
             {uzsText(remaining)}
           </Text>
@@ -238,6 +243,7 @@ const BudgetCard = ({
 // ---------- Ekran ----------
 const ShaxsiyMoliya = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const nav: Nav = (route, params) => navigation.navigate(route, params);
   // Pastki TAB sifatida ochilganda orqaga tugma kerak emas (top-level).
   // Home'dan PUSH qilinganda (tab param yo'q) — orqaga tugma ko'rinadi.
@@ -274,8 +280,8 @@ const ShaxsiyMoliya = () => {
   const soon = () =>
     Toast.show({
       type: 'info',
-      text1: 'Tez kunda',
-      text2: 'Bu amal mobil ilovada tez orada ishga tushadi.',
+      text1: t('Tez kunda'),
+      text2: t('Bu amal mobil ilovada tez orada ishga tushadi.'),
     });
 
   if (dashboard.loading && health.loading) {
@@ -285,7 +291,7 @@ const ShaxsiyMoliya = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="Shaxsiy moliya" showBack={!isTab} />
+      <RdHeader title={t('Shaxsiy moliya')} showBack={!isTab} />
 
       <ScrollView
         style={styles.scroll}
@@ -306,7 +312,7 @@ const ShaxsiyMoliya = () => {
             accent={RED}
             accentBg={rd.color.errorBg}
             Icon={ArrowDownLeft}
-            label="Olingan qarz"
+            label={t('Olingan qarz')}
             value={uzsText(debts?.borrowed || 0)}
             onPress={soon}
           />
@@ -314,7 +320,7 @@ const ShaxsiyMoliya = () => {
             accent={GREEN}
             accentBg={rd.color.successBg}
             Icon={ArrowUpRight}
-            label="Berilgan qarz"
+            label={t('Berilgan qarz')}
             value={uzsText(debts?.lent || 0)}
             onPress={soon}
           />
@@ -322,18 +328,18 @@ const ShaxsiyMoliya = () => {
             accent={BLUE}
             accentBg={rd.color.primaryTint}
             Icon={CoinIcon}
-            label="Oylik xarajat"
+            label={t('Oylik xarajat')}
             value={uzsText(expenses?.monthly_total || 0)}
-            sub="Bu oy"
+            sub={t('Bu oy')}
             onPress={soon}
           />
           <MetricCard
             accent={PURPLE}
             accentBg="#efe7fd"
             Icon={BarChartIcon}
-            label="Maqsadlar jarayoni"
+            label={t('Maqsadlar jarayoni')}
             value={`${goals?.progress || 0}%`}
-            sub={`${goals?.active_count || 0} ta faol`}
+            sub={t('{{count}} ta faol', { count: goals?.active_count || 0 })}
             onPress={soon}
           />
         </View>
@@ -349,14 +355,14 @@ const ShaxsiyMoliya = () => {
         )}
 
         {/* 4. Yaqinlashgan to'lovlar */}
-        <Text style={styles.blockTitle}>Yaqinlashgan to‘lovlar</Text>
+        <Text style={styles.blockTitle}>{t('Yaqinlashgan to‘lovlar')}</Text>
         <View style={styles.card}>
           {upcoming.length === 0 ? (
             <View style={styles.emptyBox}>
               <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
                 <ClockIcon size={rs(22)} color={rd.color.textTertiary} />
               </CircleIcon>
-              <Text style={styles.emptyText}>Yaqinlashgan to‘lovlar yo‘q.</Text>
+              <Text style={styles.emptyText}>{t('Yaqinlashgan to‘lovlar yo‘q.')}</Text>
             </View>
           ) : (
             upcoming.map((r, i) => {
@@ -392,14 +398,14 @@ const ShaxsiyMoliya = () => {
         </View>
 
         {/* 5. Asosiy kategoriyalar */}
-        <Text style={styles.blockTitle}>Asosiy kategoriyalar</Text>
+        <Text style={styles.blockTitle}>{t('Asosiy kategoriyalar')}</Text>
         <View style={styles.card}>
           {topCategories.length === 0 ? (
             <View style={styles.emptyBox}>
               <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
                 <BarChartIcon size={rs(22)} color={rd.color.textTertiary} />
               </CircleIcon>
-              <Text style={styles.emptyText}>Xarajatlar mavjud emas.</Text>
+              <Text style={styles.emptyText}>{t('Xarajatlar mavjud emas.')}</Text>
             </View>
           ) : (
             topCategories.map((c, i) => {
@@ -409,7 +415,7 @@ const ShaxsiyMoliya = () => {
                 <View key={i} style={[styles.catRow, i === 0 && { borderTopWidth: 0 }]}>
                   <View style={[styles.catDot, { backgroundColor: color }]} />
                   <Text style={styles.catName} numberOfLines={1}>
-                    {c?.name || 'Boshqa'}
+                    {c?.name || t('Boshqa')}
                   </Text>
                   <Text style={styles.catPct}>{pct}%</Text>
                   <Text style={styles.catAmount} numberOfLines={1}>
@@ -422,24 +428,24 @@ const ShaxsiyMoliya = () => {
         </View>
 
         {/* 6. So'nggi xarajatlar */}
-        <Text style={styles.blockTitle}>So‘nggi xarajatlar</Text>
+        <Text style={styles.blockTitle}>{t('So‘nggi xarajatlar')}</Text>
         <View style={styles.card}>
           {recent.length === 0 ? (
             <View style={styles.emptyBox}>
               <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
                 <CoinIcon size={rs(22)} color={rd.color.textTertiary} />
               </CircleIcon>
-              <Text style={styles.emptyText}>Xarajatlar mavjud emas.</Text>
+              <Text style={styles.emptyText}>{t('Xarajatlar mavjud emas.')}</Text>
             </View>
           ) : (
             recent.map((r, i) => (
               <View key={i} style={[styles.expRow, i === 0 && { borderTopWidth: 0 }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.expTitle} numberOfLines={1}>
-                    {r?.title || r?.description || r?.category?.name || 'Xarajat'}
+                    {r?.title || r?.description || r?.category?.name || t('Xarajat')}
                   </Text>
                   <Text style={styles.expMeta} numberOfLines={1}>
-                    {(r?.category?.name || 'Boshqa') +
+                    {(r?.category?.name || t('Boshqa')) +
                       ' · ' +
                       (getDueMeta(r?.expense_date)?.date || '—')}
                   </Text>
@@ -454,7 +460,7 @@ const ShaxsiyMoliya = () => {
 
         <TouchableOpacity activeOpacity={0.9} style={styles.ctaBtn} onPress={soon}>
           <PlusIcon size={rs(18)} color={rd.color.onPrimary} />
-          <Text style={styles.ctaText}>Xarajat qo‘shish</Text>
+          <Text style={styles.ctaText}>{t('Xarajat qo‘shish')}</Text>
           <ChevronRight size={rs(18)} color={rd.color.onPrimary} />
         </TouchableOpacity>
       </ScrollView>
