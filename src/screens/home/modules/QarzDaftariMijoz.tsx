@@ -231,7 +231,7 @@ const QarzDaftariMijoz = () => {
 
   const goYangi = () => {
     if (!mijoz?.savdo_faoliyat_id || !mijoz?.id) {
-      Toast.show({ type: 'error', text1: t('Mijoz ma’lumotlari topilmadi') });
+      Toast.show({ type: 'error', props: { title: t('Mijoz ma’lumotlari topilmadi') } });
       return;
     }
     navigation.navigate('QarzDaftariYangi', {

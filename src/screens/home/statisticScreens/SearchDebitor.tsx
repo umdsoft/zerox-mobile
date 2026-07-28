@@ -204,14 +204,18 @@ const SearchDebitor = () => {
     }, 400);
   };
 
-  // FAQAT JARAYONDAGI shartnomalar (status 2=Tugallangan, 4=Rad etildi yashiriladi).
-  const isDoneContract = (it: any) => {
+  // FAQAT RAD ETILGAN (status 4) yashiriladi. Backend metadatasi bo'yicha
+  // (`act`/`pass`) status 2 = FAOL/tasdiqlangan qarz (asosiy qism, karta summasini
+  // tashkil qiladi), status 3 = jarayonda/tasdiq kutilmoqda — ikkalasi ham haqiqiy
+  // qarz, shu sabab ro'yxatда ko'rsatiladi (saytdagi kabi, karta bilan mos keladi).
+  // Ilgari status 2 xato "Tugallangan" deb yashirilardi -> faol qarzlar ko'rinmasdi.
+  const isRejected = (it: any) => {
     const s = it?.status;
-    return s === 2 || s === 4 || s === '2' || s === '4';
+    return s === 4 || s === '4';
   };
   const rawListAll: any[] =
     (searchData.length === 0 && !isCheck ? data?.data : searchData) || [];
-  const rawList: any[] = rawListAll.filter((it: any) => !isDoneContract(it));
+  const rawList: any[] = rawListAll.filter((it: any) => !isRejected(it));
   const counts = {all: rawList.length, active: 0, near: 0, overdue: 0};
   rawList.forEach((it: any) => {
     counts[getDueMeta(it?.end_date).cat] += 1;
@@ -226,9 +230,8 @@ const SearchDebitor = () => {
       (a: any, b: any) =>
         getDueMeta(a?.end_date).diff - getDueMeta(b?.end_date).diff,
     );
-  // "Jarayonda" tab OLIB TASHLANDI (so'rov bo'yicha): "Barchasi" allaqachon FAQAT
-  // jarayondagi qarzlarni ko'rsatadi (tugallangan/rad status filtri bilan chiqarilgan;
-  // ular hisobot bo'limiga o'tadi). Qolgan tablar — muddat bo'yicha filtr.
+  // "Barchasi" — faol (status 2) + jarayondagi (status 3) qarzlar (faqat rad etilgan
+  // status 4 chiqarib tashlanadi). Qolgan tablar — muddat bo'yicha filtr.
   const TABS: {key: typeof activeTab; label: string}[] = [
     {key: 'all', label: 'Barchasi'},
     {key: 'near', label: 'Muddati oz qolgan'},
@@ -242,7 +245,7 @@ const SearchDebitor = () => {
     s === 3 || s === '3'
       ? 'Jarayonda'
       : s === 2 || s === '2'
-      ? 'Tugallangan'
+      ? 'Tasdiqlangan'
       : s === 4 || s === '4'
       ? 'Rad etildi'
       : '';

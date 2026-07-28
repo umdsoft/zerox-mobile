@@ -203,10 +203,12 @@ const QarzDaftariQarz = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      Toast.show({ type: 'omad', text1: t('SMS yuborildi') });
+      // 'omad'/'error' toast custom config `props.title` ni o'qiydi (text1 EMAS) —
+      // aks holda BO'SH karta chiqadi (faqat ikonka). Shu bois props ishlatamiz.
+      Toast.show({ type: 'omad', props: { title: t('SMS yuborildi') } });
     } catch (error: any) {
       const code = error?.response?.data?.code;
-      Toast.show({ type: 'error', text1: t(talabErrorText(code)) });
+      Toast.show({ type: 'error', props: { title: t(talabErrorText(code)) } });
     } finally {
       setTalabLoading(false);
     }

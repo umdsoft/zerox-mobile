@@ -89,10 +89,13 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.page,
   },
   bar: {
-    height: rs(73),
+    height: rs(77),
     paddingHorizontal: rs(8),
     flexDirection: 'row',
-    alignItems: 'center',
+    // Yorliqlar TEPADAN boshlanadi (flex-start) — barning ortiqcha balandligi
+    // PASTGA tushadi, shu bois 2-qatorli so'z bilan pastki chiziq orasida aniq
+    // bo'shliq qoladi (ilgari markazlashgan edi, so'z chiziqqa yaqin turardi).
+    alignItems: 'flex-start',
     backgroundColor: rd.color.surface,
     borderWidth: 1,
     borderColor: rd.color.border,

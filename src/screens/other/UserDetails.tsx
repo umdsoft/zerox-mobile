@@ -59,7 +59,9 @@ const UserDetails = () => {
     : d?.company || '';
   const line2 = isPerson ? titleCaseName(`${d?.middle_name ?? ''}`) : '';
 
-  // JShShIR (PINFL) ni clipboard'ga nusxalash + qisqa "Nusxalandi" toasti.
+  // JShShIR (PINFL) ni clipboard'ga nusxalash + qisqa toast.
+  // "Nusxalandi" sarlavhasi OLIB TASHLANDI (so'rov bo'yicha): faqat bitta
+  // jirniy "JShShIR nusxalandi" qatori ko'rsatiladi (title = semibold).
   const copyPinfl = () => {
     Clipboard.setString(String(d?.pinfl ?? ''));
     Toast.show({
@@ -67,7 +69,7 @@ const UserDetails = () => {
       visibilityTime: 1800,
       position: 'bottom',
       type: 'omad',
-      props: { title: 'Nusxalandi', desc: 'JShShIR nusxalandi' },
+      props: { title: t('JShShIR nusxalandi') },
     });
   };
 

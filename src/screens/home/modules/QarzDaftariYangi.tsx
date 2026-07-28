@@ -186,7 +186,7 @@ const QarzDaftariYangi = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.success) {
-        Toast.show({ type: 'omad', text1: t('Qarz saqlandi') });
+        Toast.show({ type: 'omad', props: { title: t('Qarz saqlandi') } });
         navigation.goBack();
       } else {
         Toast.show({ type: 'xato', text1: t('Xatolik yuz berdi') });

@@ -154,7 +154,7 @@ const QarzDaftariVozKechish = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      Toast.show({ type: 'omad', text1: t('Voz kechildi') });
+      Toast.show({ type: 'omad', props: { title: t('Voz kechildi') } });
       navigation.goBack();
     } catch (error: any) {
       Toast.show({

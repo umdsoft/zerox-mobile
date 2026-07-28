@@ -414,6 +414,7 @@ const MetricCard = ({
   usd,
   value,
   comingSoon,
+  loading,
   onPress,
 }: {
   accent: string;
@@ -424,6 +425,7 @@ const MetricCard = ({
   usd?: string;
   value?: string;
   comingSoon?: boolean;
+  loading?: boolean;
   onPress?: () => void;
 }) => {
   const { t } = useTranslation();
@@ -455,10 +457,19 @@ const MetricCard = ({
           <Text style={styles.metricLabel} numberOfLines={1}>
             {t(label)}
           </Text>
-          <Text style={styles.metricUzs} numberOfLines={1} adjustsFontSizeToFit>
-            {uzs}
-          </Text>
-          {usd ? <Text style={styles.metricUsd}>{usd}</Text> : null}
+          {loading ? (
+            // Dashboard (shartnoma+daftar birlashgan summa) hali kelmagan —
+            // qisman/xato raqam KO'RSATILMAYDI (aks holda keyin sakraydi).
+            // O'rniga skeleton; summa TAYYOR bo'lganda bir marta paydo bo'ladi.
+            <View style={styles.metricSkeleton} />
+          ) : (
+            <>
+              <Text style={styles.metricUzs} numberOfLines={1} adjustsFontSizeToFit>
+                {uzs}
+              </Text>
+              {usd ? <Text style={styles.metricUsd}>{usd}</Text> : null}
+            </>
+          )}
         </>
       )}
     </TouchableOpacity>
@@ -714,6 +725,11 @@ const HomeRedesign = () => {
     dashboardCache = dashFresh;
   }
   const dd: any = dashValid ? dashFresh : dashboardCache || {};
+  // Metrik kartalar (Berilgan/Olingan qarz) BIRLASHGAN summasi (shartnoma+daftar)
+  // faqat dashboard TAYYOR bo'lganda ko'rsatiladi. Aks holda birinchi yuklashda
+  // avval faqat-shartnoma summasi chiqib, keyin daftar qo'shilib SAKRAB ketardi.
+  // Kesh bo'lsa (keyingi mount'lar) darhol tayyor -> skeleton ko'rinmaydi.
+  const dashReady = dashValid || !!dashboardCache;
   const numv = (v: any) => Number(v || 0);
   const bqDash = dd?.berilgan_qarz;
   const oqDash = dd?.olingan_qarz;
@@ -849,6 +865,7 @@ const HomeRedesign = () => {
             label="Berilgan qarz"
             uzs={uzsText(totDebUZS)}
             usd={usdText(totDebUSD)}
+            loading={!dashReady}
             // Home drill-down -> manba TANLASH sahifasi (2 vertikal karta), ro'yxatsiz.
             onPress={() =>
               nav('SearchDebitor', { ...DEBT_NAV.debitor, view: 'select' })
@@ -861,6 +878,7 @@ const HomeRedesign = () => {
             label="Olingan qarz"
             uzs={uzsText(totCredUZS)}
             usd={usdText(totCredUSD)}
+            loading={!dashReady}
             onPress={() =>
               nav('SearchDebitor', { ...DEBT_NAV.creditor, view: 'select' })
             }
@@ -1078,6 +1096,15 @@ const styles = StyleSheet.create({
   metricUzs: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.text, marginTop: rs(4) },
   metricUsd: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.textTertiary, marginTop: rs(2) },
   metricValueBig: { fontFamily: rd.font.bold, fontSize: rs(24), color: rd.color.text },
+  // Summa hali tayyor emas — skeleton (metricUzs balandligiga mos, layout siljimaydi).
+  metricSkeleton: {
+    height: rs(18),
+    width: '68%',
+    borderRadius: rs(6),
+    backgroundColor: rd.color.surfaceAlt,
+    marginTop: rs(7),
+    marginBottom: rs(3),
+  },
 
   // Modullar
   moduleCard: {

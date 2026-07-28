@@ -178,7 +178,7 @@ const QarzDaftariYopish = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res?.data?.success) {
-        Toast.show({ type: 'omad', text1: t('To‘lov qabul qilindi') });
+        Toast.show({ type: 'omad', props: { title: t('To‘lov qabul qilindi') } });
         navigation.goBack();
       } else {
         Toast.show({ type: 'error2', text1: t('Xatolik') });

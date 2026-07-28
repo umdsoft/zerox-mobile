@@ -40,7 +40,7 @@ const AboutMe = () => {
           </Text>
 
           <TransText
-            fontSize={rs(13)}
+            fontSize={rs(15)}
             textAlign="center"
             styles={styles.aboutText}
             tKey={'haqida'}
@@ -105,8 +105,10 @@ const styles = StyleSheet.create({
     marginTop: rs(14),
   },
   aboutText: {
-    // "Ilova naqli" bilan tavsif orasidagi ochiq bo'shliq (rs(20) -> rs(44)).
-    marginTop: rs(44),
+    // "Ilova naqli: 1.6" bilan tavsif orasida yanada ochiqroq bo'shliq
+    // (rs(44) -> rs(64)) + kattaroq shrift (rs(15)) uchun mos qator balandligi.
+    marginTop: rs(64),
+    lineHeight: rs(22),
     paddingHorizontal: rs(6),
     color: rd.color.textSecondary,
   },
