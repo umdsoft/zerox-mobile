@@ -2,9 +2,11 @@ import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-nativ
 import React from 'react';
 import { rd, rs } from '../theme/rd';
 import { FingerprintIcon, ShieldIcon } from './home/redesign/icons';
+import { useTranslation } from 'react-i18next';
 // import TouchID from 'react-native-touch-id';
 
 const FingerScanner = () => {
+  const { t } = useTranslation();
   // React.useEffect(() => {
   //   TouchID.isSupported()
   //     .then(() => {
@@ -33,16 +35,16 @@ const FingerScanner = () => {
         </View>
 
         <Text allowFontScaling={false} style={styles.title}>
-          Barmoq izi bilan kirish
+          {t('Barmoq izi bilan kirish')}
         </Text>
         <Text allowFontScaling={false} style={styles.subtitle}>
-          Hisobingizga tez va xavfsiz kirish uchun barmoq izini skanerlang
+          {t('Hisobingizga tez va xavfsiz kirish uchun barmoq izini skanerlang')}
         </Text>
 
         <View style={styles.hintRow}>
           <ShieldIcon size={rs(16)} color={rd.color.textTertiary} />
           <Text allowFontScaling={false} style={styles.hintText}>
-            Ma’lumotlaringiz himoyalangan
+            {t('Ma’lumotlaringiz himoyalangan')}
           </Text>
         </View>
       </View>
@@ -50,7 +52,7 @@ const FingerScanner = () => {
       <TouchableOpacity activeOpacity={0.85} style={styles.scanBtn}>
         <FingerprintIcon size={rs(22)} color={rd.color.onPrimary} />
         <Text allowFontScaling={false} style={styles.scanText}>
-          Barmoq izi bilan kirish
+          {t('Barmoq izi bilan kirish')}
         </Text>
       </TouchableOpacity>
     </View>

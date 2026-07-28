@@ -36,7 +36,7 @@ const DownloadModal = ({ hide, onHide, data, path }) => {
         {data?.type == 0 ? (
           <View style={styles.body}>
             <Text style={styles.text} allowFontScaling={false}>
-              Siz o'zingizni qr kodingizni yuklab oldingiz.
+              {t("Siz o'zingizni qr kodingizni yuklab oldingiz.")}
             </Text>
           </View>
         ) : null}

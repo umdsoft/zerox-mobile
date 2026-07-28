@@ -9,17 +9,23 @@ import {
   MessageIcon,
   PhoneIcon,
 } from '../../redesign/icons';
+import {useTranslation} from 'react-i18next';
 
 const Support = () => {
+  const {t} = useTranslation();
   const actions = [
-    {title: 'Ko`p takrorlanadigan savollar', Icon: HelpIcon, onPress: () => {}},
-    {title: 'Mutaxassis bilan chat', Icon: MessageIcon, onPress: () => {}},
-    {title: 'Telegram orqali yozing', Icon: MessageIcon, onPress: () => {}},
-    {title: 'Bizga yozing', Icon: MessageIcon, onPress: () => {}},
+    {
+      title: t('Ko`p takrorlanadigan savollar'),
+      Icon: HelpIcon,
+      onPress: () => {},
+    },
+    {title: t('Mutaxassis bilan chat'), Icon: MessageIcon, onPress: () => {}},
+    {title: t('Telegram orqali yozing'), Icon: MessageIcon, onPress: () => {}},
+    {title: t('Bizga yozing'), Icon: MessageIcon, onPress: () => {}},
   ];
 
   return (
-    <ScreenLayout title={"Qo'llab-quvvatlash xizmati"}>
+    <ScreenLayout title={t("Qo'llab-quvvatlash xizmati")}>
       <View style={styles.card}>
         {actions.map((item, index) => {
           const {Icon} = item;
@@ -57,7 +63,7 @@ const Support = () => {
             +998 93 752 44 11
           </Text>
           <Text style={styles.phoneLabel} allowFontScaling={false}>
-            Qo`llab-quvvatlash telefon raqami
+            {t('Qo`llab-quvvatlash telefon raqami')}
           </Text>
         </View>
       </TouchableOpacity>

@@ -362,7 +362,7 @@ const LoginWithPhone = () => {
           <AuthReveal delay={340}>
           {/* Ro'yxatdan o'tish */}
           <View style={styles.registerRow}>
-            <Text style={styles.registerHint}>Hisobingiz yo‘qmi?</Text>
+            <Text style={styles.registerHint}>{t('Hisobingiz yo‘qmi?')}</Text>
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => {

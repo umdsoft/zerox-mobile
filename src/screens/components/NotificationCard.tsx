@@ -2,7 +2,9 @@ import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {memo} from 'react';
 import {style} from '../../theme/style';
 import CloseIcon from '../../images/components/CloseIcon.svg';
+import {useTranslation} from 'react-i18next';
 const NotificationCard = () => {
+  const {t} = useTranslation();
   return (
     <View style={styles.container}>
       <View style={{marginVertical: 15, marginHorizontal: 15}}>
@@ -12,7 +14,7 @@ const NotificationCard = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
-          <Text allowFontScaling={false} style={styles.notificationTitle}>Bildirishnomalar</Text>
+          <Text allowFontScaling={false} style={styles.notificationTitle}>{t('Bildirishnomalar')}</Text>
           <TouchableOpacity activeOpacity={0.5}>
             <CloseIcon width={15} height={15} />
           </TouchableOpacity>
@@ -40,7 +42,7 @@ const NotificationCard = () => {
               Bugun soat {new Date().toLocaleString()}
             </Text>
             <TouchableOpacity activeOpacity={0.8} style={styles.button}>
-              <Text allowFontScaling={false} style={[styles.notification, {color: '#fff'}]}>Ok</Text>
+              <Text allowFontScaling={false} style={[styles.notification, {color: '#fff'}]}>{t('Ok')}</Text>
             </TouchableOpacity>
           </View>
         </View>

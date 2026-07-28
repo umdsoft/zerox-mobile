@@ -23,7 +23,7 @@ const NoInternet = ({ onChangeIntenet }) => {
         {t('780')}
       </Text>
       <Text allowFontScaling={false} style={styles.subtitle}>
-        Ulanishni tekshirib, qayta urinib ko‘ring
+        {t('Ulanishni tekshirib, qayta urinib ko‘ring')}
       </Text>
 
       <TouchableOpacity

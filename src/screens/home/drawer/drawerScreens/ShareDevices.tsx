@@ -11,8 +11,10 @@ import LaptopIcon from '../../../../images/laptop';
 import {getUniqueId} from 'react-native-device-info';
 import {getDevicesAction, onDeleteDevices} from '../../../../store/api/home';
 import {rd, rs} from '../../../../theme/rd';
+import {useTranslation} from 'react-i18next';
 
 const ShareDevices = () => {
+  const {t} = useTranslation();
   const {user, devices} = useSelector(state => state.HomeReducer);
   const [data, setData] = useState([]);
   const [currect, setCurrent] = useState({});
@@ -54,9 +56,9 @@ const ShareDevices = () => {
   }, [checking]);
 
   return (
-    <ScreenLayout title={'Ulangan qurilmalar'}>
+    <ScreenLayout title={t('Ulangan qurilmalar')}>
       <Text style={styles.sectionLabel} allowFontScaling={false}>
-        Hozirgi seans
+        {t('Hozirgi seans')}
       </Text>
       <View style={styles.card}>
         <View style={styles.deviceRow}>
@@ -84,7 +86,7 @@ const ShareDevices = () => {
           onPress={onDeleteDevice}
           style={styles.deleteBtn}>
           <Text style={styles.deleteText} allowFontScaling={false}>
-            Barcha seanslarni o'chirish
+            {t("Barcha seanslarni o'chirish")}
           </Text>
         </TouchableOpacity>
       )}
@@ -92,13 +94,13 @@ const ShareDevices = () => {
       {data.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyText} allowFontScaling={false}>
-            Sizda boshqa seanslar mavjud emas
+            {t('Sizda boshqa seanslar mavjud emas')}
           </Text>
         </View>
       ) : (
         <View style={styles.section}>
           <Text style={styles.sectionLabel} allowFontScaling={false}>
-            Active seanslar
+            {t('Active seanslar')}
           </Text>
           <View style={styles.card}>
             {data.map((item, index) => {

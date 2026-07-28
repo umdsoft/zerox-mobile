@@ -5,10 +5,12 @@ import ScreenLayout from '../components/ScreenLayout';
 import {rd, rs} from '../../theme/rd';
 import Logo from '../../images/logo.svg';
 import {HelpIcon, ShieldIcon} from '../home/redesign/icons';
+import {useTranslation} from 'react-i18next';
 
 const AboutUs = () => {
+  const {t} = useTranslation();
   return (
-    <ScreenLayout title={'Biz haqimizda'}>
+    <ScreenLayout title={t('Biz haqimizda')}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
       <View style={styles.hero}>
@@ -16,18 +18,21 @@ const AboutUs = () => {
           <Logo width={rs(52)} height={rs(52)} />
         </View>
         <Text style={styles.appName}>ZeroX</Text>
-        <Text style={styles.version}>Versiya {getVersion()}</Text>
+        <Text style={styles.version}>
+          {t('Versiya {{version}}', {version: getVersion()})}
+        </Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Bizning mobil ilova</Text>
+      <Text style={styles.sectionTitle}>{t('Bizning mobil ilova')}</Text>
 
       <View style={styles.card}>
         <View style={styles.iconCircle}>
           <ShieldIcon size={rs(20)} color={rd.color.primary} />
         </View>
         <Text style={styles.cardText}>
-          Biz tashrif buyurmasdan siz va sizning biznesingiz uchun bank
-          xizmatlarini to‘liq taqdim etamiz.
+          {t(
+            'Biz tashrif buyurmasdan siz va sizning biznesingiz uchun bank xizmatlarini to‘liq taqdim etamiz.',
+          )}
         </Text>
       </View>
 
@@ -36,17 +41,9 @@ const AboutUs = () => {
           <HelpIcon size={rs(20)} color={rd.color.primary} />
         </View>
         <Text style={styles.cardText}>
-          Barcha xizmatlarni saytdan, mobil ilovasidan, yoki shunchaki sutkalik
-          aloqa markaziga qo‘ng‘iroq qilib olish mumkin. Biz aynan shunday
-          konsepsiyani tanladik, chunki u bugungi kunda o‘zini to‘liq oqlay
-          oladi. Mamlakat aholisi yanada mobilroq bo‘lib qoldi, raqamli
-          texnologiyalardan foydalanishni va ko‘pgina xizmatlarni masofadan va
-          dunyoning istalgan nuqtasidan sutka davomida olishni afzal ko‘radi.
-          Shaharda bizning odatiy bo‘limlarimiz yo‘q, biz mamlakat bo‘ylab
-          millionlab qurilmalarda erishimlimiz. Har bir mijozga nisbatan
-          individual yondashuvni saqlab va ma‘lumotlarga ishlov berishda
-          xavfsizlikni kafolatlab, har qanday so‘rovga maksimal operativ tarzda
-          ishlov berish uchun biz ulkan sa‘y-harakatlar qildik.
+          {t(
+            'Barcha xizmatlarni saytdan, mobil ilovasidan, yoki shunchaki sutkalik aloqa markaziga qo‘ng‘iroq qilib olish mumkin. Biz aynan shunday konsepsiyani tanladik, chunki u bugungi kunda o‘zini to‘liq oqlay oladi. Mamlakat aholisi yanada mobilroq bo‘lib qoldi, raqamli texnologiyalardan foydalanishni va ko‘pgina xizmatlarni masofadan va dunyoning istalgan nuqtasidan sutka davomida olishni afzal ko‘radi. Shaharda bizning odatiy bo‘limlarimiz yo‘q, biz mamlakat bo‘ylab millionlab qurilmalarda erishimlimiz. Har bir mijozga nisbatan individual yondashuvni saqlab va ma‘lumotlarga ishlov berishda xavfsizlikni kafolatlab, har qanday so‘rovga maksimal operativ tarzda ishlov berish uchun biz ulkan sa‘y-harakatlar qildik.',
+          )}
         </Text>
       </View>
     </ScreenLayout>

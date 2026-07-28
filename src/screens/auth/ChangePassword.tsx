@@ -21,7 +21,7 @@ const ChangePassword = () => {
       <View style={styles.body}>
         <View style={styles.field}>
           <Text style={styles.label} allowFontScaling={false}>
-            Parolni kiriting
+            {t('Parolni kiriting')}
           </Text>
           <TextInput
             allowFontScaling={false}

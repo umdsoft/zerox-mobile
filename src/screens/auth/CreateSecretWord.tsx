@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../theme/rd';
 import {ChevronLeft, LockIcon} from '../home/redesign/icons';
 import {GradientIconBadge} from '../components/BrandLockup';
 
 const CreateSecretWord = () => {
   const navigation = useNavigation();
+  const {t} = useTranslation();
   const [focused, setFocused] = useState<'question' | 'word' | null>(null);
 
   return (
@@ -42,15 +44,16 @@ const CreateSecretWord = () => {
             <GradientIconBadge size={rs(84)}>
               <LockIcon size={rs(34)} color={rd.color.primary} />
             </GradientIconBadge>
-            <Text style={styles.title}>Maxfiy so’z yaratish</Text>
+            <Text style={styles.title}>{t('Maxfiy so’z yaratish')}</Text>
             <Text style={styles.subtitle}>
-              Hisobingizni tiklashda ishlatiladigan maxfiy savol va so’zni
-              belgilang
+              {t(
+                'Hisobingizni tiklashda ishlatiladigan maxfiy savol va so’zni belgilang',
+              )}
             </Text>
           </View>
 
           {/* Maxfiy savol */}
-          <Text style={styles.label}>Maxfiy so’z uchun savol yarating</Text>
+          <Text style={styles.label}>{t('Maxfiy so’z uchun savol yarating')}</Text>
           <View
             style={[
               styles.field,
@@ -68,7 +71,7 @@ const CreateSecretWord = () => {
 
           {/* Maxfiy so'z */}
           <Text style={[styles.label, {marginTop: rs(16)}]}>
-            Maxfiy so’zni yarating
+            {t('Maxfiy so’zni yarating')}
           </Text>
           <View
             style={[styles.field, focused === 'word' && styles.fieldFocused]}>
@@ -89,7 +92,7 @@ const CreateSecretWord = () => {
               navigation.navigate('NewPasswordEnter');
             }}
             style={styles.submitBtn}>
-            <Text style={styles.submitText}>Davom etish</Text>
+            <Text style={styles.submitText}>{t('Davom etish')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

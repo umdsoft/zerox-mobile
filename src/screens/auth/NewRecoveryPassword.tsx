@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import {useTranslation} from 'react-i18next';
 import Loading from '../components/Loading';
 import {rd, rs} from '../../theme/rd';
 import {ChevronLeft, LockIcon} from '../home/redesign/icons';
@@ -20,6 +21,7 @@ const NewRecoveryPassword = () => {
   // 2 parolni tiklash
   const {type} = useRoute().params;
   const navigation = useNavigation();
+  const {t} = useTranslation();
 
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,18 +59,18 @@ const NewRecoveryPassword = () => {
               <LockIcon size={rs(34)} color={rd.color.primary} />
             </View>
             <Text style={styles.title} allowFontScaling={false}>
-              {type === 2 ? 'Parolni tiklash' : "Parolni o'zgartirish"}
+              {type === 2 ? t('Parolni tiklash') : t("Parolni o'zgartirish")}
             </Text>
             <Text style={styles.subtitle} allowFontScaling={false}>
               {type === 2
-                ? 'Parolni tiklash uchun maxfiy so’zni kiriting'
-                : 'Parolni o‘zgartirish uchun maxfiy so‘zni kiriting'}
+                ? t('Parolni tiklash uchun maxfiy so’zni kiriting')
+                : t('Parolni o‘zgartirish uchun maxfiy so‘zni kiriting')}
             </Text>
           </View>
 
           {/* Maxfiy so'z */}
           <Text style={styles.label} allowFontScaling={false}>
-            Maxfiy so‘z: Men aytgan gap
+            {t('Maxfiy so‘z: Men aytgan gap')}
           </Text>
           <View style={[styles.field, focused && styles.fieldFocused]}>
             <View style={styles.leadIcon}>
@@ -81,7 +83,7 @@ const NewRecoveryPassword = () => {
               }}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              placeholder="Maxfiy so’zni kiriting"
+              placeholder={t('Maxfiy so’zni kiriting')}
               placeholderTextColor={rd.color.textTertiary}
               keyboardType="default"
               style={styles.input}
@@ -103,7 +105,7 @@ const NewRecoveryPassword = () => {
             style={styles.submitBtn}
           >
             <Text style={styles.submitText} allowFontScaling={false}>
-              Davom etish
+              {t('Davom etish')}
             </Text>
           </TouchableOpacity>
         </ScrollView>

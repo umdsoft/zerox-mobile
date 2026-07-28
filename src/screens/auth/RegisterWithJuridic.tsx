@@ -26,7 +26,7 @@ import {ChevronLeft, FingerprintIcon} from '../home/redesign/icons';
 const Register = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const {i18n} = useTranslation();
+  const {t, i18n} = useTranslation();
 
   const onOpenNativeFunction = useCallback(async () => {
     if (Platform.OS === 'android') {
@@ -40,7 +40,7 @@ const Register = () => {
       //   }
       // });
     } else {
-      Alert.alert('Xatolik', 'hozircha faqat androidda mavjud');
+      Alert.alert(t('Xatolik'), t('hozircha faqat androidda mavjud'));
     }
   }, []);
 
@@ -92,8 +92,10 @@ const Register = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
-            desc: 'Hurmatli foydalanuvchi, e-imzo orqali jismoniy shaxs sifatida ilovadan foydalana olmaysiz.',
+            title: t('Xatolik'),
+            desc: t(
+              'Hurmatli foydalanuvchi, e-imzo orqali jismoniy shaxs sifatida ilovadan foydalana olmaysiz.',
+            ),
           },
         });
       }
@@ -107,8 +109,10 @@ const Register = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          title: 'Xatolik',
-          desc: 'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
+          title: t('Xatolik'),
+          desc: t(
+            'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
+          ),
         },
       });
     });
@@ -142,9 +146,9 @@ const Register = () => {
 
           {/* Brend hero */}
           <View style={styles.hero}>
-            <Text style={styles.title}>Avtorizatsiya</Text>
+            <Text style={styles.title}>{t('Avtorizatsiya')}</Text>
             <Text style={styles.subtitle}>
-              Yuridik shaxs sifatida E-imzo (ERI) orqali xavfsiz kiring
+              {t('Yuridik shaxs sifatida E-imzo (ERI) orqali xavfsiz kiring')}
             </Text>
           </View>
 
@@ -155,9 +159,9 @@ const Register = () => {
                 <FingerprintIcon size={rs(22)} color={rd.color.primary} />
               </View>
               <View style={styles.infoTextBox}>
-                <Text style={styles.infoTitle}>E-imzo (ERI)</Text>
+                <Text style={styles.infoTitle}>{t('E-imzo (ERI)')}</Text>
                 <Text style={styles.infoDesc}>
-                  Elektron raqamli imzo orqali yuridik shaxsingizni tasdiqlang
+                  {t('Elektron raqamli imzo orqali yuridik shaxsingizni tasdiqlang')}
                 </Text>
               </View>
             </View>
@@ -168,7 +172,7 @@ const Register = () => {
               onPress={onOpenNativeFunction}
               style={styles.enterButton}>
               <FingerprintIcon size={rs(20)} color={rd.color.onPrimary} />
-              <Text style={styles.enterText}>E-imzo orqali kirish</Text>
+              <Text style={styles.enterText}>{t('E-imzo orqali kirish')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

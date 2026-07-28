@@ -49,7 +49,7 @@ const ResetPassCode = () => {
           Toast.show({
             type: 'error2',
             position: 'top',
-            props: {title: 'Xatolik!', desc: t('resetpas')},
+            props: {title: t('Xatolik!'), desc: t('resetpas')},
             visibilityTime: 3000,
             autoHide: true,
             topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -60,7 +60,7 @@ const ResetPassCode = () => {
         Toast.show({
           type: 'error2',
           position: 'top',
-          props: {title: 'Xatolik!', desc: t('resetpas')},
+          props: {title: t('Xatolik!'), desc: t('resetpas')},
           visibilityTime: 3000,
           autoHide: true,
           topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -71,7 +71,7 @@ const ResetPassCode = () => {
       Toast.show({
         type: 'error2',
         position: 'top',
-        props: {title: 'Xatolik!', desc: "Iltimos, qaytadan urinib ko'ring"},
+        props: {title: t('Xatolik!'), desc: t("Iltimos, qaytadan urinib ko'ring")},
         visibilityTime: 3000,
         autoHide: true,
         topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -89,7 +89,7 @@ const ResetPassCode = () => {
           </View>
           <Text style={styles.title}>{t('PIN-kodni tiklash')}</Text>
           <Text style={styles.subtitle}>
-            Hisobingiz parolini kiriting — PIN-kod qayta tiklanadi
+            {t('Hisobingiz parolini kiriting — PIN-kod qayta tiklanadi')}
           </Text>
         </View>
 

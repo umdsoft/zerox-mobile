@@ -84,7 +84,7 @@ const NewPasswordEnter = () => {
           visibilityTime: 2000,
           position: 'bottom',
           type: 'omad',
-          props: {title: 'Muvaffaqiyatli', desc: t('changepassword')},
+          props: {title: t('Muvaffaqiyatli'), desc: t('changepassword')},
         });
         setTimeout(() => {
           navigation.navigate('BottomTabNavigator');
@@ -99,12 +99,12 @@ const NewPasswordEnter = () => {
     return (
       <View style={styles.checklist}>
         {[
-          {label: 'Kamida 8 belgidan iborat', valid: min},
-          {label: 'Kamida bitta kichik harf', valid: lower},
-          {label: 'Kamida bitta katta harf', valid: upper},
-          {label: 'Kamida bitta raqam', valid: number},
-          {label: 'Kamida bitta belgi', valid: symbole},
-          {label: "Bo'sh joy bo'lmasligi kerak", valid: space},
+          {label: t('Kamida 8 belgidan iborat'), valid: min},
+          {label: t('Kamida bitta kichik harf'), valid: lower},
+          {label: t('Kamida bitta katta harf'), valid: upper},
+          {label: t('Kamida bitta raqam'), valid: number},
+          {label: t('Kamida bitta belgi'), valid: symbole},
+          {label: t("Bo'sh joy bo'lmasligi kerak"), valid: space},
         ].map(({label, valid}, index) => (
           <View style={styles.validationItem} key={index}>
             <View
@@ -172,16 +172,16 @@ const NewPasswordEnter = () => {
               <LockIcon size={rs(34)} color={rd.color.primary} />
             </View>
             <Text style={styles.title} allowFontScaling={false}>
-              Yangi parol kiriting
+              {t('Yangi parol kiriting')}
             </Text>
             <Text style={styles.subtitle} allowFontScaling={false}>
-              Hisobingiz uchun yangi parol o'ylab toping
+              {t("Hisobingiz uchun yangi parol o'ylab toping")}
             </Text>
           </View>
 
           {/* Yangi parol */}
           <PasswordInput
-            title={'Parolni kiriting'}
+            title={t('Parolni kiriting')}
             password={password}
             onChangeText={onChangeText}
             setLower={setLower}
@@ -194,7 +194,7 @@ const NewPasswordEnter = () => {
 
           {/* Parolni takrorlang */}
           <Text style={[styles.label, {marginTop: rs(16)}]} allowFontScaling={false}>
-            Parolni takrorlang
+            {t('Parolni takrorlang')}
           </Text>
           <View
             style={[styles.field, focused === 'confirm' && styles.fieldFocused]}>
@@ -242,7 +242,7 @@ const NewPasswordEnter = () => {
                 disabled && {color: rd.color.textTertiary},
               ]}
               allowFontScaling={false}>
-              Tasdiqlash
+              {t('Tasdiqlash')}
             </Text>
           </TouchableOpacity>
         </ScrollView>

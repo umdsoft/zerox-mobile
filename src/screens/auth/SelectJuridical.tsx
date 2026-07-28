@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path, Line } from 'react-native-svg';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, UserIcon } from '../home/redesign/icons';
@@ -50,6 +51,7 @@ const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
 
 const SelectJuridical = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<'juridic' | 'physical' | null>(null);
 
   const options = [
@@ -57,15 +59,15 @@ const SelectJuridical = () => {
       key: 'juridic' as const,
       route: 'RegisterWithJuridic',
       Icon: BuildingIcon,
-      title: 'Yuridik shaxs',
-      desc: 'Tashkilot yoki korxona sifatida kirish',
+      title: t('Yuridik shaxs'),
+      desc: t('Tashkilot yoki korxona sifatida kirish'),
     },
     {
       key: 'physical' as const,
       route: 'LoginWithPhone',
       Icon: UserIcon,
-      title: 'Jismoniy shaxs',
-      desc: 'Shaxsiy hisob sifatida kirish',
+      title: t('Jismoniy shaxs'),
+      desc: t('Shaxsiy hisob sifatida kirish'),
     },
   ];
 
@@ -94,9 +96,9 @@ const SelectJuridical = () => {
 
         {/* Brend hero */}
         <View style={styles.hero}>
-          <Text style={styles.title}>Avtorizatsiya</Text>
+          <Text style={styles.title}>{t('Avtorizatsiya')}</Text>
           <Text style={styles.subtitle}>
-            Davom etish uchun hisob turini tanlang
+            {t('Davom etish uchun hisob turini tanlang')}
           </Text>
         </View>
 
@@ -159,7 +161,7 @@ const SelectJuridical = () => {
               !selected && { color: rd.color.textTertiary },
             ]}
           >
-            Davom etish
+            {t('Davom etish')}
           </Text>
         </TouchableOpacity>
       </ScrollView>
