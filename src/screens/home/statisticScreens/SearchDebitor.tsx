@@ -19,7 +19,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {storage} from '../../../store/api/token/getToken';
-import {t} from 'i18next';
+import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import {
@@ -61,6 +61,7 @@ const SourceCardWide = ({Icon, label, uzs, usd, onPress, ledger}: any) => (
 );
 
 const SearchDebitor = () => {
+  const {t} = useTranslation();
   // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
   const route = useRoute<any>();
   const {
@@ -122,7 +123,7 @@ const SearchDebitor = () => {
           contentContainerStyle={styles.selectContent}>
           <View style={styles.totalCard}>
             <Text allowFontScaling={false} style={styles.totalLabel}>
-              {isDebitorRole ? 'Jami berilgan qarz' : 'Jami olingan qarz'}
+              {isDebitorRole ? t('Jami berilgan qarz') : t('Jami olingan qarz')}
             </Text>
             {/* so'm 1-qatorda, $ PASTKI qatorda (nuqtasiz — so'rov bo'yicha). */}
             <Text allowFontScaling={false} numberOfLines={1} style={styles.totalValue}>
@@ -136,13 +137,13 @@ const SearchDebitor = () => {
           </View>
 
           <Text allowFontScaling={false} style={styles.selectSub}>
-            Manbalar bo‘yicha
+            {t('Manbalar bo‘yicha')}
           </Text>
 
           {/* Qarz shartnomasi — TEPADA. Bosilsa -> shartnoma qarzlari ro'yxati. */}
           <SourceCardWide
             Icon={ContractIcon}
-            label="Qarz shartnomasi"
+            label={t('Qarz shartnomasi')}
             uzs={shUZS}
             usd={shUSD}
             onPress={() =>
@@ -156,7 +157,7 @@ const SearchDebitor = () => {
           {/* Qarz daftari — PASTDA. Bosilsa -> Qarz daftari bo'limi. */}
           <SourceCardWide
             Icon={LedgerIcon}
-            label="Qarz daftari"
+            label={t('Qarz daftari')}
             uzs={dfUZS}
             usd={dfUSD}
             ledger
@@ -251,7 +252,7 @@ const SearchDebitor = () => {
         Toast.show({
           type: 'omad',
           position: 'bottom',
-          props: {title: 'Ro‘yxat bo‘sh', desc: 'Yuklab olish uchun ma’lumot yo‘q'},
+          props: {title: t('Ro‘yxat bo‘sh'), desc: t('Yuklab olish uchun ma’lumot yo‘q')},
         });
         return;
       }
@@ -291,10 +292,10 @@ const SearchDebitor = () => {
         position: 'bottom',
         visibilityTime: 2500,
         props: {
-          title: 'Excel yuklab olindi',
+          title: t('Excel yuklab olindi'),
           desc:
             Platform.OS === 'android'
-              ? 'Download/Zerox papkasiga saqlandi'
+              ? t('Download/Zerox papkasiga saqlandi')
               : fileName,
         },
       });
@@ -333,7 +334,7 @@ const SearchDebitor = () => {
           style={styles.excelBtn}>
           <ArrowDown size={rs(16)} color={rd.color.onPrimary} />
           <Text allowFontScaling={false} style={styles.excelText}>
-            Excelga yuklash
+            {t('Excelga yuklash')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -354,7 +355,7 @@ const SearchDebitor = () => {
                 <Text
                   allowFontScaling={false}
                   style={[styles.tabText, active && styles.tabTextActive]}>
-                  {tab.label}
+                  {t(tab.label)}
                 </Text>
                 <View style={[styles.tabBadge, active && styles.tabBadgeActive]}>
                   <Text

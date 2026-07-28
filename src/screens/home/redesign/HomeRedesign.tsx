@@ -9,6 +9,7 @@
  */
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -184,51 +185,60 @@ const Header = ({
   </View>
 );
 
-const Stat = ({ Icon, label, value }: { Icon: (p: IconProps) => JSX.Element; label: string; value: string }) => (
-  <View style={styles.stat}>
-    <CircleIcon size={rs(34)} bg={rd.color.onPrimaryChip}>
-      <Icon size={rs(20)} color={rd.color.onPrimary} />
-    </CircleIcon>
-    <View style={{ flex: 1 }}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  </View>
-);
-
-type BalanceData = { total: string; trend: string; owedToMe: string; iOwe: string };
-const BalanceCard = ({ data }: { data: BalanceData }) => (
-  <View style={styles.balanceCard}>
-    <GradientBg />
-    <View style={styles.balanceTop}>
-      <Text style={styles.balanceTitle}>Umumiy qarz holati</Text>
-      <View style={styles.trendChip}>
-        <Text style={styles.trendText}>{data.trend}</Text>
+const Stat = ({ Icon, label, value }: { Icon: (p: IconProps) => JSX.Element; label: string; value: string }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.stat}>
+      <CircleIcon size={rs(34)} bg={rd.color.onPrimaryChip}>
+        <Icon size={rs(20)} color={rd.color.onPrimary} />
+      </CircleIcon>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.statLabel}>{t(label)}</Text>
+        <Text style={styles.statValue}>{value}</Text>
       </View>
     </View>
-    <Text style={styles.balanceTotal} numberOfLines={1} adjustsFontSizeToFit>
-      {data.total}
-    </Text>
-    <View style={styles.balanceDivider} />
-    <View style={styles.statsRow}>
-      <Stat Icon={ArrowUpRight} label="Menga qarzdor" value={data.owedToMe} />
-      <Stat Icon={ArrowDownLeft} label="Men qarzdor" value={data.iOwe} />
-    </View>
-  </View>
-);
+  );
+};
 
-const QuickActions = ({ nav }: { nav: Nav }) => (
-  <View style={styles.actionsRow}>
-    {actions.map(({ key, label, Icon, route, params, tint, color }) => (
-      <TouchableOpacity key={key} activeOpacity={0.85} style={styles.actionCard} onPress={() => nav(route, params)}>
-        <CircleIcon size={rs(46)} bg={tint}>
-          <Icon size={rs(24)} color={color} />
-        </CircleIcon>
-        <Text style={styles.actionLabel}>{label}</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+type BalanceData = { total: string; trend: string; owedToMe: string; iOwe: string };
+const BalanceCard = ({ data }: { data: BalanceData }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.balanceCard}>
+      <GradientBg />
+      <View style={styles.balanceTop}>
+        <Text style={styles.balanceTitle}>{t('Umumiy qarz holati')}</Text>
+        <View style={styles.trendChip}>
+          <Text style={styles.trendText}>{t(data.trend)}</Text>
+        </View>
+      </View>
+      <Text style={styles.balanceTotal} numberOfLines={1} adjustsFontSizeToFit>
+        {data.total}
+      </Text>
+      <View style={styles.balanceDivider} />
+      <View style={styles.statsRow}>
+        <Stat Icon={ArrowUpRight} label="Menga qarzdor" value={data.owedToMe} />
+        <Stat Icon={ArrowDownLeft} label="Men qarzdor" value={data.iOwe} />
+      </View>
+    </View>
+  );
+};
+
+const QuickActions = ({ nav }: { nav: Nav }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.actionsRow}>
+      {actions.map(({ key, label, Icon, route, params, tint, color }) => (
+        <TouchableOpacity key={key} activeOpacity={0.85} style={styles.actionCard} onPress={() => nav(route, params)}>
+          <CircleIcon size={rs(46)} bg={tint}>
+            <Icon size={rs(24)} color={color} />
+          </CircleIcon>
+          <Text style={styles.actionLabel}>{t(label)}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
 
 // Qarzdorlik ro'yxatlariga navigatsiya paramlari endi `./debtNav` faylida —
 // QarzShartnomasi kartalari ham aynan shu ro'yxatga o'tadi (bitta manba).
@@ -252,74 +262,85 @@ const DebtCard = ({
   amountUsd?: string;
   count: number;
   onPress: () => void;
-}) => (
-  <TouchableOpacity
-    activeOpacity={0.9}
-    style={[styles.debtCard, { shadowColor: colors[1] }]}
-    onPress={onPress}
-  >
-    <Grad id={gradId} colors={colors} />
-    <View style={styles.debtTop}>
-      <View style={styles.debtIconWrap}>
-        {positive ? (
-          <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
-        ) : (
-          <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
-        )}
+}) => {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={[styles.debtCard, { shadowColor: colors[1] }]}
+      onPress={onPress}
+    >
+      <Grad id={gradId} colors={colors} />
+      <View style={styles.debtTop}>
+        <View style={styles.debtIconWrap}>
+          {positive ? (
+            <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
+          ) : (
+            <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
+          )}
+        </View>
+        <ChevronRight size={rs(18)} color="rgba(255,255,255,0.9)" />
       </View>
-      <ChevronRight size={rs(18)} color="rgba(255,255,255,0.9)" />
-    </View>
-    <Text style={styles.debtLabel}>{label}</Text>
-    <Text style={styles.debtAmount} numberOfLines={1} adjustsFontSizeToFit>
-      {amountUzs}
-    </Text>
-    {amountUsd ? (
-      <View style={styles.debtUsdChip}>
-        <CoinIcon size={rs(14)} color={rd.color.onPrimary} />
-        <Text style={styles.debtUsd}>{amountUsd}</Text>
-      </View>
-    ) : null}
-    <Text style={styles.debtCount}>{count} ta shartnoma</Text>
-  </TouchableOpacity>
-);
+      <Text style={styles.debtLabel}>{t(label)}</Text>
+      <Text style={styles.debtAmount} numberOfLines={1} adjustsFontSizeToFit>
+        {amountUzs}
+      </Text>
+      {amountUsd ? (
+        <View style={styles.debtUsdChip}>
+          <CoinIcon size={rs(14)} color={rd.color.onPrimary} />
+          <Text style={styles.debtUsd}>{amountUsd}</Text>
+        </View>
+      ) : null}
+      <Text style={styles.debtCount}>{t('{{count}} ta shartnoma', { count })}</Text>
+    </TouchableOpacity>
+  );
+};
 
 type ContractsData = { total: string; segments: { label: string; count: string; color: string; value: number }[] };
-const ContractsCard = ({ data }: { data: ContractsData }) => (
-  <View style={styles.card}>
-    <View style={styles.contractsRow}>
-      <Donut segments={data.segments} size={rs(96)} centerValue={data.total} centerLabel="shartnoma" />
-      <View style={styles.legend}>
-        <Text style={styles.cardTitle}>Shartnomalar holati</Text>
-        {data.segments.map(seg => (
-          <View key={seg.label} style={styles.legendRow}>
-            <View style={[styles.dot, { backgroundColor: seg.color }]} />
-            <Text style={styles.legendLabel}>{seg.label}</Text>
-            <Text style={styles.legendCount}>{seg.count}</Text>
-          </View>
-        ))}
+const ContractsCard = ({ data }: { data: ContractsData }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.card}>
+      <View style={styles.contractsRow}>
+        <Donut segments={data.segments} size={rs(96)} centerValue={data.total} centerLabel={t('shartnoma')} />
+        <View style={styles.legend}>
+          <Text style={styles.cardTitle}>{t('Shartnomalar holati')}</Text>
+          {data.segments.map(seg => (
+            <View key={seg.label} style={styles.legendRow}>
+              <View style={[styles.dot, { backgroundColor: seg.color }]} />
+              <Text style={styles.legendLabel}>{t(seg.label)}</Text>
+              <Text style={styles.legendCount}>{seg.count}</Text>
+            </View>
+          ))}
+        </View>
       </View>
     </View>
-  </View>
-);
+  );
+};
 
-const WarningBanner = ({ count, onPress }: { count: number; onPress: () => void }) => (
-  <TouchableOpacity activeOpacity={0.9} style={styles.warning} onPress={onPress}>
-    <CircleIcon size={rs(34)} bg={rd.color.surface}>
-      <ClockIcon size={rs(22)} color={rd.color.warning} />
-    </CircleIcon>
-    <Text style={styles.warningText}>{count} ta qarz muddati yaqinlashmoqda</Text>
-    <ChevronRight size={rs(18)} color={rd.color.warning} />
-  </TouchableOpacity>
-);
+const WarningBanner = ({ count, onPress }: { count: number; onPress: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity activeOpacity={0.9} style={styles.warning} onPress={onPress}>
+      <CircleIcon size={rs(34)} bg={rd.color.surface}>
+        <ClockIcon size={rs(22)} color={rd.color.warning} />
+      </CircleIcon>
+      <Text style={styles.warningText}>{t('{{count}} ta qarz muddati yaqinlashmoqda', { count })}</Text>
+      <ChevronRight size={rs(18)} color={rd.color.warning} />
+    </TouchableOpacity>
+  );
+};
 
-const RecentOperations = ({ ops }: { ops: RecentOp[] }) => (
+const RecentOperations = ({ ops }: { ops: RecentOp[] }) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.opsCard}>
     {ops.length === 0 && (
       <View style={styles.opsEmpty}>
         <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
           <ClockIcon size={rs(22)} color={rd.color.textTertiary} />
         </CircleIcon>
-        <Text style={styles.opsEmptyText}>Hozircha amaliyotlar yo‘q</Text>
+        <Text style={styles.opsEmptyText}>{t('Hozircha amaliyotlar yo‘q')}</Text>
       </View>
     )}
     {ops.map((op, i) => (
@@ -344,7 +365,8 @@ const RecentOperations = ({ ops }: { ops: RecentOp[] }) => (
       </View>
     ))}
   </View>
-);
+  );
+};
 
 // ---------- Web-uslub komponentlari (veb dashboard bilan bir xil) ----------
 
@@ -357,27 +379,30 @@ const HeroBanner = ({
   name: string;
   score: number;
   status: string;
-}) => (
-  <View style={styles.hero}>
-    <Grad id="heroGrad" colors={GRAD.brand} />
-    <Text style={styles.heroTitle} numberOfLines={2}>
-      Xush kelibsiz, {name}!
-    </Text>
-    <Text style={styles.heroSub} numberOfLines={2}>
-      Shartnomalarni elektron rasmiylashtiring va oson boshqaring.
-    </Text>
-    <View style={styles.heroChips}>
-      <View style={styles.heroChip}>
-        <Text style={styles.heroChipValue}>{score}</Text>
-        <Text style={styles.heroChipLabel}>Moliyaviy sog‘liq</Text>
-      </View>
-      <View style={styles.heroChip}>
-        <Text style={styles.heroChipValue}>{status}</Text>
-        <Text style={styles.heroChipLabel}>Holat</Text>
+}) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.hero}>
+      <Grad id="heroGrad" colors={GRAD.brand} />
+      <Text style={styles.heroTitle} numberOfLines={2}>
+        {t('Xush kelibsiz, {{name}}!', { name })}
+      </Text>
+      <Text style={styles.heroSub} numberOfLines={2}>
+        {t('Shartnomalarni elektron rasmiylashtiring va oson boshqaring.')}
+      </Text>
+      <View style={styles.heroChips}>
+        <View style={styles.heroChip}>
+          <Text style={styles.heroChipValue}>{score}</Text>
+          <Text style={styles.heroChipLabel}>{t('Moliyaviy sog‘liq')}</Text>
+        </View>
+        <View style={styles.heroChip}>
+          <Text style={styles.heroChipValue}>{t(status)}</Text>
+          <Text style={styles.heroChipLabel}>{t('Holat')}</Text>
+        </View>
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 // Asosiy ko'rsatkich kartasi — tepa aksent chizig'i, ikona, label, UZS + USD.
 const MetricCard = ({
@@ -400,42 +425,45 @@ const MetricCard = ({
   value?: string;
   comingSoon?: boolean;
   onPress?: () => void;
-}) => (
-  <TouchableOpacity
-    activeOpacity={comingSoon ? 1 : 0.85}
-    disabled={comingSoon}
-    onPress={onPress}
-    style={[styles.metricCard, comingSoon && styles.metricCardSoon]}
-  >
-    <View style={[styles.metricAccent, { backgroundColor: accent }]} />
-    <View style={styles.metricHead}>
-      <CircleIcon size={rs(32)} bg={accentBg}>
-        <Icon size={rs(17)} color={accent} />
-      </CircleIcon>
+}) => {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity
+      activeOpacity={comingSoon ? 1 : 0.85}
+      disabled={comingSoon}
+      onPress={onPress}
+      style={[styles.metricCard, comingSoon && styles.metricCardSoon]}
+    >
+      <View style={[styles.metricAccent, { backgroundColor: accent }]} />
+      <View style={styles.metricHead}>
+        <CircleIcon size={rs(32)} bg={accentBg}>
+          <Icon size={rs(17)} color={accent} />
+        </CircleIcon>
+        {comingSoon ? (
+          <View style={styles.soonBadge}>
+            <Text style={styles.soonText}>{t('Tez kunda')}</Text>
+          </View>
+        ) : null}
+      </View>
       {comingSoon ? (
-        <View style={styles.soonBadge}>
-          <Text style={styles.soonText}>Tez kunda</Text>
-        </View>
-      ) : null}
-    </View>
-    {comingSoon ? (
-      <>
-        <Text style={styles.metricValueBig}>{value}</Text>
-        <Text style={styles.metricLabel}>{label}</Text>
-      </>
-    ) : (
-      <>
-        <Text style={styles.metricLabel} numberOfLines={1}>
-          {label}
-        </Text>
-        <Text style={styles.metricUzs} numberOfLines={1} adjustsFontSizeToFit>
-          {uzs}
-        </Text>
-        {usd ? <Text style={styles.metricUsd}>{usd}</Text> : null}
-      </>
-    )}
-  </TouchableOpacity>
-);
+        <>
+          <Text style={styles.metricValueBig}>{value}</Text>
+          <Text style={styles.metricLabel}>{t(label)}</Text>
+        </>
+      ) : (
+        <>
+          <Text style={styles.metricLabel} numberOfLines={1}>
+            {t(label)}
+          </Text>
+          <Text style={styles.metricUzs} numberOfLines={1} adjustsFontSizeToFit>
+            {uzs}
+          </Text>
+          {usd ? <Text style={styles.metricUsd}>{usd}</Text> : null}
+        </>
+      )}
+    </TouchableOpacity>
+  );
+};
 
 // Modul kartasi — "Qarz shartnomasi" (Debitor + Kreditor qiymatlari bilan).
 // Modul kartasi — sarlavha + ikona + IKKI sub-summa (Debitor / Kreditor).
@@ -456,33 +484,36 @@ const ModuleWithSubs = ({
   credUzs: string;
   credUsd: string;
   onPress: () => void;
-}) => (
-  <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
-    <View style={styles.moduleHead}>
-      <CircleIcon size={rs(38)} bg={rd.color.primaryTint}>
-        <Icon size={rs(20)} color={rd.color.primary} />
-      </CircleIcon>
-      <Text style={styles.moduleTitle}>{title}</Text>
-      <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-    </View>
-    <View style={styles.moduleSubRow}>
-      <View style={[styles.moduleSub, { backgroundColor: rd.color.successBg }]}>
-        <Text style={[styles.moduleSubAmt, { color: rd.color.success }]} numberOfLines={1} adjustsFontSizeToFit>
-          {debUzs}
-        </Text>
-        {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
-        <Text style={styles.moduleSubLabel}>Debitor</Text>
+}) => {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
+      <View style={styles.moduleHead}>
+        <CircleIcon size={rs(38)} bg={rd.color.primaryTint}>
+          <Icon size={rs(20)} color={rd.color.primary} />
+        </CircleIcon>
+        <Text style={styles.moduleTitle}>{t(title)}</Text>
+        <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
       </View>
-      <View style={[styles.moduleSub, { backgroundColor: rd.color.errorBg }]}>
-        <Text style={[styles.moduleSubAmt, { color: rd.color.error }]} numberOfLines={1} adjustsFontSizeToFit>
-          {credUzs}
-        </Text>
-        {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
-        <Text style={styles.moduleSubLabel}>Kreditor</Text>
+      <View style={styles.moduleSubRow}>
+        <View style={[styles.moduleSub, { backgroundColor: rd.color.successBg }]}>
+          <Text style={[styles.moduleSubAmt, { color: rd.color.success }]} numberOfLines={1} adjustsFontSizeToFit>
+            {debUzs}
+          </Text>
+          {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
+          <Text style={styles.moduleSubLabel}>{t('Debitor')}</Text>
+        </View>
+        <View style={[styles.moduleSub, { backgroundColor: rd.color.errorBg }]}>
+          <Text style={[styles.moduleSubAmt, { color: rd.color.error }]} numberOfLines={1} adjustsFontSizeToFit>
+            {credUzs}
+          </Text>
+          {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
+          <Text style={styles.moduleSubLabel}>{t('Kreditor')}</Text>
+        </View>
       </View>
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 // Modul kartasi — bosiladigan (onPress bo'lsa) yoki "Tez kunda" (onPress yo'q).
 const ModuleSoon = ({
@@ -494,6 +525,7 @@ const ModuleSoon = ({
   title: string;
   onPress?: () => void;
 }) => {
+  const { t } = useTranslation();
   const soon = !onPress;
   const inner = (
     <View style={styles.moduleHead}>
@@ -501,11 +533,11 @@ const ModuleSoon = ({
         <Icon size={rs(20)} color={soon ? rd.color.textTertiary : rd.color.primary} />
       </CircleIcon>
       <Text style={[styles.moduleTitle, soon && { color: rd.color.textTertiary }]}>
-        {title}
+        {t(title)}
       </Text>
       {soon ? (
         <View style={styles.soonBadge}>
-          <Text style={styles.soonText}>Tez kunda</Text>
+          <Text style={styles.soonText}>{t('Tez kunda')}</Text>
         </View>
       ) : (
         <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
@@ -589,6 +621,7 @@ const buildRecentOps = (bild?: any[], myId?: number): RecentOp[] =>
   });
 
 const HomeRedesign = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch();
   const { user: storeUser, home, notification, loading, usd, analytics } =
@@ -875,14 +908,14 @@ const HomeRedesign = () => {
         {/* Ogohlantirishlar — "Barchasi" endi BILDIRISHNOMALAR emas, MUDDATI
             YAQINLASHAYOTGAN qarz shartnomalari ro'yxatini ochadi (so'rov bo'yicha). */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Ogohlantirishlar</Text>
+          <Text style={styles.sectionTitle}>{t('Ogohlantirishlar')}</Text>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() =>
               nav('SearchDebitor', debtNav('debitor', 'near', 'Muddati yaqin qarzlar'))
             }
           >
-            <Text style={styles.sectionLink}>Barchasi</Text>
+            <Text style={styles.sectionLink}>{t('Barchasi')}</Text>
           </TouchableOpacity>
         </View>
         <RecentOperations ops={recentOpsData} />

@@ -10,6 +10,7 @@
  */
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   ContractIcon,
   HomeIcon,
@@ -40,7 +41,9 @@ const TABS: {
   { label: 'Shaxsiy\nmoliya', Icon: WalletIcon, tab: 'Statistic' },
 ];
 
-const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => (
+const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.wrap}>
     <View style={styles.bar}>
       {TABS.map(item => {
@@ -66,14 +69,15 @@ const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => (
               numberOfLines={2}
               style={[styles.label, active && styles.labelActive]}
             >
-              {item.label}
+              {t(item.label)}
             </Text>
           </TouchableOpacity>
         );
       })}
     </View>
   </View>
-);
+  );
+};
 
 export default GlobalBottomBar;
 

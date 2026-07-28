@@ -10,7 +10,7 @@ import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
@@ -95,6 +95,7 @@ const SMS_PACKETS = [
 ];
 
 const Types = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useSelector((state: any) => state.HomeReducer);
 
@@ -110,7 +111,7 @@ const Types = () => {
       visibilityTime: 2200,
       position: 'bottom',
       type: 'omad',
-      props: { title: 'Tez kunda', desc: 'To‘lov ilovaga tez kunda qo‘shiladi' },
+      props: { title: t('Tez kunda'), desc: t('To‘lov ilovaga tez kunda qo‘shiladi') },
     });
 
   return (
@@ -122,7 +123,7 @@ const Types = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
         <Text allowFontScaling={false} style={styles.subtitle}>
-          Qarz daftari va qarz shartnomasi bo‘yicha narxlar
+          {t('Qarz daftari va qarz shartnomasi bo‘yicha narxlar')}
         </Text>
 
         {/* ══ SMS balans (ENG TEPADA — saytdagidek) ══ */}
@@ -133,7 +134,7 @@ const Types = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={styles.smsLabel}>
-                Joriy tarif
+                {t('Joriy tarif')}
               </Text>
               <Text allowFontScaling={false} style={styles.smsPlan}>
                 Free
@@ -157,7 +158,7 @@ const Types = () => {
             style={styles.smsHistoryBtn}>
             <MessageIcon size={rs(15)} color={rd.color.primary} />
             <Text allowFontScaling={false} style={styles.smsHistoryText}>
-              SMS xabarlar tarixi
+              {t('SMS xabarlar tarixi')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -169,10 +170,10 @@ const Types = () => {
           </View>
           <View style={{ flex: 1 }}>
             <Text allowFontScaling={false} style={styles.sectionTitle}>
-              Qarz daftari tariflari
+              {t('Qarz daftari tariflari')}
             </Text>
             <Text allowFontScaling={false} style={styles.cardSub}>
-              Obuna asosida · SMS bildirishnomalar bilan
+              {t('Obuna asosida · SMS bildirishnomalar bilan')}
             </Text>
           </View>
         </View>
@@ -202,7 +203,7 @@ const Types = () => {
               </View>
             </View>
             <Text allowFontScaling={false} style={styles.tariffSms}>
-              {tar.sms}
+              {t(tar.sms)}
             </Text>
 
             <View style={styles.features}>
@@ -225,7 +226,7 @@ const Types = () => {
                       styles.featureText,
                       !f.on && { color: rd.color.textTertiary },
                     ]}>
-                    {f.label}
+                    {t(f.label)}
                   </Text>
                 </View>
               ))}
@@ -234,7 +235,7 @@ const Types = () => {
             {tar.current ? (
               <View style={styles.currentBtn}>
                 <Text allowFontScaling={false} style={styles.currentText}>
-                  Joriy tarif
+                  {t('Joriy tarif')}
                 </Text>
               </View>
             ) : (
@@ -243,7 +244,7 @@ const Types = () => {
                 onPress={soon}
                 style={[styles.joinBtn, { backgroundColor: tar.accent }]}>
                 <Text allowFontScaling={false} style={styles.joinText}>
-                  Ulanish
+                  {t('Ulanish')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -257,10 +258,10 @@ const Types = () => {
           </View>
           <View style={{ flex: 1 }}>
             <Text allowFontScaling={false} style={styles.sectionTitle}>
-              Qo‘shimcha SMS paketlar
+              {t('Qo‘shimcha SMS paketlar')}
             </Text>
             <Text allowFontScaling={false} style={styles.cardSub}>
-              SMS tugasa, tarifni o‘zgartirmasdan qo‘shimcha oling
+              {t('SMS tugasa, tarifni o‘zgartirmasdan qo‘shimcha oling')}
             </Text>
           </View>
         </View>
@@ -285,7 +286,7 @@ const Types = () => {
                 onPress={soon}
                 style={styles.packetBtn}>
                 <Text allowFontScaling={false} style={styles.packetBtnText}>
-                  Sotib olish
+                  {t('Sotib olish')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -300,7 +301,7 @@ const Types = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={styles.cardTitle}>
-                Qarz shartnomasi tariflari
+                {t('Qarz shartnomasi tariflari')}
               </Text>
             </View>
           </View>
@@ -311,15 +312,15 @@ const Types = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={styles.contractLabel}>
-                Bepul shartnomalar
+                {t('Bepul shartnomalar')}
               </Text>
               <Text
                 allowFontScaling={false}
                 style={[styles.contractValue, { color: rd.color.success }]}>
-                Mutlaqo bepul
+                {t('Mutlaqo bepul')}
               </Text>
               <Text allowFontScaling={false} style={styles.contractNote}>
-                Barcha foydalanuvchilarga qarz berishda
+                {t('Barcha foydalanuvchilarga qarz berishda')}
               </Text>
             </View>
           </View>
@@ -330,11 +331,11 @@ const Types = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={styles.contractLabel}>
-                Shartnoma narxi
+                {t('Shartnoma narxi')}
               </Text>
               <View style={styles.priceLine}>
                 <Text allowFontScaling={false} style={styles.priceTerm}>
-                  1 mln so‘mgacha
+                  {t('1 mln so‘mgacha')}
                 </Text>
                 <Text allowFontScaling={false} style={styles.priceVal}>
                   1 000 UZS
@@ -342,7 +343,7 @@ const Types = () => {
               </View>
               <View style={styles.priceLine}>
                 <Text allowFontScaling={false} style={styles.priceTerm}>
-                  1 mln – 100 mln so‘m
+                  {t('1 mln – 100 mln so‘m')}
                 </Text>
                 <Text allowFontScaling={false} style={styles.priceVal}>
                   0.1%
@@ -350,7 +351,7 @@ const Types = () => {
               </View>
               <View style={styles.priceLine}>
                 <Text allowFontScaling={false} style={styles.priceTerm}>
-                  100 mln so‘mdan ortiq
+                  {t('100 mln so‘mdan ortiq')}
                 </Text>
                 <Text allowFontScaling={false} style={styles.priceVal}>
                   100 000 UZS
@@ -365,10 +366,10 @@ const Types = () => {
               <WalletIcon size={rs(18)} color={rd.color.primary} />
               <View style={{ marginLeft: rs(10) }}>
                 <Text allowFontScaling={false} style={styles.balanceLabel}>
-                  Mobil hisob balansingiz
+                  {t('Mobil hisob balansingiz')}
                 </Text>
                 <Text allowFontScaling={false} style={styles.balanceValue}>
-                  {groupDigits(balance)} so‘m
+                  {t('{{amount}} so‘m', { amount: groupDigits(balance) })}
                 </Text>
               </View>
             </View>
@@ -377,7 +378,7 @@ const Types = () => {
               onPress={() => navigation.navigate('PayScreen')}
               style={styles.topUpBtn}>
               <Text allowFontScaling={false} style={styles.topUpText}>
-                To‘ldirish
+                {t('To‘ldirish')}
               </Text>
             </TouchableOpacity>
           </View>

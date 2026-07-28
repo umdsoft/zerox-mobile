@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import i18n from '../../../i18n';
 import { Linking, Platform, Share } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -112,6 +112,7 @@ const MENU: Item[] = [
 // (rasmiy logotip och fon uchun mo'ljallangan, gradient ustida ko'rinmasdi).
 
 const DrawerMenu = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.HomeReducer);
@@ -130,7 +131,7 @@ const DrawerMenu = () => {
         Platform.OS === 'android'
           ? 'https://play.google.com/store/apps/details?id=com.zeroxuz'
           : 'https://apps.apple.com/uz/app/zerox/id6446497826';
-      await Share.share({ message: link, url: link, title: 'Ishonch kafolati' });
+      await Share.share({ message: link, url: link, title: t('Ishonch kafolati') });
     } catch (e) {
       // ulashish bekor qilindi — jim o'tamiz.
     }
@@ -189,7 +190,7 @@ const DrawerMenu = () => {
             <WalletIcon size={rs(20)} color={rd.color.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.accountLabel}>Mobil hisob</Text>
+            <Text style={styles.accountLabel}>{t('Mobil hisob')}</Text>
             {/* "so'm" -> "UZS"; shrift kichraytirildi (juda katta edi). */}
             <Text style={styles.accountValue}>{balance} UZS</Text>
           </View>
@@ -214,10 +215,10 @@ const DrawerMenu = () => {
                 {/* Ikonalar ham KO'K (matn bilan bir xil) — so'rov bo'yicha. */}
                 <item.Icon size={rs(22)} color={active ? rd.color.onPrimary : soon ? rd.color.textTertiary : rd.color.primary} />
               </View>
-              <Text style={[styles.rowLabel, active && styles.rowLabelActive, soon && styles.rowLabelSoon]}>{item.label}</Text>
+              <Text style={[styles.rowLabel, active && styles.rowLabelActive, soon && styles.rowLabelSoon]}>{t(item.label)}</Text>
               {soon ? (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>Tez kunda</Text>
+                  <Text style={styles.badgeText}>{t('Tez kunda')}</Text>
                 </View>
               ) : null}
             </TouchableOpacity>

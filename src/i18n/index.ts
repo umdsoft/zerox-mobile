@@ -13,6 +13,12 @@ i18n.use(initReactI18next).init({
   lng: lang || 'uz',
   fallbackLng: 'uz',
   compatibilityJSON: 'v3',
+  // Redizayn ekranlarda "string-as-key" ishlatiladi: kalit = o'zbekcha matnning o'zi
+  // (masalan t('Berilgan qarz')). Matn tarkibida '.' yoki ':' bo'lsa i18next uni
+  // nested-key yoki namespace deb talqin qilmasligi uchun ajratgichlarni o'chiramiz.
+  // Raqamli kalitlar ("117") va mavjud tarjimalarga ta'sir qilmaydi.
+  keySeparator: false,
+  nsSeparator: false,
   resources: {
     uz: uz,
     ru: ru,

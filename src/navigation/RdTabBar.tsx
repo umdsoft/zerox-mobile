@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   ContractIcon,
   HomeIcon,
@@ -31,7 +32,9 @@ const TABS: {
   { label: 'Shaxsiy\nmoliya', Icon: WalletIcon },
 ];
 
-const RdTabBar = ({ state, navigation }: any) => (
+const RdTabBar = ({ state, navigation }: any) => {
+  const { t } = useTranslation();
+  return (
   <View style={styles.wrap}>
     <View style={styles.bar}>
       {state.routes.map((route: any, index: number) => {
@@ -59,7 +62,7 @@ const RdTabBar = ({ state, navigation }: any) => (
               numberOfLines={2}
               style={[styles.label, active && styles.labelActive]}
             >
-              {tab.label}
+              {t(tab.label)}
             </Text>
             {/* Doiracha olib tashlandi (so'rov bo'yicha) — faol holat endi FAQAT
                 ikona va yorliq rangi bilan bildiriladi. */}
@@ -68,7 +71,8 @@ const RdTabBar = ({ state, navigation }: any) => (
       })}
     </View>
   </View>
-);
+  );
+};
 
 export default RdTabBar;
 

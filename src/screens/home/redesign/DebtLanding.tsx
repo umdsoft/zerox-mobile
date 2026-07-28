@@ -168,14 +168,14 @@ const DebtLanding = ({ type, title, subtitle }: Props) => {
           <ActionRow
             Icon={ClockIcon}
             title={t('207') as string}
-            subtitle="Amaliyotlar tarixi"
+            subtitle={t('Amaliyotlar tarixi')}
             onPress={() => onNavigate('HistoryDebt')}
           />
           <View style={styles.divider} />
           <ActionRow
             Icon={GridIcon}
             title={t('795') as string}
-            subtitle="QR-kod orqali tez"
+            subtitle={t('QR-kod orqali tez')}
             onPress={() => onNavigate('QrScan')}
           />
         </View>

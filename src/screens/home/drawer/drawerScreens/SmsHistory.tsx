@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { useFetch } from '../../../../hooks/useFetch';
@@ -51,6 +52,7 @@ const mapType = (t: any): string => {
 };
 
 const SmsHistory = () => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<string | null>(null);
 
   // Nomzod endpoint — bo'lmasa jimgina bo'sh massiv (crash yo'q).
@@ -75,13 +77,13 @@ const SmsHistory = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title="SMS xabarlar tarixi" />
+      <RdHeader title={t('SMS xabarlar tarixi')} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
         <Text allowFontScaling={false} style={styles.subtitle}>
-          Yuborilgan SMS xabarlar kategoriyalar bo‘yicha
+          {t('Yuborilgan SMS xabarlar kategoriyalar bo‘yicha')}
         </Text>
 
         {CATEGORIES.map(cat => {
@@ -97,7 +99,7 @@ const SmsHistory = () => {
                   <cat.Icon size={rs(16)} color={cat.color} />
                 </View>
                 <Text allowFontScaling={false} numberOfLines={2} style={styles.catLabel}>
-                  {cat.label}
+                  {t(cat.label)}
                 </Text>
                 <View style={styles.catCountWrap}>
                   <Text allowFontScaling={false} style={styles.catCount}>
@@ -129,7 +131,7 @@ const SmsHistory = () => {
                 ) : (
                   <View style={styles.catBody}>
                     <Text allowFontScaling={false} style={styles.emptyRow}>
-                      Bu kategoriyada xabar yo‘q
+                      {t('Bu kategoriyada xabar yo‘q')}
                     </Text>
                   </View>
                 )
@@ -141,7 +143,7 @@ const SmsHistory = () => {
         {/* Jami yuborilgan (quyuq panel — saytdagidek). */}
         <View style={styles.totalBar}>
           <Text allowFontScaling={false} style={styles.totalBarLabel}>
-            JAMI YUBORILGAN
+            {t('JAMI YUBORILGAN')}
           </Text>
           <Text allowFontScaling={false} style={styles.totalBarValue}>
             {total}
@@ -150,7 +152,7 @@ const SmsHistory = () => {
 
         {!res.loading && total === 0 ? (
           <Text allowFontScaling={false} style={styles.note}>
-            SMS xabarlar tarixi hozircha bo‘sh.
+            {t('SMS xabarlar tarixi hozircha bo‘sh.')}
           </Text>
         ) : null}
       </ScrollView>
