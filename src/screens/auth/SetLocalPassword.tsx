@@ -518,37 +518,34 @@ const SetLocalPassword = () => {
                   {Array.from({ length: 12 }, (_v, i) => {
                     if (i === 9) {
                       // 0 ning CHAP tomonidagi tugma — biometrik (Face ID / Touch ID).
-                      // PIN KIRITISH (unlock, !isLocal) rejimida DOIM ko'rinadi:
-                      // bosilganda Android'da barmoq izi, iOS'da Face ID ishga tushadi
-                      // (onFingerScan platformani o'zi aniqlaydi). PIN O'RNATISHDA
-                      // (isLocal) biometrik tegishli emas -> bo'sh joy.
+                      // DOIM ko'rinadi: ham PIN O'RNATISH (isLocal), ham PIN KIRITISH
+                      // (unlock, !isLocal) rejimida FaceTouchIdIcon tugmasi turadi
+                      // (bo'sh joy qoldirilmaydi — panel simmetrik bo'lsin).
+                      // BIROQ biometrik FAQAT unlock (!isLocal) rejimida ishga tushadi:
+                      // bosilganda Android'da barmoq izi, iOS'da Face ID ochiladi.
+                      // PIN O'RNATISHDA (isLocal) tugma NO-OP — bu vaqtda PIN hali
+                      // mavjud emas, shuning uchun biometrik autentifikatsiya
+                      // bo'lishi mumkin emas: bosilsa hech narsa qilmaydi.
                       return (
                         <View key={i} style={[styles.codeNumberContainer]}>
-                          {!isLocal ? (
-                            <Pressable
-                              android_ripple={{
-                                color: rd.color.primary,
-                                radius: 50,
-                                borderless: true,
-                              }}
-                              onPress={() => {
+                          <Pressable
+                            android_ripple={{
+                              color: rd.color.primary,
+                              radius: 50,
+                              borderless: true,
+                            }}
+                            onPress={() => {
+                              if (!isLocal) {
                                 onFingerScan();
-                              }}
-                              style={styles.codeButton}
-                            >
-                              <FaceTouchIdIcon
-                                size={rs(30)}
-                                color={rd.color.primary}
-                              />
-                            </Pressable>
-                          ) : (
-                            <View
-                              style={[
-                                styles.codeButton,
-                                { backgroundColor: 'transparent' },
-                              ]}
+                              }
+                            }}
+                            style={styles.codeButton}
+                          >
+                            <FaceTouchIdIcon
+                              size={rs(30)}
+                              color={rd.color.primary}
                             />
-                          )}
+                          </Pressable>
                         </View>
                       );
                     } else {

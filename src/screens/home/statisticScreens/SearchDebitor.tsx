@@ -124,10 +124,15 @@ const SearchDebitor = () => {
             <Text allowFontScaling={false} style={styles.totalLabel}>
               {isDebitorRole ? 'Jami berilgan qarz' : 'Jami olingan qarz'}
             </Text>
+            {/* so'm 1-qatorda, $ PASTKI qatorda (nuqtasiz — so'rov bo'yicha). */}
             <Text allowFontScaling={false} numberOfLines={1} style={styles.totalValue}>
               {compactUzs(totUZS)}
-              {totUSD > 0 ? ` · ${compactUsd(totUSD)}` : ''}
             </Text>
+            {totUSD > 0 ? (
+              <Text allowFontScaling={false} numberOfLines={1} style={styles.totalValueUsd}>
+                {compactUsd(totUSD)}
+              </Text>
+            ) : null}
           </View>
 
           <Text allowFontScaling={false} style={styles.selectSub}>
@@ -220,9 +225,11 @@ const SearchDebitor = () => {
       (a: any, b: any) =>
         getDueMeta(a?.end_date).diff - getDueMeta(b?.end_date).diff,
     );
+  // "Jarayonda" tab OLIB TASHLANDI (so'rov bo'yicha): "Barchasi" allaqachon FAQAT
+  // jarayondagi qarzlarni ko'rsatadi (tugallangan/rad status filtri bilan chiqarilgan;
+  // ular hisobot bo'limiga o'tadi). Qolgan tablar — muddat bo'yicha filtr.
   const TABS: {key: typeof activeTab; label: string}[] = [
     {key: 'all', label: 'Barchasi'},
-    {key: 'active', label: 'Jarayonda'},
     {key: 'near', label: 'Muddati oz qolgan'},
     {key: 'overdue', label: 'Muddati o‘tgan'},
   ];
@@ -326,7 +333,7 @@ const SearchDebitor = () => {
           style={styles.excelBtn}>
           <ArrowDown size={rs(16)} color={rd.color.onPrimary} />
           <Text allowFontScaling={false} style={styles.excelText}>
-            Excel
+            Excelga yuklash
           </Text>
         </TouchableOpacity>
       </View>
@@ -408,6 +415,12 @@ const styles = StyleSheet.create({
     fontSize: rs(20),
     color: rd.color.text,
     marginTop: rs(3),
+  },
+  totalValueUsd: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.textSecondary,
+    marginTop: rs(2),
   },
   selectSub: {
     fontFamily: rd.font.medium,

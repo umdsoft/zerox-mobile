@@ -21,6 +21,7 @@ const ToastCard = ({
       <View
         style={[
           styles.iconCircle,
+          isError && styles.iconCircleError,
           { backgroundColor: isError ? rd.color.errorBg : rd.color.successBg },
         ]}
       >
@@ -86,7 +87,7 @@ export const toastConfig = {
 
 const styles = StyleSheet.create({
   card: {
-    width: '92%',
+    width: '88%',
     alignSelf: 'center',
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
@@ -105,9 +106,11 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   // Xato toasti — QIZG'ISH fon + qizil chegara (eski ilovadagidek, e'tiborni tortadi).
+  // Kontent qizil aksent chizig'iga (chapga) biroz yaqinlashtiriladi (faqat xato uchun).
   cardError: {
     backgroundColor: rd.color.errorBg,
     borderColor: rd.color.error,
+    paddingLeft: rs(6),
   },
   accent: {
     position: 'absolute',
@@ -126,6 +129,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: rs(4),
   },
+  // Xato toastida ikonka-doira chapga (qizil aksentga) qo'shimcha siljitiladi.
+  iconCircleError: {
+    marginLeft: rs(2),
+  },
   textWrap: { flex: 1, justifyContent: 'center' },
   title: {
     fontFamily: rd.font.semibold,
@@ -135,7 +142,8 @@ const styles = StyleSheet.create({
     color: rd.color.text,
     marginBottom: 2,
   },
-  titleError: { color: rd.color.error },
+  // Xato sarlavhasi QORA (qizil emas) — fon qizg'ish, aksent/ikonka qizil qoladi.
+  titleError: { color: rd.color.text },
   desc: {
     fontFamily: rd.font.regular,
     fontSize: rs(13),

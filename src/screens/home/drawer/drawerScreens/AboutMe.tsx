@@ -29,8 +29,9 @@ const AboutMe = () => {
   return (
     <ScreenLayout title={t('Ilova haqida')} scroll={false} contentStyle={styles.content}>
       <View style={styles.card}>
-        {/* Logo + naqli + tavsif — sahifaning O'RTA qismida markazlashadi
-            (logo biroz pastda, tavsif markazda — eski ilovadagidek). */}
+        {/* Logo + naqli YUQORI qismda, so'ng OCHIQ BO'SHLIQ, keyin tavsif.
+            (Ilgari uchchalasi birga vertikal markazlashardi — endi logo+naqli
+            tepaga suriladi, "Ilova naqli" bilan tavsif orasida nafas qoladi.) */}
         <View style={styles.centerBlock}>
           <View style={styles.logoWrap}>{renderLogo()}</View>
 
@@ -88,7 +89,10 @@ const styles = StyleSheet.create({
   centerBlock: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    // Logo+naqli blokini YUQORIGA suramiz (markazdan flex-start ga) — pastda
+    // tavsifgacha ochiq bo'shliq qoladi.
+    justifyContent: 'flex-start',
+    paddingTop: rs(48),
   },
   logoWrap: {
     alignItems: 'center',
@@ -101,7 +105,8 @@ const styles = StyleSheet.create({
     marginTop: rs(14),
   },
   aboutText: {
-    marginTop: rs(20),
+    // "Ilova naqli" bilan tavsif orasidagi ochiq bo'shliq (rs(20) -> rs(44)).
+    marginTop: rs(44),
     paddingHorizontal: rs(6),
     color: rd.color.textSecondary,
   },

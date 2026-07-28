@@ -26,7 +26,9 @@ import { colors } from '../../../../theme/colors';
 import { t } from 'i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { ArrowDown, ArrowUpRight } from '../../../home/redesign/icons';
-import ZeroXWordmark from '../../../../images/TextAndLogo';
+// Mark + "ZeroX" (shiorsiz) — "ZeroX" TO'LIQ va aniq ko'rinadi (TextAndLogo
+// wordmark'ida "Z" qirqilib "7"dek chiqardi).
+import ZeroXLogoText from '../../../../images/LogoAndText';
 
 import RNBlobUtil from 'react-native-blob-util';
 
@@ -295,15 +297,8 @@ const QrCode = () => {
           }}
         >
           <View style={styles.qrCard}>
-            {/* viewBox — komponentning DEFAULT (0 350 4000 1000) framing'i:
-                "ZeroX" TO'LIQ ko'rinadi (ilgari 0 0 4000 1300 override "Z"ni qirqardi). */}
-            <ZeroXWordmark
-              width={rs(140)}
-              height={rs(38)}
-              viewBox="0 350 4000 1000"
-              fill="#0063B6"
-              color="#FF2D2D"
-            />
+            {/* Mark + "ZeroX" (o'z ranglari bilan) — to'liq va aniq. */}
+            <ZeroXLogoText width={rs(150)} height={rs(84)} />
 
             <View style={styles.qrWrap}>
               <QRCode
@@ -424,9 +419,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   helperText: {
-    fontFamily: rd.font.regular,
+    fontFamily: rd.font.medium,
     fontSize: rs(13),
-    color: rd.color.textTertiary,
+    // Quyuqroq (textTertiary -> textSecondary) — ilgari juda xira edi.
+    color: rd.color.textSecondary,
     textAlign: 'center',
     marginTop: rs(18),
     marginHorizontal: rs(24),

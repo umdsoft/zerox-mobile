@@ -151,10 +151,10 @@ const Types = () => {
           <View style={styles.smsBarTrack}>
             <View style={styles.smsBarFill} />
           </View>
-          <Text allowFontScaling={false} style={styles.smsHint}>
-            SMS bildirishnomalar uchun Start yoki Premium tarifni tanlang
-          </Text>
-          <TouchableOpacity activeOpacity={0.7} onPress={soon} style={styles.smsHistoryBtn}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('SmsHistory')}
+            style={styles.smsHistoryBtn}>
             <MessageIcon size={rs(15)} color={rd.color.primary} />
             <Text allowFontScaling={false} style={styles.smsHistoryText}>
               SMS xabarlar tarixi

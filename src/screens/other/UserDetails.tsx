@@ -1,15 +1,16 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Clipboard, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 
 import { useNavigation } from '@react-navigation/native';
 
 import { useSelector } from 'react-redux';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Edit from '../../images/Edit';
 import ScreenLayout from '../components/ScreenLayout';
 import { t } from 'i18next';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
-import { AvatarPersonIcon, StarIcon } from '../home/redesign/icons';
+import { ArrowDown, ArrowUp, AvatarPersonIcon, CopyIcon, StarIcon } from '../home/redesign/icons';
 import { useFetch } from '../../hooks/useFetch';
 import { URL } from '../constants';
 
@@ -58,6 +59,18 @@ const UserDetails = () => {
     : d?.company || '';
   const line2 = isPerson ? titleCaseName(`${d?.middle_name ?? ''}`) : '';
 
+  // JShShIR (PINFL) ni clipboard'ga nusxalash + qisqa "Nusxalandi" toasti.
+  const copyPinfl = () => {
+    Clipboard.setString(String(d?.pinfl ?? ''));
+    Toast.show({
+      autoHide: true,
+      visibilityTime: 1800,
+      position: 'bottom',
+      type: 'omad',
+      props: { title: 'Nusxalandi', desc: 'JShShIR nusxalandi' },
+    });
+  };
+
   return (
     <ScreenLayout title={t('810')} scroll={false} contentStyle={styles.content}>
       {/* Sarlavha kartasi — avatar + FISH (2 qator) + reyting. */}
@@ -80,6 +93,12 @@ const UserDetails = () => {
           <Text style={styles.ratingLabel}>Reyting</Text>
           <StarIcon size={rs(14)} color="#f5a623" />
           <Text style={styles.ratingScore}>{rating.toFixed(2)}</Text>
+          {/* Trend strelkasi (sayt kabi): yuqori reyting yashil ↑, past reyting qizil ↓. */}
+          {rating >= 3 ? (
+            <ArrowUp size={rs(14)} color={rd.color.success} />
+          ) : (
+            <ArrowDown size={rs(14)} color={rd.color.error} />
+          )}
         </View>
       </View>
 
@@ -91,7 +110,16 @@ const UserDetails = () => {
           <InfoRow label={t('684')} value={d?.brithday} divider />
         ) : null}
         {isPerson ? (
-          <InfoRow label={t('687')} value={d?.pinfl} divider />
+          <InfoRow
+            label={t('687')}
+            value={d?.pinfl}
+            divider
+            right={
+              <TouchableOpacity onPress={copyPinfl} style={styles.editBtn}>
+                <CopyIcon size={rs(18)} color={rd.color.primary} />
+              </TouchableOpacity>
+            }
+          />
         ) : null}
         <InfoRow
           label={t('27')}
@@ -174,16 +202,16 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontFamily: rd.font.bold,
-    fontSize: rs(16),
+    fontSize: rs(18),
     color: rd.color.text,
     textAlign: 'center',
   },
   headerName2: {
     fontFamily: rd.font.medium,
-    fontSize: rs(14),
+    fontSize: rs(15.5),
     color: rd.color.textSecondary,
     textAlign: 'center',
-    marginTop: rs(2),
+    marginTop: rs(3),
   },
   ratingChip: {
     flexDirection: 'row',

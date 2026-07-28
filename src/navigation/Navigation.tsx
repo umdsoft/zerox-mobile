@@ -81,6 +81,7 @@ import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
 import MyIdScreen from '../screens/auth/RecoveryPassword/MyIdScreen';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
 import Types from '../screens/home/drawer/drawerScreens/Types';
+import SmsHistory from '../screens/home/drawer/drawerScreens/SmsHistory';
 import ResetPassCode from '../screens/other/ResetPassCode';
 import UpdateLocalPassCode from '../screens/auth/UpdateLocalPassCode';
 import NewsScreen from '../screens/other/NewsScreen';
@@ -247,6 +248,7 @@ const AllNavigators = [
   { name: 'MyIdScreen', component: MyIdScreen },
   { name: 'UpdatePassword', component: UpdatePassword },
   { name: 'Types', component: Types },
+  { name: 'SmsHistory', component: SmsHistory },
   { name: 'NewsScreen', component: NewsScreen },
   {
     name: 'ResetPassCode',

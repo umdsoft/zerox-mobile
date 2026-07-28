@@ -109,6 +109,14 @@ export const CloseIcon = (p: IconProps) => (
   </Base>
 );
 
+// Nusxalash (copy) — ikki ustma-ust to'rtburchak.
+export const CopyIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="9" y="9" width="11" height="11" rx="2" />
+    <Path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </Base>
+);
+
 // Kalendar (tug'ilgan sana).
 export const CalendarIcon = (p: IconProps) => (
   <Base {...p}>

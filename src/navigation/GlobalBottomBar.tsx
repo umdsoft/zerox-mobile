@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.page,
   },
   bar: {
-    height: rs(70),
+    height: rs(73),
     paddingHorizontal: rs(8),
     flexDirection: 'row',
     alignItems: 'center',
@@ -101,13 +101,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: rs(4),
     paddingHorizontal: rs(2),
-    paddingTop: rs(11),
+    paddingTop: rs(10),
   },
+  // 2-qatorli yorliq ("Qarz\nshartnomasi" ...) ning 2-qatori KESILMASIN:
+  // balandlik 2 qatorga yetadigan qilib oshirildi (rs(28)) va Android'da pastki
+  // harflar (descender) kesilmasligi uchun includeFontPadding:false.
   label: {
     fontFamily: rd.font.medium,
     fontSize: rs(9.5),
     lineHeight: rs(12),
-    height: rs(24),
+    height: rs(28),
+    includeFontPadding: false,
     textAlign: 'center',
     textAlignVertical: 'top',
     color: rd.color.textTertiary,

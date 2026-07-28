@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 import Uzbekistan from '../../images/uzbekistaan.svg';
 import Russia from '../../images/russia.svg';
+import { KarakalpakFlag, UkFlag } from '../../images/ExtraFlags';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../theme/rd';
@@ -34,6 +35,12 @@ const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
   </Svg>
 );
 
+// ExtraFlags `size` propi bilan ishlaydi (Uzbekistan/Russia svg'lari esa 25px
+// intrinsik o'lchamda). flagBox (rs(32)) ichida bir xil ko'rinishi uchun yangi
+// bayroqlarni ham rs(25) o'lchamda o'raymiz — map'dagi `<Flag />` o'zgarmaydi.
+const KarakalpakFlagIcon = () => <KarakalpakFlag size={rs(25)} />;
+const UkFlagIcon = () => <UkFlag size={rs(25)} />;
+
 const SelectLanguageScreen = () => {
   const [lang, setLang] = useState(2);
   const { i18n } = useTranslation();
@@ -48,6 +55,12 @@ const SelectLanguageScreen = () => {
         break;
       case 'uz':
         setLang(2);
+        break;
+      case 'kaa':
+        setLang(3);
+        break;
+      case 'en':
+        setLang(4);
         break;
     }
 
@@ -68,6 +81,12 @@ const SelectLanguageScreen = () => {
         case 'uz':
           setLang(2);
           break;
+        case 'kaa':
+          setLang(3);
+          break;
+        case 'en':
+          setLang(4);
+          break;
       }
       i18n.changeLanguage(l);
     }
@@ -77,6 +96,8 @@ const SelectLanguageScreen = () => {
     { code: 'uz', value: 2, label: 'O‘zbekcha', Flag: Uzbekistan },
     { code: 'kr', value: 1, label: 'Ўзбекча', Flag: Uzbekistan },
     { code: 'ru', value: 0, label: 'Русский', Flag: Russia },
+    { code: 'kaa', value: 3, label: 'Qaraqalpaqsha', Flag: KarakalpakFlagIcon },
+    { code: 'en', value: 4, label: 'English', Flag: UkFlagIcon },
   ];
 
   return (
