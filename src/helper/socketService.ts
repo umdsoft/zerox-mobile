@@ -111,7 +111,15 @@ class SocketService {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      transports: ['websocket', 'polling'],
+      // SS-DEV (2026-09-23): tartib POLLING -> websocket (upgrade). Ilgari
+      // 'websocket' birinchi edi; tb/app.zerox.uz oldidagi nginx->apache proksi
+      // WebSocket handshake'ni o'tkazmaydi (web mijoz shu sabab polling'da
+      // ishlaydi), socket.io-client esa birinchi transport yiqilsa keyingisiga
+      // O'TMAYDI — natijada mobil socket UMUMAN ulanmasdi (bildirishnoma,
+      // real-time, session_revoked kelmasdi). Polling har doim o'tadi, so'ng
+      // imkon bo'lsa websocket'ga ko'tariladi.
+      transports: ['polling', 'websocket'],
+      tryAllTransports: true,
       // TLS sertifikat tekshiruvi YOQILDI (oldin secure:false + rejectUnauthorized:false
       // edi → MITM token o'g'irlashi mumkin edi). app.zerox.uz cert'i valid (tekshirildi).
       secure: true,

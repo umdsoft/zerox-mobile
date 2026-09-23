@@ -6,6 +6,10 @@ buildscript {
         targetSdkVersion = 36
         ndkVersion = "27.0.12077973"
         kotlinVersion = "2.1.20"
+        // SS-DEV (2026-09-23): react-native-otp-verify `play-services-auth:+` ni oladi;
+        // 21.0.0 dan boshlab `Auth.GOOGLE_SIGN_IN_API` olib tashlangan -> compile xato
+        // ("cannot find symbol GOOGLE_SIGN_IN_API"). Oxirgi mos versiyaga qadaymiz.
+        googlePlayServicesVersion = "20.7.0"
     }
     repositories {
         google()
