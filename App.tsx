@@ -30,7 +30,6 @@ import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import DeviceInfo from 'react-native-device-info';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
-import crashlytics from '@react-native-firebase/crashlytics';
 import { logError } from './src/log';
 import {
   APP_LOADING_TIMEOUT,
@@ -104,24 +103,9 @@ const activePathHas = (state: any, name: string): boolean => {
   return activePathHas(route.state, name);
 };
 
-const defaultHandler = ErrorUtils.getGlobalHandler();
-
-/**
- * Global error handler for crash reporting
- */
-ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
-  crashlytics().recordError(error);
-  crashlytics().log(`JS Error: ${error.message}`);
-
-  if (isFatal) {
-    crashlytics().crash();
-  }
-
-  // Call the default handler
-  if (defaultHandler) {
-    defaultHandler(error, isFatal);
-  }
-});
+// 2026-09-23: global JS error handler endi FAQAT index.js'da (bitta joy, RN default
+// handler'iga zanjirlangan). Bu yerdagi nusxa index.js tomonidan baribir ustidan
+// yozilardi va `crashlytics().crash()` (test-crash API) ni chaqirardi.
 
 /**
  * Checks and updates app version in storage

@@ -111,6 +111,11 @@ const GiveDebtUser = () => {
     const map: Record<string, string> = {
       'user-bir': t('O‘zingiz bilan qarz shartnomasi tuzib bo‘lmaydi'),
       date: t('Qaytarish muddati noto‘g‘ri'),
+      // 2026-09-23: backend USD shartnomada CBU kursini ololmasa 503 qaytaradi
+      // (ilgari NaN komissiya bilan shartnoma yaratilardi).
+      'rate-unavailable': t(
+        'Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring',
+      ),
     };
     Toast.show({
       autoHide: true,
@@ -331,8 +336,14 @@ const GiveDebtUser = () => {
         }
       }
     } catch (error) {
-      setError(true);
       setLoading(false);
+      // 503 rate-unavailable — aniq xabar; qolgan holatlar avvalgidek.
+      const msg = (error as any)?.response?.data?.msg;
+      if (msg === 'rate-unavailable') {
+        showFail({ msg });
+        return;
+      }
+      setError(true);
     }
   };
   const onValue = text => {

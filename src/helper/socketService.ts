@@ -2,6 +2,7 @@ import notifee from '@notifee/react-native';
 import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
 import { onTokenRefreshed } from '../store/api/authInterceptor';
+import { forceLogout } from './forceLogout';
 import { SOCKET_URL } from '../screens/constants';
 import { Store } from '../store/store/Store';
 import {
@@ -327,6 +328,18 @@ class SocketService {
       console.error('Socket error:', error.code, error.message);
       this.onError?.(error);
       this.handleSocketError(error);
+    });
+
+    // SS-DEV (2026-09-23): "Ulangan qurilmalar" — SHU qurilma sessiyasi boshqa
+    // qurilmadan tugatildi (backend helper/sessionEvents.js faqat tegishli
+    // family socketiga yuboradi). Darhol majburiy chiqamiz; server socketni
+    // o'zi uzadi — qayta ulanmaslik uchun oldindan o'zimiz uzamiz.
+    this.socket.on('session_revoked', () => {
+      console.warn('Socket: session_revoked — majburiy logout');
+      try {
+        this.disconnect();
+      } catch {}
+      forceLogout('revoked');
     });
   }
 

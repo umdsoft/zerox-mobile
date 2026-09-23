@@ -35,14 +35,25 @@ Appearance.setColorScheme('light');
 crashlytics().log('App mounted successfully');
 
 /**
- * Global error handler for logging errors to Crashlytics
+ * Global error handler for logging errors to Crashlytics.
+ *
+ * 2026-09-23: YAGONA handler. Ilgari App.tsx ham o'z handler'ini o'rnatar, index.js
+ * esa uni (va RN default handler'ini) zanjirsiz USTIDAN YOZAR edi — natijada
+ * fatal JS xato Crashlytics'ga yozilar, lekin RN default handler chaqirilmay
+ * ilova release'da jimgina muzlab qolardi. Endi default handler saqlanib,
+ * xato yozilgach unga uzatiladi (dev'da red box, release'da RN'ning o'z crash yo'li).
  */
+const rnDefaultErrorHandler = ErrorUtils.getGlobalHandler();
 ErrorUtils.setGlobalHandler((error, isFatal) => {
-  crashlytics().recordError(error);
-  logError('Global error', error);
-
-  if (isFatal) {
-    // Optional: show custom crash screen or restart app
+  try {
+    crashlytics().recordError(error);
+    crashlytics().log(`JS Error (${isFatal ? 'fatal' : 'non-fatal'}): ${error?.message}`);
+    logError('Global error', error);
+  } catch (_) {
+    // Crashlytics tayyor bo'lmasa ham default handler ishlashi shart
+  }
+  if (rnDefaultErrorHandler) {
+    rnDefaultErrorHandler(error, isFatal);
   }
 });
 

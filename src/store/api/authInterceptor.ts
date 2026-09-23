@@ -21,6 +21,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
+import { forceLogout, isSessionRevokedError } from '../../helper/forceLogout';
 
 const REFRESH_PATH = '/user/refresh-token';
 
@@ -46,6 +47,16 @@ export const refreshAccessToken = (): Promise<string | null> => {
 
   refreshPromise = axios
     .post(URL + REFRESH_PATH, { refreshToken })
+    .catch(err => {
+      // SS-DEV (2026-09-23): refresh token QAT'IY rad etilsa (401/400 — bekor
+      // qilingan/qayta ishlatilgan/yaroqsiz) sessiya tugagan: majburiy chiqamiz.
+      // Tarmoq/5xx/429 — vaqtinchalik, chiqarmaymiz (null qaytadi).
+      const st = err?.response?.status;
+      if (st === 401 || st === 400) {
+        forceLogout('refresh-failed');
+      }
+      throw err;
+    })
     .then(res => {
       const newToken = res?.data?.token as string | undefined;
       if (newToken) {
@@ -84,6 +95,14 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
     response => response,
     async error => {
       const original = error?.config;
+
+      // SS-DEV (2026-09-23): "Ulangan qurilmalar"da SHU qurilma tugatilgan —
+      // backend 401 + code:'SESSION_REVOKED'. Refresh urinib o'tirmaymiz (u ham
+      // shu sessiyada, baribir rad etiladi) — darhol majburiy chiqamiz.
+      if (isSessionRevokedError(error)) {
+        forceLogout('revoked');
+        return Promise.reject(error);
+      }
 
       // Faqat token-eskirgan 401; bir marta retry; refresh endpointning o'ziga tushmaslik.
       if (

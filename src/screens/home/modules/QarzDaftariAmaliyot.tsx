@@ -466,8 +466,11 @@ const QarzDaftariAmaliyot = () => {
                               setPayRow(g);
                               setPayVal(String(Math.round(Number(g?.summa) || 0)));
                             }}>
+                            {/* SS-DEV (2026-09-23): tugma matni "To'landi" edi — holat
+                                belgisiga o'xshab, to'lanmagan oylar ham "to'landi" deb
+                                o'qilardi. Endi AMAL nomi + konturli ko'rinish. */}
                             <Text allowFontScaling={false} style={styles.schPayText}>
-                              {t('To‘landi')}
+                              {t('To‘lov kiritish')}
                             </Text>
                           </TouchableOpacity>
                         )}
@@ -650,14 +653,18 @@ const styles = StyleSheet.create({
     paddingVertical: rs(1),
     marginTop: rs(3),
   },
+  // SS-DEV (2026-09-23): konturli (to'ldirilmagan) — yashil "To'landi" holat
+  // belgisi bilan adashtirmaslik uchun.
   schPayBtn: {
     marginTop: rs(5),
-    backgroundColor: GREEN,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: GREEN,
     borderRadius: rd.radius.pill,
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(4),
+    paddingHorizontal: rs(10),
+    paddingVertical: rs(3),
   },
-  schPayText: { fontFamily: rd.font.semibold, fontSize: rs(10.5), color: '#fff' },
+  schPayText: { fontFamily: rd.font.semibold, fontSize: rs(10.5), color: GREEN },
   payBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(9,14,26,0.55)',
