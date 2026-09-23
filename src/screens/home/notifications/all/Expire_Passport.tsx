@@ -6,6 +6,7 @@ import { t } from 'i18next';
 import { navigate } from '../../../../navigation/NavigationRef';
 import NotificationShell, { NotifButton } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
+import { style } from '../../../../theme/style';
 const ExpirePassport = ({ item, okay }) => {
   const onOkay = async () => {
     okay(item?.id);
@@ -36,9 +37,11 @@ export default ExpirePassport;
 
 const styles = StyleSheet.create({
   notification: {
-    fontSize: rs(13.5),
-    fontFamily: rd.font.regular,
-    color: rd.color.textSecondary,
-    lineHeight: rs(20),
+    // Boshqa bildirishnomalar body matni bilan BIR XIL (MainText = medium,
+    // style.fontSize.xx+1, color text). Ilgari regular/rs13.5/textSecondary edi.
+    fontSize: style.fontSize.xx + 1,
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
+    lineHeight: rs(22),
   },
 });

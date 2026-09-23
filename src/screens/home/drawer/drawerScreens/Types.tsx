@@ -1,4 +1,6 @@
 import {
+  ActivityIndicator,
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -15,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { useFetch } from '../../../../hooks/useFetch';
+import apiClient from '../../../../store/api/apiClient';
 import { groupDigits } from '../../../../helper/money';
 import RdHeader from '../../redesign/RdHeader';
 import {
@@ -87,12 +90,15 @@ const DAFTARI_TARIFFS = [
   },
 ];
 
-// ── Qo'shimcha SMS paketlar. ──
+// ── Qo'shimcha SMS paketlar (name — backend ADDON_SMS_PACKAGES bilan bir xil). ──
 const SMS_PACKETS = [
-  { sms: '100', price: '21 000' },
-  { sms: '200', price: '40 000' },
-  { sms: '300', price: '57 000' },
+  { name: 'small', sms: '100', price: '21 000', amount: 21000 },
+  { name: 'medium', sms: '200', price: '40 000', amount: 40000 },
+  { name: 'large', sms: '300', price: '57 000', amount: 57000 },
 ];
+
+// Tarif narxlari (UZS, son) — tasdiqlash matni va balans-tekshiruvi uchun.
+const PLAN_AMOUNT: Record<string, number> = { start: 99000, premium: 199000 };
 
 const Types = () => {
   const { t } = useTranslation();
@@ -104,15 +110,91 @@ const Types = () => {
   const balance =
     Number((me.data as any)?.data?.balance ?? user?.data?.balance ?? 0) || 0;
 
-  // Obuna/paket sotib olish oqimi ilovada hali ulanmagan — halol "tez kunda".
-  const soon = () =>
+  // Joriy obuna (tarif) — REAL. Qaysi karta "Joriy tarif" ekanini shu belgilaydi.
+  const subRes = useFetch({ method: 'GET', url: URL + '/finance/subscription/' });
+  const currentPlan: string =
+    (subRes.data as any)?.data?.subscription?.plan || 'free';
+
+  // Sotib olish jarayoni — bosilgan tugma kaliti (ikki marta bosishdan himoya + spinner).
+  const [busy, setBusy] = React.useState<string | null>(null);
+  // Tarif/SMS xarid MODALI holati (so'rov SS11 — sayt kabi balans-breakdown oynasi).
+  const [payModal, setPayModal] = React.useState<any>(null);
+
+  // SMS balansi — REAL (/qarz-daftari/sms-balance). Free tarifda 100 SMS grant.
+  const smsRes = useFetch({ method: 'GET', url: URL + '/qarz-daftari/sms-balance' });
+  const smsB: any = (smsRes.data as any)?.data || {};
+  const smsTotal = Number(smsB.total || 0);
+  const smsRemaining = Number(smsB.remaining || 0);
+  const smsSent = Number(smsB.sent || 0);
+  const smsUsed = Number(smsB.used ?? Math.max(smsTotal - smsRemaining, 0));
+  const smsBarPct = smsTotal > 0 ? Math.min(100, Math.round((smsUsed / smsTotal) * 100)) : 0;
+
+  // Sotib olgandan keyin balans, SMS va obunani qayta yuklaymiz.
+  const refetchAll = () => {
+    me.onRefresh({});
+    smsRes.onRefresh({});
+    subRes.onRefresh({});
+  };
+  const toastOk = (desc: string) =>
     Toast.show({
-      autoHide: true,
-      visibilityTime: 2200,
-      position: 'bottom',
-      type: 'omad',
-      props: { title: t('Tez kunda'), desc: t('To‘lov ilovaga tez kunda qo‘shiladi') },
+      autoHide: true, visibilityTime: 2400, position: 'bottom', type: 'omad',
+      props: { desc },
     });
+  const toastErr = (desc: string) =>
+    Toast.show({
+      autoHide: true, visibilityTime: 2600, position: 'bottom', type: 'error2',
+      props: { desc },
+    });
+
+  // ── Tarif/SMS xarid MODALI (so'rov SS11) — balans yetsa "Tasdiqlash", aks holda
+  //    "Mobil hisobni to'ldirish". Modal balans-breakdown ko'rsatadi. ──
+  const closePay = () => setPayModal(null);
+  const confirmPay = async () => {
+    if (!payModal || busy) return;
+    setBusy(payModal.key);
+    try {
+      await apiClient.post(payModal.path, payModal.body);
+      toastOk(payModal.successText);
+      refetchAll();
+      closePay();
+    } catch (e: any) {
+      const r = e?.response;
+      closePay();
+      if (r?.status === 402 && r?.data?.code === 'insufficient-balance') {
+        toastErr(t('Mobil hisobda mablag‘ yetarli emas'));
+      } else {
+        toastErr(t('Amalni bajarib bo‘lmadi. Birozdan so‘ng urinib ko‘ring'));
+      }
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Tarifga ulanish — modal ochadi (balansdan yechim tasdiq oynasида).
+  const purchasePlan = (planKey: string, badge: string) => {
+    setPayModal({
+      key: 'plan-' + planKey,
+      title: t('Tarifga ulanish'),
+      tarif: badge,
+      price: PLAN_AMOUNT[planKey] || 0,
+      path: '/finance/subscription/purchase-from-balance',
+      body: { plan: planKey },
+      successText: t('Tarif muvaffaqiyatli ulandi'),
+    });
+  };
+
+  // Qo'shimcha SMS paket sotib olish — shu modal.
+  const purchaseAddon = (pkg: { name: string; sms: string; amount: number }) => {
+    setPayModal({
+      key: 'sms-' + pkg.name,
+      title: t('SMS paket sotib olish'),
+      tarif: `${pkg.sms} SMS`,
+      price: pkg.amount,
+      path: '/finance/subscription/purchase-addon-from-balance',
+      body: { package_name: pkg.name },
+      successText: t('SMS paket qo‘shildi'),
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -134,23 +216,26 @@ const Types = () => {
             </View>
             <View style={{ flex: 1 }}>
               <Text allowFontScaling={false} style={styles.smsLabel}>
-                {t('Joriy tarif')}
+                {t('SMS balansingiz')}
               </Text>
               <Text allowFontScaling={false} style={styles.smsPlan}>
-                Free
+                {/* Balans bilan izchil: sarflangan = jami - qoldiq (paketdan yechilgan).
+                    sms_history soni (sent) ba'zan kamroq bo'ladi (eski loglanmagan
+                    yozuvlar) — shu bois "sarflangan" ko'rsatkichi ishlatiladi. */}
+                {t('Jami {{n}} ta SMS yuborilgan', { n: smsUsed })}
               </Text>
             </View>
             <View style={styles.smsCountWrap}>
               <Text allowFontScaling={false} style={styles.smsCount}>
-                100
+                {`${smsRemaining} / ${smsTotal}`}
               </Text>
               <Text allowFontScaling={false} style={styles.smsCountLabel}>
-                SMS
+                {t('SMS qoldi')}
               </Text>
             </View>
           </View>
           <View style={styles.smsBarTrack}>
-            <View style={styles.smsBarFill} />
+            <View style={[styles.smsBarFill, { width: `${smsBarPct}%` }]} />
           </View>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -232,20 +317,35 @@ const Types = () => {
               ))}
             </View>
 
-            {tar.current ? (
+            {currentPlan === tar.key ? (
               <View style={styles.currentBtn}>
                 <Text allowFontScaling={false} style={styles.currentText}>
                   {t('Joriy tarif')}
                 </Text>
               </View>
+            ) : tar.key === 'free' ? (
+              <View style={styles.currentBtn}>
+                <Text allowFontScaling={false} style={styles.currentText}>
+                  {t('Bepul tarif')}
+                </Text>
+              </View>
             ) : (
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={soon}
-                style={[styles.joinBtn, { backgroundColor: tar.accent }]}>
-                <Text allowFontScaling={false} style={styles.joinText}>
-                  {t('Ulanish')}
-                </Text>
+                disabled={!!busy}
+                onPress={() => purchasePlan(tar.key, tar.badge)}
+                style={[
+                  styles.joinBtn,
+                  { backgroundColor: tar.accent },
+                  busy === 'plan-' + tar.key && { opacity: 0.75 },
+                ]}>
+                {busy === 'plan-' + tar.key ? (
+                  <ActivityIndicator color={rd.color.onPrimary} size="small" />
+                ) : (
+                  <Text allowFontScaling={false} style={styles.joinText}>
+                    {t('Ulanish')}
+                  </Text>
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -283,11 +383,19 @@ const Types = () => {
               </Text>
               <TouchableOpacity
                 activeOpacity={0.85}
-                onPress={soon}
-                style={styles.packetBtn}>
-                <Text allowFontScaling={false} style={styles.packetBtnText}>
-                  {t('Sotib olish')}
-                </Text>
+                disabled={!!busy}
+                onPress={() => purchaseAddon(p)}
+                style={[
+                  styles.packetBtn,
+                  busy === 'sms-' + p.name && { opacity: 0.75 },
+                ]}>
+                {busy === 'sms-' + p.name ? (
+                  <ActivityIndicator color={rd.color.primary} size="small" />
+                ) : (
+                  <Text allowFontScaling={false} style={styles.packetBtnText}>
+                    {t('Sotib olish')}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           ))}
@@ -311,9 +419,7 @@ const Types = () => {
               <CheckIcon size={rs(15)} color={rd.color.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text allowFontScaling={false} style={styles.contractLabel}>
-                {t('Bepul shartnomalar')}
-              </Text>
+              {/* "Bepul shartnomalar" sarlavhasi olib tashlandi (so'rov). */}
               <Text
                 allowFontScaling={false}
                 style={[styles.contractValue, { color: rd.color.success }]}>
@@ -384,6 +490,122 @@ const Types = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* ── Tarif/SMS xarid MODALI (so'rov SS11) — balans-breakdown + tasdiq/to'ldirish ── */}
+      <Modal
+        visible={!!payModal}
+        transparent
+        animationType="fade"
+        onRequestClose={closePay}>
+        <View style={styles.payOverlay}>
+          <View style={styles.payCard}>
+            <View style={styles.payHead}>
+              <View style={{ flex: 1 }}>
+                <Text allowFontScaling={false} style={styles.payTitle}>
+                  {payModal?.title}
+                </Text>
+                <Text allowFontScaling={false} style={styles.paySub}>
+                  {t('Tarif')}: {payModal?.tarif}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={closePay}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <CloseIcon size={rs(20)} color={rd.color.textTertiary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.payRows}>
+              <View style={styles.payRow}>
+                <Text allowFontScaling={false} style={styles.payRowLabel}>
+                  {t('Joriy balans')}
+                </Text>
+                <Text allowFontScaling={false} style={styles.payRowVal}>
+                  {groupDigits(balance)} UZS
+                </Text>
+              </View>
+              <View style={styles.payRow}>
+                <Text allowFontScaling={false} style={styles.payRowLabel}>
+                  {t('Tarif qiymati')}
+                </Text>
+                <Text allowFontScaling={false} style={styles.payRowVal}>
+                  {groupDigits(payModal?.price || 0)} UZS
+                </Text>
+              </View>
+              <View style={[styles.payRow, styles.payRowLast]}>
+                {balance >= (payModal?.price || 0) ? (
+                  <>
+                    <Text allowFontScaling={false} style={styles.payRowLabel}>
+                      {t('Ulanishdan keyin balans')}
+                    </Text>
+                    <Text allowFontScaling={false} style={[styles.payRowVal, { color: '#16a34a' }]}>
+                      {groupDigits(balance - (payModal?.price || 0))} UZS
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text allowFontScaling={false} style={styles.payRowLabel}>
+                      {t('Yetishmayotgan mablag‘')}
+                    </Text>
+                    <Text allowFontScaling={false} style={[styles.payRowVal, { color: '#dc2626' }]}>
+                      {groupDigits((payModal?.price || 0) - balance)} UZS
+                    </Text>
+                  </>
+                )}
+              </View>
+            </View>
+
+            <Text
+              allowFontScaling={false}
+              style={[
+                styles.payNote,
+                balance < (payModal?.price || 0) && { color: '#dc2626' },
+              ]}>
+              {balance >= (payModal?.price || 0)
+                ? t('Tasdiqlasangiz, ko‘rsatilgan summa Mobil hisobingizdan yechib olinadi va tarif faollashadi.')
+                : t('Mobil hisobda mablag‘ yetarli emas. Avval to‘ldirib oling.')}
+            </Text>
+
+            <View style={styles.payBtns}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={styles.payCancel}
+                onPress={closePay}>
+                <Text allowFontScaling={false} style={styles.payCancelText}>
+                  {t('Bekor qilish')}
+                </Text>
+              </TouchableOpacity>
+              {balance >= (payModal?.price || 0) ? (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  disabled={!!busy}
+                  style={[styles.payConfirm, !!busy && { opacity: 0.7 }]}
+                  onPress={confirmPay}>
+                  {busy ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text allowFontScaling={false} style={styles.payConfirmText}>
+                      {t('Tasdiqlash')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.payConfirm}
+                  onPress={() => {
+                    closePay();
+                    navigation.navigate('PayScreen');
+                  }}>
+                  <Text allowFontScaling={false} style={styles.payConfirmText}>
+                    {t('Mobil hisobni to‘ldirish')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -437,7 +659,7 @@ const styles = StyleSheet.create({
   smsCountWrap: { alignItems: 'flex-end' },
   smsCount: {
     fontFamily: rd.font.bold,
-    fontSize: rs(18),
+    fontSize: rs(15.5),
     color: rd.color.primary,
   },
   smsCountLabel: {
@@ -752,4 +974,71 @@ const styles = StyleSheet.create({
     fontSize: rs(11.5),
     color: rd.color.primary,
   },
+
+  // ── Xarid modali (SS11) — orqa fon qorong'ilashadi (blur-effekt), oq karta ──
+  payOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15,23,42,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(22),
+  },
+  payCard: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xl ?? rs(22),
+    padding: rs(18),
+  },
+  payHead: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10) },
+  payTitle: { fontFamily: rd.font.bold, fontSize: rs(16.5), color: rd.color.text },
+  paySub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12.5),
+    color: rd.color.textTertiary,
+    marginTop: rs(2),
+  },
+  payRows: {
+    marginTop: rs(16),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.md,
+    paddingHorizontal: rs(14),
+  },
+  payRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: rs(12),
+    borderBottomWidth: 1,
+    borderBottomColor: rd.color.border,
+  },
+  payRowLast: { borderBottomWidth: 0 },
+  payRowLabel: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.textSecondary },
+  payRowVal: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
+  payNote: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
+    lineHeight: rs(17),
+    marginTop: rs(12),
+  },
+  payBtns: { flexDirection: 'row', gap: rs(10), marginTop: rs(18) },
+  payCancel: {
+    flex: 1,
+    height: rs(48),
+    borderRadius: rd.radius.md,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  payCancelText: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.textSecondary },
+  payConfirm: {
+    flex: 1.4,
+    height: rs(48),
+    borderRadius: rd.radius.md,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  payConfirmText: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.onPrimary },
 });

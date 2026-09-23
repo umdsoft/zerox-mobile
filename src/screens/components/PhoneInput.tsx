@@ -30,7 +30,7 @@ const PhoneInput = ({onChangeText, value, icon = false, max}) => {
         <TextInput
           maxLength={max}
           value={checkingPhone(value)}
-          placeholder="__ ___-__-__"
+          placeholder="__ ___ __ __"
           placeholderTextColor={rd.color.textTertiary}
           onChangeText={onChangeText}
           onFocus={() => setFocused(true)}

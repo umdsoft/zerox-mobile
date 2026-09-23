@@ -23,7 +23,7 @@ const ChangeLocalPassword = () => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: {title: 'Muvaffaqiyatli', desc: t('Shaxsingiz tasdiqlandi')},
+          props: {desc: t('Shaxsingiz tasdiqlandi')},
           type: 'omad',
           visibilityTime: 3000,
         });
@@ -32,7 +32,7 @@ const ChangeLocalPassword = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: {title: 'Xatolik', desc: t('Shaxsingiz tasdiqlanmadi')},
+        props: {desc: t('Shaxsingiz tasdiqlanmadi')},
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -51,7 +51,7 @@ const ChangeLocalPassword = () => {
             Toast.show({
               type: 'error2',
               position: 'top',
-              props: {title: 'Xatolik!', desc: t('777')},
+              props: {desc: t('777')},
               visibilityTime: 3000,
               autoHide: true,
               topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -77,7 +77,7 @@ const ChangeLocalPassword = () => {
             Toast.show({
               type: 'omad',
               position: 'top',
-              props: {title: 'Muvaffaqiyatli', desc: t('885')},
+              props: {desc: t('885')},
               visibilityTime: 3000,
               autoHide: true,
               topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -91,7 +91,6 @@ const ChangeLocalPassword = () => {
               type: 'error2',
               position: 'top',
               props: {
-                title: 'Xatolik!',
                 desc: t(
                   'Yangi PIN-kodni takrorlashda xatolikka yo‘l qo‘yilgan',
                 ),
@@ -121,9 +120,14 @@ const ChangeLocalPassword = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <RdHeader title={t('774')} />
+      {/* Kontent (ikonka+matn+nuqtalar+pad) VERTIKAL MARKAZда — ilgari hammasi
+          tepaда yig'ilib, pastда ancha bo'sh joy qolardi (so'rov: pad pastroqда,
+          bo'shliq to'ldirilsin). */}
+      <View style={styles.body}>
       <View style={styles.iconWrap}>
         <View style={styles.iconCircle}>
-          <ShieldIcon size={rs(38)} color={rd.color.primary} />
+          {/* Ikonka biroz KATTALASHTIRILDI (so'rov bo'yicha). */}
+          <ShieldIcon size={rs(46)} color={rd.color.primary} />
         </View>
       </View>
       <View style={styles.textWrap}>{renderText(step)}</View>
@@ -202,6 +206,7 @@ const ChangeLocalPassword = () => {
           }
         })}
       </View>
+      </View>
     </View>
   );
 };
@@ -224,14 +229,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: rd.color.page,
   },
+  // Header'дан pastdagi butun kontent shu yerда vertikal MARKAZlashadi -> pad
+  // pastroqда, tepа/pastдаgi bo'sh joy teng taqsimlanadi (so'rov).
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   iconWrap: {
     alignItems: 'center',
-    marginTop: rs(24),
+    marginTop: rs(4),
   },
   iconCircle: {
-    width: rs(76),
-    height: rs(76),
-    borderRadius: rs(38),
+    // Ikonka-doira KATTALASHTIRILDI (76->88), ShieldIcon 38->46 (so'rov).
+    width: rs(88),
+    height: rs(88),
+    borderRadius: rs(44),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
@@ -251,7 +263,8 @@ const styles = StyleSheet.create({
   dotsRow: {
     flexDirection: 'row',
     alignSelf: 'center',
-    marginBottom: rs(36),
+    // Spacer (flex:1) endi dots va pad orasidagi masofani boshqaradi.
+    marginBottom: rs(8),
   },
   dot: {
     width: rs(14),
@@ -259,14 +272,18 @@ const styles = StyleSheet.create({
     borderRadius: rs(7),
     marginHorizontal: rs(8),
   },
+  // So'rov SS3: PIN-kod klaviaturasi 3 USTUN bo'lsin. Ilgari `width: rs(300)` +
+  // `keyCell width: rs(100)` (rs yaxlitlash / tor qurilma) 3-cellни sig'дirmай
+  // 2 ustunга o'rardi. Endi keyCell = 33.33% → HAMISHA 3 ustun (barcha qurilmада).
   keypad: {
-    width: rs(300),
+    width: '100%',
+    maxWidth: rs(340),
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignSelf: 'center',
   },
   keyCell: {
-    width: rs(100),
+    width: '33.33%',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: rs(16),

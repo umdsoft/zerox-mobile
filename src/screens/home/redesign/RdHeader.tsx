@@ -19,9 +19,13 @@ type Props = {
   onBack?: () => void;
   right?: React.ReactNode;
   showBack?: boolean;
+  // Orqaga tugma foni — ixtiyoriy (masalan Daromadlar=yashil, Xarajatlar=qizil).
+  backColor?: string;
+  // SS22: ixtiyoriy sarlavha shrift o'lchami (uzun sarlavhalar uchun biroz kichraytirish).
+  titleSize?: number;
 };
 
-const RdHeader = ({ title, subtitle, onBack, right, showBack = true }: Props) => {
+const RdHeader = ({ title, subtitle, onBack, right, showBack = true, backColor, titleSize }: Props) => {
   const navigation = useNavigation<any>();
   const back = onBack || (() => navigation.goBack());
 
@@ -29,7 +33,10 @@ const RdHeader = ({ title, subtitle, onBack, right, showBack = true }: Props) =>
     <View style={styles.row}>
       <View style={styles.side}>
         {showBack ? (
-          <TouchableOpacity activeOpacity={0.8} style={styles.iconBtn} onPress={back}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={[styles.iconBtn, backColor && { backgroundColor: backColor }]}
+            onPress={back}>
             <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
           </TouchableOpacity>
         ) : null}
@@ -39,7 +46,7 @@ const RdHeader = ({ title, subtitle, onBack, right, showBack = true }: Props) =>
         {/* Uzun sarlavhalar (masalan "Foydalanish yo'riqnomasi") qirqilmasin —
             avtomatik biroz kichrayadi (qisqa sarlavhalarga ta'sir qilmaydi). */}
         <Text
-          style={styles.title}
+          style={[styles.title, titleSize ? { fontSize: rs(titleSize) } : null]}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.8}>

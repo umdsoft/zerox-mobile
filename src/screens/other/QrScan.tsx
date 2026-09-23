@@ -21,7 +21,7 @@ import {useTranslation} from 'react-i18next';
 import {heightPercentageToDP} from 'react-native-responsive-screen';
 import {storage} from '../../store/api/token/getToken';
 import {rd, rs} from '../../theme/rd';
-import {ChevronLeft, SunSettingsIcon, WifiOffIcon} from '../home/redesign/icons';
+import {ChevronLeft, SunSettingsIcon, QrIcon} from '../home/redesign/icons';
 
 const QrScan = () => {
   let scannedRef = useRef(false); // lock
@@ -76,7 +76,6 @@ const QrScan = () => {
                   visibilityTime: 3000,
                   type: 'error2',
                   props: {
-                    title: 'Xatolik',
                     desc: t('Foydalanuvchi ma’lumotlari to‘g‘ri kelmadi'),
                   },
                 });
@@ -112,7 +111,7 @@ const QrScan = () => {
           <ChevronLeft size={rs(24)} color={rd.color.text} />
         </TouchableOpacity>
         <View style={styles.permIcon}>
-          <WifiOffIcon size={rs(30)} color={rd.color.primary} />
+          <QrIcon size={rs(34)} color={rd.color.primary} />
         </View>
         <Text allowFontScaling={false} style={styles.permTitle}>
           {t('798')}

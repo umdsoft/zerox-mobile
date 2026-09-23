@@ -25,7 +25,7 @@ import {
 } from '../../store/api/home';
 import { createFmtTokenAction } from '../../store/api/user';
 import { storage } from '../../store/api/token/getToken';
-import { setUsd } from '../../store/reducers/HomeReducer';
+import { setUsd, contractModalShow } from '../../store/reducers/HomeReducer';
 
 // Helpers
 
@@ -34,10 +34,27 @@ import { fetchUSDExchangeRate } from '../../helper/getUsdExchange';
 import { NotificationBadgeModule } from '../../nativemodule/notificationBadge';
 
 const Main = () => {
-  const { user, notification } = useSelector(state => state.HomeReducer);
+  const { user, notification, contract } = useSelector(
+    state => state.HomeReducer,
+  );
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
+
+  // So'rov: ommaviy oferta TASDIQLASH. Ilgari oferta modali FAQAT MyID
+  // identifikatsiyasi vaqtida chiqardi (ScanFaceMyId). Agar foydalanuvchi o'sha
+  // paytda tasdiqlay olmasa (masalan PDF yuklanmagan bo'lsa) — qayta ko'rsatishning
+  // yo'li yo'q edi. Endi: identifikatsiyadan o'tgan (is_active===1) lekin ofertani
+  // tasdiqlamagan (is_contract!==1) foydalanuvchiga bosh sahifada modal QAYTA
+  // ochiladi. Tasdiqlagach getMe() is_contract=1 qiladi → boshqa chiqmaydi (loop yo'q).
+  // Xodim: backend is_contract=1 qaytaradi → bu shart bajarilmaydi.
+  useEffect(() => {
+    const u = user?.data;
+    if (!u || u.is_xodim) return;
+    if (Number(u.is_active) === 1 && Number(u.is_contract) !== 1 && !contract) {
+      dispatch(contractModalShow({ show: true }));
+    }
+  }, [user?.data?.is_active, user?.data?.is_contract, contract, dispatch, user?.data]);
 
   const hasUnreadNotifications = useMemo(
     () => notification?.bild?.length > 0,
@@ -196,7 +213,8 @@ const Main = () => {
     });
 
     const unsubscribeRefToken = messaging().onTokenRefresh(async token => {
-      console.warn('FCM token refreshed:', token);
+      // VULN-026: FCM tokenni loglamaymiz (device profiling / push-abuse himoyasi).
+      if (__DEV__) console.warn('FCM token refreshed');
       storage.set('fcmtoken', token);
       dispatch(createFmtTokenAction({ fmt_token: token }));
       dispatch(getMe());

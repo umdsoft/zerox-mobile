@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { useFetch } from '../../../../hooks/useFetch';
-import { settingDate } from '../../../other/UserDetails';
 import RdHeader from '../../redesign/RdHeader';
 import {
   BellIcon,
@@ -40,22 +39,37 @@ const CATEGORIES = [
   { key: 'paid', label: 'Qarz to‘langanligi to‘g‘risida xabarnoma', Icon: CheckIcon, color: rd.color.success, bg: rd.color.successBg },
 ];
 
-// Backend turi (raqam/kalit) -> bizning kategoriya kaliti. Backend qo'shilganда
-// bu moslashtirish yangilanadi.
+// Backend `sms_history.type` -> mobil kategoriya kaliti.
+// Server turlari: 'registration' (ro'yxatga olish), 'auto' (muddati kelgan avtomatik
+// eslatma), 'manual'/'payment_link' (qo'lda/talab), 'qarz_tolandi' (to'landi).
 const mapType = (t: any): string => {
   const s = String(t ?? '').toLowerCase();
-  if (s.includes('register') || s === '1') return 'register';
-  if (s.includes('due') || s.includes('muddat') || s === '2') return 'due';
-  if (s.includes('demand') || s.includes('talab') || s === '3') return 'demand';
-  if (s.includes('paid') || s.includes('tolan') || s === '4') return 'paid';
+  if (s === 'registration' || s.includes('register') || s === '1') return 'register';
+  if (s === 'auto' || s.includes('due') || s.includes('muddat') || s === '2') return 'due';
+  if (s === 'manual' || s === 'payment_link' || s.includes('demand') || s.includes('talab') || s === '3')
+    return 'demand';
+  if (s === 'qarz_tolandi' || s.includes('paid') || s.includes('tolan') || s === '4') return 'paid';
   return 'register';
+};
+
+// Sana + SOAT (DD.MM.YYYY HH:MM) — Uzbek vaqti (+5), qurilma mintaqasidan qat'i nazar
+// (ilovaning boshqa joylaridagi +5 konvensiyasi bilan bir xil). SMS qachon yuborilgani.
+const dateTime = (text: any): string => {
+  if (!text) return '';
+  const d = new Date(text);
+  if (isNaN(d.getTime())) return '';
+  const z = new Date(d.getTime() + 5 * 3600 * 1000);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(z.getUTCDate())}.${p(z.getUTCMonth() + 1)}.${z.getUTCFullYear()} ${p(
+    z.getUTCHours(),
+  )}:${p(z.getUTCMinutes())}`;
 };
 
 const SmsHistory = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState<string | null>(null);
 
-  // Nomzod endpoint — bo'lmasa jimgina bo'sh massiv (crash yo'q).
+  // Backend endpoint (deploy qilingan) — SMS bo'lmasa bo'sh massiv (crash yo'q).
   const res = useFetch({ method: 'GET', url: URL + '/qarz-daftari/sms-history' });
   const rawItems: any[] = useMemo(() => {
     const d: any = (res.data as any)?.data ?? res.data;
@@ -123,7 +137,7 @@ const SmsHistory = () => {
                           {it?.phone || it?.number || '—'}
                         </Text>
                         <Text allowFontScaling={false} style={styles.smsDate}>
-                          {it?.created_at ? settingDate(it.created_at) : it?.date || ''}
+                          {dateTime(it?.sent_at || it?.created_at) || it?.date || ''}
                         </Text>
                       </View>
                     ))}

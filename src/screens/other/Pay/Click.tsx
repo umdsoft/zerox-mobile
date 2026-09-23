@@ -12,7 +12,7 @@ import {
 import React, {useEffect, useState} from 'react';
 import {rd, rs} from '../../../theme/rd';
 import Toast from 'react-native-toast-message';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation, useRoute, StackActions } from '@react-navigation/native';
 import ClickIcon from '../../../images/pay/ClickIcon';
 import {useDispatch, useSelector} from 'react-redux';
 import RdHeader from '../../home/redesign/RdHeader';
@@ -45,7 +45,7 @@ const Pay = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: {title: 'Muvaffaqiyatli', desc: t('828')},
+            props: {desc: t('828')},
             type: 'error2',
             visibilityTime: 3000,
           });
@@ -88,7 +88,7 @@ const Pay = () => {
   // const setPayment = (nums) => {
   //   if (nums.length <= 3) {
   //     if (nums < 1000) {
-  //       Toast.show({ autoHide: true, position: 'bottom', props: { title: 'Muvaffaqiyatli', desc: t('822') }, type: 'error2', visibilityTime: 3000, })
+  //       Toast.show({ autoHide: true, position: 'bottom', props: { desc: t('822') }, type: 'error2', visibilityTime: 3000, })
   //     }
   //   }
   // }
@@ -114,7 +114,10 @@ const Pay = () => {
         const userData = await dispatch(getMe()).unwrap();
 
         if (userData.user.data?.balance > user?.data?.balance) {
-          navigation.navigate('UserMoneyResult', {user: userData.user.data});
+          // NAV-FIX: to'lov TUGADI. `replace` — natija ekranidan orqaga bosilganda
+          // to'lov (Click WebView) sahifasiga qaytmasin: bu chalkash va xavfli
+          // (foydalanuvchi to'lovni takrorlashga urinishi mumkin).
+          navigation.dispatch(StackActions.replace('UserMoneyResult', {user: userData.user.data}));
           setIsLoading(false);
         } else {
           setIsLoading(false);
@@ -149,38 +152,43 @@ const Pay = () => {
       <StatusBar barStyle="dark-content" />
       <RdHeader title={title} />
       <View style={styles.main}>
-        <View style={styles.logoCard}>
-          {type === 0 ? (
-            <ClickIcon width={rs(90)} height={rs(30)} color={rd.color.primary} />
-          ) : type === 1 ? (
-            <PaymeIcon width={rs(90)} height={rs(30)} />
-          ) : (
-            <Image source={require('../../../images/paynet.png')} />
-          )}
+        {/* TEPA YARIM — KATTA logo (so'rov bo'yicha kattaroq hajmda, 1-yarimda). */}
+        <View style={styles.topHalf}>
+          <View style={styles.logoCard}>
+            {type === 0 ? (
+              <ClickIcon width={rs(170)} height={rs(48)} color={rd.color.primary} />
+            ) : type === 1 ? (
+              <PaymeIcon width={rs(180)} height={rs(58)} />
+            ) : (
+              <Image source={require('../../../images/paynet.png')} />
+            )}
+          </View>
         </View>
 
-        <Text style={styles.label}>{t('276')}</Text>
-        <TextInput
-          value={textInputPlace(amount)}
-          placeholder={t('276')}
-          placeholderTextColor={rd.color.textTertiary}
-          keyboardType="numeric"
-          onChangeText={val => {
-            setAmount(val);
-          }}
-          style={styles.input}
-          allowFontScaling={false}
-        />
+        {/* PASTKI YARIM — summa maydoni + Davom etish. "Summani kiriting" LABEL
+            OLIB TASHLANDI (so'rov bo'yicha) — input placeholder'ining o'zi yetarli. */}
+        <View style={styles.bottomHalf}>
+          <TextInput
+            value={textInputPlace(amount)}
+            placeholder={t('276')}
+            placeholderTextColor={rd.color.textTertiary}
+            keyboardType="numeric"
+            onChangeText={val => {
+              setAmount(val);
+            }}
+            style={styles.input}
+            allowFontScaling={false}
+          />
 
-        <TouchableOpacity
-          // disabled={amount.length > 3 ? false : true}
-          activeOpacity={0.8}
-          onPress={PayUser}
-          style={styles.payButton}>
-          <Text style={styles.payButtonText} allowFontScaling={false}>
-            {t('45')}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={PayUser}
+            style={styles.payButton}>
+            <Text style={styles.payButtonText} allowFontScaling={false}>
+              {t('45')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -197,22 +205,19 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: rs(16),
     paddingTop: rs(10),
+    paddingBottom: rs(16),
   },
+  // Ekran ikkiga bo'linadi: logo tepa yarmda (markazda, katta), forma pastki yarmda.
+  topHalf: { flex: 1, justifyContent: 'center' },
+  bottomHalf: { flex: 1, paddingTop: rs(8) },
   logoCard: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,
     borderColor: rd.color.border,
     borderRadius: rd.radius.lg,
-    paddingVertical: rs(22),
+    paddingVertical: rs(36),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(22),
-  },
-  label: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(8),
   },
   input: {
     width: '100%',

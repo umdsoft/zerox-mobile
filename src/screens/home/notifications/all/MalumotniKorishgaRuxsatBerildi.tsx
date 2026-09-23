@@ -1,7 +1,7 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import axios from 'axios';
 import { URL } from '../../../constants';
 import { storage } from '../../../../store/api/token/getToken';
@@ -15,6 +15,7 @@ import NotificationShell, {
   NotifButton,
 } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
+import { style } from '../../../../theme/style';
 
 const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
   const { user } = useSelector(state => state.HomeReducer);
@@ -87,9 +88,12 @@ export default memo(MalumotniKorishgaRuxsatBerildi);
 
 const styles = StyleSheet.create({
   notification: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
-    color: rd.color.textSecondary,
-    lineHeight: rs(20),
+    // Boshqa bildirishnomalar body matni bilan BIR XIL o'lcham+og'irlik (MainText =
+    // medium, style.fontSize.xx+1, color text). Ilgari regular/rs(13.5)/textSecondary
+    // (yupqa+kichik+ochroq) edi — farqli ko'rinardi (so'rov).
+    fontFamily: rd.font.medium,
+    fontSize: style.fontSize.xx + 1,
+    color: rd.color.text,
+    lineHeight: rs(22),
   },
 });

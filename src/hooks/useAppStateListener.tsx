@@ -27,6 +27,18 @@ export default function useAppStateListener() {
             console.log('More than 30 seconds in background, lock the app');
             storage.set('appLocked', true);
 
+            // J (so'rov): qulflashdan OLDIN joriy navigatsiya holatini saqlaymiz —
+            // PIN/Touch ID/Face ID dan keyin foydalanuvchi BOSH SAHIFA emas, AYNAN
+            // qaysi ekranda bo'lsa o'sha ekranga qaytadi. (SetLocalPassword'нинг
+            // o'zида qulflansa saqlamaymiz — takror-qulflanish loop bo'lmasin.)
+            try {
+              const navState: any = navigation.getState();
+              const curRoute = navState?.routes?.[navState.index]?.name;
+              if (navState && curRoute !== 'SetLocalPassword') {
+                storage.set('preLockNavState', JSON.stringify(navState));
+              }
+            } catch (e) {}
+
             // Menyuni PIN ekranidan OLDIN yopamiz. `reset` faqat Stack'ga
             // ta'sir qiladi, ota Drawer esa ochiq qolaveradi — natijada menyu
             // qulf ekrani ustida osilib qolardi (kontent o'ngga surilardi va

@@ -38,6 +38,27 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 const TopTab = createMaterialTopTabNavigator();
 const { width, height } = Dimensions.get('screen');
+
+// type=4 (mobil hisob amaliyoti) — `pay` bo'yicha ajratiladi (so'rov SS12/14):
+//   pay='Balance'    -> tarif balansdan sotib olindi (chiqim)
+//   pay='BalanceSms' -> SMS paket balansdan sotib olindi (chiqim)
+//   aks holda        -> "Mobil hisobni to'ldirish" (kirim, t('602'))
+const isType4Tariff = (item: any) =>
+  ['Balance', 'BalanceSms'].includes(String(item?.pay || ''));
+// Ro'yxat yorlig'i (Kirim-chiqim satrida).
+const type4ListLabel = (item: any) => {
+  const pay = String(item?.pay || '');
+  if (pay === 'Balance') return t('Yangi tarifga ulanish');
+  if (pay === 'BalanceSms') return t('SMS paket xarid qilish');
+  return t('602');
+};
+// Modal sarlavhasi (tafsilot oynasida).
+const type4Title = (item: any) => {
+  const pay = String(item?.pay || '');
+  if (pay === 'Balance') return t('Tarifga ulanish');
+  if (pay === 'BalanceSms') return t('SMS paket xaridi');
+  return t('602');
+};
 const SendMoneyHistory = () => {
   let modalRef = useRef(null);
 
@@ -146,7 +167,7 @@ const ListStatistic = ({ item, index, type, openModal }) => {
       case 4:
         return (
           <Text allowFontScaling={false} style={styles.number2}>
-            {t('602')}
+            {type4ListLabel(item)}
           </Text>
         );
     }
@@ -506,7 +527,8 @@ const ShowDetailsModal = ({ getRef }) => {
             </View>
             <View style={styles.mainInside}>
               <Text allowFontScaling={false} style={styles.infoTitle}>
-                {t('651')}
+                {/* Tarif/SMS xaridida "O'tkazma summasi" -> "Summa" (so'rov SS14.2). */}
+                {isType4Tariff(data) ? t('Summa') : t('651')}
               </Text>
               <Text allowFontScaling={false} style={styles.info}>
                 {sortText(data.amount)} UZS
@@ -691,7 +713,7 @@ const ShowDetailsModal = ({ getRef }) => {
       case 3:
         return t('642');
       case 4:
-        return t('602');
+        return type4Title(data); // tarif/SMS balansdan -> "Tarifga ulanish"/"SMS paket xaridi"
       case 1:
         return t('654');
       case 5:
@@ -721,27 +743,25 @@ const ShowDetailsModal = ({ getRef }) => {
         </View>
 
         <View style={styles.iconSuccess}>
-          {data?.type === 5 ? (
-            <CancelTransfer
-              width={normalize(50)}
-              color={'#fff'}
-              height={normalize(50)}
-            />
-          ) : (
-            <Success
-              width={normalize(50)}
-              color={rd.color.success}
-              height={normalize(50)}
-            />
-          )}
-          {/* {data.type === 1 ? ( */}
+          {/* Rangли doira-badge ichida holat ikonasi (zamonaviy success/cancel). */}
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: (data.type === 5 ? rd.color.error : rd.color.success) + '18' },
+            ]}
+          >
+            {data?.type === 5 ? (
+              <CancelTransfer width={normalize(44)} color={rd.color.error} height={normalize(44)} />
+            ) : (
+              <Success width={normalize(44)} color={rd.color.success} height={normalize(44)} />
+            )}
+          </View>
           <Text
             allowFontScaling={false}
             style={[styles.sum, { color: data.type === 5 ? rd.color.error : rd.color.success }]}
           >
             {sortText(data?.amount)} UZS
           </Text>
-          {/* ) : null} */}
         </View>
         <View style={styles.main}>
           {/* <RenderInfo type={data.type} /> */}
@@ -779,22 +799,30 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red',
     right: 0,
   },
+  // Holat ikonasi doira-badge (zamonaviy success/cancel ko'rinishi).
+  statusBadge: {
+    width: normalize(76),
+    height: normalize(76),
+    borderRadius: normalize(38),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sum: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(16),
+    fontFamily: rd.font.bold,
+    fontSize: rs(22),
     color: rd.color.success,
-    marginTop: 5,
+    marginTop: normalize(12),
   },
   downloadButton: {
     backgroundColor: rd.color.primary,
-    width: '60%',
-    paddingVertical: normalize(10),
-    borderRadius: 12,
+    width: '100%',
+    paddingVertical: normalize(13),
+    borderRadius: rd.radius.pill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: normalize(15),
+    marginTop: normalize(18),
   },
   info: {
     marginTop: normalize(3),
@@ -843,21 +871,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: width - normalize(40),
     alignSelf: 'center',
-    marginTop:
-      Platform.OS === 'ios'
-        ? (normalize(height) - normalize(340)) / 4.2
-        : (normalize(height) - normalize(340)) / 4.2,
     marginLeft: (width - (width - normalize(40))) / 2,
     padding: 15,
-    height: normalize(400),
+    // Qattiq height: normalize(400) OLIB TASHLANDI — redizayndan so'ng kontent
+    // balandroq bo'lib, "Yuklab olish" tugmasi 400px chegaradan pastга tushib
+    // KESILARDI. Endi modal kontentга moslashadi (auto), maxHeight faqat juda
+    // kichik ekranда oshib ketmasligi uchun. react-native-paper Modal o'zi
+    // vertikal markazlashtiradi (marginTop kerak emas).
+    maxHeight: height - normalize(120),
   },
   modalCotainer: {
     width: '100%',
-    // height: normalize(400),
-    // height: normalize(400),
     backgroundColor: rd.color.surface,
-    borderRadius: 12,
-    padding: normalize(10),
+    borderRadius: normalize(24),
+    padding: normalize(18),
   },
   number2: {
     fontFamily: rd.font.semibold,

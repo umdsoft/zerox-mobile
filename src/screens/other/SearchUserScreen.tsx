@@ -44,6 +44,8 @@ import { widthPercentageToDP } from 'react-native-responsive-screen';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
+import Person from '../../images/home/person';
+import Famale from '../../images/Famale';
 const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
@@ -72,12 +74,12 @@ const SearchUserScreen = () => {
 
       if (user.data.uid === userID.replace('/', '')) {
         Toast.show({
+          // "Xatolik" sarlavhasi olib tashlandi -> desc bold (descStrong).
           autoHide: true,
           position: 'bottom',
           visibilityTime: 3000,
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t('Foydalanuvchi ma’lumotlari to‘g‘ri kelmadi'),
           },
         });
@@ -107,14 +109,27 @@ const SearchUserScreen = () => {
           return;
         }
         if (data.success === false) {
+          // ID tizimда BOR-yo'qligini aniqlaymiz: candidate-search topmasa ->
+          // "Ushbu ID raqamli foydalanuvchi mavjud emas"; topsa (lekin qidiruv
+          // fail = tug'ilgan sana mos emas) -> "Foydalanuvchi ma'lumotlari to'g'ri
+          // kelmadi". Sarlavhasiz -> desc bold (so'rov).
+          let exists = false;
+          try {
+            const cs = await axios.get(
+              URL + `/user/candidate-search/${userID.replace('/', '')}`,
+              { headers: { Authorization: `Bearer ${storage.getString('token')}` } },
+            );
+            exists = !!(cs?.data?.success && cs?.data?.data);
+          } catch {}
           Toast.show({
             autoHide: true,
             position: 'bottom',
             visibilityTime: 3000,
             type: 'error2',
             props: {
-              title: 'Xatolik',
-              desc: t('825'),
+              desc: exists
+                ? t('825')
+                : t('Ushbu ID raqamli foydalanuvchi mavjud emas'),
             },
           });
           setError(false);
@@ -124,12 +139,12 @@ const SearchUserScreen = () => {
       }
     } catch {
       Toast.show({
+        // "Xatolik" sarlavhasi olib tashlandi -> desc bold.
         autoHide: true,
         position: 'bottom',
         visibilityTime: 3000,
         type: 'error2',
         props: {
-          title: 'Xatolik',
           desc: t('825'),
         },
       });
@@ -150,6 +165,7 @@ const SearchUserScreen = () => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
         {searchForm == false ? (
@@ -159,22 +175,32 @@ const SearchUserScreen = () => {
             <UserInfo user={data?.user} navigation={navigation} type={type} />
           )
         ) : (
-          <View style={styles.card}>
+          <>
+            {/* Hero — qidiruv ikonkasi + kontekst sarlavhasi (bo'sh joyni to'ldiradi) */}
+            <View style={styles.hero}>
+              <View style={styles.heroBadge}>
+                <SearchIcon size={rs(38)} color={rd.color.primary} />
+              </View>
+              <Text style={styles.heroTitle} allowFontScaling={false}>
+                {type === 1 ? t('Qarz berish') : t('Qarz olish')}
+              </Text>
+            </View>
+
+            <View style={styles.card}>
             {/* Foydalanuvchi ID */}
             <View style={styles.fieldGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>{t('210')}</Text>
                 <Popover
-                  popoverStyle={{ borderRadius: 10 }}
-                  displayArea={{
-                    x: 50,
-                    y: 150,
-                    width: 300,
-                    height: 250,
-                  }}
                   placement={Placement.BOTTOM}
+                  popoverStyle={styles.tooltip}
+                  backgroundStyle={styles.tooltipBackdrop}
+                  arrowSize={{ width: rs(16), height: rs(9) }}
                   from={
-                    <TouchableOpacity style={{ marginLeft: rs(6) }}>
+                    <TouchableOpacity
+                      style={{ marginLeft: rs(6) }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
                       <QuestionMarkIcon
                         width={rs(18)}
                         height={rs(18)}
@@ -183,8 +209,10 @@ const SearchUserScreen = () => {
                     </TouchableOpacity>
                   }
                 >
-                  <View style={{ padding: 10, width: 250 }}>
-                    <MainText size={fontSize[11]}>{t('130')}</MainText>
+                  <View style={styles.tooltipInner}>
+                    <Text style={styles.tooltipText} allowFontScaling={false}>
+                      {t('130')}
+                    </Text>
                   </View>
                 </Popover>
               </View>
@@ -218,9 +246,13 @@ const SearchUserScreen = () => {
                 style={styles.dateInput}
               >
                 {settingDate(date) === settingDate(Date.now()) ? (
-                  <Text style={styles.datePlaceholder}>dd.mm.yyyy</Text>
+                  <Text style={styles.datePlaceholder} allowFontScaling={false}>
+                    {t('kk.oo.yyyy')}
+                  </Text>
                 ) : (
-                  <Text style={styles.dateValue}>{settingDate(date)}</Text>
+                  <Text style={styles.dateValue} allowFontScaling={false}>
+                    {settingDate(date)}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -243,7 +275,8 @@ const SearchUserScreen = () => {
                 {t('216')}
               </Text>
             </TouchableOpacity>
-          </View>
+            </View>
+          </>
         )}
       </ScrollView>
 
@@ -345,7 +378,8 @@ const UserInfo = ({ user, navigation, type }) => {
         position: 'bottom',
         visibilityTime: 2000,
         type: 'omad',
-        props: { title: t('243'), desc: t('228') },
+        // "Muvaffaqiyatli bajarildi" sarlavhasi OLIB TASHLANDI — desc bold chiqadi.
+        props: { desc: t('228') },
       });
       if (status === 201) {
         // socketService.sendNotification({
@@ -382,66 +416,76 @@ const UserInfo = ({ user, navigation, type }) => {
   const requestDisabled = active && first;
 
   return (
-    <View style={styles.card}>
-      {/* Foydalanuvchi kartasi */}
-      <View style={styles.userRow}>
-        <View style={styles.avatar}>
-          {initials ? (
-            <Text style={styles.avatarText}>{initials}</Text>
+    <View>
+      {/* Profil kartasi — ALOHIDA (markazlashgan gender avatar + FISH + ID chip) */}
+      <View style={styles.profileCard}>
+        <View style={styles.avatarLg}>
+          {user?.gender == 2 ? (
+            <Famale width={rs(40)} height={rs(40)} color={rd.color.primary} />
           ) : (
-            <UserIcon size={rs(24)} color={rd.color.primary} />
+            <Person width={rs(40)} height={rs(40)} color={rd.color.primary} />
           )}
         </View>
-        <View style={styles.userMeta}>
-          <Text style={styles.userName} numberOfLines={2}>
-            {fullName.trim()}
+        <Text style={styles.profileName} numberOfLines={2} allowFontScaling={false}>
+          {fullName.trim()}
+        </Text>
+        <View style={styles.profileChip}>
+          <Text style={styles.profileChipLabel} allowFontScaling={false}>
+            {t('120')}
           </Text>
-          <Text style={styles.userDetail}>
-            {t('120')}: {user?.uid}
+          <Text style={styles.profileChipValue} allowFontScaling={false}>
+            {user?.uid}
           </Text>
         </View>
       </View>
 
-      <View style={styles.divider} />
+      {/* Izoh — CARD TASHQARISIDA, yengil qutida (oddiy matn emas) */}
+      <View style={styles.noticeBox}>
+        <View style={styles.noticeDot} />
+        <Text style={styles.noticeText} allowFontScaling={false}>
+          {resolve
+            ? t('246')
+            : reject
+            ? t('258')
+            : !active
+            ? t('219')
+            : t('231')}
+        </Text>
+      </View>
 
-      <Text style={styles.statusText}>
-        {resolve
-          ? t('246')
-          : reject
-          ? t('258')
-          : !active
-          ? t('219')
-          : t('231')}
-      </Text>
-
+      {/* 1) Ma'lumotlarni ko'rishni so'rash — OCH (light) + primary ikonka */}
       <TouchableOpacity
         disabled={requestDisabled}
         onPress={() => {
           startTimer();
         }}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
         style={[
-          styles.primaryButton,
-          styles.actionButton,
-          requestDisabled
-            ? styles.primaryButtonDisabled
-            : resolve
-            ? styles.successButton
-            : null,
+          styles.actionBtn,
+          resolve ? styles.actionBtnSuccess : styles.btnLight,
+          requestDisabled && styles.actionBtnDisabled,
         ]}
       >
-        {resolve ? <EyeIcon /> : <AskPermission />}
+        {resolve ? (
+          <EyeIcon color={rd.color.onPrimary} />
+        ) : (
+          <AskPermission
+            color={requestDisabled ? rd.color.textTertiary : rd.color.primary}
+          />
+        )}
         <Text
           style={[
-            styles.primaryButtonText,
-            requestDisabled && styles.primaryButtonTextDisabled,
-            { marginLeft: rs(8) },
+            resolve ? styles.actionBtnTextLight : styles.btnTextPrimary,
+            requestDisabled && styles.actionBtnTextDisabled,
           ]}
+          numberOfLines={1}
+          allowFontScaling={false}
         >
           {resolve ? t('252') : t('225')}
         </Text>
       </TouchableOpacity>
 
+      {/* 2) Ko'rmasdan qarz berish/olish — KO'K (filled) + oq ikonka */}
       <TouchableOpacity
         onPress={() => {
           navigation.navigate('GiveDebtUser', {
@@ -449,12 +493,13 @@ const UserInfo = ({ user, navigation, type }) => {
             type: type,
           });
         }}
-        activeOpacity={0.8}
-        style={[styles.primaryButton, styles.actionButton]}
+        activeOpacity={0.85}
+        style={[styles.actionBtn, styles.actionBtnFilled]}
       >
-        <AskPermissionNearby />
+        <AskPermissionNearby color={rd.color.onPrimary} />
         <Text
-          style={[styles.primaryButtonText, { marginLeft: rs(8) }]}
+          style={styles.actionBtnTextLight}
+          numberOfLines={1}
           allowFontScaling={false}
         >
           {type === 1 ? t('222') : t('288')}
@@ -485,9 +530,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: rs(16),
     paddingTop: rs(8),
     paddingBottom: rs(40),
+  },
+  // Hero — qidiruv ikonkasi + sarlavha (yuqoridagi bo'sh joyni to'ldiradi)
+  hero: {
+    alignItems: 'center',
+    marginBottom: rs(22),
+  },
+  heroBadge: {
+    width: rs(84),
+    height: rs(84),
+    borderRadius: rs(42),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(14),
+  },
+  heroTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
+  // Tooltip — sahifani to'liq qoraytirmaydi (yengil backdrop), toza qora kartochka
+  tooltip: {
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.text,
+    maxWidth: rs(280),
+  },
+  tooltipBackdrop: {
+    backgroundColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  tooltipInner: {
+    paddingVertical: rs(10),
+    paddingHorizontal: rs(14),
+  },
+  tooltipText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12.5),
+    color: rd.color.onPrimary,
+    lineHeight: rs(18),
   },
   card: {
     backgroundColor: rd.color.surface,
@@ -596,26 +681,134 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: rs(14),
   },
+  // FISH — kartaga sig'ishi uchun kichikroq (rs16 -> rs14.5)
   userName: {
-    fontFamily: rd.font.semibold,
+    fontFamily: rd.font.bold,
+    fontSize: rs(14.5),
+    color: rd.color.text,
+    lineHeight: rs(20),
+  },
+  // ID — yengil chip ko'rinishida
+  uidChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: rd.color.primaryTint,
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(10),
+    paddingVertical: rs(4),
+    marginTop: rs(6),
+  },
+  uidChipText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.primary,
+  },
+  // Profil kartasi — ALOHIDA, markazlashgan (avatar + FISH + ID chip)
+  profileCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.xxl,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    alignItems: 'center',
+    paddingVertical: rs(22),
+    paddingHorizontal: rs(16),
+  },
+  avatarLg: {
+    width: rs(88),
+    height: rs(88),
+    borderRadius: rs(44),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileName: {
+    fontFamily: rd.font.bold,
     fontSize: rs(16),
     color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(14),
+    maxWidth: '92%',
+    lineHeight: rs(22),
   },
-  userDetail: {
+  profileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(6),
+    marginTop: rs(12),
+  },
+  profileChipLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.textSecondary,
+  },
+  profileChipValue: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13),
+    color: rd.color.text,
+  },
+  // Izoh qutisi — card tashqarisida, yengil fon + nuqta
+  noticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: rs(8),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.md,
+    padding: rs(14),
+    marginTop: rs(16),
+  },
+  noticeDot: {
+    width: rs(6),
+    height: rs(6),
+    borderRadius: rs(3),
+    backgroundColor: rd.color.primary,
+    marginTop: rs(6),
+  },
+  noticeText: {
+    flex: 1,
     fontFamily: rd.font.regular,
     fontSize: rs(13),
     color: rd.color.textSecondary,
-    marginTop: rs(4),
+    lineHeight: rs(19),
   },
-  divider: {
-    height: 1,
-    backgroundColor: rd.color.border,
-    marginVertical: rs(16),
+  btnLight: { backgroundColor: rd.color.primaryTint },
+  btnTextPrimary: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.primary,
+    textAlign: 'center',
+    flexShrink: 1,
   },
-  statusText: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textSecondary,
-    marginBottom: rs(4),
+  // Amal tugmalari — bir xil shrift, matn sig'adi (rs13.5), ikonka + matn
+  actionBtn: {
+    height: rs(54),
+    borderRadius: rd.radius.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(12),
+    gap: rs(8),
+    marginTop: rs(12),
+  },
+  actionBtnFilled: {
+    backgroundColor: rd.color.primary,
+  },
+  actionBtnSuccess: {
+    backgroundColor: rd.color.success,
+  },
+  actionBtnDisabled: {
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  actionBtnTextLight: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14),
+    color: rd.color.onPrimary,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
+  actionBtnTextDisabled: {
+    color: rd.color.textTertiary,
   },
 });

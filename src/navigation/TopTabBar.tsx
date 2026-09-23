@@ -45,7 +45,11 @@ const TopTabBar = ({ state, descriptors, navigation }) => {
               activeOpacity={0.85}
               style={[styles.tab, isFocused && styles.tabActive]}
             >
-              <Text style={[styles.label, isFocused && styles.labelActive]}>
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={[styles.label, isFocused && styles.labelActive]}
+              >
                 {label}
               </Text>
               {count > 0 && (
@@ -92,7 +96,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: rd.font.medium,
-    fontSize: rs(13.5),
+    // "Bildirishnomalar" + badge (son) tab'ga sig'maganidan rs(13.5) -> rs(12).
+    // numberOfLines=1 + gap bilan birga endi so'z + badge bemalol joylashadi.
+    fontSize: rs(12),
     color: rd.color.textTertiary,
   },
   labelActive: { fontFamily: rd.font.semibold, color: rd.color.text },

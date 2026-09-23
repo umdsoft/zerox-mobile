@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from '../home/redesign/icons';
 import {useSelector} from 'react-redux';
+import SmsBalanceCard from '../components/SmsBalanceCard';
 
 const GradientBg = () => (
   <Svg style={StyleSheet.absoluteFill}>
@@ -28,13 +29,16 @@ const GradientBg = () => (
   </Svg>
 );
 
-const ActionRow = ({Icon, label, onPress}) => (
-  <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.actionRow}>
-    <View style={styles.actionIcon}>
-      <Icon size={rs(22)} color={rd.color.primary} />
+const ActionRow = ({Icon, label, onPress, blue}) => (
+  <TouchableOpacity
+    activeOpacity={0.8}
+    onPress={onPress}
+    style={[styles.actionRow, blue && styles.actionRowBlue]}>
+    <View style={[styles.actionIcon, blue && styles.actionIconBlue]}>
+      <Icon size={rs(22)} color={blue ? rd.color.onPrimary : rd.color.primary} />
     </View>
-    <Text style={styles.actionLabel}>{label}</Text>
-    <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+    <Text style={[styles.actionLabel, blue && {color: rd.color.onPrimary}]}>{label}</Text>
+    <ChevronRight size={rs(20)} color={blue ? rd.color.onPrimary : rd.color.textTertiary} />
   </TouchableOpacity>
 );
 
@@ -67,30 +71,31 @@ const UserMoneyResult = () => {
         </View>
       </View>
 
-      {/* Amallar */}
-      <View style={styles.actionsGroup}>
-        <ActionRow
-          Icon={PlusIcon}
-          label={t('603')}
-          onPress={() => navigation.navigate('PayScreen')}
-        />
-        <View style={styles.divider} />
-        <ActionRow
-          Icon={TransferIcon}
-          label={t('606')}
-          onPress={() => {
-            navigation.navigate('SendMoney', {user: user.data});
-          }}
-        />
-        <View style={styles.divider} />
-        <ActionRow
-          Icon={ClockIcon}
-          label={t('582')}
-          onPress={() => {
-            navigation.navigate('SendMoneyHistory');
-          }}
-        />
-      </View>
+      {/* Amallar — har biri ALOHIDA karta (so'rov bo'yicha bir-biridan ajralib turadi). */}
+      <ActionRow
+        Icon={PlusIcon}
+        label={t('603')}
+        onPress={() => navigation.navigate('PayScreen')}
+      />
+      <ActionRow
+        Icon={TransferIcon}
+        label={t('606')}
+        onPress={() => {
+          navigation.navigate('SendMoney', {user: user.data});
+        }}
+      />
+      <ActionRow
+        Icon={ClockIcon}
+        label={t('582')}
+        blue
+        onPress={() => {
+          navigation.navigate('SendMoneyHistory');
+        }}
+      />
+
+      {/* SMS balans kartasi — "Tariflar" bo'limidagi bilan bir xil (so'rov bo'yicha
+          Mobil hisobning pastki bo'sh qismiga qo'shildi). */}
+      <SmsBalanceCard />
 
       {user.data?.cnt === 0 ? null : (
         <View style={styles.infoCard}>
@@ -162,11 +167,22 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     overflow: 'hidden',
   },
+  // Har bir amal — ALOHIDA karta (ilgari bitta guruhда divider bilan edi).
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: rs(14),
-    paddingVertical: rs(14),
+    paddingVertical: rs(16),
+    backgroundColor: rd.color.surface,
+    borderRadius: rd.radius.lg,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    marginTop: rs(12),
+  },
+  // Kirim-chiqim kartasi — KO'K (so'rov bo'yicha).
+  actionRowBlue: {
+    backgroundColor: rd.color.primary,
+    borderColor: rd.color.primary,
   },
   actionIcon: {
     width: rs(40),
@@ -177,6 +193,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: rs(12),
   },
+  actionIconBlue: { backgroundColor: 'rgba(255,255,255,0.22)' },
   actionLabel: {
     flex: 1,
     fontFamily: rd.font.semibold,

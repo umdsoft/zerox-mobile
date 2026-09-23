@@ -19,10 +19,13 @@ import {
   View,
 } from 'react-native';
 import { useFetch } from '../../../hooks/useFetch';
+import { shopQuery } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
-import { sortMoneyText } from '../../components/StatisticCard';
+// SS6 (2026-09-14): stat-cardlarda summa MILLIARDGA yetsa "1,08 B" ko'rinishida
+// qisqaradi (aks holda card'ga sig'may qirqilardi); pastroq summalar o'zgarmaydi.
+import { billionOrExact } from '../../../helper/money';
 import RdHeader from '../redesign/RdHeader';
 import { ChevronRight, ClockIcon, SearchIcon, UserIcon } from '../redesign/icons';
 
@@ -58,15 +61,6 @@ const isOverdue = (q: any) =>
   q?.qaytarish_sanasi &&
   new Date(q.qaytarish_sanasi) < new Date();
 
-// Modul darajasiga ko'chirildi (faqat Group + rang konstantalari) -> renderItem
-// useCallback deps'iga kirmaydi, barqaror bo'ladi.
-const statusMeta = (g: Group) =>
-  g.hasOverdue
-    ? { label: 'Muddati o‘tgan', color: RED }
-    : g.hasActive
-    ? { label: 'Aktiv', color: AMBER }
-    : { label: 'Yopilgan', color: GREEN };
-
 // Satrlar orasidagi 12px oraliq (ilgari ScrollView `gap` bergan edi).
 const ListSeparator = () => <View style={{ height: rs(12) }} />;
 
@@ -77,9 +71,13 @@ const QarzDaftariQarzlar = () => {
   const status: string | undefined = route.params?.status;
   const { t } = useTranslation();
 
+  // SS17: do'kon endi BOSH SAHIFADA global tanlanadi — ro'yxat o'sha tanlovga
+  // bo'ysunadi (backend `faoliyat_id` bo'yicha filtrlaydi). useFetch bog'liqligi
+  // URL SATRI bo'lgani uchun do'kon almashsa avtomatik qayta o'qiladi.
   const qs = [
     turi ? `turi=${turi}` : '',
     status ? `status=${status}` : '',
+    shopQuery('').replace(/^&/, ''),
   ]
     .filter(Boolean)
     .join('&');
@@ -94,6 +92,10 @@ const QarzDaftariQarzlar = () => {
   const rows: any[] = (data as any)?.data || [];
   const accent = turi === 'olish' ? GREEN : BLUE;
 
+  // SS17: lokal do'kon ro'yxati/tanlagichi OLIB TASHLANDI — filtrlash endi
+  // backendda (global tanlov). Qatorlar to'g'ridan-to'g'ri ishlatiladi.
+  const scopedRows = rows;
+
   const title =
     status === 'muddati-otgan'
       ? turi === 'olish'
@@ -103,10 +105,10 @@ const QarzDaftariQarzlar = () => {
       ? t('Olingan qarzlar')
       : t('Berilgan qarzlar');
 
-  // Mijoz bo'yicha guruhlash.
+  // Mijoz bo'yicha guruhlash (tanlangan do'kon doirasida).
   const groups: Group[] = React.useMemo(() => {
     const map = new Map<any, Group>();
-    for (const q of rows) {
+    for (const q of scopedRows) {
       const key = q?.mijoz_id ?? q?.mijoz?.id;
       if (key == null) continue;
       let g = map.get(key);
@@ -137,7 +139,7 @@ const QarzDaftariQarzlar = () => {
       if (dt > g.lastDate) g.lastDate = dt;
     }
     return Array.from(map.values()).sort((a, b) => b.lastDate - a.lastDate);
-  }, [rows]);
+  }, [scopedRows]);
 
   const filtered = groups.filter(g => {
     if (!search.trim()) return true;
@@ -148,12 +150,30 @@ const QarzDaftariQarzlar = () => {
   // Statistikalar.
   const totalQoldiqUzs = groups.reduce((s, g) => s + g.qoldiqUzs, 0);
   const totalQoldiqUsd = groups.reduce((s, g) => s + g.qoldiqUsd, 0);
-  const totalActive = groups.reduce((s, g) => s + g.activeCount, 0);
+
+  // SS15-3: "Undirilgan qarz" — mijozlar HAQIQATDA qaytargan summa.
+  // ⚠️ `qoldiq` voz kechishda ham kamayadi, ya'ni (miqdor - qoldiq) =
+  // (qaytarilgan + voz kechilgan). Shu sabab backend qaytargan `voz_kechilgan`
+  // ni AYIRAMIZ — aks holda kechirilgan qarz "undirilgan" bo'lib ko'rinardi.
+  const undirilgan = React.useMemo(() => {
+    let uzs = 0;
+    let usd = 0;
+    for (const q of scopedRows) {
+      const v = Math.max(
+        0,
+        (Number(q?.miqdor) || 0) - (Number(q?.qoldiq) || 0) - (Number(q?.voz_kechilgan) || 0),
+      );
+      if (String(q?.valyuta).toUpperCase() === 'USD') usd += v;
+      else uzs += v;
+    }
+    return { uzs, usd };
+  }, [scopedRows]);
+  const totalUndirilganUzs = undirilgan.uzs;
+  const totalUndirilganUsd = undirilgan.usd;
 
   // FlatList uchun memoizatsiyalangan qator (ilgari ScrollView + .map edi).
   const renderItem = React.useCallback(
     ({ item: g }: { item: Group }) => {
-      const st = statusMeta(g);
       return (
         <TouchableOpacity
           activeOpacity={0.85}
@@ -169,37 +189,20 @@ const QarzDaftariQarzlar = () => {
           <View style={[styles.avatar, { backgroundColor: accent + '1A' }]}>
             <UserIcon size={rs(20)} color={accent} />
           </View>
+          {/* So'rov: mijoz cardida FAQAT nomi va telefon (summa/holat YO'Q). */}
           <View style={{ flex: 1 }}>
             <Text style={styles.rowName} numberOfLines={1}>
               {g.fish}
             </Text>
             <Text style={styles.rowMeta} numberOfLines={1}>
-              {g.telefon || '—'} · {t('{{count}} ta qarz', { count: g.count })}
+              {g.telefon || '—'}
             </Text>
-            <View style={styles.rowAmts}>
-              {g.qoldiqUzs > 0 && (
-                <Text style={styles.rowAmt}>{sortMoneyText(g.qoldiqUzs) || 0} UZS</Text>
-              )}
-              {g.qoldiqUsd > 0 && (
-                <Text style={[styles.rowAmt, { color: GREEN }]}>
-                  {sortMoneyText(g.qoldiqUsd) || 0} USD
-                </Text>
-              )}
-              {g.qoldiqUzs === 0 && g.qoldiqUsd === 0 && (
-                <Text style={styles.rowAmtMuted}>{t('Qoldiq yo‘q')}</Text>
-              )}
-            </View>
           </View>
-          <View style={{ alignItems: 'flex-end', gap: rs(8) }}>
-            <View style={[styles.stPill, { backgroundColor: st.color + '1A' }]}>
-              <Text style={[styles.stPillText, { color: st.color }]}>{t(st.label)}</Text>
-            </View>
-            <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-          </View>
+          <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
         </TouchableOpacity>
       );
     },
-    [accent, turi, navigation, t],
+    [accent, turi, navigation],
   );
 
   const keyExtractor = React.useCallback(
@@ -229,25 +232,34 @@ const QarzDaftariQarzlar = () => {
         ItemSeparatorComponent={ListSeparator}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
+            {/* SS17: "Barcha do‘konlar" tanlagich cardi OLIB TASHLANDI — do'kon
+                endi BOSH SAHIFADA global tanlanadi va bu ro'yxat o'sha tanlovga
+                avtomatik bo'ysunadi (ikki joyda tanlash chalkashtirardi).
+
+                SS15-3: "Jami qoldiq" o'rniga "Qarzga berish" sahifasidan ko'chgan
+                IKKI card — "Qoldiq qarz" va "Undirilgan qarz". */}
             <View style={styles.statGrid}>
-              <View style={[styles.statCard, { borderLeftColor: accent }]}>
-                <Text style={styles.statLabel}>{t('Jami qarzlar')}</Text>
-                <Text style={styles.statValue}>{rows.length}</Text>
-              </View>
               <View style={[styles.statCard, { borderLeftColor: AMBER }]}>
-                <Text style={styles.statLabel}>{t('Aktiv qarzlar')}</Text>
-                <Text style={styles.statValue}>{totalActive}</Text>
-              </View>
-              <View style={[styles.statCard, { borderLeftColor: RED }]}>
-                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
+                <Text style={styles.statLabel}>{t('Qoldiq qarz')}</Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
-                  {sortMoneyText(totalQoldiqUzs) || 0} UZS
+                  {billionOrExact(totalQoldiqUzs)} UZS
+                </Text>
+                <Text style={styles.statValueSub} numberOfLines={1} adjustsFontSizeToFit>
+                  {billionOrExact(totalQoldiqUsd)} USD
                 </Text>
               </View>
-              <View style={[styles.statCard, { borderLeftColor: GREEN }]}>
-                <Text style={styles.statLabel}>{t('Jami qoldiq')}</Text>
+              <View style={[styles.statCard, { borderLeftColor: accent }]}>
+                {/* Atama YO'NALISHGA bog'liq: BERILGAN qarzda pulni biz undiramiz
+                    ("Undirilgan qarz"), OLINGAN qarzda esa biz qaytaramiz —
+                    u yerda "Qaytarilgan qarz" to'g'ri (so'rov). */}
+                <Text style={styles.statLabel}>
+                  {turi === 'olish' ? t('Qaytarilgan qarz') : t('Undirilgan qarz')}
+                </Text>
                 <Text style={styles.statValueSm} numberOfLines={1} adjustsFontSizeToFit>
-                  {sortMoneyText(totalQoldiqUsd) || 0} USD
+                  {billionOrExact(totalUndirilganUzs)} UZS
+                </Text>
+                <Text style={styles.statValueSub} numberOfLines={1} adjustsFontSizeToFit>
+                  {billionOrExact(totalUndirilganUsd)} USD
                 </Text>
               </View>
             </View>
@@ -257,8 +269,12 @@ const QarzDaftariQarzlar = () => {
               <TextInput
                 value={search}
                 onChangeText={setSearch}
-                placeholder={t('FISH yoki telefon bo‘yicha qidirish...')}
+                placeholder={t('FISh yoki telefon raqami bo‘yicha qidirish')}
                 placeholderTextColor={rd.color.textTertiary}
+                // SS2b: multiline -> uzun placeholder 2 qatorda TO'LIQ ko'rinadi
+                // ("qidirish" so'zi kesilib qolmasin). searchBox minHeight buni qo'llab-quvvatlaydi.
+                multiline
+                textAlignVertical="center"
                 style={styles.searchInput}
               />
             </View>
@@ -274,6 +290,9 @@ const QarzDaftariQarzlar = () => {
           </View>
         }
       />
+
+      {/* SS17: do‘kon tanlash MODALI OLIB TASHLANDI — do‘kon endi BOSH
+          SAHIFADA global tanlanadi (qarzShop), bu ekran o‘sha tanlovga bo‘ysunadi. */}
     </View>
   );
 };
@@ -281,6 +300,31 @@ const QarzDaftariQarzlar = () => {
 export default QarzDaftariQarzlar;
 
 const styles = StyleSheet.create({
+  // SS1: do‘kon tanlash modali (QarzDaftariFaoliyat dagi picker bilan bir xil uslub).
+  modalRoot: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: rs(22) },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11,18,32,0.6)' },
+  modalCard: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(24),
+    paddingTop: rs(16),
+    paddingBottom: rs(14),
+    paddingHorizontal: rs(16),
+    maxHeight: '70%',
+    shadowColor: '#0b1220',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: rs(10) },
+  modalTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
+  modalClose: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.textTertiary, paddingHorizontal: rs(4) },
+  modalList: { flexGrow: 0 },
+  modalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: rs(12), paddingHorizontal: rs(10), borderRadius: rs(12) },
+  modalSep: { height: 1, backgroundColor: rd.color.border, marginHorizontal: rs(10) },
+  modalRowSelected: { backgroundColor: rd.color.primaryTint },
+  modalRowText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.text },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {
@@ -315,6 +359,52 @@ const styles = StyleSheet.create({
     color: rd.color.text,
     marginTop: rs(6),
   },
+  statValueSub: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12.5),
+    color: rd.color.textSecondary,
+    marginTop: rs(2),
+  },
+  statSub: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(11),
+    color: rd.color.primary,
+    marginTop: rs(3),
+  },
+
+  // R4: do'kon tanlagich
+  dokonWrap: { gap: rs(8) },
+  dokonHead: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13),
+    color: rd.color.text,
+    marginBottom: rs(2),
+  },
+  dokonBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(10),
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(14),
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingVertical: rs(10),
+    paddingHorizontal: rs(12),
+  },
+  dokonIcon: {
+    width: rs(36),
+    height: rs(36),
+    borderRadius: rs(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dokonName: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: rd.color.text },
+  dokonMeta: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+    marginTop: rs(2),
+  },
 
   searchBox: {
     flexDirection: 'row',
@@ -325,12 +415,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: rd.color.border,
     paddingHorizontal: rs(14),
-    height: rs(48),
+    // Qattiq height o'rniga moslashuvchi — 2-qatorli placeholder to'liq sig'adi.
+    minHeight: rs(48),
+    paddingVertical: rs(8),
   },
   searchInput: {
     flex: 1,
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(12.5),
     color: rd.color.text,
     padding: 0,
   },

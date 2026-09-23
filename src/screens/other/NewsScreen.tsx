@@ -52,6 +52,9 @@ function YouTubeWebView({
 }: Props) {
   const html = useMemo(() => {
     const auto = autoplay ? 1 : 0;
+    // VULN-024: faqat qat'iy YouTube video ID (11 ta [A-Za-z0-9_-] belgi). Aks holda
+    // hujumchi videoId orqali iframe src'dan chiqib HTML/JS in'ektsiya qila olardi.
+    const safeId = /^[A-Za-z0-9_-]{11}$/.test(String(videoId || '')) ? videoId : '';
     // playsinline needed for autoplay on iOS and to keep inline playback
     return `
       <!doctype html>
@@ -70,7 +73,7 @@ function YouTubeWebView({
               type="text/html"
               width="100%"
               height="100%"
-              src="https://www.youtube.com/embed/${videoId}?controls=${controls}&autoplay=${auto}&playsinline=1&rel=0&start=${start}"
+              src="https://www.youtube.com/embed/${safeId}?controls=${controls}&autoplay=${auto}&playsinline=1&rel=0&start=${start}"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
@@ -92,7 +95,13 @@ function YouTubeWebView({
   return (
     <View style={[styles.container, {height, borderRadius: 20}]}>
       <WebView
-        originWhitelist={['*']}
+        originWhitelist={['https://www.youtube.com', 'https://www.youtube-nocookie.com']}
+        // VULN-024: faqat YouTube originlariga navigatsiyaga ruxsat (boshqa URL bloklanadi)
+        onShouldStartLoadWithRequest={(req: {url: string}) =>
+          req.url === 'about:blank' ||
+          req.url.startsWith('data:') ||
+          /^https:\/\/(www\.)?(youtube\.com|youtube-nocookie\.com|youtu\.be)\//.test(req.url)
+        }
         source={{html}}
         style={styles.webview}
         javaScriptEnabled={true}

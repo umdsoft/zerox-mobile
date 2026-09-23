@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import React, { memo, useCallback, useState } from 'react';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import axios from 'axios';
 import { URL } from '../../../constants';
 import { storage } from '../../../../store/api/token/getToken';
@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { filter_notification } from '../../../../store/reducers/HomeReducer';
 
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell, {
   NotifButton,
@@ -44,7 +44,7 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: { title: 'Muvaffaqiyatli', desc: t('249') },
+          props: { desc: t('249') },
           type: 'omad',
           visibilityTime: 3000,
         });
@@ -83,8 +83,8 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: { title: 'Muvaffaqiyatli', desc: t('261') },
-          type: 'omad',
+          props: { desc: t('261') },
+          type: 'error2',
           visibilityTime: 3000,
         });
         dispatch(filter_notification(item?.id));

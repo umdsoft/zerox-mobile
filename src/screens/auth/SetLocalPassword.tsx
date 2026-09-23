@@ -15,6 +15,7 @@ import { normalize, style } from '../../theme/style';
 import SetCode from '../../images/SetCode';
 import {
   DrawerActions,
+  StackActions,
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
@@ -98,6 +99,24 @@ const SetLocalPassword = () => {
     }, [navigation]),
   );
 
+  // J (so'rov): qulfdan chiqqach — foydalanuvchi qulf OLDIDA turgan ekranga qaytadi
+  // (bosh sahifa emas). useAppStateListener qulflashdan oldin nav-holatni saqlaydi;
+  // shuni tiklaymiz. Saqlangan holat bo'lmasa — bosh sahifa (BottomTabNavigator).
+  const restoreAfterUnlock = useCallback(() => {
+    const saved = storage.getString('preLockNavState');
+    if (saved) {
+      try {
+        const st = JSON.parse(saved);
+        storage.delete('preLockNavState');
+        navigation.reset(st);
+        return;
+      } catch (e) {
+        storage.delete('preLockNavState');
+      }
+    }
+    navigation.reset({ routes: [{ name: 'BottomTabNavigator' }], index: 0 });
+  }, [navigation]);
+
   const onFingerScan = useCallback(async () => {
     try {
       if (Platform.OS === 'android') {
@@ -107,15 +126,15 @@ const SetLocalPassword = () => {
         if (result === 'success') {
           storage.set('appLocked', false);
           if (storage.getString('pendingNavigation') !== undefined) {
-            navigation.navigate('Notification');
+            // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
+            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
+            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
+            navigation.dispatch(StackActions.replace('Notification'));
             storage.delete('pendingNavigation');
             return;
           }
           setTimeout(() => {
-            navigation.reset({
-              routes: [{ name: 'BottomTabNavigator' }],
-              index: 0,
-            });
+            restoreAfterUnlock();
           }, 500);
         }
       } else {
@@ -132,16 +151,16 @@ const SetLocalPassword = () => {
             storage.set('appLocked', false);
 
             if (storage.getString('pendingNavigation') !== undefined) {
-              navigation.navigate('Notification');
+              // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
+            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
+            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
+            navigation.dispatch(StackActions.replace('Notification'));
               storage.delete('pendingNavigation');
               return;
             }
 
             setTimeout(() => {
-              navigation.reset({
-                routes: [{ name: 'BottomTabNavigator' }],
-                index: 0,
-              });
+              restoreAfterUnlock();
             }, 500);
           }
         }
@@ -149,7 +168,7 @@ const SetLocalPassword = () => {
     } catch (error) {
       console.log('Error', error);
     }
-  }, [navigation]);
+  }, [navigation, restoreAfterUnlock]);
 
   // Biometrik OPT-IN: PIN o'rnatilgach (ro'yxatdan o'tish) foydalanuvchidan Touch/Face
   // ID ni yoqishni SO'RAYMIZ (avtomatik yoqmaymiz — oldin oferta tasdiqlashda kutilmagan
@@ -205,7 +224,10 @@ const SetLocalPassword = () => {
             storage.set('appLocked', false);
             const goNext = () => {
               if (storage.getString('pendingNavigation') !== undefined) {
-                navigation.navigate('Notification');
+                // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
+            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
+            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
+            navigation.dispatch(StackActions.replace('Notification'));
                 storage.delete('pendingNavigation');
                 return;
               }
@@ -226,7 +248,6 @@ const SetLocalPassword = () => {
               type: 'error2',
               position: 'top',
               props: {
-                title: 'Xatolik!',
                 desc: t(
                   'Yangi PIN-kodni takrorlashda xatolikka yo‘l qo‘yilgan',
                 ),
@@ -245,18 +266,18 @@ const SetLocalPassword = () => {
 
         if (password + val === k2) {
           // askForBiometric();
-          const token = storage.getString('token');
           storage.delete('isLoginScreen');
           storage.set('appLocked', false);
           if (storage.getString('pendingNavigation') !== undefined) {
-            navigation.navigate('Notification');
+            // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
+            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
+            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
+            navigation.dispatch(StackActions.replace('Notification'));
             storage.delete('pendingNavigation');
             return;
           }
-          navigation.reset({
-            routes: [{ name: 'BottomTabNavigator', params: { token: token } }],
-            index: 0,
-          });
+          // J: qulf oldidagi ekranga qaytamiz (bosh sahifa emas).
+          restoreAfterUnlock();
         } else {
           setPassword('');
           setCount(prevCount => {
@@ -271,7 +292,6 @@ const SetLocalPassword = () => {
               type: 'error2',
               position: 'top',
               props: {
-                title: 'Xatolik!',
                 desc: t('parol', { count: count - 1 }),
               },
               visibilityTime: 3000,

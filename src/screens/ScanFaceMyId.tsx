@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ShieldIcon,
 } from './home/redesign/icons';
+import { AnimatedIconCircle } from '../images/debtActionIcons';
 
 import { storage } from '../store/api/token/getToken';
 import axios from 'axios';
@@ -332,17 +333,22 @@ const ScanFaceMyId = () => {
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-      {/* Orqaga */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.backBtn}
-        onPress={() => navigation.goBack()}
-      >
-        <ChevronLeft size={rs(22)} color={rd.color.text} />
-      </TouchableOpacity>
+      {/* So'rov: sarlavha TEPADA orqaga tugma yonida (ikonка ostida EMAS). */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
+        </TouchableOpacity>
+        <Text allowFontScaling={false} style={styles.headerTitle} numberOfLines={1}>
+          {t('otish')}
+        </Text>
+      </View>
 
-      {/* Hero */}
       <View style={styles.body}>
+        {/* So'rov: animatsiyali skan ikonkasi (Lottie — pasport-muddati ekranidagidek). */}
         <View style={styles.heroCircle}>
           <LottieView
             source={require('../images/scan.json')}
@@ -352,11 +358,8 @@ const ScanFaceMyId = () => {
             style={styles.lottie}
           />
         </View>
-
-        <Text allowFontScaling={false} style={styles.title}>
-          {t('otish')}
-        </Text>
-        <Text allowFontScaling={false} style={styles.subtitle}>
+        {/* Izoh — ikonка ostida, KATTAROQ shrift (so'rov); bitta jumla (2-jumla olindi). */}
+        <Text allowFontScaling={false} style={styles.subtitleBig}>
           {t('753')}
         </Text>
       </View>
@@ -384,37 +387,60 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: rd.color.page,
     paddingHorizontal: rs(24),
-    paddingTop: rs(52),
+    // SS22: sarlavha + orqaga tugma TEPAROQ (3-skrinshotdagidek).
+    paddingTop: rs(14),
     paddingBottom: rs(28),
   },
+  // Orqaga tugma — KO'K (so'rov bo'yicha).
   backBtn: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Sarlavha qatori — orqaga + "Identifikatsiyadan o'tish" yonma-yon (so'rov).
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
+  headerTitle: {
+    flex: 1,
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
+  // Ikonка ostidagi izoh — KATTAROQ shrift (so'rov).
+  subtitleBig: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(16),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(14),
+    lineHeight: rs(23),
+    paddingHorizontal: rs(10),
   },
   body: {
     flex: 1,
     alignItems: 'center',
+    // SS22: ikonka + izoh sahifa O'RTASIDA (Parolni tiklashdagidek), tepada emas.
     justifyContent: 'center',
   },
   heroCircle: {
-    width: rs(180),
-    height: rs(180),
-    borderRadius: rs(90),
-    backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: rs(28),
-    overflow: 'hidden',
   },
   lottie: {
-    width: rs(150),
-    height: rs(150),
+    width: rs(180),
+    height: rs(180),
+  },
+  subtitleStrong: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginTop: rs(10),
+    lineHeight: rs(21),
+    paddingHorizontal: rs(10),
   },
   title: {
     fontFamily: rd.font.bold,

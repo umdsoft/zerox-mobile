@@ -109,13 +109,15 @@ const ChangePhoneNumberSmsCheck = () => {
           position: 'bottom',
           type: 'omad',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t("Sizning telefon raqamingiz o'zgartirildi"),
           },
         });
         dispatch(HomeApi({ page: 1 }));
         setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
+          // NAV-FIX: telefon raqami O'ZGARDI — oqim tugadi (SMS kodi sarflandi).
+          // `reset` bilan ChangePhoneNumber + SmsCheck ekranlari stekdan chiqadi;
+          // aks holda bosh sahifadan orqaga bosilganda eskirgan kod ekrani chiqardi.
+          navigation.reset({ index: 0, routes: [{ name: 'BottomTabNavigator' }] });
         }, 2000);
       }
       if (data.success === true && data.msg === 'no-code') {
@@ -124,7 +126,6 @@ const ChangePhoneNumberSmsCheck = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t('738'),
           },
           visibilityTime: 3000,
@@ -138,7 +139,6 @@ const ChangePhoneNumberSmsCheck = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t('expired'),
           },
           visibilityTime: 3000,
@@ -214,7 +214,6 @@ const ChangePhoneNumberSmsCheck = () => {
           position: 'bottom',
           type: 'omad',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t('Tasdiqlash kodi qayta yuborildi'),
           },
         });

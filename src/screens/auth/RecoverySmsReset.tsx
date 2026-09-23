@@ -73,7 +73,7 @@ const toastErr = (desc: string) =>
     position: 'bottom',
     autoHide: true,
     visibilityTime: 3000,
-    props: { title: t('Xatolik'), desc },
+    props: { desc },
   });
 
 // Kichik "check" ikonka — parol checklist uchun (bajarilgan shart yashil ✓).
@@ -191,7 +191,7 @@ const RecoverySmsReset = () => {
           position: 'bottom',
           autoHide: true,
           visibilityTime: 2000,
-          props: { title: t('243'), desc: t('SMS kod tasdiqlandi') },
+          props: { desc: t('SMS kod tasdiqlandi') },
         });
         setStep(2);
         return;
@@ -242,7 +242,7 @@ const RecoverySmsReset = () => {
           position: 'bottom',
           autoHide: true,
           visibilityTime: 3000,
-          props: { title: t('243'), desc: t('Parol tiklandi') },
+          props: { desc: t('Parol tiklandi') },
         });
         setLoading(false);
         setTimeout(() => {

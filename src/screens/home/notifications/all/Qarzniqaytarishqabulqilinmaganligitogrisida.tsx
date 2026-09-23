@@ -4,9 +4,9 @@ import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
 
 import { sortText } from '../../../components/StatisticCard';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 
@@ -36,7 +36,7 @@ const Qarzniqaytarishqabulqilinmaganligitogrisida = ({
       }}
       style={[
         {
-          fontSize: style.fontSize.xx - 2,
+          fontSize: style.fontSize.xx + 1,
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         },

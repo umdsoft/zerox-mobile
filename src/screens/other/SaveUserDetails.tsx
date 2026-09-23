@@ -17,6 +17,8 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import AskPermission from '../../images/AskPermissonIcon';
 import AskPermissionNearby from '../../images/AskPermissonNearby';
 import EyeIcon from '../../images/Eye';
+import Person from '../../images/home/person';
+import Famale from '../../images/Famale';
 
 import { checkExpire } from '../../store/reducers/HomeReducer';
 import { t } from 'i18next';
@@ -68,7 +70,9 @@ const UserInfo = () => {
         position: 'bottom',
         visibilityTime: 2000,
         type: 'omad',
-        props: { title: t('243'), desc: t('228') },
+        // "Muvaffaqiyatli bajarildi" sarlavhasi OLIB TASHLANDI — desc yagona
+        // xabar bo'lib bold (descStrong) chiqadi (ToastConfig).
+        props: { desc: t('228') },
       });
       if (status === 201) {
         setTimeout(() => {
@@ -91,7 +95,11 @@ const UserInfo = () => {
 
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
-          <UserIcon size={rs(40)} color={rd.color.primary} />
+          {user?.gender == 2 ? (
+            <Famale width={rs(40)} height={rs(40)} color={rd.color.primary} />
+          ) : (
+            <Person width={rs(40)} height={rs(40)} color={rd.color.primary} />
+          )}
         </View>
         <Text allowFontScaling={false} style={styles.name}>
           {user?.last_name + ' ' + user.first_name + ' ' + user.middle_name}
@@ -106,37 +114,42 @@ const UserInfo = () => {
         </View>
       </View>
 
-      <Text allowFontScaling={false} style={styles.status}>
-        {resolve
-          ? t('246')
-          : reject
-          ? t('258')
-          : !active
-          ? t('219')
-          : t('231')}
-      </Text>
+      {/* Izoh — yengil ma'lumot qutisi (oddiy matn emas) */}
+      <View style={styles.noticeBox}>
+        <View style={styles.noticeDot} />
+        <Text allowFontScaling={false} style={styles.noticeText}>
+          {resolve
+            ? t('246')
+            : reject
+            ? t('258')
+            : !active
+            ? t('219')
+            : t('231')}
+        </Text>
+      </View>
 
+      {/* 1) Ma'lumotlarni ko'rishni so'rash — OCH (light) */}
       <TouchableOpacity
         disabled={disabled}
         onPress={startTimerx}
         activeOpacity={0.85}
         style={[
-          styles.primaryBtn,
-          {
-            backgroundColor: disabled
-              ? rd.color.surfaceAlt
-              : resolve
-              ? rd.color.success
-              : rd.color.primary,
-          },
-          disabled && styles.primaryBtnDisabled,
+          styles.actionBtn,
+          resolve ? styles.btnSuccess : styles.btnLight,
+          disabled && styles.btnDisabled,
         ]}
       >
-        {resolve ? <EyeIcon /> : <AskPermission />}
+        {resolve ? (
+          <EyeIcon color={rd.color.onPrimary} />
+        ) : (
+          <AskPermission
+            color={disabled ? rd.color.textTertiary : rd.color.primary}
+          />
+        )}
         <Text
           allowFontScaling={false}
           style={[
-            styles.primaryText,
+            resolve ? styles.btnTextLight : styles.btnTextPrimary,
             disabled && { color: rd.color.textTertiary },
           ]}
         >
@@ -144,6 +157,7 @@ const UserInfo = () => {
         </Text>
       </TouchableOpacity>
 
+      {/* 2) Ma'lumotlarni ko'rmasdan qarz berish — KO'K (blue), ikonka bilan */}
       <TouchableOpacity
         onPress={() => {
           if (expire_passport_check(userInfo.user.data.expiry_date)) {
@@ -157,10 +171,10 @@ const UserInfo = () => {
           });
         }}
         activeOpacity={0.85}
-        style={styles.secondaryBtn}
+        style={[styles.actionBtn, styles.btnFilled]}
       >
-        <AskPermissionNearby />
-        <Text allowFontScaling={false} style={styles.secondaryText}>
+        <AskPermissionNearby color={rd.color.onPrimary} />
+        <Text allowFontScaling={false} style={styles.btnTextLight}>
           {type === 1 ? t('222') : t('288')}
         </Text>
       </TouchableOpacity>
@@ -199,11 +213,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontFamily: rd.font.bold,
-    fontSize: rs(18),
+    fontSize: rs(16),
     color: rd.color.text,
     textAlign: 'center',
     marginTop: rs(14),
-    maxWidth: '90%',
+    maxWidth: '92%',
+    lineHeight: rs(22),
   },
   uidChip: {
     flexDirection: 'row',
@@ -226,16 +241,33 @@ const styles = StyleSheet.create({
     color: rd.color.text,
   },
 
-  status: {
+  // Izoh qutisi — oddiy matn o'rniga yengil fon + nuqta
+  noticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: rs(8),
+    backgroundColor: rd.color.surfaceAlt,
+    borderRadius: rd.radius.md,
+    padding: rs(14),
+    marginTop: rs(16),
+  },
+  noticeDot: {
+    width: rs(6),
+    height: rs(6),
+    borderRadius: rs(3),
+    backgroundColor: rd.color.primary,
+    marginTop: rs(6),
+  },
+  noticeText: {
+    flex: 1,
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(13),
     color: rd.color.textSecondary,
-    lineHeight: rs(20),
-    marginTop: rs(20),
-    marginBottom: rs(4),
+    lineHeight: rs(19),
   },
 
-  primaryBtn: {
+  // Amal tugmalari — bir xil o'lcham/shrift
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -243,36 +275,19 @@ const styles = StyleSheet.create({
     height: rs(54),
     borderRadius: rd.radius.lg,
     marginTop: rs(12),
-    shadowColor: rd.color.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
   },
-  primaryBtnDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  primaryText: {
+  btnFilled: { backgroundColor: rd.color.primary },
+  btnLight: { backgroundColor: rd.color.primaryTint },
+  btnSuccess: { backgroundColor: rd.color.success },
+  btnDisabled: { backgroundColor: rd.color.surfaceAlt },
+  btnTextLight: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(15),
+    fontSize: rs(14),
     color: rd.color.onPrimary,
   },
-
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(8),
-    height: rs(54),
-    borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primaryTint,
-    marginTop: rs(12),
-  },
-  secondaryText: {
+  btnTextPrimary: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(15),
+    fontSize: rs(14),
     color: rd.color.primary,
-    textAlign: 'center',
   },
 });

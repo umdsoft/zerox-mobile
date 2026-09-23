@@ -29,7 +29,7 @@ const UpdateLocalPassCode = () => {
         //     Toast.show({
         //       type: 'error2',
         //       position: 'top',
-        //       props: {title: 'Xatolik!', desc: 'PIN-kod noto’g‘ri kiritilgan'},
+        //       props: {desc: 'PIN-kod noto’g‘ri kiritilgan'},
         //       visibilityTime: 3000,
         //       autoHide: true,
         //       topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -56,7 +56,9 @@ const UpdateLocalPassCode = () => {
             Toast.show({
               type: 'omad',
               position: 'top',
-              props: {title: 'Muvaffaqiyatli', desc: t('PIN-kod tiklandi')},
+              // So'rov bo'yicha: "Muvaffaqiyatli" sarlavhasi olib tashlandi —
+              // matnning o'zi (jirniy) qoladi.
+              props: {desc: t('PIN-kod tiklandi.')},
               visibilityTime: 3000,
               autoHide: true,
               topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -72,11 +74,9 @@ const UpdateLocalPassCode = () => {
             Toast.show({
               type: 'error2',
               position: 'top',
+              // So'rov bo'yicha: "Xatolik!" sarlavhasi olib tashlandi — matn (jirniy) qoladi.
               props: {
-                title: 'Xatolik!',
-                desc: t(
-                  'Yangi PIN-kodni takrorlashda xatolikka yo‘l qo‘yilgan',
-                ),
+                desc: t('PIN-kodni takrorlashda xatolikka yo‘l qo‘yilgan.'),
               },
               visibilityTime: 3000,
               autoHide: true,
@@ -136,6 +136,9 @@ const UpdateLocalPassCode = () => {
               flex: 1,
               alignSelf: 'center',
               width: heightPercentageToDP(33),
+              // Raqam padini BIROZ PASTROQQA tushiramiz (so'rov bo'yicha) — barmoq
+              // raqamlarga qulay yetadi. Ekran balandligiga moslashuvchan (%).
+              paddingTop: heightPercentageToDP(7),
             }}>
             <View style={styles.codeNumberContainer}>
               {Array.from({length: 12}, (_v, i) => {

@@ -18,7 +18,7 @@ const NewUser = ({ item, okay, navigation }) => {
       <Text
         allowFontScaling={false}
         style={{
-          fontSize: style.fontSize.xx - 2,
+          fontSize: style.fontSize.xx + 1,
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         }}

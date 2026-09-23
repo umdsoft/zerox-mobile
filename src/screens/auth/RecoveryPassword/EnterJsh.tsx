@@ -81,7 +81,7 @@ const EnterJsh = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
+            // Sarlavhasiz — desc bold render bo'ladi (ToastConfig descStrong).
             desc: t('JShShIR noto‘g‘ri kiritilgan'),
           },
         });
@@ -102,7 +102,7 @@ const EnterJsh = () => {
       if (status === 429 || errCode === 'too-many-attempts') {
         desc = t('Juda ko‘p urinish. Birozdan so‘ng qayta urinib ko‘ring.');
       } else if (errCode === 'invalid-credentials') {
-        desc = t('JShShIR yoki telefon raqami noto‘g‘ri.');
+        desc = t('JShShIR noto‘g‘ri kiritilgan');
       } else {
         desc = t('JShShIR noto‘g‘ri kiritilgan');
       }
@@ -112,7 +112,6 @@ const EnterJsh = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          title: 'Xatolik',
           desc,
         },
       });

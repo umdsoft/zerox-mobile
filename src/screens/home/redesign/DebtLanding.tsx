@@ -11,6 +11,8 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
+  Animated,
+  Easing,
   ScrollView,
   StyleSheet,
   Text,
@@ -32,11 +34,11 @@ import { rd, rs } from '../../../theme/rd';
 import RdHeader from './RdHeader';
 import {
   ChevronRight,
-  ClockIcon,
-  GridIcon,
   IconProps,
+  PlusIcon,
   SearchIcon,
-  UserIcon,
+  UsersIcon,
+  QrScanIcon,
 } from './icons';
 
 const GradientBg = () => (
@@ -51,42 +53,118 @@ const GradientBg = () => (
   </Svg>
 );
 
-// Kreativ SVG illyustratsiya (Lottie o'rniga — har doim ishonchli render).
-// up=true -> yuqoriga strelka (Qarz berish, pul chiqadi); up=false -> pastga (Qarz olish, pul keladi).
-const W = '#ffffff';
-const DebtHero = ({ up }: { up: boolean }) => (
-  <Svg width={rs(172)} height={rs(150)} viewBox="0 0 172 150">
-    {/* Yorug'lik halqalari */}
-    <Circle cx="86" cy="72" r="68" fill="none" stroke={W} strokeOpacity={0.1} strokeWidth={2} />
-    <Circle cx="86" cy="72" r="54" fill="none" stroke={W} strokeOpacity={0.16} strokeWidth={2} />
-    {/* Suzuvchi tangalar */}
-    <Circle cx="24" cy="44" r="9" fill={W} fillOpacity={0.22} />
-    <Circle cx="150" cy="54" r="6" fill={W} fillOpacity={0.28} />
-    <Circle cx="38" cy="116" r="5" fill={W} fillOpacity={0.22} />
-    <Circle cx="146" cy="110" r="8" fill={W} fillOpacity={0.18} />
-    {/* Markaziy tanga */}
-    <Circle cx="86" cy="72" r="42" fill={W} />
-    <Circle cx="86" cy="72" r="32" fill="none" stroke={rd.color.primary} strokeOpacity={0.22} strokeWidth={2} strokeDasharray="3 5" />
-    {/* Yo'nalish strelkasi (primary) */}
-    <Path
-      d={up ? 'M86 90 V56' : 'M86 54 V88'}
-      stroke={rd.color.primary}
-      strokeWidth={6}
-      strokeLinecap="round"
-    />
-    <Path
-      d={up ? 'M74 68 L86 56 L98 68' : 'M74 76 L86 88 L98 76'}
-      stroke={rd.color.primary}
-      strokeWidth={6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    {/* Aksent nishoni (+) */}
-    <Circle cx="120" cy="102" r="16" fill={rd.color.primary} />
-    <Path d="M120 95 V109 M113 102 H127" stroke={W} strokeWidth={3} strokeLinecap="round" />
-  </Svg>
-);
+// Animatsiyali hero: markazdagi strelka up=berish bo'lsa YUQORIga harakatlanib yo'qoladi
+// va PASTdan qayta paydo bo'ladi (olishда teskari); atrofdagi kichik doirachalar
+// (sayyoralar) katta doira atrofida aylanib turadi.
+const DebtHero = ({ up }: { up: boolean }) => {
+  const arrow = React.useRef(new Animated.Value(0)).current;
+  const orbit = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    const a = Animated.loop(
+      Animated.timing(arrow, {
+        toValue: 1,
+        duration: 1700,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    );
+    const o = Animated.loop(
+      Animated.timing(orbit, {
+        toValue: 1,
+        duration: 9000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    a.start();
+    o.start();
+    return () => {
+      a.stop();
+      o.stop();
+    };
+  }, [arrow, orbit]);
+
+  const SIZE = rs(152);
+  const BIG = rs(92);
+  const ORBIT_R = rs(64);
+  const DIST = rs(15);
+
+  const translateY = arrow.interpolate({
+    inputRange: [0, 1],
+    outputRange: up ? [DIST, -DIST] : [-DIST, DIST],
+  });
+  const opacity = arrow.interpolate({
+    inputRange: [0, 0.2, 0.8, 1],
+    outputRange: [0, 1, 1, 0],
+  });
+  const rotate = orbit.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const dots = [
+    { angle: 20, r: rs(6.5), o: 0.9 },
+    { angle: 105, r: rs(4.5), o: 0.6 },
+    { angle: 165, r: rs(5.5), o: 0.8 },
+    { angle: 250, r: rs(4), o: 0.5 },
+    { angle: 315, r: rs(7), o: 0.85 },
+  ];
+
+  return (
+    <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Statik halqalar */}
+      <View style={[styles.heroRing, { width: rs(144), height: rs(144), borderRadius: rs(72), borderColor: 'rgba(255,255,255,0.12)' }]} />
+      <View style={[styles.heroRing, { width: rs(116), height: rs(116), borderRadius: rs(58), borderColor: 'rgba(255,255,255,0.2)' }]} />
+
+      {/* Aylanuvchi kichik doirachalar (sayyoralar) */}
+      <Animated.View style={{ position: 'absolute', width: SIZE, height: SIZE, transform: [{ rotate }] }}>
+        {dots.map((d, i) => {
+          const rad = (d.angle * Math.PI) / 180;
+          const left = SIZE / 2 + ORBIT_R * Math.cos(rad) - d.r;
+          const top = SIZE / 2 + ORBIT_R * Math.sin(rad) - d.r;
+          return (
+            <View
+              key={i}
+              style={{
+                position: 'absolute',
+                left,
+                top,
+                width: d.r * 2,
+                height: d.r * 2,
+                borderRadius: d.r,
+                backgroundColor: `rgba(255,255,255,${d.o})`,
+              }}
+            />
+          );
+        })}
+      </Animated.View>
+
+      {/* Markaziy oq doira + strelka */}
+      <View style={[styles.heroBig, { width: BIG, height: BIG, borderRadius: BIG / 2 }]}>
+        <View style={[styles.heroDash, { width: rs(66), height: rs(66), borderRadius: rs(33) }]} />
+        <Animated.View style={{ transform: [{ translateY }], opacity }}>
+          <Svg width={rs(36)} height={rs(36)} viewBox="0 0 24 24" fill="none">
+            <Path d={up ? 'M12 19 V5' : 'M12 5 V19'} stroke={rd.color.primary} strokeWidth={2.6} strokeLinecap="round" />
+            <Path
+              d={up ? 'M6.5 10.5 L12 5 L17.5 10.5' : 'M6.5 13.5 L12 19 L17.5 13.5'}
+              stroke={rd.color.primary}
+              strokeWidth={2.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </Svg>
+        </Animated.View>
+      </View>
+
+      {/* Aksent (+) nishoni */}
+      <View style={styles.heroPlus}>
+        <PlusIcon size={rs(16)} color={rd.color.onPrimary} />
+      </View>
+    </View>
+  );
+};
 
 const ActionRow = ({
   Icon,
@@ -155,7 +233,7 @@ const DebtLanding = ({ type, title, subtitle }: Props) => {
           onPress={() => onNavigate('SearchUserScreen')}
         >
           <GradientBg />
-          <DebtHero up={type === 0} />
+          <DebtHero up={type === 1} />
           <Text style={styles.heroSub}>{subtitle}</Text>
           <View style={styles.heroBtn}>
             <SearchIcon size={rs(18)} color={rd.color.primary} />
@@ -163,22 +241,29 @@ const DebtLanding = ({ type, title, subtitle }: Props) => {
           </View>
         </TouchableOpacity>
 
-        {/* Ikkilamchi amallar */}
-        <View style={styles.card}>
-          <ActionRow
-            Icon={ClockIcon}
-            title={t('207') as string}
-            subtitle={t('Amaliyotlar tarixi')}
-            onPress={() => onNavigate('HistoryDebt')}
-          />
-          <View style={styles.divider} />
-          <ActionRow
-            Icon={GridIcon}
-            title={t('795') as string}
-            subtitle={t('QR-kod orqali tez')}
-            onPress={() => onNavigate('QrScan')}
-          />
-        </View>
+        {/* Saqlangan foydalanuvchilar — KO'K card, matn MARKAZDA (so'rov bo'yicha) */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={styles.savedCard}
+          onPress={() => onNavigate('HistoryDebt')}
+        >
+          <View style={styles.savedIcon}>
+            <UsersIcon size={rs(22)} color={rd.color.onPrimary} />
+          </View>
+          <Text style={styles.savedTitle}>{t('207')}</Text>
+        </TouchableOpacity>
+
+        {/* QR-kodni skaner qilish — ALOHIDA card; katta QR ikonka PASTDA (bo'sh joyni to'ldiradi) */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.qrCard}
+          onPress={() => onNavigate('QrScan')}
+        >
+          <Text style={styles.qrTitle}>{t('795')}</Text>
+          <View style={styles.qrIconWrap}>
+            <QrScanIcon size={rs(104)} color={rd.color.primary} strokeWidth={1.8} />
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -188,7 +273,43 @@ export default DebtLanding;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: rd.color.page },
-  content: { paddingHorizontal: rs(16), paddingTop: rs(6), paddingBottom: rs(20), gap: rs(16) },
+  content: { flexGrow: 1, paddingHorizontal: rs(16), paddingTop: rs(6), paddingBottom: rs(20), gap: rs(14) },
+
+  // Saqlangan foydalanuvchilar — KO'K card, kontent MARKAZDA
+  savedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(12),
+    backgroundColor: rd.color.primary,
+    borderRadius: rs(18),
+    paddingVertical: rs(16),
+    paddingHorizontal: rs(14),
+  },
+  savedIcon: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savedTitle: { fontFamily: rd.font.semibold, fontSize: rs(15.5), color: rd.color.onPrimary },
+
+  // QR card — flex bilan qolgan balandlikni to'ldiradi; katta ikonka markazda-pastda
+  qrCard: {
+    flex: 1,
+    minHeight: rs(190),
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(18),
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingTop: rs(18),
+    paddingHorizontal: rs(16),
+    alignItems: 'center',
+  },
+  qrTitle: { fontFamily: rd.font.semibold, fontSize: rs(15.5), color: rd.color.text, textAlign: 'center' },
+  qrIconWrap: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
 
   hero: {
     borderRadius: rs(24),
@@ -219,6 +340,33 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.semibold,
     fontSize: rs(15),
     color: rd.color.primary,
+  },
+
+  // Animatsiyali hero elementlari
+  heroRing: {
+    position: 'absolute',
+    borderWidth: 1.5,
+  },
+  heroBig: {
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroDash: {
+    position: 'absolute',
+    borderWidth: 1.5,
+    borderColor: 'rgba(47,111,237,0.18)',
+  },
+  heroPlus: {
+    position: 'absolute',
+    right: rs(24),
+    bottom: rs(26),
+    width: rs(30),
+    height: rs(30),
+    borderRadius: rs(15),
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   card: {

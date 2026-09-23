@@ -24,6 +24,7 @@ import {
   DebtTakeFull,
   DebtTakePart,
   DebtTakeSelect,
+  DebtEntry,
   DownloadStatistic,
   FingerScanner,
   FullDebtBack,
@@ -47,6 +48,7 @@ import {
   SendMoney,
   SetLocalPassword,
   ShareDevices,
+  ActiveDevices,
   Support,
   UseTerm,
   UserInformationOfDebt,
@@ -92,9 +94,38 @@ import RecoverySmsReset from '../screens/auth/RecoverySmsReset';
 import QarzShartnomasi from '../screens/home/modules/QarzShartnomasi';
 import QarzDaftari from '../screens/home/modules/QarzDaftari';
 import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
+import FinanceExpenseAdd from '../screens/home/modules/FinanceExpenseAdd';
+import FinanceReceiptScan from '../screens/home/modules/FinanceReceiptScan';
+import FinanceExpenseList from '../screens/home/modules/FinanceExpenseList';
+import FinanceIncomeAdd from '../screens/home/modules/FinanceIncomeAdd';
+import FinanceIncomeList from '../screens/home/modules/FinanceIncomeList';
+import FinanceGoalAdd from '../screens/home/modules/FinanceGoalAdd';
+import FinanceGoalList from '../screens/home/modules/FinanceGoalList';
+import FinanceAnalytics from '../screens/home/modules/FinanceAnalytics';
+import FinanceBudget from '../screens/home/modules/FinanceBudget';
+import FinanceAdvice from '../screens/home/modules/FinanceAdvice';
+import {
+  FinanceScheduledPayments,
+  FinanceScheduledIncomes,
+} from '../screens/home/modules/FinanceScheduled';
+import FinanceDebts from '../screens/home/modules/FinanceDebts';
+import FinanceDebtAdd from '../screens/home/modules/FinanceDebtAdd';
+import FinanceDebtDetail from '../screens/home/modules/FinanceDebtDetail';
+// SS2 (2026-09-18): kontragent guruhidagi qarzlar ro'yxati.
+import FinanceDebtGroup from '../screens/home/modules/FinanceDebtGroup';
+import FinanceDebtors from '../screens/home/modules/FinanceDebtors';
+import FinanceFamily from '../screens/home/modules/FinanceFamily';
+import FinanceFamilyOverview from '../screens/home/modules/FinanceFamilyOverview';
+import FinanceGap from '../screens/home/modules/FinanceGap';
+import FinanceGapDetail from '../screens/home/modules/FinanceGapDetail';
 import QarzDaftariKiritish from '../screens/home/modules/QarzDaftariKiritish';
 import QarzDaftariQarzlar from '../screens/home/modules/QarzDaftariQarzlar';
 import QarzDaftariMijozlar from '../screens/home/modules/QarzDaftariMijozlar';
+import QarzDaftariXodimlar from '../screens/home/modules/QarzDaftariXodimlar';
+import QarzDaftariKarta from '../screens/home/modules/QarzDaftariKarta';
+import FinancePayoutCard from '../screens/home/modules/FinancePayoutCard';
+import QarzDaftariXodimYangi from '../screens/home/modules/QarzDaftariXodimYangi';
+import QarzDaftariMijozYangi from '../screens/home/modules/QarzDaftariMijozYangi';
 import QarzDaftariMijoz from '../screens/home/modules/QarzDaftariMijoz';
 import QarzDaftariQarz from '../screens/home/modules/QarzDaftariQarz';
 import QarzDaftariYangi from '../screens/home/modules/QarzDaftariYangi';
@@ -103,6 +134,8 @@ import QarzDaftariYopish from '../screens/home/modules/QarzDaftariYopish';
 import QarzDaftariVozKechish from '../screens/home/modules/QarzDaftariVozKechish';
 import QarzDaftariKvitansiya from '../screens/home/modules/QarzDaftariKvitansiya';
 import QarzDaftariAmaliyotlar from '../screens/home/modules/QarzDaftariAmaliyotlar';
+// SS9-2: bitta amaliyot (tranzaksiya) tafsiloti ekrani.
+import QarzDaftariAmaliyot from '../screens/home/modules/QarzDaftariAmaliyot';
 
 const Stack = createNativeStackNavigator();
 
@@ -178,6 +211,7 @@ const AllNavigators = [
   { name: 'AboutUs', component: AboutUs },
   { name: 'QrCode', component: QrCode },
   { name: 'ShareDevices', component: ShareDevices },
+  { name: 'ActiveDevices', component: ActiveDevices },
   { name: 'AboutMe', component: AboutMe },
   { name: 'Support', component: Support },
   { name: 'SearchDebitor', component: SearchDebitor },
@@ -201,6 +235,8 @@ const AllNavigators = [
   { name: 'PayScreen', component: PayScreen },
   //
   { name: 'SearchUserScreen', component: SearchUserScreen },
+  //
+  { name: 'DebtEntry', component: DebtEntry },
   //
   { name: 'HistoryDebt', component: HistoryDebt },
   //
@@ -259,9 +295,35 @@ const AllNavigators = [
   // QarzShartnomasi / QarzDaftari endi BottomTabNavigator ichida TAB — bu yerda
   // (stack'da) qayta ro'yxatga olinmaydi (aks holda ikki nusxa bo'lardi).
   { name: 'ShaxsiyMoliya', component: ShaxsiyMoliya },
+  { name: 'FinanceExpenseAdd', component: FinanceExpenseAdd },
+  { name: 'FinanceReceiptScan', component: FinanceReceiptScan },
+  { name: 'FinanceExpenseList', component: FinanceExpenseList },
+  { name: 'FinanceIncomeAdd', component: FinanceIncomeAdd },
+  { name: 'FinanceIncomeList', component: FinanceIncomeList },
+  { name: 'FinanceGoalAdd', component: FinanceGoalAdd },
+  { name: 'FinanceGoalList', component: FinanceGoalList },
+  { name: 'FinanceAnalytics', component: FinanceAnalytics },
+  { name: 'FinanceBudget', component: FinanceBudget },
+  { name: 'FinanceAdvice', component: FinanceAdvice },
+  { name: 'FinanceScheduledPayments', component: FinanceScheduledPayments },
+  { name: 'FinanceScheduledIncomes', component: FinanceScheduledIncomes },
+  { name: 'FinanceDebts', component: FinanceDebts },
+  { name: 'FinanceDebtAdd', component: FinanceDebtAdd },
+  { name: 'FinanceDebtDetail', component: FinanceDebtDetail },
+  { name: 'FinanceDebtGroup', component: FinanceDebtGroup },
+  { name: 'FinanceDebtors', component: FinanceDebtors },
+  { name: 'FinanceFamily', component: FinanceFamily },
+  { name: 'FinanceFamilyOverview', component: FinanceFamilyOverview },
+  { name: 'FinanceGap', component: FinanceGap },
+  { name: 'FinanceGapDetail', component: FinanceGapDetail },
   { name: 'QarzDaftariKiritish', component: QarzDaftariKiritish },
   { name: 'QarzDaftariQarzlar', component: QarzDaftariQarzlar },
   { name: 'QarzDaftariMijozlar', component: QarzDaftariMijozlar },
+  { name: 'QarzDaftariXodimlar', component: QarzDaftariXodimlar },
+  { name: 'QarzDaftariKarta', component: QarzDaftariKarta },
+  { name: 'FinancePayoutCard', component: FinancePayoutCard },
+  { name: 'QarzDaftariXodimYangi', component: QarzDaftariXodimYangi },
+  { name: 'QarzDaftariMijozYangi', component: QarzDaftariMijozYangi },
   { name: 'QarzDaftariMijoz', component: QarzDaftariMijoz },
   { name: 'QarzDaftariQarz', component: QarzDaftariQarz },
   { name: 'QarzDaftariYangi', component: QarzDaftariYangi },
@@ -270,6 +332,7 @@ const AllNavigators = [
   { name: 'QarzDaftariVozKechish', component: QarzDaftariVozKechish },
   { name: 'QarzDaftariKvitansiya', component: QarzDaftariKvitansiya },
   { name: 'QarzDaftariAmaliyotlar', component: QarzDaftariAmaliyotlar },
+  { name: 'QarzDaftariAmaliyot', component: QarzDaftariAmaliyot },
 ];
 const StackNavigator = () => {
   const is = storage.getString('k2');

@@ -7,7 +7,7 @@ const GiveDebt = () => {
   const { t } = useTranslation();
   return (
     <DebtLanding
-      type={0}
+      type={1}
       title={t('qarzberish') as string}
       subtitle={t('Qarz berish uchun foydalanuvchini qidiring') as string}
     />

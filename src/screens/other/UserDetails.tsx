@@ -27,6 +27,24 @@ const titleCaseName = (s?: string) =>
     })
     .join(' ');
 
+// Reyting trend strelkasi — SAYT (cabinet/index.vue `ratingArrow`) bilan AYNAN bir xil
+// mantiq. Strelka reyting QIYMATIga emas, `rating_type` (TREND) ga bog'liq:
+//   1 = ↑ yakka (oshgan)          3 = ⇑ juft (3 marta ketma-ket oshgan)
+//   2 = ↓ yakka (kamaygan)        4 = ⇓ juft (3 marta ketma-ket kamaygan)
+//   0/null = strelka YO'Q (hali trend yo'q — masalan yangi foydalanuvchi).
+const ratingTrend = (type?: number) => {
+  const t = Number(type);
+  if (t === 1) return { up: true, strong: false };
+  if (t === 3) return { up: true, strong: true };
+  if (t === 2) return { up: false, strong: false };
+  if (t === 4) return { up: false, strong: true };
+  return null;
+};
+
+// Sayt bilan bir xil ranglar: o'sish yashil (#16a34a), kamayish qizil (#dc2626).
+const RATING_UP_COLOR = '#16a34a';
+const RATING_DOWN_COLOR = '#dc2626';
+
 const InfoRow = ({ label, value, divider, right }: any) => (
   <View style={[styles.infoRow, divider && styles.infoDivider]}>
     <View style={styles.infoTextWrap}>
@@ -48,10 +66,13 @@ const UserDetails = () => {
   const d = user?.data || {};
   const isPerson = d?.type === 2;
 
-  // Reyting — REAL manba (/user/me → data.rating). Sayt shaxsiy kabinetidagi
-  // "Reyting ★ 0.00" ko'rsatkichi (ilgari xato bo'lib Moliyaviy sog'liq bali edi).
+  // Reyting — REAL manba (/user/me → data.rating + data.rating_type). Sayt shaxsiy
+  // kabinetidagi "Reyting ★ 0.00 ↑" ko'rsatkichi bilan bir xil. `rating_type` ham
+  // shu endpointdan keladi (backend to'liq user qatorini qaytaradi).
   const me = useFetch({ method: 'GET', url: URL + '/user/me' });
-  const rating = Number((me.data as any)?.data?.rating ?? d?.rating ?? 0) || 0;
+  const meData = (me.data as any)?.data;
+  const rating = Number(meData?.rating ?? d?.rating ?? 0) || 0;
+  const trend = ratingTrend(meData?.rating_type ?? d?.rating_type);
 
   // FISH: familiya + ism BIR qatorda, otasining ismi PASTKI qatorda (so'rov bo'yicha).
   const line1 = isPerson
@@ -69,7 +90,7 @@ const UserDetails = () => {
       visibilityTime: 1800,
       position: 'bottom',
       type: 'omad',
-      props: { title: t('JShShIR nusxalandi') },
+      props: { desc: t('JShShIR nusxalandi') + '.' },
     });
   };
 
@@ -95,12 +116,26 @@ const UserDetails = () => {
           <Text style={styles.ratingLabel}>Reyting</Text>
           <StarIcon size={rs(14)} color="#f5a623" />
           <Text style={styles.ratingScore}>{rating.toFixed(2)}</Text>
-          {/* Trend strelkasi (sayt kabi): yuqori reyting yashil ↑, past reyting qizil ↓. */}
-          {rating >= 3 ? (
-            <ArrowUp size={rs(14)} color={rd.color.success} />
-          ) : (
-            <ArrowDown size={rs(14)} color={rd.color.error} />
-          )}
+          {/* Trend strelkasi — SAYT bilan bir xil: o'sish yashil ↑ / kamayish qizil ↓;
+              3 marta ketma-ket bo'lsa juft strelka (⇑/⇓). Trend yo'q bo'lsa — strelka YO'Q. */}
+          {trend ? (
+            <View style={styles.trendWrap}>
+              {trend.up ? (
+                <ArrowUp size={rs(14)} color={RATING_UP_COLOR} strokeWidth={2.6} />
+              ) : (
+                <ArrowDown size={rs(14)} color={RATING_DOWN_COLOR} strokeWidth={2.6} />
+              )}
+              {trend.strong ? (
+                <View style={styles.trendSecond}>
+                  {trend.up ? (
+                    <ArrowUp size={rs(14)} color={RATING_UP_COLOR} strokeWidth={2.6} />
+                  ) : (
+                    <ArrowDown size={rs(14)} color={RATING_DOWN_COLOR} strokeWidth={2.6} />
+                  )}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -232,6 +267,8 @@ const styles = StyleSheet.create({
     marginRight: rs(2),
   },
   ratingScore: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
+  trendWrap: { flexDirection: 'row', alignItems: 'center' },
+  trendSecond: { marginLeft: rs(-8) }, // juft strelka ustma-ust (sayt -ml-1.5 kabi)
   card: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
-import { ClockIcon, ManIcon, WomanIcon } from '../home/redesign/icons';
+import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign/icons';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -64,6 +64,17 @@ export const getDueMeta = (endDate: any): DueMeta => {
   return { cat: 'active', label: 'Jarayonda', color: rd.color.success, bg: rd.color.successBg, date, diff };
 };
 
+// HISOBOT rejimida qator statusi (c.status): 2=Tugallangan (yashil), 3/4=Rad
+// etilgan (qizil), aks holda Jarayonda (ko'k). Faol ro'yxatда esa muddat badge'i.
+const reportStatusMeta = (status: any) => {
+  const s = Number(status);
+  if (s === 2)
+    return { label: 'Tugallangan', color: rd.color.success, bg: rd.color.successBg };
+  if (s === 3 || s === 4)
+    return { label: 'Rad etilgan', color: rd.color.error, bg: rd.color.errorBg };
+  return { label: 'Jarayonda', color: rd.color.primary, bg: rd.color.primaryTint };
+};
+
 const StatisticCard = ({
   title,
   type,
@@ -72,6 +83,8 @@ const StatisticCard = ({
   person,
   isHave,
   iconType,
+  report,
+  emptyText,
 }) => {
   const navigation = useNavigation();
   const isDebitor = person === 'debitor';
@@ -124,6 +137,8 @@ const StatisticCard = ({
       isDebitor ? item?.creditor_name : item?.debitor_name,
     );
     const due = getDueMeta(item?.end_date);
+    // Hisobotда — status badge (Tugallangan/Rad); faol ro'yxatда — muddat badge.
+    const badge = report ? reportStatusMeta(item?.status) : due;
     return (
       <TouchableOpacity
         key={index}
@@ -136,6 +151,7 @@ const StatisticCard = ({
               status: 2,
               person,
               isHave,
+              report, // HISOBOT rejimi — tugallangan/rad kontraktда amal tugmalari yashiriladi
             });
           } else {
             navigation.navigate('CreditorDebitor', {
@@ -144,10 +160,11 @@ const StatisticCard = ({
               status: 2,
               person,
               isHave,
+              report, // HISOBOT rejimi — tugallangan/rad kontraktда amal tugmalari yashiriladi
             });
           }
         }}
-        style={[styles.row, due.cat === 'overdue' && styles.rowOverdue]}
+        style={[styles.row, !report && due.cat === 'overdue' && styles.rowOverdue]}
       >
         {/* FISH bosh harfi O'RNIGA — jinsga mos odam avatari (erkak/ayol). */}
         <View style={[styles.avatar, { backgroundColor: dirBg }]}>
@@ -171,16 +188,18 @@ const StatisticCard = ({
                 </Text>
               </>
             ) : null}
-            <View style={[styles.dueBadge, { backgroundColor: due.bg }]}>
-              <Text allowFontScaling={false} style={[styles.dueBadgeText, { color: due.color }]}>
-                {due.label}
+            <View style={[styles.dueBadge, { backgroundColor: badge.bg }]}>
+              <Text allowFontScaling={false} style={[styles.dueBadgeText, { color: badge.color }]}>
+                {badge.label}
               </Text>
             </View>
           </View>
         </View>
 
         <Text allowFontScaling={false} style={[styles.amount, { color: dirColor }]} numberOfLines={1}>
-          {sortText(checkType(type) ? item?.amount : item?.residual_amount)}{' '}
+          {/* Faol ro'yxatda QOLDIQ (residual) ko'rsatiladi — qarz qaytarilsa kamayadi
+              (so'rov bo'yicha). HISOBOTда (report) esa shartnoma summasi (amount). */}
+          {sortText(report ? item?.amount : item?.residual_amount ?? item?.amount)}{' '}
           {item?.currency}
         </Text>
       </TouchableOpacity>
@@ -199,13 +218,11 @@ const StatisticCard = ({
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
           <View style={styles.empty}>
-            <LottieView
-              autoPlay
-              source={renderLottieItem(iconType)}
-              style={styles.emptyLottie}
-            />
+            <View style={styles.emptyCircle}>
+              <CheckCircleIcon size={rs(40)} color={rd.color.primary} />
+            </View>
             <Text allowFontScaling={false} style={styles.emptyText}>
-              {t('177')}
+              {emptyText ?? t('177')}
             </Text>
           </View>
         )}
@@ -232,6 +249,18 @@ export const HeaderComponent = ({ person }) => {
 
 export const sortText = text => {
   return text?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') || 0;
+};
+
+// Summa MILLIONДАН oshsa "mln"/"mlrd" ko'rinishida (so'rov): 999 000 -> "999 000",
+// 1 000 000 -> "1 mln", 1 500 000 -> "1,5 mln", 8 690 000 -> "8,69 mln",
+// 1 000 000 000 -> "1 mlrd". 1M dan past -> oddiy mingliklar (bo'shliq).
+export const formatMln = (value: any): string => {
+  const n = Number(value) || 0;
+  const abs = Math.abs(n);
+  const unit = (div: number) => String(Number((n / div).toFixed(2))).replace('.', ',');
+  if (abs >= 1e9) return `${unit(1e9)} mlrd`;
+  if (abs >= 1e6) return `${unit(1e6)} mln`;
+  return String(sortText(n) || 0);
 };
 // Pul summasi — backend "550000.00" kabi o'nlik string qaytaradi; web'dagidek
 // butun songa yaxlitlab, mingliklarni bo'shliq bilan ajratamiz ("550 000").
@@ -371,12 +400,21 @@ const styles = StyleSheet.create({
     color: rd.color.textTertiary,
   },
 
-  empty: { alignItems: 'center', paddingVertical: rs(20) },
-  emptyLottie: { width: rs(150), height: rs(150) },
+  empty: { alignItems: 'center', paddingVertical: rs(20), gap: rs(14) },
+  emptyCircle: {
+    width: rs(84),
+    height: rs(84),
+    borderRadius: rs(42),
+    backgroundColor: rd.color.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptyText: {
     fontFamily: rd.font.medium,
-    fontSize: rs(13),
-    color: rd.color.textTertiary,
+    fontSize: rs(13.5),
+    color: rd.color.textSecondary,
     textAlign: 'center',
+    paddingHorizontal: rs(32),
+    lineHeight: rs(19),
   },
 });

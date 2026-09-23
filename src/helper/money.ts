@@ -53,3 +53,50 @@ export const compactUzs = (value: number | string | null | undefined) =>
 /** Ixcham summa + dollar: "1,2 mln $". */
 export const compactUsd = (value: number | string | null | undefined) =>
   `${compactMoney(value)} $`;
+
+/**
+ * K/M/B qisqartma (so'rov bo'yicha — "mln/mlrd" o'rniga xalqaro K/M/B):
+ *   622 132       -> "622,1 K"
+ *   1 700 000     -> "1,7 M"
+ *   1 050 000     -> "1,05 M"
+ *   1 250 000 000 -> "1,25 B"
+ *   0 / 999       -> "0" / "999" (mingdan kichik — aynan o'zicha)
+ * Ortiqcha nollar tushiriladi (1,70 -> 1,7; 1,00 -> 1). O'nlik = VERGUL.
+ */
+export const compactKMB = (value: number | string | null | undefined) => {
+  const n = Number(value) || 0;
+  const abs = Math.abs(n);
+  const fmt = (v: number, dec: number) =>
+    v.toFixed(dec).replace(/\.?0+$/, '').replace('.', ',');
+  if (abs >= 1e9) return `${fmt(n / 1e9, 2)} B`;
+  if (abs >= 1e6) return `${fmt(n / 1e6, 2)} M`;
+  if (abs >= 1e3) return `${fmt(n / 1e3, 1)} K`;
+  return groupDigits(n);
+};
+
+/** K/M/B + "UZS": "1,7 M UZS", "0 UZS". */
+export const fmtUZS = (value: number | string | null | undefined) =>
+  `${compactKMB(value)} UZS`;
+
+/** K/M/B + "USD": "500 USD", "0 USD". */
+export const fmtUSD = (value: number | string | null | undefined) =>
+  `${compactKMB(value)} USD`;
+
+/**
+ * FAQAT MILLIARD qisqartmasi (2026-09-14, SS6 so'rovi):
+ *   999 999 999   -> "999 999 999"   (milliarddan past — AYNAN o'zicha)
+ *   1 008 450 000 -> "1,01 B"
+ *   1 080 000 000 -> "1,08 B"
+ *
+ * Nega alohida formatlagich: `compactKMB` mln/mingni ham qisqartiradi
+ * ("4,56 M"), bu yerda esa aniq raqam muhim — faqat milliardga yetganda
+ * card'ga sig'masligi sababli qisqartiriladi. Ortiqcha nollar tushiriladi
+ * (1,10 -> 1,1; 2,00 -> 2). O'nlik ajratgich — VERGUL.
+ */
+export const billionOrExact = (value: number | string | null | undefined) => {
+  const n = Number(value) || 0;
+  if (Math.abs(n) >= 1e9) {
+    return `${(n / 1e9).toFixed(2).replace(/\.?0+$/, '').replace('.', ',')} B`;
+  }
+  return groupDigits(n);
+};

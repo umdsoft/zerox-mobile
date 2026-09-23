@@ -26,6 +26,7 @@ import SetLocalPassword from '../screens/auth/SetLocalPassword';
 import CreateSecretWord from '../screens/auth/CreateSecretWord';
 import TakeDebt from '../screens/home/TakeDebt';
 import GiveDebt from '../screens/home/GiveDebt';
+import DebtEntry from '../screens/home/DebtEntry';
 import Statistic from '../screens/home/Statistic';
 
 import AboutUs from '../screens/other/AboutUs';
@@ -34,6 +35,7 @@ import ShareDevices from '../screens/home/drawer/drawerScreens/ShareDevices';
 import UseTerm from '../screens/home/drawer/drawerScreens/UseTerm';
 import AboutMe from '../screens/home/drawer/drawerScreens/AboutMe';
 import Support from '../screens/home/drawer/drawerScreens/Support';
+import ActiveDevices from '../screens/home/drawer/drawerScreens/ActiveDevices';
 
 import SearchDebitor from '../screens/home/statisticScreens/SearchDebitor';
 import CreditorDebitor from '../screens/home/statisticScreens/CreditorDebitor';
@@ -117,12 +119,14 @@ export {
   UseTerm,
   QrCode,
   ShareDevices,
+  ActiveDevices,
   SelectJuridical,
   SelectLanguageScreen,
   SearchDebitor,
   ScanFaceMyId,
   SearchJuridicUser,
   GiveDebt,
+  DebtEntry,
   GiveDebtUser,
   UserMoneyResult,
   UserInformationOfDebt,

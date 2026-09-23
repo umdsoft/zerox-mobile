@@ -11,12 +11,17 @@ import { useTranslation } from 'react-i18next';
 import { t as tt } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { sortText } from './StatisticCard';
+import { compactKMB } from '../../helper/money';
 import { ClockIcon } from '../home/redesign/icons';
+
+// kmb=true: summa >= 1 mln bo'lsa M/B qisqartma (so'rov SS17.5), aks holda to'liq.
+const amtText = (n: any, kmb?: boolean) =>
+  kmb && Math.abs(Number(n) || 0) >= 1e6 ? compactKMB(n) : sortText(n);
 
 // REDIZAYN: eski jadval o'rniga zamonaviy detail karta — oq surface, yumaloq, valyuta
 // segment-toggle, muddat holati rangli. Navigatsiya va valyuta filtrlash O'ZGARMAGAN.
 
-const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
+const ListCardShowDetails = ({ title, width, disabled, data = [], kmb }) => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const [uz] = useState(() => {
@@ -52,8 +57,10 @@ const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
 
   return (
     <View style={[styles.card, { width: width }]}>
-      <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>
-        {title}
+      {/* So'rov R11: sarlavha TO'LIQ ("...debitor qarzdorliklar", 3-nuqtasiz). Majburiy
+          \n olib tashlanadi (tabiiy o'ralsin), 3 qatorgacha ruxsat. */}
+      <Text allowFontScaling={false} style={styles.title} numberOfLines={3}>
+        {String(title || '').replace(/\n/g, ' ')}
       </Text>
 
       <View style={styles.segment}>
@@ -84,10 +91,15 @@ const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
       </View>
 
       <View style={styles.headerRow}>
+        {/* "Qolgan vaqt" — "vaqt" so'zi pastki qatorga (so'rov bo'yicha). Birinchi
+            probelni \n ga almashtiramiz → "Qolgan" 1-qator, "vaqt" 2-qator (markazда). */}
         <Text allowFontScaling={false} style={styles.headerLabel}>
-          {t('174')}
+          {t('174').replace(' ', '\n')}
         </Text>
-        <Text allowFontScaling={false} style={styles.headerLabel}>
+        <Text
+          allowFontScaling={false}
+          style={[styles.headerLabel, styles.headerLabelRight]}
+        >
           {t('327')}
         </Text>
       </View>
@@ -127,7 +139,7 @@ const ListCardShowDetails = ({ title, width, disabled, data = [] }) => {
                     style={styles.amount}
                     numberOfLines={1}
                   >
-                    {sortText(item?.residual_amount)}
+                    {amtText(item?.residual_amount, kmb)}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -193,7 +205,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(14),
+    fontSize: rs(12.5),
     color: rd.color.text,
     marginBottom: rs(10),
   },
@@ -230,9 +242,17 @@ const styles = StyleSheet.create({
     paddingBottom: rs(6),
   },
   headerLabel: {
+    flex: 1,
     fontFamily: rd.font.medium,
     fontSize: rs(11.5),
     color: rd.color.textTertiary,
+    // Ikkala yorliq ham USTUN MARKAZIDA (so'rov bo'yicha). Tor ustunда "Qolgan vaqt"
+    // tabiiy ravishda 2 qatorga ("Qolgan" / "vaqt") o'raladi va markazда turadi.
+    textAlign: 'center',
+  },
+  // 2-yorliq ("Qarz miqdori") ham markazga tekislanadi.
+  headerLabelRight: {
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',

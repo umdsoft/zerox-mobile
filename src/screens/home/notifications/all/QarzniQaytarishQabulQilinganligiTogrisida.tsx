@@ -4,9 +4,9 @@ import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
 
 import { sortText } from '../../../components/StatisticCard';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import NotificationShell from '../../../components/NotificationShell';
@@ -66,7 +66,7 @@ const QarzniQaytarishQabulQilinganligiTogrisida = ({
 
   const components = isCreditor
     ? {
-        start: <MainText size={style.fontSize.xx - 2} />,
+        start: <MainText size={style.fontSize.xx + 1} />,
         id: numberComp,
         name: <TextBold />,
         sum: <TextBold />,

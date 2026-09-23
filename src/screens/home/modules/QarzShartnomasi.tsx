@@ -27,12 +27,13 @@ import { useSelector } from 'react-redux';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
-import { compactUsd, compactUzs } from '../../../helper/money';
+import { compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
 import { getDueMeta, sortText } from '../../components/StatisticCard';
 import Donut from '../redesign/Donut';
 import RdHeader from '../redesign/RdHeader';
+import RdTopBar from '../redesign/RdTopBar';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -56,6 +57,9 @@ type Row = {
   end_date?: string;
   creditor_name?: string;
   debitor_name?: string;
+  // So'rov SS1: qatorга bosilganда aynan shu qarz kontragenti ochilsin.
+  counter_uid?: string;
+  counter_type?: number;
 };
 type MyData = {
   chart?: { jarayon?: number; tugallangan?: number; rad?: number };
@@ -71,12 +75,9 @@ const isCur = (r: Row, cur: string) =>
 const sumCur = (rows: Row[] | undefined, cur: string) =>
   (rows || []).reduce((s, r) => (isCur(r, cur) ? s + num(r.residual_amount) : s), 0);
 
-// UZS + (ixtiyoriy) USD matni.
-const money = (uzs: number, usd: number) => {
-  const parts: string[] = [compactUzs(uzs)];
-  if (usd > 0) parts.push(compactUsd(usd));
-  return parts;
-};
+// UZS + USD matni — so'rov bo'yicha "UZS"/"USD" + K/M/B; qarz bo'lmasa ham
+// "0 UZS"/"0 USD" DOIM ko'rsatiladi (ikkala qator turadi).
+const money = (uzs: number, usd: number) => [fmtUZS(uzs), fmtUSD(usd)];
 
 // ---------- Gradient fon ----------
 const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
@@ -127,6 +128,102 @@ const StatCard = ({ title, chart }: { title: string; chart?: MyData['chart'] }) 
   );
 };
 
+// ---------- Debitor + Kreditor diagrammalari BITTA kartada (so'rov) ----------
+// Ikki donut yonma-yon; umumiy legend SONSIZ. Donut(rang) bosilганда o'sha
+// diagrammaning sonlari ~2.5s ko'rinadi, so'ng yo'qoladi (so'rov bo'yicha).
+const DebtStatsCard = ({
+  debChart,
+  credChart,
+}: {
+  debChart?: MyData['chart'];
+  credChart?: MyData['chart'];
+}) => {
+  const { t } = useTranslation();
+  const [revealed, setRevealed] = React.useState<null | 'deb' | 'cred'>(null);
+  const timerRef = React.useRef<any>(null);
+  const reveal = (which: 'deb' | 'cred') => {
+    setRevealed(which);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setRevealed(null), 2500);
+  };
+  React.useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
+  // MUHIM: bu RENDER-FUNKSIYA (komponent EMAS) — `{renderCol(...)}` tarzида
+  // chaqiriladi. Ilgari `<Col/>` komponent edi -> `revealed` o'zgarганда Col
+  // qayta yaratilib, ichidagi Donut'lar REMOUNT bo'lib miltillardi.
+  const renderCol = (
+    which: 'deb' | 'cred',
+    title: string,
+    chart?: MyData['chart'],
+  ) => {
+    const jarayon = num(chart?.jarayon);
+    const tugallangan = num(chart?.tugallangan);
+    const rad = num(chart?.rad);
+    const total = jarayon + tugallangan + rad;
+    const segs = [
+      { label: 'Jarayonda', color: C_JARAYON, value: jarayon },
+      { label: 'Tugallangan', color: C_TUGALLANGAN, value: tugallangan },
+      { label: 'Rad etildi', color: C_RAD, value: rad },
+    ];
+    return (
+      <View style={styles.statCol}>
+        <Text style={styles.statColTitle} numberOfLines={2}>
+          {title}
+        </Text>
+        <TouchableOpacity activeOpacity={0.85} onPress={() => reveal(which)}>
+          <Donut
+            segments={total === 0 ? [{ value: 1, color: rd.color.border }] : segs}
+            size={rs(94)}
+            centerValue={String(total)}
+            centerLabel={t('jami')}
+          />
+        </TouchableOpacity>
+        {/* Sonlar — FAQAT bosilганда ~2.5s (so'rov). Joy o'zgarmasligi uchun
+            ko'rinmаганда ham bir xil balandlikda placeholder turadi. */}
+        {revealed === which ? (
+          <View style={styles.revealBox}>
+            {segs.map(s => (
+              <View key={s.label} style={styles.revealRow}>
+                <View style={[styles.dot, { backgroundColor: s.color }]} />
+                <Text style={styles.revealCount}>{s.value}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.revealBox} />
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.statCard}>
+      <View style={styles.statPair}>
+        {renderCol('deb', t('Debitor qarzdorlik'), debChart)}
+        {renderCol('cred', t('Kreditor qarzdorlik'), credChart)}
+      </View>
+      {/* Umumiy legend — SONSIZ (sonlar diagramma bosilганда chiqadi). */}
+      <View style={styles.sharedLegend}>
+        {[
+          { label: 'Jarayonda', color: C_JARAYON },
+          { label: 'Tugallangan', color: C_TUGALLANGAN },
+          { label: 'Rad etildi', color: C_RAD },
+        ].map(l => (
+          <View key={l.label} style={styles.sharedLegendItem}>
+            <View style={[styles.dot, { backgroundColor: l.color }]} />
+            <Text style={styles.sLegendLabel}>{t(l.label)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
 // ---------- Qarzdorlik kartasi (chegara rangli) ----------
 const DebtCard = ({
   accent,
@@ -170,12 +267,7 @@ const DebtCard = ({
       {lines[0]}
     </Text>
     {lines[1] ? <Text style={styles.debtAmountUsd}>{lines[1]}</Text> : null}
-    {/* Bosiladigan ekanini bildiruvchi ishora (o'ngda kichik strelka) */}
-    {onPress ? (
-      <View style={styles.debtGo}>
-        <ChevronRight size={rs(15)} color={rd.color.textTertiary} />
-      </View>
-    ) : null}
+    {/* Pastki-o'ng strelka OLIB TASHLANDI (so'rov SS4.4). */}
   </TouchableOpacity>
 );
 
@@ -184,10 +276,12 @@ const NearCard = ({
   title,
   five,
   onPress,
+  onRow,
 }: {
   title: string;
   five?: Row[];
   onPress?: () => void;
+  onRow?: (uid: any, type: number) => void;
 }) => {
   const { t } = useTranslation();
   const [cur, setCur] = useState<'UZS' | 'USD'>('UZS');
@@ -240,15 +334,23 @@ const NearCard = ({
           </View>
           {rows.map((r, i) => {
             const due = getDueMeta(r.end_date);
+            // So'rov SS1: qator bosilса AYNAN shu qarz (kontragent) ochiladi.
+            // Kartaning o'zi (yoki "Barchasini ko'rish") esa BARCHASINI ochadi.
+            const tappable = !!(onRow && r.counter_uid);
             return (
-              <View key={i} style={styles.tableRow}>
+              <TouchableOpacity
+                key={i}
+                activeOpacity={tappable ? 0.6 : 1}
+                disabled={!tappable}
+                onPress={() => tappable && onRow!(r.counter_uid, Number(r.counter_type) || 0)}
+                style={styles.tableRow}>
                 <View style={[styles.dueBadge, { backgroundColor: due.bg }]}>
                   <Text style={[styles.dueBadgeText, { color: due.color }]}>{due.label}</Text>
                 </View>
                 <Text style={[styles.tableAmount, styles.tableRight]} numberOfLines={1}>
                   {sortText(num(r.residual_amount))} {r.currency || 'UZS'}
                 </Text>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -265,16 +367,28 @@ const NearCard = ({
   );
 };
 
-// ---------- Hisobot kartasi ----------
-const ReportCard = ({ label, onPress }: { label: string; onPress: () => void }) => (
-  <TouchableOpacity activeOpacity={0.85} style={styles.reportCard} onPress={onPress}>
+// ---------- Hisobot kartasi (yonma-yon, rangli — so'rov SS4.6) ----------
+const ReportCard = ({
+  label,
+  tint,
+  iconColor,
+  onPress,
+}: {
+  label: string;
+  tint: string;
+  iconColor: string;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.85}
+    style={[styles.reportCard, { backgroundColor: tint, borderColor: tint }]}
+    onPress={onPress}>
     <View style={styles.reportIcon}>
-      <BarChartIcon size={rs(20)} color={rd.color.primary} />
+      <BarChartIcon size={rs(20)} color={iconColor} />
     </View>
-    <Text style={styles.reportLabel} numberOfLines={2}>
+    <Text style={styles.reportLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
       {label}
     </Text>
-    <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
   </TouchableOpacity>
 );
 
@@ -282,19 +396,21 @@ const ReportCard = ({ label, onPress }: { label: string; onPress: () => void }) 
 // real /contract/report endpointidan to'liq ro'yxatni yuklaydi).
 const REPORT_NAV = {
   debitor: {
-    title: 'Debitor qarzdorlik',
+    title: 'Hisobot (berilgan qarzlar)',
     type: 1,
     person: 'debitor',
     isHave: false,
+    report: true,
     url: '/contract/report?type=debitor&page=1&limit=1000&status=all&start=0&end=0',
     searchUrl: '/contract/report/search?type=debitor&page=1&limit=500&search=',
     iconType: 3,
   },
   creditor: {
-    title: 'Kreditor qarzdorlik',
+    title: 'Hisobot (olingan qarzlar)',
     type: 3,
     person: 'creditor',
     isHave: false,
+    report: true,
     url: '/contract/report?type=creditor&page=1&limit=1000&status=all&start=0&end=0',
     searchUrl: '/contract/report/search?type=creditor&page=1&limit=500&search=',
     iconType: 3,
@@ -338,10 +454,12 @@ const QarzShartnomasi = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
-      <RdHeader
-        title={t('Qarz shartnomasi')}
-        onBack={() => navigation.navigate('Home')}
-      />
+      {/* SS24 (2026-09-15): ORQAGA tugmasi OLIB TASHLANDI — bu ekran pastki
+          menyudagi TAB, ya'ni top-level. Orqaga tugmasi "qayerga qaytadi?"
+          degan savol tug'dirardi (Home'ga sakrardi, holbuki Home ham tab). */}
+      {/* SS7 (2026-09-18): barcha asosiy bo'limlarda BIR XIL yuqori panel
+          (menyu + nom + bildirishnoma + shaxsiy kabinet). */}
+      <RdTopBar title={t('Qarz shartnomasi')} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -361,17 +479,16 @@ const QarzShartnomasi = () => {
         {/* 1. Hero banner */}
         <View style={styles.hero}>
           <Grad id="qshHero" colors={GRAD_BRAND} />
-          <Text style={styles.heroTitle} numberOfLines={2}>
-            {t('Xush kelibsiz, {{name}}!', { name })}
-          </Text>
+          {/* "Xush kelibsiz, {name}!" sarlavhasi OLIB TASHLANDI (so'rov bo'yicha) —
+              kartada faqat tavsif + 2 amal tugmasi qoladi. */}
           <Text style={styles.heroSub} numberOfLines={2}>
-            {t('Shartnomalarni elektron rasmiylashtiring va oson boshqaring.')}
+            {t('Qarz shartnomalarini elektron rasmiylashtiring va oson boshqaring.')}
           </Text>
           <View style={styles.heroBtns}>
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.heroBtn, styles.heroBtnLight]}
-              onPress={() => navigation.navigate('SearchUserScreen', { type: 1 })}
+              onPress={() => navigation.navigate('DebtEntry', { type: 1 })}
             >
               <ArrowUpRight size={rs(18)} color={rd.color.primary} />
               <Text style={[styles.heroBtnText, { color: rd.color.primary }]}>{t('Qarz berish')}</Text>
@@ -379,7 +496,7 @@ const QarzShartnomasi = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.heroBtn, { backgroundColor: rd.color.success }]}
-              onPress={() => navigation.navigate('SearchUserScreen', { type: 0 })}
+              onPress={() => navigation.navigate('DebtEntry', { type: 0 })}
             >
               <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
               <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>{t('Qarz olish')}</Text>
@@ -390,11 +507,12 @@ const QarzShartnomasi = () => {
               endi faqat IKKI AMALNI taklif qiladi. */}
         </View>
 
-        {/* Sarlavhasiz: diagrammalarning o'z nomi bor. */}
-        <StatCard title={t('Debitor qarzdorlik')} chart={deb.chart} />
-        <StatCard title={t('Kreditor qarzdorlik')} chart={cred.chart} />
+        {/* Diagramma qismi (Debitor+Kreditor donutlar) OLIB TASHLANDI (so'rov) —
+            hero'дан keyin darhol qarz kartalari boshlanadi. */}
 
         <View style={styles.debtGrid}>
+          {/* Yuqori qator: Berilgan qarz | Olingan qarz (yonma-yon). Past qator:
+              Muddati o'tgan (ber.) | Muddati o'tgan (ol.) — har biri o'z turi TAGIDA. */}
           <DebtCard
             accent={rd.color.primary}
             Icon={ArrowUpRight}
@@ -404,18 +522,7 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.primary}
             amountColor={rd.color.text}
             lines={money(debGivenUzs, debGivenUsd)}
-            onPress={() => goList('debitor', 'all', 'Berilgan qarz')}
-          />
-          <DebtCard
-            accent={rd.color.error}
-            Icon={ClockIcon}
-            label={t('Berilgan qarz')}
-            badge={t('Muddati o‘tgan')}
-            badgeBg={rd.color.errorBg}
-            badgeColor={rd.color.error}
-            amountColor={rd.color.error}
-            lines={money(debExpUzs, debExpUsd)}
-            onPress={() => goList('debitor', 'overdue', 'Muddati o‘tgan (debitor)')}
+            onPress={() => goList('debitor', 'all', t('Berilgan qarz'))}
           />
           <DebtCard
             accent={rd.color.success}
@@ -426,7 +533,18 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.success}
             amountColor={rd.color.text}
             lines={money(credTakenUzs, credTakenUsd)}
-            onPress={() => goList('creditor', 'all', 'Olingan qarz')}
+            onPress={() => goList('creditor', 'all', t('Olingan qarz'))}
+          />
+          <DebtCard
+            accent={rd.color.error}
+            Icon={ClockIcon}
+            label={t('Berilgan qarz')}
+            badge={t('Muddati o‘tgan')}
+            badgeBg={rd.color.errorBg}
+            badgeColor={rd.color.error}
+            amountColor={rd.color.error}
+            lines={money(debExpUzs, debExpUsd)}
+            onPress={() => goList('debitor', 'overdue', t('Muddati o‘tgan (debitor)'))}
           />
           <DebtCard
             accent={rd.color.error}
@@ -437,7 +555,7 @@ const QarzShartnomasi = () => {
             badgeColor={rd.color.error}
             amountColor={rd.color.error}
             lines={money(credExpUzs, credExpUsd)}
-            onPress={() => goList('creditor', 'overdue', 'Muddati o‘tgan (kreditor)')}
+            onPress={() => goList('creditor', 'overdue', t('Muddati o‘tgan (kreditor)'))}
           />
         </View>
 
@@ -445,24 +563,36 @@ const QarzShartnomasi = () => {
         <NearCard
           title={t('Muddati oz qolgan berilgan qarzlar')}
           five={deb.five}
-          onPress={() => goList('debitor', 'near', 'Muddati oz qolgan (debitor)')}
+          onPress={() => goList('debitor', 'near', t('Muddati oz qolgan (debitor)'))}
+          onRow={(uid, type) =>
+            navigation.navigate('ShowUserDetails', { id: uid, type })
+          }
         />
         <NearCard
           title={t('Muddati oz qolgan olingan qarzlar')}
           five={cred.five}
-          onPress={() => goList('creditor', 'near', 'Muddati oz qolgan (kreditor)')}
+          onPress={() => goList('creditor', 'near', t('Muddati oz qolgan (kreditor)'))}
+          onRow={(uid, type) =>
+            navigation.navigate('ShowUserDetails', { id: uid, type })
+          }
         />
 
-        {/* 5. Hisobotlar */}
-        <Text style={styles.blockTitle}>{t('Hisobotlar')}</Text>
-        <ReportCard
-          label={t('Hisobot (debitor qarzdorliklar)')}
-          onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.debitor)}
-        />
-        <ReportCard
-          label={t('Hisobot (kreditor qarzdorliklar)')}
-          onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.creditor)}
-        />
+        {/* 5. Hisobotlar — "Hisobotlar" sarlavhasi OLIB TASHLANDI (SS4.5); ikki karta
+            yonma-yon (chap=berilgan yashil, o'ng=olingan qizil — SS4.6). */}
+        <View style={styles.reportRow}>
+          <ReportCard
+            label={t('Berilgan qarzlar hisoboti')}
+            tint={rd.color.successBg}
+            iconColor={rd.color.success}
+            onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.debitor)}
+          />
+          <ReportCard
+            label={t('Olingan qarzlar hisoboti')}
+            tint={rd.color.errorBg}
+            iconColor={rd.color.error}
+            onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.creditor)}
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -488,13 +618,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
+  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.onPrimary },
   heroSub: {
     fontFamily: rd.font.regular,
-    fontSize: rs(11.5),
+    fontSize: rs(12.5),
     color: 'rgba(255,255,255,0.9)',
     marginTop: rs(4),
-    lineHeight: rs(16),
+    lineHeight: rs(17),
   },
   heroBtns: { flexDirection: 'row', gap: rs(8), marginTop: rs(12) },
   heroBtn: {
@@ -512,7 +642,7 @@ const styles = StyleSheet.create({
   // Blok sarlavhasi
   blockTitle: {
     fontFamily: rd.font.bold,
-    fontSize: rs(17),
+    fontSize: rs(13.5),
     color: rd.color.text,
     marginBottom: rs(-6),
   },
@@ -525,15 +655,55 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     padding: rs(16),
   },
-  statTitle: { fontFamily: rd.font.semibold, fontSize: rs(15), color: rd.color.text },
+  statTitle: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
   statBody: { flexDirection: 'row', alignItems: 'center', gap: rs(16), marginTop: rs(12) },
   legend: { flex: 1, gap: rs(10) },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
   dot: { width: rs(9), height: rs(9), borderRadius: rs(4.5) },
   legendLabel: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(13), color: rd.color.textSecondary },
-  legendCount: { fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
+  legendCount: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
+
+  // Birlashgan diagramma kartasi (Debitor + Kreditor yonma-yon).
+  statPair: { flexDirection: 'row', marginTop: rs(4) },
+  statCol: { flex: 1, alignItems: 'center', paddingHorizontal: rs(4) },
+  statColTitle: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13.5),
+    color: rd.color.text,
+    textAlign: 'center',
+    marginBottom: rs(10),
+    minHeight: rs(36),
+  },
+  // Sonlar bloki — bosilганда chiqadi; joy tebranmasligi uchun doim shu balandlik.
+  revealBox: {
+    minHeight: rs(74),
+    marginTop: rs(10),
+    gap: rs(6),
+    alignSelf: 'stretch',
+    paddingHorizontal: rs(10),
+    justifyContent: 'center',
+  },
+  revealRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  revealCount: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.text },
+  // Umumiy legend — sonsiz, gorizontal, markazда.
+  sharedLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: rs(14),
+    marginTop: rs(14),
+    paddingTop: rs(12),
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  sharedLegendItem: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  sLegendLabel: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
 
   // Qarzdorlik kartalari
+  // 2×2 GRID (so'rov): yuqori qatorда Berilgan | Olingan (yonma-yon), past
+  // qatorда Muddati o'tgan (ber.) | Muddati o'tgan (ol.). Har muddati-o'tgan
+  // o'z qarz-turi TAGIDA (bir ustunда). JSX tartibi: Berilgan, Olingan,
+  // Muddati-ber, Muddati-ol -> qator-wrap shu grid'ni beradi.
   debtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(12) },
   debtCard: {
     width: '47%',
@@ -568,7 +738,7 @@ const styles = StyleSheet.create({
     color: rd.color.textSecondary,
     marginTop: rs(12),
   },
-  debtAmount: { fontFamily: rd.font.bold, fontSize: rs(16), marginTop: rs(4) },
+  debtAmount: { fontFamily: rd.font.bold, fontSize: rs(13), marginTop: rs(4) },
   debtAmountUsd: {
     fontFamily: rd.font.semibold,
     fontSize: rs(12.5),
@@ -601,7 +771,7 @@ const styles = StyleSheet.create({
     color: rd.color.primary,
   },
   nearHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
-  nearTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
+  nearTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
   segment: {
     flexDirection: 'row',
     backgroundColor: rd.color.page,
@@ -645,26 +815,32 @@ const styles = StyleSheet.create({
   },
   dueBadge: { paddingHorizontal: rs(9), paddingVertical: rs(4), borderRadius: rd.radius.pill },
   dueBadgeText: { fontFamily: rd.font.semibold, fontSize: rs(11) },
-  tableAmount: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
+  tableAmount: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
 
   // Hisobot kartasi
+  reportRow: { flexDirection: 'row', gap: rs(12) },
   reportCard: {
-    flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
-    gap: rs(12),
-    backgroundColor: rd.color.surface,
+    gap: rs(10),
     borderRadius: rs(16),
     borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(16),
+    paddingVertical: rs(16),
+    // So'rov SS7.2: "hisoboti" so'zi to'liq sig'sin — yon-padding kamaytirildi.
+    paddingHorizontal: rs(8),
   },
   reportIcon: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    backgroundColor: rd.color.primaryTint,
+    width: rs(44),
+    height: rs(44),
+    borderRadius: rs(22),
+    backgroundColor: rd.color.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  reportLabel: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
+  reportLabel: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(13),
+    color: rd.color.text,
+    textAlign: 'center',
+  },
 });

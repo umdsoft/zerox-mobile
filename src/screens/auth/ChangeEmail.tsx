@@ -17,15 +17,15 @@ const ChangeEmail = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <RdHeader title={t('848')} />
+      <RdHeader title={t('Elektron pochtani o‘zgartirish')} />
       <View style={styles.body}>
         <View style={styles.field}>
           <Text style={styles.label} allowFontScaling={false}>
-            {t('15')}
+            {t('Elektron pochta')}
           </Text>
           <TextInput
             allowFontScaling={false}
-            placeholder={t('847')}
+            placeholder={t('Elektron pochtangizni kiriting')}
             placeholderTextColor={rd.color.textTertiary}
             keyboardType="email-address"
             style={styles.input}
@@ -39,7 +39,7 @@ const ChangeEmail = () => {
           style={styles.submitButton}
         >
           <Text style={styles.submitText} allowFontScaling={false}>
-            {t('42')}
+            {t('Saqlash')}
           </Text>
         </TouchableOpacity>
       </View>

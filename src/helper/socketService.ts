@@ -114,12 +114,12 @@ class SocketService {
       // TLS sertifikat tekshiruvi YOQILDI (oldin secure:false + rejectUnauthorized:false
       // edi → MITM token o'g'irlashi mumkin edi). app.zerox.uz cert'i valid (tekshirildi).
       secure: true,
-      // NOTE (V-004 qoldiq): token hozircha query'da. `auth:{}` ga ko'chirish PRODUCTION
-      // socket-server (app.zerox.uz) `handshake.auth` o'qishini talab qiladi — Faza 5'da
-      // backend bilan birga qilinadi (aks holda realtime buziladi).
-      query: {
+      // VULN-016: token FAQAT `auth` handshake orqali yuboriladi (query string
+      // reverse-proxy/APM/error loglariga tushib ketardi). Backend endi tokenni
+      // faqat handshake.auth dan o'qiydi va identity'ni JWT subject'dan oladi —
+      // shuning uchun query'da id yuborishning ham hojati yo'q.
+      auth: {
         token,
-        id: id,
       },
     });
 
@@ -156,7 +156,20 @@ class SocketService {
       this.onConnectionChange?.(false);
       this.stopPingInterval();
       if (reason === 'io client disconnect') {
+        // Ataylab uzildi (logout) — qayta ulanmaymiz.
         this.isInitialized = false;
+        return;
+      }
+      // 'io server disconnect' — socket.io buni AVTO qayta ulamaydi (yagona holat).
+      // Server qayta ishga tushsa yoki ulanishni majburан uzsa, socket o'lik qolib,
+      // real-time bildirishnomalar kelmasdi. Bir marta qayta ulanishga urinamiz
+      // (auth-xato bo'lsa token-refresh oqimi updateToken orqali tuzatadi).
+      if (reason === 'io server disconnect') {
+        setTimeout(() => {
+          if (this.socket && !this.socket.connected) {
+            this.socket.connect();
+          }
+        }, 2000);
       }
     });
 
@@ -215,8 +228,10 @@ class SocketService {
   updateToken(newToken: string): void {
     if (!this.socket) return;
     try {
+      // VULN-016: yangi tokenni `auth` handshake orqali beramiz (query emas).
       const opts: any = this.socket.io?.opts || {};
-      opts.query = { ...(opts.query || {}), token: newToken, id: this.userId };
+      opts.auth = { ...(opts.auth || {}), token: newToken };
+      (this.socket as any).auth = { ...((this.socket as any).auth || {}), token: newToken };
       if (this.socket.connected) {
         this.socket.disconnect();
       }
@@ -512,7 +527,11 @@ class SocketService {
           }
           Store.dispatch(setNotification({ notification: data.notification }));
         } else {
-          console.warn('App is not active, skipping notification display');
+          // Ilova fon rejimida (yoki iOS'да 'inactive') — LOKAL bildirishnoma
+          // ko'rsatmaymiz (FCM buni bajaradi), LEKIN Redux ro'yxatini baribir
+          // yangilaymiz. Aks holda oldin bu event butunlay tashlab yuborilardi va
+          // ilovaga qaytganда ro'yxat eskirib qolardi (real-time uzilardi).
+          Store.dispatch(setNotification({ notification: data.notification }));
         }
       } catch (error) {
         console.error('Error in reciveNotification:', error);

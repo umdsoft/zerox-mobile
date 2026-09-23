@@ -45,11 +45,11 @@ import { t } from 'i18next';
 import { Trans } from 'react-i18next';
 import TransText from '../components/TransText';
 
-import { getMe } from '../../store/api/home';
+import { getMe, HomeApi } from '../../store/api/home';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
-import { UserIcon } from '../home/redesign/icons';
+import { UserIcon, CoinIcon } from '../home/redesign/icons';
 
 const GiveDebtUser = () => {
   const navigation = useNavigation();
@@ -78,6 +78,48 @@ const GiveDebtUser = () => {
       setDisabled(true);
     }
   }, [amount, checked, date]);
+
+  // Amaldan keyin Home'ga SILLIQ qaytish: `navigation.reset` (butun navigatorni
+  // REMOUNT qilib "ekran oqarib qolishi"ni keltirib chiqarardi) O'RNIGA `navigate`
+  // (remount yo'q) + HomeApi refresh (yangi shartnoma darhol ko'rinadi).
+  const goHomeSoon = () => {
+    // ~1.4s toast'ni o'qishga ulguriladi, keyin yashiramiz + HomeApi yangilaymiz,
+    // fade TUGAGACH (300ms) navigatsiya -> juda tez ochilmaydi, Home'da toast
+    // qolmaydi, qotmaydi.
+    setTimeout(() => {
+      Toast.hide();
+      dispatch(HomeApi({ page: 1 }));
+      setTimeout(() => navigation.navigate('BottomTabNavigator'), 300);
+    }, 1400);
+  };
+  // success=false javoblarni chiройли ko'rsatamiz. `msg:"ex"` = 2 daqiqa dublikat
+  // himoyasi: shartnoma ALLAQACHON yaratilgan va qarshi tomonga yuborilgan
+  // (Notification+FCM insert bo'lgan) -> xato emas, Home'ga qaytamiz.
+  const showFail = (data: any) => {
+    const msg = data?.msg;
+    if (msg === 'ex') {
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 2000,
+        position: 'bottom',
+        type: 'omad',
+        props: { desc: t('So‘rov allaqachon yuborilgan') },
+      });
+      goHomeSoon();
+      return;
+    }
+    const map: Record<string, string> = {
+      'user-bir': t('O‘zingiz bilan qarz shartnomasi tuzib bo‘lmaydi'),
+      date: t('Qaytarish muddati noto‘g‘ri'),
+    };
+    Toast.show({
+      autoHide: true,
+      visibilityTime: 2500,
+      position: 'bottom',
+      type: 'error2',
+      props: { desc: map[msg] || t('Xatolik yuz berdi') },
+    });
+  };
 
   const getUsd = useCallback(async () => {
     try {
@@ -178,7 +220,8 @@ const GiveDebtUser = () => {
               position: 'bottom',
               type: 'error2',
               props: {
-                title: 'Xatolik',
+                // "Xatolik" sarlavhasi olib tashlandi (so'rov bo'yicha) — endi
+                // yagona qalin (descStrong) matn, keskin "Xatolik" so'zisiz.
                 desc: t('294'),
               },
             });
@@ -216,24 +259,14 @@ const GiveDebtUser = () => {
             visibilityTime: 2000,
             position: 'bottom',
             type: 'omad',
-            props: { title: 'Muvaffaqiyatli', desc: t('285') },
+            // Sarlavhasiz — desc BOLD (descStrong) render bo'ladi.
+            props: { desc: t('285') },
           });
-          // socketService.sendNotification({id: qarzoluvchi.id});
-          // socketService.emit('notification', user?.data?.id);
-          // socketService.on('notification', data => {
-          //   dispatch(setNotification({notification: data.not}));
-          // });
           dispatch(getMe());
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'BottomTabNavigator' }],
-            });
-          }, 2000);
+          goHomeSoon();
         } else {
-          setError(true);
           setLoading(false);
-          Alert.alert('Error', JSON.stringify(data));
+          showFail(data);
         }
       }
       if (type === 1) {
@@ -269,7 +302,6 @@ const GiveDebtUser = () => {
             visibilityTime: 2000,
             type: 'error2',
             props: {
-              title: 'Xatolik',
               desc: t('expire_passport'),
             },
           });
@@ -286,20 +318,16 @@ const GiveDebtUser = () => {
           dispatch(getMe());
           Toast.show({
             autoHide: true,
-            visibilityTime: 3000,
+            visibilityTime: 2000,
             position: 'bottom',
             type: 'omad',
-            props: { title: 'Muvaffaqiyatli', desc: t('285') },
+            // Sarlavhasiz — desc BOLD (descStrong) render bo'ladi.
+            props: { desc: t('285') },
           });
-          setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'BottomTabNavigator' }],
-            });
-          }, 2000);
+          goHomeSoon();
         } else {
-          setError(true);
           setLoading(false);
+          showFail(data);
         }
       }
     } catch (error) {
@@ -409,34 +437,31 @@ const GiveDebtUser = () => {
     );
   }, [active, amount]);
   const renderSum = useMemo(() => {
+    // Xizmat haqi bildirishnomasi — chiroyli info-karta (chap chekkasida rangли
+    // urg'u, tanga ikonkasi va yumshoq fon). Ilgari oddiy markazlashgan matn edi.
     return (
-      <View
-        style={{
-          alignItems: 'center',
-          marginVertical: 10,
-          width: '80%',
-          alignSelf: 'center',
-        }}
-      >
-        <TransText
-          textAlign="center"
-          tKey={291}
-          values={{
-            amount: onValue(pay(amount)),
-          }}
-          components={{
-            amount: (
-              <MainText size={style.fontSize.xx - 2} color={colors.red} />
-            ),
-          }}
-        />
-        {/* <MainText textAlign={'center'} size={fontSize[13]}>
-          Xizmat haqi sifatida hisobingizdan{' '}
-          <MainText size={fontSize[13]} color={colors.red}>
-            {onValue(pay(amount))}
-          </MainText>{' '}
-          so’m yechiladi.
-        </MainText> */}
+      <View style={styles.feeCard}>
+        <View style={styles.feeIconWrap}>
+          <CoinIcon size={rs(18)} color={rd.color.warning} />
+        </View>
+        <View style={styles.feeTextWrap}>
+          <TransText
+            textAlign="left"
+            tKey={291}
+            values={{
+              amount: onValue(pay(amount)),
+            }}
+            components={{
+              amount: (
+                <MainText
+                  size={rs(14)}
+                  color={rd.color.warning}
+                  ft={rd.font.bold}
+                />
+              ),
+            }}
+          />
+        </View>
       </View>
     );
   }, [pay, amount]);
@@ -584,7 +609,7 @@ const GiveDebtUser = () => {
                     dateIsPlaceholder && styles.inputPlaceholder,
                   ]}
                 >
-                  {dateIsPlaceholder ? 'dd.mm.yyyy' : settingDate(date)}
+                  {dateIsPlaceholder ? t('kk.oo.yyyy') : settingDate(date)}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -887,6 +912,32 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.regular,
     fontSize: rs(14),
     color: rd.color.text,
+  },
+
+  // Xizmat haqi info-kartasi — yumshoq amber fon + chap rangли urg'u + tanga ikonka.
+  feeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    marginTop: rs(14),
+    backgroundColor: rd.color.warningBg,
+    borderRadius: rd.radius.lg,
+    borderLeftWidth: rs(3),
+    borderLeftColor: rd.color.warning,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+    gap: rs(12),
+  },
+  feeIconWrap: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(17),
+    backgroundColor: rd.color.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feeTextWrap: {
+    flex: 1,
   },
 
   // Tugma

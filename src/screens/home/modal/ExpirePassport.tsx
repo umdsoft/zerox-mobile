@@ -39,11 +39,13 @@ const ExpirePassportModal = () => {
             {t('expire_passport')}
           </Text>
 
+          {/* SS25: tugmalar YONMA-YON — OK (kichik, chapда) + Identifikatsiyadan o'tish
+              (kengroq, o'ngда, uzun matn 2 qatorда sig'adi). */}
           <View style={styles.row}>
             <TouchableOpacity
               onPress={onOk}
               activeOpacity={0.85}
-              style={[styles.btn, styles.btnCancel]}>
+              style={[styles.btn, styles.btnCancel, styles.btnOk]}>
               <Text style={styles.btnCancelText} allowFontScaling={false}>
                 {t('OK')}
               </Text>
@@ -51,8 +53,8 @@ const ExpirePassportModal = () => {
             <TouchableOpacity
               onPress={onClose}
               activeOpacity={0.85}
-              style={[styles.btn, styles.btnPrimary]}>
-              <Text style={styles.btnPrimaryText} allowFontScaling={false}>
+              style={[styles.btn, styles.btnPrimary, styles.btnPrimaryFlex]}>
+              <Text style={styles.btnPrimaryText} allowFontScaling={false} numberOfLines={2} adjustsFontSizeToFit>
                 {t('747')}
               </Text>
             </TouchableOpacity>
@@ -100,19 +102,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     width: '100%',
+    gap: rs(10),
   },
   btn: {
-    flex: 1,
-    height: rs(50),
+    minHeight: rs(52),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: rd.radius.lg,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(8),
   },
+  btnOk: { flex: 1 },
+  btnPrimaryFlex: { flex: 1.7 },
   btnCancel: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,
     borderColor: rd.color.border,
-    marginRight: rs(12),
   },
   btnCancelText: {
     fontFamily: rd.font.semibold,
@@ -131,5 +136,7 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.semibold,
     fontSize: rs(15),
     color: rd.color.onPrimary,
+    // SS6: 2 qatorga tushganda ham matn karta O'RTASIDA turadi.
+    textAlign: 'center',
   },
 });

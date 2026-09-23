@@ -1,25 +1,15 @@
-import {
-  DeviceEventEmitter,
-  NativeEventEmitter,
-  NativeModules,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import {StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useState} from 'react';
 
 import {useNavigation} from '@react-navigation/native';
 
 import LottieView from 'lottie-react-native';
-import {androidFace, iosFace} from '../nativemodule/android.event';
 import {storage} from '../store/api/token/getToken';
 import axios from 'axios';
 
 import {useDispatch} from 'react-redux';
-import {HomeApi, getMe} from '../store/api/home';
+import {getMe} from '../store/api/home';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {contractModalShow} from '../store/reducers/HomeReducer';
 import {useTranslation} from 'react-i18next';
 import Loading from './components/Loading';
 import {t} from 'i18next';
@@ -28,118 +18,52 @@ import ScreenLayout from './components/ScreenLayout';
 import Button from './components/Button';
 import {rd, rs} from '../theme/rd';
 import {FingerprintIcon} from './home/redesign/icons';
+import {useMyIdSession} from '../hooks/useMyIdSession';
+import {MYID} from '../config/myid';
+import {
+  MyIdCameraShape,
+  MyIdEntryType,
+  MyIdLocale,
+  useMyId,
+} from 'react-native-nitro-myid';
+
+const err2 = desc =>
+  Toast.show({
+    autoHide: true,
+    visibilityTime: 3000,
+    position: 'bottom',
+    type: 'error2',
+    props: {desc},
+  });
 
 const returnMessage = response => {
-  switch (response.data.code) {
+  switch (response?.data?.code) {
     case 0:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('Foydalanuvchi topilmadi.'),
-        },
-      });
+      err2(t('Foydalanuvchi topilmadi.'));
       break;
     case 1:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t("Siz muqaddam identifikatsiyadan o'tgansiz."),
-        },
-      });
+      err2(t("Siz muqaddam identifikatsiyadan o'tgansiz."));
       break;
     case 2:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t("Siz identifikatsiyadan o'tgansiz."),
-        },
-      });
+      err2(t("Siz identifikatsiyadan o'tgansiz."));
       break;
     case 3:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('Rasm yuklashda xatolik.'),
-        },
-      });
+      err2(t('Rasm yuklashda xatolik.'));
       break;
     case 4:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('Bildirishnoma yaratishda xatolik.'),
-        },
-      });
+      err2(t('Bildirishnoma yaratishda xatolik.'));
       break;
-
     case 5:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t("Foydalanuvchini ma'lumotlarini o'zgartirishda xatolik."),
-        },
-      });
+      err2(t("Foydalanuvchini ma'lumotlarini o'zgartirishda xatolik."));
       break;
-
     case 6:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('MyId bilan xatolik yuz berdi.'),
-        },
-      });
+      err2(t('MyId bilan xatolik yuz berdi.'));
       break;
     case 7:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('MyId bilan token olishda xatolik yuz berdi.'),
-        },
-      });
+      err2(t('MyId bilan token olishda xatolik yuz berdi.'));
       break;
     default:
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          // title: 'Xatolik',
-          desc: t('Xatolik!'),
-        },
-      });
+      err2(t('Xatolik!'));
       break;
   }
 };
@@ -148,17 +72,26 @@ const ChangePassportData = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {i18n} = useTranslation();
+  const {start} = useMyId();
   const [loading, setLoading] = useState(false);
-  const Indentificator = useCallback(async () => {
-    const nativeEvent = new NativeEventEmitter(NativeModules.MyIdModule);
+  const [loading2, setLoading2] = useState(false);
 
-    const postData = async data => {
-      let token = storage.getString('token');
+  // MyID sessiyasi (yangi nitro SDK — eski o'lik NativeModules.MyIdModule o'rniga).
+  const {getSession} = useMyIdSession({
+    url: URL + '/user/myid/session',
+    token: storage.getString('token') || undefined,
+    onError: e => returnMessage(e?.response),
+  });
+
+  // MyID muvaffaqiyatли yakunlanganда — `code`ni backendga yuboramiz. Backend
+  // (PUT /user/change-passport-data) code orqali MyID profilini oladi va pasport
+  // ma'lumotlarini yangilaydi. Rasm IXTIYORIY (nitro faqat code beradi).
+  const postData = useCallback(
+    async data => {
+      const token = storage.getString('token');
       try {
         const form = new FormData();
-        form.append('code', data.code);
-        form.append('image', data.image);
-
+        form.append('code', data?.code);
         const response = await axios.put(
           URL + '/user/change-passport-data',
           form,
@@ -169,103 +102,74 @@ const ChangePassportData = () => {
             },
           },
         );
-
-        if (response.data.success) {
+        if (response.data?.success) {
           setLoading(true);
-          dispatch(getMe()).then(val => {
-            navigation.navigate('BottomTabNavigator');
-            setTimeout(() => {
-              setLoading(false);
-            }, 300);
+          dispatch(getMe()).then(() => {
+            // NAV-FIX: pasport ma'lumoti SAQLANDI — oqim tugadi. `reset` bilan
+            // forma stekdan chiqadi; aks holda bosh sahifadan orqaga bosilganda
+            // yana to'ldirilgan pasport formasi ochilib qolardi.
+            navigation.reset({ index: 0, routes: [{ name: 'BottomTabNavigator' }] });
+            setTimeout(() => setLoading(false), 300);
           });
         } else {
-          Toast.show({
-            autoHide: true,
-            visibilityTime: 3000,
-            position: 'bottom',
-            type: 'error2',
-            props: {
-              // title: 'Xatolik',
-              desc: t('Xatolik!'),
-            },
-          });
+          err2(t('Xatolik!'));
         }
-      } catch (err) {
-        returnMessage(err.response);
+      } catch (e) {
+        returnMessage(e?.response);
       }
-    };
-    if (Platform.OS === 'android') {
-      DeviceEventEmitter.addListener('onSuccess', async data => {
-        console.log('success');
-        postData(data);
-      });
-      DeviceEventEmitter.addListener('onError', data => {
-        console.log(data, 'error face');
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            // title: 'Xatolik',
-            desc: t('Xatolik!'),
-          },
-        });
-      });
-    }
-    if (Platform.OS === 'ios') {
-      nativeEvent.addListener('onSuccess', data => {
-        console.log(data, 'data');
-        postData(data);
-      });
-      nativeEvent.addListener('onError', data => {
-        console.log(data, 'errorr');
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: {
-            // title: 'Xatolik',
-            desc: t(data.message),
-          },
-        });
-      });
-      nativeEvent.addListener('onUserExited', data => {
-        console.log(data, 'user find');
-      });
-    }
-  }, [dispatch, navigation]);
+    },
+    [dispatch, navigation],
+  );
 
-  useEffect(() => {
-    Indentificator();
+  // "Davom etish" — MyID sessiyasini olib, kamerani ochamiz (IDENTIFICATION → code).
+  const onStart = useCallback(async () => {
+    setLoading2(true);
+    let sessionId;
+    try {
+      const res = await getSession();
+      sessionId = res?.sessionId;
+    } finally {
+      setLoading2(false);
+    }
+    if (!sessionId) return;
 
-    return () => {
-      DeviceEventEmitter.removeAllListeners('onSuccess');
-      DeviceEventEmitter.removeAllListeners('onError');
-      DeviceEventEmitter.removeAllListeners('onUserExited');
+    const lang = i18n.language === 'uz' ? MyIdLocale.UZ : MyIdLocale.RU;
+    const cfg = {
+      sessionId,
+      ...MYID,
+      entryType: MyIdEntryType.IDENTIFICATION,
+      cameraShape: MyIdCameraShape.CIRCLE,
+      locale: lang,
     };
-  }, [Indentificator]);
+    try {
+      start(cfg, {
+        onSuccess: async d => {
+          await postData(d);
+        },
+        onError: () => err2(t('Xatolik!')),
+        onUserExited: () => {},
+      });
+    } catch (e) {
+      err2(t('Xatolik!'));
+    }
+  }, [getSession, i18n.language, postData, start]);
+
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <ScreenLayout title={t('otish')} scroll contentStyle={styles.content}>
+    <ScreenLayout title={t('otish')} titleSize={14.5} scroll contentStyle={styles.content}>
+      {/* SS22: touch-ID badge OLIB TASHLANdi; Lottie CARDSIZ — to'g'ridan-to'g'ri
+          sahifada (1/2-skrinshotlardagi kabi). */}
       <View style={styles.hero}>
-        <View style={styles.badge}>
-          <FingerprintIcon size={rs(30)} color={rd.color.primary} />
-        </View>
-
-        <View style={styles.scanCard}>
-          <LottieView
-            source={require('../images/scan.json')}
-            autoPlay={true}
-            renderMode="AUTOMATIC"
-            resizeMode="cover"
-            style={styles.lottie}
-          />
-        </View>
+        <LottieView
+          source={require('../images/scan.json')}
+          autoPlay={true}
+          renderMode="AUTOMATIC"
+          resizeMode="cover"
+          style={styles.lottie}
+        />
 
         <Text allowFontScaling={false} style={styles.text}>
           {t('753')}
@@ -274,16 +178,9 @@ const ChangePassportData = () => {
 
       <Button
         title={t('45')}
-        onPress={() => {
-          Platform.OS === 'android'
-            ? androidFace(
-                i18n.language.toString() === 'uz' ||
-                  i18n.language.toString() === 'kril'
-                  ? 'uz'
-                  : 'ru',
-              )
-            : iosFace();
-        }}
+        onPress={onStart}
+        loading={loading2}
+        disabled={loading2}
         style={styles.buttonSpacing}
       />
     </ScreenLayout>
@@ -312,20 +209,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(28),
   },
-  scanCard: {
-    width: rs(220),
-    height: rs(220),
-    borderRadius: rd.radius.huge,
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: rs(28),
-  },
   lottie: {
-    width: rs(150),
-    height: rs(150),
+    width: rs(190),
+    height: rs(190),
+    marginBottom: rs(24),
   },
   text: {
     fontSize: rs(15),

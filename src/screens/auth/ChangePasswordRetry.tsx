@@ -100,7 +100,7 @@ const ChangePasswordRetry = () => {
 
           {/* Parolni tasdiqlang */}
           <Text style={[styles.label, { marginTop: rs(16) }]} allowFontScaling={false}>
-            {t('845')}
+            {t('Parolni tasdiqlang')}
           </Text>
           <View
             style={[styles.field, focused === 'confirm' && styles.fieldFocused]}

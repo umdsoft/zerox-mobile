@@ -22,8 +22,7 @@ import {
   LogOutIcon,
   CoinIcon,
   AvatarPersonIcon,
-  CheckIcon,
-} from '../home/redesign/icons';
+  CheckIcon, MonitorIcon,} from '../home/redesign/icons';
 
 import messaging from '@react-native-firebase/messaging';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -50,7 +49,7 @@ import {colors} from '../../theme/colors';
 import {fontSize} from '../../theme/font';
 // import {t} from 'i18next';
 import {useTranslation} from 'react-i18next';
-import {URL} from '../constants';
+import {URL, PDF_OFERTA_URL} from '../constants';
 import notifee from '@notifee/react-native';
 import {NotificationBadgeModule} from '../../nativemodule/notificationBadge';
 import socketService from '../../helper/socketService';
@@ -124,8 +123,13 @@ const UserScreen = () => {
     }
     return ((user?.data?.company || 'Z')[0] || 'Z').toUpperCase();
   })();
+  // Tasdiqlangan foydalanuvchida "Identifikatsiyadan o'tish" FAQAT pasport muddati
+  // o'tганда chiqadi (so'rov). 🔴 ROOT: expiry_date bo'sh/null bo'lса
+  // `new Date(null)`=1970 (o'tган kun) → expire_passport_check TRUE qaytarib,
+  // amaldаgi pasportда ham tugma chiqardi. `!!expiry_date` guard buni to'g'rlaydi.
   const showPassportCta =
     user?.data?.is_active !== 0 &&
+    !!user?.data?.expiry_date &&
     expire_passport_check(user?.data?.expiry_date);
 
   const Row = ({icon, label, onPress, last}: any) => (
@@ -218,9 +222,9 @@ const UserScreen = () => {
             icon={<CoinIcon size={rs(20)} color={rd.color.primary} />}
             label={t('681')}
             onPress={() => {
-              let lang = storage.getString('lang');
+              let lang = storage.getString('lang') || 'uz';
               navigation.navigate('Contract', {
-                url: `https://pdf.zerox.uz/oferta.php?id=${user.data.uid}&lang=${lang}&download=0`,
+                url: `${PDF_OFERTA_URL}?id=${user.data.uid}&lang=${lang}&download=0`,
                 title: t('681'),
               });
             }}
@@ -239,6 +243,16 @@ const UserScreen = () => {
             label={t('816')}
             onPress={() => {
               navigateScreen('Security');
+            }}
+          />
+          <View style={styles.divider} />
+          {/* SS9 (2026-09-18): "Ulangan qurilmalar" Xavfsizlik ichidan SHU YERGA
+              ko'chirildi — Xavfsizlik bandidan keyin, "Chiqish" dan oldin. */}
+          <Row
+            icon={<MonitorIcon size={rs(20)} color={rd.color.primary} />}
+            label={t('Ulangan qurilmalar')}
+            onPress={() => {
+              navigateScreen('ActiveDevices');
             }}
             last
           />
@@ -274,38 +288,44 @@ const UserScreen = () => {
 const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
   const {t} = useTranslation();
   const [loading, setLoading] = useState(false);
+  // KRITIK: `dispatch` ExitModal'ning O'Z scope'ida bo'lishi SHART. Ilgari onLogOut
+  // ota-komponentdagi `dispatch`ga murojaat qilardi (prop emas) — ExitModal render
+  // bo'lganda useCallback dependency array'da `dispatch` o'qilib "ReferenceError:
+  // dispatch is not defined" berardi → UserScreen ochilishi bilan CRASH (avatar bosilganda).
+  const dispatch = useDispatch();
 
   const onLogOut = useCallback(async () => {
+    // HAR DOIM ishlaydigan yakuniy tozalash — deleteToken muvaffaqiyatli bo'lsa ham,
+    // xato bersa ham. Aks holda logout jim no-op bo'lib, oldingi foydalanuvchi
+    // ma'lumotlari (MMKV + Redux) qolib, keyingi foydalanuvchiga aralashib ketardi.
+    const finishLogout = () => {
+      if (Platform.OS === 'ios') {
+        notifee.setBadgeCount(0).then(() => {});
+      } else {
+        NotificationBadgeModule.setBadgeOnlyNumber(0);
+      }
+      storage.clearAll(); // MMKV (token/PIN/user_id...)
+      dispatch({ type: 'RESET_STORE' }); // Redux BARCHA slice initial holatiga
+      navigation.reset({
+        routes: [{ name: 'SelectLanguageScreen' }],
+        index: 0,
+      });
+      setHide(false);
+      setLoading(false);
+    };
     try {
       setLoading(true);
       deleteToken()
-        .then(async () => {
-          if (Platform.OS === 'ios') {
-            notifee.setBadgeCount(0).then(() => {});
-          } else {
-            NotificationBadgeModule.setBadgeOnlyNumber(0);
-          }
-          storage.clearAll();
-          navigation.reset({
-            routes: [{name: 'SelectLanguageScreen'}],
-            index: 0,
-          });
-          setHide(false);
-          setLoading(false);
-        })
+        .then(finishLogout)
         .catch((error: any) => {
-          // storage.clearAll();
           console.error('Error deleting token:', error);
-          setHide(false);
-          setLoading(false);
+          finishLogout();
         });
-      // await onLastTime();
     } catch (error) {
-      // storage.clearAll();
-      setLoading(false);
       console.error('Error during logout:', error);
+      finishLogout();
     }
-  }, [deleteToken, navigation, setHide]);
+  }, [deleteToken, dispatch, navigation, setHide]);
 
   return (
     <RNModal

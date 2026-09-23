@@ -30,11 +30,13 @@ import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import DateModal from '../modal/DateModal';
+import { fmtUSD, fmtUZS } from '../../../helper/money';
 import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  ClockIcon,
+  CalendarIcon,
+  ChevronRight,
   CoinIcon,
   UserIcon,
 } from '../redesign/icons';
@@ -89,6 +91,40 @@ const CircleIcon = ({
   </View>
 );
 
+// Sana maydoni — chiroyli karta: taqvim ikonasi (aksent doira) + yorliq + sana +
+// chevron. Ikkala sana (berilgan/qaytarish) uchun bir xil ko'rinish.
+const DateField = ({
+  label,
+  value,
+  placeholder,
+  accent,
+  accentBg,
+  onPress,
+}: {
+  label: string;
+  value?: string;
+  placeholder: string;
+  accent: string;
+  accentBg: string;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity activeOpacity={0.85} style={styles.dateCard} onPress={onPress}>
+    <CircleIcon size={rs(42)} bg={accentBg}>
+      <CalendarIcon size={rs(20)} color={accent} />
+    </CircleIcon>
+    <View style={{ flex: 1 }}>
+      <Text style={styles.dateCardLabel}>{label}</Text>
+      <Text
+        style={[styles.dateCardValue, !value && styles.dateCardPlaceholder]}
+        numberOfLines={1}
+      >
+        {value || placeholder}
+      </Text>
+    </View>
+    <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+  </TouchableOpacity>
+);
+
 // ---------- Ekran ----------
 const QarzDaftariYangi = () => {
   const navigation = useNavigation<any>();
@@ -98,6 +134,11 @@ const QarzDaftariYangi = () => {
   const faoliyat_id = route.params?.faoliyat_id;
   const mijoz_id = route.params?.mijoz_id;
   const fish: string = route.params?.fish || '';
+  // SS7-2: mijozning joriy qoldig'i — chaqiruvchi ekran (mijozlar ro'yxati /
+  // mijoz sahifasi) uni allaqachon yuklagan, shu bois qo'shimcha so'rovsiz
+  // param orqali beriladi. Yangi qo'shilgan mijozda 0.
+  const qoldiqUzs = Number(route.params?.qoldiq_uzs || 0);
+  const qoldiqUsd = Number(route.params?.qoldiq_usd || 0);
   const turi: 'berish' | 'olish' = route.params?.turi || 'berish';
 
   const isOlish = turi === 'olish';
@@ -152,16 +193,16 @@ const QarzDaftariYangi = () => {
     if (submitting) return;
 
     if (miqdor <= 0) {
-      Toast.show({ type: 'xato', text1: t('Qarz miqdorini kiriting') });
+      Toast.show({ type: 'error2', props: { desc: t('Qarz miqdorini kiriting') } });
       return;
     }
     if (bolibTolash) {
       if (oylarNum < 1) {
-        Toast.show({ type: 'xato', text1: t('Oylar sonini kiriting (1–60)') });
+        Toast.show({ type: 'error2', props: { desc: t('Oylar sonini kiriting (1–60)') } });
         return;
       }
     } else if (!qaytarishSana) {
-      Toast.show({ type: 'xato', text1: t('Qaytarish sanasini tanlang') });
+      Toast.show({ type: 'error2', props: { desc: t('Qaytarish sanasini tanlang') } });
       return;
     }
 
@@ -186,10 +227,10 @@ const QarzDaftariYangi = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.success) {
-        Toast.show({ type: 'omad', props: { title: t('Qarz saqlandi') } });
+        Toast.show({ type: 'omad', props: { desc: t('Qarz saqlandi') } });
         navigation.goBack();
       } else {
-        Toast.show({ type: 'xato', text1: t('Xatolik yuz berdi') });
+        Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
       }
     } catch (error: any) {
       const code = error?.response?.data?.code;
@@ -199,7 +240,7 @@ const QarzDaftariYangi = () => {
           : code === 'required_plan'
           ? t('Tarif talab qilinadi')
           : t('Xatolik yuz berdi');
-      Toast.show({ type: 'xato', text1: msg });
+      Toast.show({ type: 'error2', props: { desc: msg } });
     } finally {
       setSubmitting(false);
     }
@@ -229,14 +270,25 @@ const QarzDaftariYangi = () => {
               <Text style={styles.clientName} numberOfLines={1}>
                 {titleCase(fish)}
               </Text>
-              <Text style={styles.clientNote}>
-                {isOlish ? t('Ushbu mijozdan qarz olinadi') : t('Ushbu mijozga qarz beriladi')}
-              </Text>
+              {/* SS7-2 (2026-09-14): FISH ostida mijozning QOLDIQ qarzi —
+                  do'kon egasi yangi qarz berishdan oldin mavjud qarzni ko'radi.
+                  Shrift kichik va ALOHIDA qatorda: FISH asosiy ma'lumot bo'lib
+                  qoladi va summa uzun bo'lsa ham uni siqib qo'ymaydi
+                  (K/M/B qisqartma — `fmtUZS`/`fmtUSD`). */}
+              {(qoldiqUzs > 0 || qoldiqUsd > 0) && (
+                <View style={styles.clientQoldiq}>
+                  <Text style={styles.clientQoldiqLabel}>{t('Qoldiq qarz')}</Text>
+                  <Text style={styles.clientQoldiqVal} numberOfLines={1}>
+                    {fmtUZS(qoldiqUzs)}
+                    {qoldiqUsd > 0 ? ` · ${fmtUSD(qoldiqUsd)}` : ''}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
           {/* 2) Valyuta */}
-          <Text style={styles.label}>{t('Valyuta')}</Text>
+          <Text style={styles.label}>{t('Valyutani tanlang')}</Text>
           <View style={styles.valyutaRow}>
             {(
               [
@@ -267,7 +319,7 @@ const QarzDaftariYangi = () => {
           </View>
 
           {/* 3) Qarz miqdori */}
-          <Text style={styles.label}>{t('Qarz miqdori')}</Text>
+          <Text style={styles.label}>{t('Qarz miqdorini kiriting')}</Text>
           <View style={styles.inputWrap}>
             <TextInput
               style={styles.input}
@@ -281,27 +333,26 @@ const QarzDaftariYangi = () => {
           </View>
 
           {/* 4) Mahsulot nomi (ixtiyoriy) */}
-          <Text style={styles.label}>{t('Mahsulot nomi (ixtiyoriy)')}</Text>
+          <Text style={styles.label}>{t('Mahsulot yoki xizmat nomi (ixtiyoriy)')}</Text>
           <View style={styles.inputWrap}>
             <TextInput
               style={styles.input}
               value={mahsulot}
               onChangeText={setMahsulot}
-              placeholder={t('Masalan: Shifer va taxta')}
+              placeholder={t('Masalan, telefon')}
               placeholderTextColor={rd.color.textTertiary}
             />
           </View>
 
           {/* 5) Qarz berilgan sana */}
-          <Text style={styles.label}>{t('Qarz berilgan sana')}</Text>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.dateField}
+          <DateField
+            label={t('Qarz berilgan sana')}
+            value={toDisplayDate(berilganSana)}
+            placeholder={t('Sanani tanlang')}
+            accent={accent}
+            accentBg={accentBg}
             onPress={() => setBerilganOpen(true)}
-          >
-            <ClockIcon size={rs(18)} color={rd.color.textTertiary} />
-            <Text style={styles.dateText}>{toDisplayDate(berilganSana)}</Text>
-          </TouchableOpacity>
+          />
 
           {/* 6) Bo'lib to'lash toggle */}
           <View style={styles.switchRow}>
@@ -352,22 +403,14 @@ const QarzDaftariYangi = () => {
           ) : (
             <>
               {/* Qarzni qaytarish sanasi */}
-              <Text style={styles.label}>{t('Qarzni qaytarish sanasi')}</Text>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.dateField}
+              <DateField
+                label={t('Qarzni qaytarish sanasi')}
+                value={qaytarishSana ? toDisplayDate(qaytarishSana) : ''}
+                placeholder={t('Sanani tanlang')}
+                accent={accent}
+                accentBg={accentBg}
                 onPress={() => setQaytarishOpen(true)}
-              >
-                <ClockIcon size={rs(18)} color={rd.color.textTertiary} />
-                <Text
-                  style={[
-                    styles.dateText,
-                    !qaytarishSana && { color: rd.color.textTertiary },
-                  ]}
-                >
-                  {qaytarishSana ? toDisplayDate(qaytarishSana) : t('Sanani tanlang')}
-                </Text>
-              </TouchableOpacity>
+              />
             </>
           )}
 
@@ -490,6 +533,19 @@ const styles = StyleSheet.create({
     marginBottom: rs(4),
   },
   clientName: { fontFamily: rd.font.bold, fontSize: rs(15.5), color: rd.color.text },
+  // SS7-2: qoldiq qarz — FISH ostida, sezilarli kichik shriftda.
+  clientQoldiq: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(3) },
+  clientQoldiqLabel: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(10.5),
+    color: rd.color.textTertiary,
+  },
+  clientQoldiqVal: {
+    flex: 1,
+    fontFamily: rd.font.semibold,
+    fontSize: rs(11),
+    color: rd.color.textSecondary,
+  },
   clientNote: {
     fontFamily: rd.font.regular,
     fontSize: rs(12),
@@ -506,21 +562,25 @@ const styles = StyleSheet.create({
   },
 
   // Valyuta toggle
-  valyutaRow: { flexDirection: 'row', gap: rs(12) },
+  valyutaRow: { flexDirection: 'row', gap: rs(10) },
+  // SS7-3 (2026-09-14, 2-marta): valyuta cardlari YANA ixchamlashtirildi —
+  // oldingi o'lcham ham forma ichida haddan katta joy egallardi. Balandlik
+  // (padding) va ikkala matn birgalikda kichraydi, aks holda card kichrayib
+  // matn ichida siqilib qolardi.
   valyutaCard: {
     flex: 1,
     alignItems: 'center',
-    gap: rs(3),
+    gap: rs(1),
     backgroundColor: rd.color.surface,
-    borderRadius: rs(16),
+    borderRadius: rs(10),
     borderWidth: 1.5,
     borderColor: rd.color.border,
-    paddingVertical: rs(16),
+    paddingVertical: rs(7),
   },
-  valyutaTitle: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.text },
+  valyutaTitle: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
   valyutaNote: {
     fontFamily: rd.font.regular,
-    fontSize: rs(11.5),
+    fontSize: rs(9),
     color: rd.color.textTertiary,
   },
 
@@ -548,19 +608,34 @@ const styles = StyleSheet.create({
     marginLeft: rs(8),
   },
 
-  // Date field
-  dateField: {
+  // Date field — chiroyli karta (taqvim ikonasi + yorliq + sana + chevron)
+  dateCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: rs(10),
+    gap: rs(12),
     backgroundColor: rd.color.surface,
-    borderRadius: rs(14),
+    borderRadius: rs(16),
     borderWidth: 1.5,
     borderColor: rd.color.border,
     paddingHorizontal: rs(14),
-    paddingVertical: rs(13),
+    paddingVertical: rs(12),
+    marginTop: rs(4),
   },
-  dateText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.text },
+  dateCardLabel: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.textTertiary,
+  },
+  dateCardValue: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(15.5),
+    color: rd.color.text,
+    marginTop: rs(2),
+  },
+  dateCardPlaceholder: {
+    fontFamily: rd.font.semibold,
+    color: rd.color.textTertiary,
+  },
 
   // Switch
   switchRow: {

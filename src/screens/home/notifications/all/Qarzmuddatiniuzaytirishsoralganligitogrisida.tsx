@@ -4,9 +4,9 @@ import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
 import { settingDate } from '../../../../helper';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import { font } from '../../../../theme/font';
@@ -65,7 +65,7 @@ const Qarzmuddatiniuzaytirishsoralganligitogrisida = ({
               {item.number}
             </Text>
           ),
-          start: <MainText ft={font.medium} size={style.fontSize.xx - 2} />,
+          start: <MainText ft={font.medium} size={style.fontSize.xx + 1} />,
           end: <TextBold />,
         }}
       />

@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { toastConfig } from '../../../components/ToastConfig';
@@ -26,7 +26,7 @@ const MalumotniKorishgaRadEtildi = ({ item, navigation, okay }) => {
       <Text
         allowFontScaling={false}
         style={{
-          fontSize: style.fontSize.xx - 2,
+          fontSize: style.fontSize.xx + 1,
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         }}

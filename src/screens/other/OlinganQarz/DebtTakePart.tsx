@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import React, { useEffect, useMemo, useState } from 'react';
+import { goHomeSmooth } from "../../../helper/finishAction";
 import { style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -31,6 +32,14 @@ import Loading from '../../components/Loading';
 import ScreenLayout from '../../components/ScreenLayout';
 import { ActivityIndicator } from 'react-native';
 import { rd, rs } from '../../../theme/rd';
+import { titleCase } from '../../../helper/returnName';
+import {
+  AnimatedIconCircle,
+  PartReturnIcon,
+} from '../../../images/debtActionIcons';
+
+// Qisman qaytarish — KO'K (DebtTakeSelect bilan mos).
+const PART = '#2f6fed';
 
 const DebtTakePart = () => {
   const navigation = useNavigation();
@@ -84,7 +93,6 @@ const DebtTakePart = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t("Ushbu shartnoma bo'yicha qarzdorlik mavjud emas"),
           },
         });
@@ -96,7 +104,6 @@ const DebtTakePart = () => {
         Toast.show({
           autoHide: true,
           props: {
-            title: 'Xatolik',
             desc: t(
               'Siz ushbu qarz shartnomasi bo‘yicha so‘rov yuborgansiz. Iltimos, so‘rov natijasini kuting!',
             ),
@@ -109,20 +116,17 @@ const DebtTakePart = () => {
         return;
       }
       if (status === 201) {
+        // SS6: "Muvaffaqiyatli" (t('243')) sarlavhasi olib tashlandi -> matn bold.
         Toast.show({
-          autoHide: true,
+          // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+          autoHide: false,
           props: {
-            title: t('243'),
             desc: t('456'),
           },
-          visibilityTime: 2000,
           position: 'bottom',
           type: 'omad',
         });
-        setTimeout(() => {
-          setLoading(false);
-          navigation.navigate('BottomTabNavigator');
-        }, 2000);
+        goHomeSmooth(navigation, t('456'));
       }
 
       // socketService.sendNotification({
@@ -138,7 +142,6 @@ const DebtTakePart = () => {
       Toast.show({
         autoHide: true,
         props: {
-          title: 'Xatolik',
           desc: t('Xatolik sodir bo‘ldi'),
         },
         text1: '',
@@ -193,9 +196,8 @@ const DebtTakePart = () => {
   const renderInput = useMemo(() => {
     return (
       <View style={styles.inputWrap}>
-        <Text style={styles.inputLabel} allowFontScaling={false}>
-          {t('276')}
-        </Text>
+        {/* Input tepasidagi "Summani kiriting" label OLIB TASHLANDI — placeholder'da
+            allaqachon bor edi (dublikat, so'rov bo'yicha). */}
         <TextInput
           value={onValue(sum)}
           placeholder={t('276')}
@@ -215,6 +217,12 @@ const DebtTakePart = () => {
   return (
     <ScreenLayout title={t('450')} scroll>
         <View style={styles.content}>
+            {/* Tepada — QISMAN qaytarish ikonasi (ko'k) + yengil puls. */}
+            <View style={styles.iconWrap}>
+              <AnimatedIconCircle size={rs(92)} bg={PART}>
+                <PartReturnIcon width={rs(48)} height={rs(48)} />
+              </AnimatedIconCircle>
+            </View>
             <View>
               <View style={[styles.card]}>
                 <View style={styles.insideMoney}>
@@ -225,7 +233,8 @@ const DebtTakePart = () => {
                         start: settingDate(contractInfo.created_at),
                         end: contractInfo.number,
                         id: contractInfo.number,
-                        name: contractInfo?.debitor_name,
+                        // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.
+                        name: titleCase(contractInfo?.debitor_name),
                         sum: `${
                           sortText(contractInfo.amount - contractInfo.inc) +
                           ' ' +
@@ -233,9 +242,9 @@ const DebtTakePart = () => {
                         }`,
                       }}
                       components={{
-                        start: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
+                        // Shrift barcha so'z va raqamda bir xil — faqat shartnoma
+                        // raqami (id) bosiladigan ko'k havola.
+                        start: <Text allowFontScaling={false} />,
                         id: (
                           <Text
                             onPress={() => {
@@ -244,19 +253,13 @@ const DebtTakePart = () => {
                                 id: contractInfo.id,
                               });
                             }}
-                            style={{
-                              color: style.blue,
-                            }}
+                            style={styles.link}
                             allowFontScaling={false}
                           />
                         ),
-                        end: <TextBold />,
-                        name: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
-                        sum: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
+                        end: <Text allowFontScaling={false} />,
+                        name: <Text allowFontScaling={false} style={styles.nameBold} />,
+                        sum: <Text allowFontScaling={false} style={styles.sumBold} />,
                       }}
                     />
                   </Text>
@@ -335,9 +338,14 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: rs(16),
-    paddingTop: rs(20),
+    paddingTop: rs(24),
     paddingBottom: rs(24),
   },
+  // Ikona tepada -> matn/input/tugma biroz pastroq (so'rov bo'yicha).
+  iconWrap: { alignItems: 'center', marginBottom: rs(28) },
+  // Umumiy qarz summasi — bold (so'rov bo'yicha jirniy).
+  sumBold: { fontFamily: rd.font.bold, color: rd.color.text },
+  nameBold: { fontFamily: rd.font.bold, color: rd.color.text },
   inputWrap: {
     marginTop: rs(20),
   },
@@ -378,6 +386,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: rs(22),
   },
+  // Shartnoma raqami havolasi — shrift bir xil, faqat ko'k rang.
+  link: { color: rd.color.primary },
   insideMoney: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -3,7 +3,8 @@
  * Barcha ikonka bir xil API: { size?, color?, strokeWidth? }. 24px default, stroke 2.
  */
 import React from 'react';
-import Svg, { Circle, Line, Path, Polyline, Rect } from 'react-native-svg';
+import { Animated, Easing, View } from 'react-native';
+import Svg, { Circle, Ellipse, Line, Path, Polyline, Rect } from 'react-native-svg';
 
 export type IconProps = {
   size?: number;
@@ -46,6 +47,68 @@ export const BellIcon = (p: IconProps) => (
   <Base {...p}>
     <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
     <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </Base>
+);
+
+// Tangalar dastasi (coins) — PUL. "Qarzni qaytarish" hero uchun (pulni qaytarish).
+export const CoinsIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Ellipse cx="12" cy="6.5" rx="7" ry="3" />
+    <Path d="M5 6.5 v4 c0 1.66 3.13 3 7 3 s7 -1.34 7 -3 v-4" />
+    <Path d="M5 10.5 v4 c0 1.66 3.13 3 7 3 s7 -1.34 7 -3 v-4" />
+  </Base>
+);
+
+// $ tanga — PUL (dollar belgili tanga). "Qarzni qaytarish" hero (pulni qaytarish).
+export const MoneyCoinIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="12" r="9.5" />
+    <Path d="M14.8 9 H10.6 a1.9 1.9 0 0 0 0 3.8 h2.8 a1.9 1.9 0 0 1 0 3.8 H9" />
+    <Line x1="12" y1="6.7" x2="12" y2="17.3" />
+  </Base>
+);
+
+// Pulni EGASIGA QAYTARISH — ochiq kaft (qo'l) pulni (tanga) uzatmoqda.
+// "Qarzni qaytarish" hero: tanga EMAS, bank/DB EMAS, $ EMAS — aynan
+// "pulni egasiga topshirish/qaytarish" ma'nosi (qo'l + tanga).
+export const HandCoinReturnIcon = (p: IconProps) => (
+  <Base {...p} strokeWidth={p.strokeWidth ?? 2}>
+    {/* Qo'l/bilak — pastdan yuqoriga uzatmoqda (topshirmoqda) */}
+    <Path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+    <Path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+    <Path d="m2 16 6 6" />
+    {/* Tanga (pul) — uzatilayotgan qiymat */}
+    <Circle cx="16" cy="9" r="2.9" />
+    <Circle cx="6" cy="5" r="3" />
+  </Base>
+);
+
+// Do'kon (storefront) — tent/awning + devor + eshik. "Savdo faoliyati" uchun.
+export const StorefrontIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M3 9 L4.5 4 H19.5 L21 9 Z" />
+    <Path d="M5 9 V20 H19 V9" />
+    <Path d="M10 20 V14.5 H14 V14.5 V20" />
+    <Line x1="3" y1="9" x2="21" y2="9" />
+  </Base>
+);
+
+// Ogohlantirish uchburchagi (alert-triangle) — home "Ogohlantirishlar" alertlari.
+export const WarningIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <Line x1="12" y1="9" x2="12" y2="13" />
+    <Line x1="12" y1="17" x2="12.01" y2="17" />
+  </Base>
+);
+
+// Savat (trash-2) — o'chirish amallari uchun.
+export const TrashIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Polyline points="3 6 5 6 21 6" />
+    <Path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <Line x1="10" y1="11" x2="10" y2="17" />
+    <Line x1="14" y1="11" x2="14" y2="17" />
   </Base>
 );
 
@@ -96,9 +159,43 @@ export const ClockIcon = (p: IconProps) => (
   </Base>
 );
 
+// YUZ-SKAN — identifikatsiya (Lucide scan-face): skan-ramka burchaklari + yuz
+// (ko'zlar + tabassum). "Identifikatsiyadan o'tish" hero uchun (touch-ID EMAS).
+export const ScanFaceIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M3 7V5a2 2 0 0 1 2-2h2" />
+    <Path d="M17 3h2a2 2 0 0 1 2 2v2" />
+    <Path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+    <Path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+    <Path d="M8 14s1.5 2 4 2 4-2 4-2" />
+    <Line x1="9" y1="9" x2="9.01" y2="9" />
+    <Line x1="15" y1="9" x2="15.01" y2="9" />
+  </Base>
+);
+
+// Mijoz QO'SHISH — odam + plus (Feather user-plus). "Yangi mijoz" hero uchun.
+export const UserPlusIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <Circle cx="8.5" cy="7" r="4" />
+    <Line x1="20" y1="8" x2="20" y2="14" />
+    <Line x1="23" y1="11" x2="17" y2="11" />
+  </Base>
+);
+
 export const ChevronRight = (p: IconProps) => (
   <Base {...p} strokeWidth={p.strokeWidth ?? 2.4}>
     <Polyline points="9 6 15 12 9 18" />
+  </Base>
+);
+
+// Saqlangan foydalanuvchilar — ikki odam (Feather "users").
+export const UsersIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <Circle cx="9" cy="7" r="4" />
+    <Path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <Path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </Base>
 );
 
@@ -211,6 +308,23 @@ export const ArrowUp = (p: IconProps) => (
   </Base>
 );
 
+// Kompyuter/monitor — "Aktiv qurilmalar" (web bilan bir xil shakl).
+export const MonitorIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="4.5" width="18" height="12" rx="2" />
+    <Line x1="8.5" y1="20.5" x2="15.5" y2="20.5" />
+    <Line x1="12" y1="16.5" x2="12" y2="20.5" />
+  </Base>
+);
+
+// Smartfon — mobil qurilma sessiyasi (web bilan bir xil shakl).
+export const SmartphoneIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="6" y="2" width="12" height="20" rx="2.6" />
+    <Line x1="10.4" y1="18.6" x2="13.6" y2="18.6" />
+  </Base>
+);
+
 export const BarChartIcon = (p: IconProps) => (
   <Base {...p}>
     <Line x1="6" y1="20" x2="6" y2="14" />
@@ -240,6 +354,19 @@ export const UserIcon = (p: IconProps) => (
   </Base>
 );
 
+// Manzillar kitobi (kontaktlar) — kartochka ichida odam + chapда tikuv chiziqlari.
+// "Telefon kontaktlaridan tanlash" tugmasi uchun (QarzDaftariMijozYangi).
+export const ContactBookIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="6" y="3" width="14" height="18" rx="2" />
+    <Circle cx="13" cy="10" r="2.3" />
+    <Path d="M9.6 16.2a3.6 3.6 0 0 1 6.8 0" />
+    <Line x1="6" y1="7.5" x2="3.5" y2="7.5" />
+    <Line x1="6" y1="12" x2="3.5" y2="12" />
+    <Line x1="6" y1="16.5" x2="3.5" y2="16.5" />
+  </Base>
+);
+
 export const TransferIcon = (p: IconProps) => (
   <Base {...p}>
     <Line x1="4" y1="9" x2="18" y2="9" />
@@ -248,6 +375,79 @@ export const TransferIcon = (p: IconProps) => (
     <Polyline points="9 12 6 15 9 18" />
   </Base>
 );
+
+// HARAKATLANUVCHI pul o'tkazish ikonkasi — ikkita strelka QARAMA-QARSHI
+// yo'nalishда siljib turadi (yuqori strelka o'ngga, pastki chapga) — "hisobdan
+// hisobga pul oqishi"ni jonli ko'rsatadi (so'rov: strelkalar harakatlansin).
+export const AnimatedTransferIcon = ({
+  size = 40,
+  color = '#fff',
+}: {
+  size?: number;
+  color?: string;
+}) => {
+  const drive = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(drive, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(drive, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [drive]);
+
+  const shift = size * 0.14;
+  const rowH = size * 0.46;
+  // Yuqori strelka (o'ngga qaragan) o'ngга-chapga; pastki (chapga qaragan) teskari.
+  const topX = drive.interpolate({ inputRange: [0, 1], outputRange: [-shift, shift] });
+  const botX = drive.interpolate({ inputRange: [0, 1], outputRange: [shift, -shift] });
+  const sw = Math.max(2, size * 0.055);
+
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', gap: size * 0.08 }}>
+      <Animated.View style={{ transform: [{ translateX: topX }] }}>
+        <Svg
+          width={size}
+          height={rowH}
+          viewBox="0 0 24 11"
+          fill="none"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round">
+          <Line x1="2" y1="5.5" x2="18" y2="5.5" />
+          <Polyline points="14 1.5 18.5 5.5 14 9.5" />
+        </Svg>
+      </Animated.View>
+      <Animated.View style={{ transform: [{ translateX: botX }] }}>
+        <Svg
+          width={size}
+          height={rowH}
+          viewBox="0 0 24 11"
+          fill="none"
+          stroke={color}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeLinejoin="round">
+          <Line x1="22" y1="5.5" x2="6" y2="5.5" />
+          <Polyline points="10 1.5 5.5 5.5 10 9.5" />
+        </Svg>
+      </Animated.View>
+    </View>
+  );
+};
 
 // Shartnoma — burchagi bukilgan hujjat + matn qatorlari (rasmiy varaq).
 export const ContractIcon = (p: IconProps) => (
@@ -302,6 +502,28 @@ export const QrIcon = (p: IconProps) => (
   </Base>
 );
 
+// QR-kodni SKANER qilish — skaner ramkasi (4 burchak qavs / viewfinder) + ichida
+// QR bo'laklari. Oddiy QR emas, aynan "skanerlash"ni ifodalaydi.
+export const QrScanIcon = (p: IconProps) => {
+  const c = p.color ?? '#2f6fed';
+  const sw = p.strokeWidth ?? 2;
+  const s = p.size ?? 24;
+  return (
+    <Svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      {/* Skaner ramkasi — 4 burchak qavs (viewfinder) */}
+      <Path d="M3 8.5 V6 A3 3 0 0 1 6 3 H8.5" fill="none" />
+      <Path d="M15.5 3 H18 A3 3 0 0 1 21 6 V8.5" fill="none" />
+      <Path d="M21 15.5 V18 A3 3 0 0 1 18 21 H15.5" fill="none" />
+      <Path d="M8.5 21 H6 A3 3 0 0 1 3 18 V15.5" fill="none" />
+      {/* Ichida QR bo'laklari */}
+      <Rect x="7.4" y="7.4" width="3.6" height="3.6" rx="0.7" />
+      <Rect x="13" y="7.4" width="3.6" height="3.6" rx="0.7" fill={c} />
+      <Rect x="7.4" y="13" width="3.6" height="3.6" rx="0.7" fill={c} />
+      <Rect x="13" y="13" width="3.6" height="3.6" rx="0.7" />
+    </Svg>
+  );
+};
+
 // Erkak avatar — bosh + yelka (neytral odam siluети).
 export const ManIcon = (p: IconProps) => (
   <Base {...p}>
@@ -325,12 +547,42 @@ export const CheckIcon = (p: IconProps) => (
   </Base>
 );
 
+// Belgi DOIRA ichida — "hammasi joyida / bo'sh" holat uchun (checkmark + doira).
+export const CheckCircleIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="12" r="9" />
+    <Polyline points="8.3 12 11 14.7 15.7 9.4" />
+  </Base>
+);
+
+// Yangiliklar — gazeta (rasm bloki + matn qatorlari).
+export const NewsIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M4 4 H17 A1 1 0 0 1 18 5 V18 A2 2 0 0 0 20 20 H6 A2 2 0 0 1 4 18 Z" />
+    <Path d="M18 8 H20 A1 1 0 0 1 21 9 V18 A2 2 0 0 1 19 20" />
+    <Rect x="6.5" y="7" width="4.5" height="4" rx="0.6" />
+    <Line x1="13" y1="7.6" x2="15.5" y2="7.6" />
+    <Line x1="13" y1="10.4" x2="15.5" y2="10.4" />
+    <Line x1="6.5" y1="14" x2="15.5" y2="14" />
+    <Line x1="6.5" y1="16.5" x2="12.5" y2="16.5" />
+  </Base>
+);
+
 // Ilova haqida — ma'lumot.
 export const InfoIcon = (p: IconProps) => (
   <Base {...p}>
     <Circle cx="12" cy="12" r="9" />
     <Line x1="12" y1="11" x2="12" y2="16" />
     <Line x1="12" y1="7.6" x2="12" y2="7.7" />
+  </Base>
+);
+
+// Lampochka (ma'lumot/izoh) — bo'lim nima ekanligini tushuntirish uchun.
+export const BulbIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M9 18h6" />
+    <Path d="M10 22h4" />
+    <Path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" />
   </Base>
 );
 
@@ -395,6 +647,24 @@ export const LockIcon = (p: IconProps) => (
   <Base {...p}>
     <Rect x="3.5" y="11" width="17" height="10" rx="2.5" />
     <Path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11" />
+  </Base>
+);
+
+// Qalam (tahrirlash) ikonkasi — "Tahrir" yorlig'i o'rniga (so'rov moliya-batch).
+export const PencilIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M12 20h9" />
+    <Path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+  </Base>
+);
+
+// Parolni tiklash ikonkasi — qulf + aylanma (refresh) strelka (so'rov SS19).
+export const LockResetIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="4" y="12" width="16" height="9" rx="2.5" />
+    <Line x1="12" y1="15.4" x2="12" y2="17.6" />
+    <Path d="M7.5 12V8.5a4.5 4.5 0 0 1 8.2-2.6" />
+    <Polyline points="16 3 16 6 13 6" />
   </Base>
 );
 

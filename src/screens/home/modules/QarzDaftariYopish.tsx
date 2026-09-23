@@ -178,15 +178,15 @@ const QarzDaftariYopish = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res?.data?.success) {
-        Toast.show({ type: 'omad', props: { title: t('To‘lov qabul qilindi') } });
+        Toast.show({ type: 'omad', props: { desc: t('To‘lov qabul qilindi') } });
         navigation.goBack();
       } else {
-        Toast.show({ type: 'error2', text1: t('Xatolik') });
+        Toast.show({ type: 'error2', props: { desc: t('Xatolik') } });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error2',
-        text1: error?.response?.data?.message || t('Xatolik'),
+        props: { desc: error?.response?.data?.message || t('Xatolik') },
       });
     } finally {
       setSubmitting(false);
@@ -259,23 +259,34 @@ const QarzDaftariYopish = () => {
             ))}
           </View>
 
-          {/* Submit */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            disabled={!canSubmit}
-            style={[
-              styles.btn,
-              { backgroundColor: GREEN },
-              !canSubmit && styles.btnDisabled,
-            ]}
-            onPress={submit}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>{t('Tasdiqlash')}</Text>
-            )}
-          </TouchableOpacity>
+          {/* Submit + Bekor qilish (web bilan bir xil — 2 tugma yonma-yon) */}
+          <View style={styles.btnRow}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              disabled={submitting}
+              style={styles.btnGhost}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.btnGhostText}>{t('Bekor qilish')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              disabled={!canSubmit}
+              style={[
+                styles.btn,
+                styles.btnFlex,
+                { backgroundColor: GREEN },
+                !canSubmit && styles.btnDisabled,
+              ]}
+              onPress={submit}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>{t('Tasdiqlash')}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 3. Hisob-kitob */}
@@ -423,6 +434,19 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.5 },
   btnText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: '#fff' },
+  // Bekor qilish + Tasdiqlash qatori
+  btnRow: { flexDirection: 'row', alignItems: 'center', gap: rs(10), marginTop: rs(18) },
+  btnFlex: { flex: 1, marginTop: 0 },
+  btnGhost: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: rs(14),
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    paddingVertical: rs(14),
+    paddingHorizontal: rs(18),
+  },
+  btnGhostText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.textSecondary },
 
   // Hisob-kitob
   calcRow: {

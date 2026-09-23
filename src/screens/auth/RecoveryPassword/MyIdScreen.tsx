@@ -1,13 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import LottieView from 'lottie-react-native';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import i18n from '@src/i18n';
@@ -24,7 +17,6 @@ import Button from '../../components/Button';
 import {
   ChevronLeft,
   ClockIcon,
-  FingerprintIcon,
   ShieldIcon,
 } from '../../home/redesign/icons';
 import { URL } from '../../constants';
@@ -51,7 +43,7 @@ const showError = (desc: string) => {
     visibilityTime: 4000,
     position: 'bottom',
     type: 'error2',
-    props: { title: t('Xatolik'), desc },
+    props: { desc },
   });
 };
 
@@ -143,10 +135,13 @@ const MyIdScreen = () => {
         },
         onError: err => {
           setBusy(false);
-          const m =
+          const rawM =
             err?.message || (err?.code != null ? String(err.code) : 'unknown');
+          // MyID SDK xabar oxiriga " (N)" (urinish soni) qo'shadi — OLIB tashlaymiz (so'rov).
+          const m = String(rawM).replace(/\s*\(\d+\)\s*$/, '').trim();
           setStatus(t('MyID xatosi') + ': ' + m);
-          showError(t('Identifikatsiya amalga oshmadi') + ' — ' + m);
+          // Tire (—) o'rniga NUQTA (so'rov): "Identifikatsiya amalga oshmadi. <matn>".
+          showError(t('Identifikatsiya amalga oshmadi') + '. ' + m);
         },
         onUserExited: () => {
           // Oldin bu jim `console.warn` edi → foydalanuvchi shu ekranga qaytib,
@@ -167,22 +162,33 @@ const MyIdScreen = () => {
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
-      {/* Orqaga — TO'LDIRILGAN KO'K (oq/kulrang sezilmasdi). */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.backBtn}
-        onPress={() => navigation.goBack()}
-      >
-        <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
-      </TouchableOpacity>
-
-      {/* Hero — animatsiyali "skaner" ikonasi (barmoq izi + tarqaluvchi halqalar). */}
-      <View style={styles.body}>
-        <BiometricHero />
-        <Text allowFontScaling={false} style={styles.title}>
+      {/* So'rov: sarlavha TEPADA orqaga tugma yonida (ikonка ostida EMAS). */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
+        </TouchableOpacity>
+        <Text allowFontScaling={false} style={styles.headerTitle} numberOfLines={1}>
           {t('747')}
         </Text>
-        <Text allowFontScaling={false} style={styles.subtitle}>
+      </View>
+
+      <View style={styles.body}>
+        {/* So'rov: animatsiyali skan ikonkasi (Lottie — pasport-muddati ekranidagidek). */}
+        <View style={styles.heroBox}>
+          <LottieView
+            source={require('../../../images/scan.json')}
+            autoPlay={true}
+            renderMode="AUTOMATIC"
+            resizeMode="cover"
+            style={styles.lottie}
+          />
+        </View>
+        {/* Izoh — ikonка ostida, KATTAROQ shrift (so'rov). */}
+        <Text allowFontScaling={false} style={styles.subtitleBig}>
           {t('744')}
         </Text>
 
@@ -214,52 +220,13 @@ const MyIdScreen = () => {
 
 export default MyIdScreen;
 
-/**
- * BiometricHero — barmoq izi ikonasi ORTIDA tarqaluvchi ikki halqa (skaner
- * pulsi). Statik ikona o'rniga "tirik"/gif-simon ta'sir beradi.
- *
- * Worklet qoidasi: o'lchamlar worklet TASHQARISIDA (RING_SCALE) — worklet
- * ichida faqat arifmetika. `useReducedMotion()` bilan a11y hurmat qilinadi.
- */
-const RING_SCALE = 0.9;
-const BiometricHero = () => {
-  const reduce = useReducedMotion();
-  const p = useSharedValue(0);
-  useEffect(() => {
-    if (reduce) return;
-    p.value = withRepeat(
-      withTiming(1, { duration: 1900, easing: Easing.out(Easing.ease) }),
-      -1,
-      false,
-    );
-  }, [reduce, p]);
-
-  const ring1 = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + p.value * RING_SCALE }],
-    opacity: 0.35 * (1 - p.value),
-  }));
-  const ring2 = useAnimatedStyle(() => {
-    const q = (p.value + 0.5) % 1;
-    return { transform: [{ scale: 1 + q * RING_SCALE }], opacity: 0.35 * (1 - q) };
-  });
-
-  return (
-    <View style={styles.heroWrap}>
-      <Animated.View style={[styles.ring, ring1]} />
-      <Animated.View style={[styles.ring, ring2]} />
-      <View style={styles.heroCircle}>
-        <FingerprintIcon size={rs(58)} color={rd.color.primary} />
-      </View>
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: rd.color.page,
     paddingHorizontal: rs(24),
-    paddingTop: rs(52),
+    // SS22: sarlavha + orqaga tugma TEPAROQ (3-skrinshotdagidek).
+    paddingTop: rs(14),
     paddingBottom: rs(28),
   },
   backBtn: {
@@ -270,10 +237,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Sarlavha qatori — orqaga + "Identifikatsiyadan o'tish" yonma-yon (so'rov).
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
+  headerTitle: {
+    flex: 1,
+    fontFamily: rd.font.bold,
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
   body: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Lottie skan ikonasi (animatsiyali).
+  heroBox: {
+    width: rs(180),
+    height: rs(180),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(24),
+  },
+  lottie: { width: rs(180), height: rs(180) },
+  // Ikonка ostidagi izoh — KATTAROQ shrift (so'rov).
+  subtitleBig: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(16),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+    marginTop: rs(4),
+    lineHeight: rs(23),
+    paddingHorizontal: rs(10),
   },
   // Ikona + tarqaluvchi halqalar bir markazda.
   heroWrap: {

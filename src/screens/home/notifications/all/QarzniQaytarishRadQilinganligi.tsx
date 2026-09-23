@@ -2,9 +2,9 @@ import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import NotificationShell from '../../../components/NotificationShell';
@@ -71,7 +71,7 @@ const QarzniQaytarishRadQilinganligi = ({ item, okay, navigation }) => {
           start: isCreditor ? (
             <TextBold />
           ) : (
-            <MainText size={style.fontSize.xx - 2} />
+            <MainText size={style.fontSize.xx + 1} />
           ),
           id: idComp,
           sum: <TextBold />,
@@ -85,7 +85,7 @@ const QarzniQaytarishRadQilinganligi = ({ item, okay, navigation }) => {
 export default memo(QarzniQaytarishRadQilinganligi);
 
 const styles_notification = {
-  fontSize: style.fontSize.xx - 2,
+  fontSize: style.fontSize.xx + 1,
   fontFamily: style.fontFamilyMedium,
   color: style.textColor,
 };

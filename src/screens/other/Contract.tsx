@@ -38,7 +38,7 @@ const Contract = () => {
       visibilityTime: 2000,
       position: 'bottom',
       type: 'omad',
-      props: { title: 'Muvaffaqiyatli', desc: t('789') + '...' },
+      props: { desc: t('789') + '...' },
     });
 
     try {
@@ -87,7 +87,7 @@ const Contract = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: { title: 'Xatolik', desc: t('Yuklab olish amalga oshmadi') },
+        props: { desc: t('Yuklab olish amalga oshmadi') },
       });
     }
   };

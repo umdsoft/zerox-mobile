@@ -121,9 +121,6 @@ const UserInformationOfDebt = () => {
     return <Loading />;
   }
 
-  console.log(data.debitor, 'debitor');
-  console.log(data.creditor, 'creditor');
-
   const fullName = `${data.profile?.last_name ?? ''} ${
     data.profile?.first_name ?? ''
   } ${data.profile?.middle_name ?? ''}`
@@ -131,7 +128,7 @@ const UserInformationOfDebt = () => {
     .trim();
 
   return (
-    <ScreenLayout title={type === 1 ? '' : t('qidiruv')}>
+    <ScreenLayout title={type === 1 ? '' : t('Qarz ma’lumoti')}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
 
       {/* Kontragent kartasi */}
@@ -166,18 +163,18 @@ const UserInformationOfDebt = () => {
             >
               {fullName || t('fish')}
             </Text>
-            <Text style={styles.profileId} allowFontScaling={false}>
-              ID: {data?.profile?.uid ?? '—'}
-            </Text>
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        <DetailRow label={t('fish')} value={fullName} />
         <DetailRow
           label={t('reg')}
-          value={settingDate(data?.profile?.created_at?.slice(0, 10))}
+          value={
+            data?.profile?.created_at
+              ? settingDate(String(data.profile.created_at).slice(0, 10))
+              : '—'
+          }
         />
         <DetailRow label={t('120')} value={data?.profile?.uid} />
       </View>
@@ -190,6 +187,7 @@ const UserInformationOfDebt = () => {
           disabled={true}
           title={t('153')}
           Icon={OlinganQarz}
+          kmb
           type={0}
           color={rd.color.text}
         />
@@ -199,6 +197,7 @@ const UserInformationOfDebt = () => {
           disabled={true}
           title={t('156')}
           Icon={BerilganQarzIcon}
+          kmb
           type={0}
           color={rd.color.text}
         />
@@ -210,6 +209,7 @@ const UserInformationOfDebt = () => {
           disabled={true}
           title={t('170')}
           Icon={MuddatUtganPlus}
+          kmb
           type={2}
           color={rd.color.error}
           data={data?.debitor?.expired}
@@ -219,6 +219,7 @@ const UserInformationOfDebt = () => {
           disabled={true}
           title={t('170')}
           Icon={MuddatUtganMinus}
+          kmb
           type={2}
           color={rd.color.error}
           data={data.creditor?.expired}
@@ -231,6 +232,7 @@ const UserInformationOfDebt = () => {
           width={CARD_W}
           title={t('168')}
           type={2}
+          kmb
           data={data?.debitor?.five}
         />
         <ListCardShowDetails
@@ -238,6 +240,7 @@ const UserInformationOfDebt = () => {
           width={CARD_W}
           title={t('171')}
           type={2}
+          kmb
           data={data?.creditor?.five}
         />
       </View>
@@ -257,16 +260,29 @@ const UserInformationOfDebt = () => {
             });
           }}
           activeOpacity={0.85}
-          style={[styles.actionBtn, styles.actionPrimary]}
+          style={[
+            styles.actionBtn,
+            {
+              // So'rov SS17.1: "Qarz berish" tugmasi KO'K (to'ldirilgan).
+              backgroundColor: rd.color.primary,
+              marginLeft: 0,
+              marginRight: rs(6),
+              shadowColor: rd.color.primary,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.22,
+              shadowRadius: 12,
+              elevation: 4,
+            },
+          ]}
         >
           <Text
-            style={[styles.actionText, { color: rd.color.onPrimary }]}
+            style={[styles.actionText, { color: '#fff' }]}
             allowFontScaling={false}
           >
             {t('147')}
           </Text>
-          <View style={styles.actionIconPrimary}>
-            <ArrowUpRight size={rs(20)} color={rd.color.onPrimary} />
+          <View style={[styles.actionIconPrimary, { backgroundColor: 'rgba(255,255,255,0.22)' }]}>
+            <ArrowUpRight size={rs(20)} color="#fff" />
           </View>
         </TouchableOpacity>
 
@@ -283,16 +299,27 @@ const UserInformationOfDebt = () => {
             });
           }}
           activeOpacity={0.85}
-          style={[styles.actionBtn, styles.actionOutline]}
+          style={[
+            styles.actionBtn,
+            {
+              backgroundColor: '#16a34a',
+              marginLeft: rs(6),
+              shadowColor: '#16a34a',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.22,
+              shadowRadius: 12,
+              elevation: 4,
+            },
+          ]}
         >
           <Text
-            style={[styles.actionText, { color: rd.color.primary }]}
+            style={[styles.actionText, { color: '#fff' }]}
             allowFontScaling={false}
           >
             {t('150')}
           </Text>
-          <View style={styles.actionIconOutline}>
-            <ArrowDownLeft size={rs(20)} color={rd.color.primary} />
+          <View style={[styles.actionIconPrimary, { backgroundColor: 'rgba(255,255,255,0.22)' }]}>
+            <ArrowDownLeft size={rs(20)} color="#fff" />
           </View>
         </TouchableOpacity>
       </View>

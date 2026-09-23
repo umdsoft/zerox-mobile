@@ -2,10 +2,18 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { successStatus, URL } from '../../../screens/constants';
 import { storage } from '../token/getToken';
+// SESSIYA IZOLYATSIYASI GUARD: so'rov boshlanganda joriy foydalanuvchi identifikatorini
+// (user_id) suratga olamiz. Javob kelганда identifikator o'zgargan bo'lsa (logout yoki
+// boshqa foydalanuvchi kirgan), bu javob ESKI foydalanuvchiники — uni Redux'ga YOZMAYMIZ.
+// (Token-refresh'да user_id o'zgarmaydi, shuning uchun bu false-positive bermaydi.)
+const isSameSession = (uidAtStart: string | undefined) =>
+  storage.getString('user_id') === uidAtStart;
+
 const HomeApi = createAsyncThunk(
   'get/home/user',
   async (state, { rejectWithValue }) => {
     const token = storage.getString('token');
+    const uidAtStart = storage.getString('user_id');
 
     try {
       const [user_data, debitor, creditor, notification, analytics] =
@@ -43,6 +51,10 @@ const HomeApi = createAsyncThunk(
             .catch(() => null),
         ]);
 
+      // Sessiya guard — javob eski foydalanuvchiники bo'lsa qabul qilmaymiz.
+      if (!isSameSession(uidAtStart)) {
+        return rejectWithValue({ message: 'stale-session' });
+      }
       if (
         user_data.status === successStatus &&
         creditor.status === successStatus &&
@@ -75,6 +87,7 @@ const getCreditorAndDebitorData = createAsyncThunk(
   'get/creditor/debitor/user',
   async state => {
     const token = storage.getString('token');
+    const uidAtStart = storage.getString('user_id');
     try {
       const [user, debitor, creditor] = await axios.all([
         axios.get(URL + '/user/me', {
@@ -93,6 +106,10 @@ const getCreditorAndDebitorData = createAsyncThunk(
           },
         }),
       ]);
+      // Sessiya guard — eski foydalanuvchi javobini yozmaymiz.
+      if (!isSameSession(uidAtStart)) {
+        return undefined;
+      }
       return {
         user: user.data,
         home: {
@@ -108,12 +125,17 @@ const getCreditorAndDebitorData = createAsyncThunk(
 
 const getMe = createAsyncThunk('getme', async state => {
   const token = storage.getString('token');
+  const uidAtStart = storage.getString('user_id');
   try {
     const { data } = await axios.get(URL + '/user/me', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    // Sessiya guard — eski foydalanuvchi javobini yozmaymiz.
+    if (!isSameSession(uidAtStart)) {
+      return undefined;
+    }
     return {
       user: data,
     };
@@ -343,6 +365,7 @@ const getNotificationWithPage = createAsyncThunk(
   'getNotifcationWithPage',
   async state => {
     const token = storage.getString('token');
+    const uidAtStart = storage.getString('user_id');
     try {
       const { data } = await axios.get(
         URL + `/notification/me?page=${state.page || 1}&limit=500`,
@@ -353,7 +376,10 @@ const getNotificationWithPage = createAsyncThunk(
         },
       );
 
-      console.log(data, 'dasda');
+      // Sessiya guard — eski foydalanuvchi bildirishnomalarini yozmaymiz.
+      if (!isSameSession(uidAtStart)) {
+        return undefined;
+      }
 
       return {
         notification: data,

@@ -28,6 +28,8 @@ interface ScreenLayoutProps {
   right?: React.ReactNode;
   children: React.ReactNode;
   contentStyle?: ViewStyle | ViewStyle[];
+  titleSize?: number; // SS22: sarlavha shrift o'lchami (ixtiyoriy)
+  backColor?: string; // SS3: orqaga tugma foni (bo'lim rangi bilan bir xil)
 }
 
 const ScreenLayout: React.FC<ScreenLayoutProps> = ({
@@ -39,6 +41,8 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   right,
   children,
   contentStyle,
+  titleSize,
+  backColor,
 }) => {
   const inner = card ? (
     <View style={[styles.card, { backgroundColor: cardColor }]}>{children}</View>
@@ -49,7 +53,7 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({
   return (
     <View style={styles.container}>
       {title !== undefined ? (
-        <RdHeader title={title} showBack={showBack} right={right} />
+        <RdHeader title={title} showBack={showBack} right={right} titleSize={titleSize} backColor={backColor} />
       ) : null}
 
       {scroll ? (

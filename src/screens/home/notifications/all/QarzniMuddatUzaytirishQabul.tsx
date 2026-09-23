@@ -3,11 +3,11 @@ import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 
 import { useSelector } from 'react-redux';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';

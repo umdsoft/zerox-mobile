@@ -1,9 +1,9 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo, useCallback } from 'react';
 import { sortText } from '../../../components/StatisticCard';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -14,6 +14,7 @@ import NotificationShell, {
   NotifButton,
 } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
+import { style } from '../../../../theme/style';
 
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
@@ -171,7 +172,10 @@ export default memo(Qarzniqaytarishtalabqilinganligitogrisida);
 const styles = StyleSheet.create({
   notification: {
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    // Shartnoma raqami (id havolasi) matnning QOLGAN qismi bilan BIR XIL o'lcham
+    // bo'lsin (body = NotifTransText = style.fontSize.xx + 1). Ilgari rs(13.5) edi
+    // -> raqam boshqa so'zlardan KICHIKROQ ko'rinardi (so'rov).
+    fontSize: style.fontSize.xx + 1,
     color: rd.color.textSecondary,
     lineHeight: rs(20),
   },

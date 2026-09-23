@@ -1,5 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
+import { goHomeSmooth } from "../../../helper/finishAction";
 import { style } from '../../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -16,12 +17,20 @@ import { storage } from '../../../store/api/token/getToken';
 import { settingDate } from '../../../helper';
 import ScreenLayout from '../../components/ScreenLayout';
 import { rd, rs } from '../../../theme/rd';
+import { titleCase } from '../../../helper/returnName';
 
 import { setNotification } from '../../../store/reducers/HomeReducer';
 import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import { Trans } from 'react-i18next';
 import socketService from '../../../helper/socketService';
+import {
+  AnimatedIconCircle,
+  FullReturnIcon,
+} from '../../../images/debtActionIcons';
+
+// To'liq qaytarish — YASHIL (DebtTakeSelect bilan mos).
+const FULL = '#16a34a';
 
 const DebtTakeFull = () => {
   const navigation = useNavigation();
@@ -29,10 +38,15 @@ const DebtTakeFull = () => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.HomeReducer);
   const [checked, setChecked] = useState(false);
+  // Yuklanish holati — "Tasdiqlash" bosilганда darhol spinner (ilgari hech qanday
+  // vizual javob yo'q edi -> tugma "muzlaган"дек ko'rinardi, sekin his qilinardi).
+  const [loading, setLoading] = useState(false);
 
   const onPress = async () => {
+    if (loading) return;
     const token = storage.getString('token');
     try {
+      setLoading(true);
       const { data, status } = await axios.post(
         URL + '/contract/act',
         {
@@ -77,26 +91,26 @@ const DebtTakeFull = () => {
       );
 
       if (data.msg === 'end' && status === 200) {
+        setLoading(false);
         Toast.show({
           autoHide: true,
           visibilityTime: 2000,
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t("Ushbu shartnoma bo'yicha qarzdorlik mavjud emas"),
           },
         });
       }
 
       if (data.msg === 'ex' && status === 200) {
+        setLoading(false);
         Toast.show({
           autoHide: true,
           visibilityTime: 2000,
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t(
               'Siz ushbu qarz shartnomasi bo‘yicha so‘rov yuborgansiz. Iltimos, so‘rov natijasini kuting!',
             ),
@@ -104,19 +118,17 @@ const DebtTakeFull = () => {
         });
       }
       if (status === 201) {
+        // SS6: "Muvaffaqiyatli" (t('243')) sarlavhasi olib tashlandi -> matn bold.
         Toast.show({
-          autoHide: true,
+          // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+          autoHide: false,
           props: {
-            title: t('243'),
             desc: t('447'),
           },
-          visibilityTime: 2000,
           position: 'bottom',
           type: 'omad',
         });
-        setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
-        }, 2000);
+        goHomeSmooth(navigation, t('447'));
       }
 
       // socketService.sendNotification({id: item.debitor});
@@ -126,14 +138,13 @@ const DebtTakeFull = () => {
       //   dispatch(setNotification({notification: data.not}));
       // });
     } catch (error) {
-      console.log(error, 'error');
+      setLoading(false);
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
         props: {
-          title: 'Xatolik',
           desc: t('Xatolik sodir bo‘ldi'),
         },
       });
@@ -142,8 +153,14 @@ const DebtTakeFull = () => {
 
   console.log(item, 'item');
   return (
-    <ScreenLayout title={t('441')} scroll>
+    <ScreenLayout title={t('441')} scroll={false}>
         <View style={styles.content}>
+            {/* Tepada — TO'LIQ qaytarish ikonasi (yashil) + yengil puls. */}
+            <View style={styles.iconWrap}>
+              <AnimatedIconCircle size={rs(92)} bg={FULL}>
+                <FullReturnIcon width={rs(48)} height={rs(48)} />
+              </AnimatedIconCircle>
+            </View>
             <View>
               <View style={[styles.card]}>
                 <View style={styles.insideMoney}>
@@ -160,13 +177,14 @@ const DebtTakeFull = () => {
                           sortText(item.amount - item.inc) + ' ' + item.currency
                         }`,
                         id: item.number,
-                        name: item?.debitor_name,
+                        // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.
+                        name: titleCase(item?.debitor_name),
                         // sum: `${sortText(item.residual_amount - item.inc) + ' ' + item.currency}`,
                       }}
                       components={{
-                        start: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
+                        // Shrift barcha so'zда bir xil; shartnoma raqami (id) ko'k havola,
+                        // umumiy qarz summasi (sum) BOLD (so'rov bo'yicha jirniy).
+                        start: <Text allowFontScaling={false} />,
                         id: (
                           <Text
                             allowFontScaling={false}
@@ -176,18 +194,12 @@ const DebtTakeFull = () => {
                                 id: item.id,
                               });
                             }}
-                            style={{
-                              color: style.blue,
-                            }}
+                            style={styles.link}
                           />
                         ),
-                        sum: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
-                        end: <TextBold />,
-                        name: (
-                          <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                        ),
+                        sum: <Text allowFontScaling={false} style={styles.sumBold} />,
+                        end: <Text allowFontScaling={false} />,
+                        name: <Text allowFontScaling={false} style={styles.nameBold} />,
                       }}
                     />
                   </Text>
@@ -220,19 +232,23 @@ const DebtTakeFull = () => {
             </View>
             <TouchableOpacity
               activeOpacity={0.85}
-              disabled={!checked}
+              disabled={!checked || loading}
               onPress={onPress}
               style={[styles.primaryBtn, !checked && styles.primaryBtnDisabled]}
             >
-              <Text
-                allowFontScaling={false}
-                style={[
-                  styles.primaryBtnText,
-                  !checked && styles.primaryBtnTextDisabled,
-                ]}
-              >
-                {t('357')}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color={rd.color.onPrimary} />
+              ) : (
+                <Text
+                  allowFontScaling={false}
+                  style={[
+                    styles.primaryBtnText,
+                    !checked && styles.primaryBtnTextDisabled,
+                  ]}
+                >
+                  {t('357')}
+                </Text>
+              )}
             </TouchableOpacity>
         </View>
 
@@ -247,11 +263,14 @@ const styles = StyleSheet.create({
   mainText: {
     fontFamily: rd.font.bold,
   },
+  // Kontent VERTIKAL MARKAZDA — ikona tepada, matn/checkbox/tugma pastroqда (balansli).
   content: {
+    flex: 1,
+    justifyContent: 'center',
     paddingHorizontal: rs(16),
-    paddingTop: rs(20),
     paddingBottom: rs(24),
   },
+  iconWrap: { alignItems: 'center', marginBottom: rs(28) },
   hisob: {
     fontSize: rs(15),
     fontFamily: rd.font.medium,
@@ -259,6 +278,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: rs(22),
   },
+  // Umumiy qarz summasi — bold (so'rov bo'yicha jirniy).
+  sumBold: { fontFamily: rd.font.bold, color: rd.color.text },
+  nameBold: { fontFamily: rd.font.bold, color: rd.color.text },
+  // Shartnoma raqami havolasi — shrift bir xil, faqat ko'k rang.
+  link: { color: rd.color.primary },
   linkText: {
     fontFamily: rd.font.medium,
     fontSize: rs(13),
@@ -287,7 +311,7 @@ const styles = StyleSheet.create({
     marginTop: rs(20),
     height: rs(54),
     borderRadius: rd.radius.lg,
-    backgroundColor: rd.color.primary,
+    backgroundColor: FULL,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -3,7 +3,7 @@ import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
@@ -87,9 +87,11 @@ export default memo(QarzShartnomasiQabulQilinmaganligiHaqida);
 
 const styles = StyleSheet.create({
   notification: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
-    color: rd.color.textSecondary,
-    lineHeight: rs(20),
+    // Boshqa bildirishnomalar body matni bilan BIR XIL (MainText = medium,
+    // style.fontSize.xx+1, color text). Ilgari regular/rs13.5/textSecondary edi.
+    fontFamily: rd.font.medium,
+    fontSize: style.fontSize.xx + 1,
+    color: rd.color.text,
+    lineHeight: rs(22),
   },
 });

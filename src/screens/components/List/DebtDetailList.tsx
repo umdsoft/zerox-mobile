@@ -225,15 +225,15 @@ const DebitorDetail = ({ item, isHave }: any) => {
         onPress={() => navigation.navigate('ShowUserDetails', { id: item.cuid, type: 0 })}
       />
       <View style={styles.detailCard}>
-        <IconRow Icon={ArrowDownLeft} label={t('330')} value={`${sortText(item?.inc)} ${cur}`} />
-        {isHave ? (
+        <IconRow Icon={ArrowDownLeft} label={t('330')} value={`${sortText(item?.inc == null ? 0 : item?.inc)} ${cur}`} />
+        {item?.residual_amount == null ? null : (
           <IconRow
             Icon={WalletIcon}
             label={t('420')}
             value={`${sortText(item?.residual_amount)} ${cur}`}
             divider
           />
-        ) : null}
+        )}
         <IconRow Icon={CalendarIcon} label={t('303')} value={settingDate(item?.created_at)} divider />
         <IconRow Icon={ClockIcon} label={t('396')} value={checkDate(item?.end_date)} divider />
         {item?.vos_summa == null ? null : (

@@ -7,10 +7,14 @@
  *
  * Web rang semantikasi: berish = KO'K, olish = YASHIL.
  */
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -18,7 +22,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
+import { enterXodimSession } from '../../../store/api/token/xodimSession';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -26,8 +32,9 @@ import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  BuildingIcon,
+  StorefrontIcon,
   ChevronRight,
+  InfoIcon,
   PlusIcon,
 } from '../redesign/icons';
 
@@ -64,25 +71,52 @@ const QarzDaftariKiritish = () => {
   const { t } = useTranslation();
   const preTuri: 'berish' | 'olish' | undefined = route.params?.turi;
 
-  const { data, loading } = useFetch({
+  const { data, loading, onRefresh } = useFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat`,
     method: 'GET',
   });
 
+  // Token konteksti (owner ↔ xodim) o'zgargan bo'lishi mumkin — ekranga har
+  // qaytganda do'kon ro'yxatini yangilaymiz (birinchi mount'da useFetch o'zi oladi).
+  const firstFocus = React.useRef(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      onRefresh({});
+    }, [onRefresh]),
+  );
+
   const shops: any[] = (data as any)?.data || [];
-  const [selected, setSelected] = React.useState<any>(null);
 
-  // Do'kon bitta bo'lsa — avtomatik tanlaymiz (ortiqcha bosish shart emas).
-  React.useEffect(() => {
-    if (!selected && shops.length === 1) setSelected(shops[0]);
-  }, [shops, selected]);
+  // Xodim do'koniga "kirish" (session-swap) davom etayotgan do'kon id'si.
+  const [enteringId, setEnteringId] = React.useState<number | null>(null);
+  // SS6: do'konlar MODAL tanlagichi ("Barcha do'konlar" cardi bosilganda ochiladi).
+  const [shopPicker, setShopPicker] = React.useState(false);
 
-  const goMijozlar = (turi: 'berish' | 'olish') => {
-    if (!selected) return;
+  // Qarz turi (berish/olish) OLDINGI sahifada (Hero tugmasi) allaqachon tanlangan —
+  // shu sabab bu yerda TUR TANLASH BOSQICHI YO'Q. Do'kon tanlanishi bilan darhol
+  // mijozlar sahifasiga o'tamiz (so'rov bo'yicha).
+  const pickShop = async (s: any) => {
+    // Xodim do'koni (boshqa egaga tegishli, telefon mosligi) — avval xodim
+    // kontekstiga o'tamiz (owner user_id li token), aks holda backend "Ruxsat yo'q"
+    // beradi. Web bilan bir xil oqim (POST /qarz-daftari/xodim/enter).
+    if (s.is_xodim_role) {
+      if (enteringId != null) return;
+      setEnteringId(s.id);
+      const r = await enterXodimSession(s.id, s.nomi);
+      setEnteringId(null);
+      if (!r.ok) {
+        Toast.show({ type: 'error2', props: { desc: t(r.message || 'Xatolik yuz berdi') } });
+        return;
+      }
+    }
     navigation.navigate('QarzDaftariMijozlar', {
-      faoliyat_id: selected.id,
-      faoliyat_nomi: selected.nomi,
-      turi,
+      faoliyat_id: s.id,
+      faoliyat_nomi: s.nomi,
+      turi: preTuri || 'berish',
     });
   };
 
@@ -91,19 +125,24 @@ const QarzDaftariKiritish = () => {
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title={t('Daftariga kiritish')} />
+      {/* Sarlavha kirish turiga qarab: "Qarzga berish" / "Qarzga olish"
+          (Hero tugmalari doim turi uzatadi); turi yo'q bo'lsa umumiy sarlavha. */}
+      <RdHeader
+        title={
+          preTuri === 'berish'
+            ? t('Qarzga berish')
+            : preTuri === 'olish'
+            ? t('Qarzga olish')
+            : t('Daftariga kiritish')
+        }
+      />
 
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Ogohlantirish */}
-        <View style={styles.warnBox}>
-          <Text style={styles.warnText}>
-            {t('Qarz daftariga kiritilgan qarzlar bo‘yicha qarz shartnomasi rasmiylashtirilmaydi. Rasmiy shartnoma uchun «Qarz shartnomasi» bo‘limidan foydalaning.')}
-          </Text>
-        </View>
+        {/* Eslatma yuqoridan OLINDI -> sahifaning eng pastiga ko'chirildi (so'rov). */}
 
         {/* 1-bosqich: do'kon tanlash */}
         <View style={styles.stepHead}>
@@ -116,7 +155,7 @@ const QarzDaftariKiritish = () => {
         {shops.length === 0 ? (
           <View style={styles.emptyCard}>
             <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
-              <BuildingIcon size={rs(28)} color={rd.color.textTertiary} />
+              <StorefrontIcon size={rs(28)} color={rd.color.textTertiary} />
             </CircleIcon>
             <Text style={styles.emptyTitle}>{t('Savdo faoliyatingiz hali yo‘q')}</Text>
             <Text style={styles.emptySub}>
@@ -133,44 +172,31 @@ const QarzDaftariKiritish = () => {
           </View>
         ) : (
           <View style={{ gap: rs(10) }}>
-            {shops.map((s, i) => {
-              const active = selected?.id === s.id;
-              return (
-                <TouchableOpacity
-                  key={i}
-                  activeOpacity={0.85}
-                  onPress={() => setSelected(s)}
-                  style={[styles.shopCard, active && styles.shopCardActive]}
-                >
-                  <CircleIcon
-                    size={rs(42)}
-                    bg={active ? BLUE : rd.color.surfaceAlt}
-                  >
-                    <BuildingIcon
-                      size={rs(20)}
-                      color={active ? '#fff' : rd.color.textSecondary}
-                    />
-                  </CircleIcon>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.shopName} numberOfLines={1}>
-                      {s.nomi}
-                    </Text>
-                    {s.is_xodim_role ? (
-                      <View style={styles.xodimBadge}>
-                        <Text style={styles.xodimBadgeText}>{t('Xodim')}</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.shopSub} numberOfLines={1}>
-                        {[s.region, s.district].filter(Boolean).join(', ') || t('Do‘kon')}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={[styles.radio, active && styles.radioActive]}>
-                    {active && <View style={styles.radioDot} />}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {/* SS6: do'konlar ro'yxati o'rniga BITTA "Barcha do'konlar" cardi —
+                bosilganda do'konlar MODAL'da ochiladi (SS1 dagi kabi). */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setShopPicker(true)}
+              disabled={enteringId != null}
+              style={styles.shopCard}
+            >
+              <CircleIcon size={rs(42)} bg={rd.color.primaryTint}>
+                <StorefrontIcon size={rs(20)} color={BLUE} />
+              </CircleIcon>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.shopName} numberOfLines={1}>
+                  {t('Barcha do‘konlar')}
+                </Text>
+                <Text style={styles.shopSub} numberOfLines={1}>
+                  {t('{{count}} ta do‘kon', { count: shops.length })}
+                </Text>
+              </View>
+              {enteringId != null ? (
+                <ActivityIndicator size="small" color={BLUE} />
+              ) : (
+                <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.8}
@@ -183,50 +209,13 @@ const QarzDaftariKiritish = () => {
           </View>
         )}
 
-        {/* 2-bosqich: qarz turi */}
-        {!!selected && (
-          <>
-            <View style={[styles.stepHead, { marginTop: rs(8) }]}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>2</Text>
-              </View>
-              <Text style={styles.stepTitle}>{t('Qarz turini tanlang')}</Text>
-            </View>
-
-            <View style={styles.typeRow}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={[styles.typeCard, { borderColor: BLUE }]}
-                onPress={() => goMijozlar('berish')}
-              >
-                <CircleIcon size={rs(46)} bg="#EFF6FF">
-                  <ArrowUpRight size={rs(22)} color={BLUE} />
-                </CircleIcon>
-                <Text style={styles.typeTitle}>{t('Qarzga berish')}</Text>
-                <Text style={styles.typeNote}>{t('Mijozga qarz berish')}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={[styles.typeCard, { borderColor: GREEN }]}
-                onPress={() => goMijozlar('olish')}
-              >
-                <CircleIcon size={rs(46)} bg="#F0FDF4">
-                  <ArrowDownLeft size={rs(22)} color={GREEN} />
-                </CircleIcon>
-                <Text style={styles.typeTitle}>{t('Qarzga olish')}</Text>
-                <Text style={styles.typeNote}>{t('Qarz olishni qayd etish')}</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {/* Qanday ishlaydi? */}
+        {/* Qanday ishlaydi? — tur tanlash bosqichi OLIB TASHLANDI (tur oldingi
+            sahifada tanlangan; do'kon bosilsa darhol mijozlar sahifasi ochiladi). */}
         <View style={styles.guideCard}>
           <Text style={styles.guideTitle}>{t('Qanday ishlaydi?')}</Text>
           {[
             'Do‘kon (savdo faoliyati)ni tanlang yoki yangisini qo‘shing.',
-            'Qarz turini (berish/olish) belgilang va mijozni tanlang.',
+            'Mijozni tanlang yoki yangisini qo‘shing.',
             'Summa, mahsulot va muddatni kiriting — qarz daftarga saqlanadi.',
           ].map((g, i) => (
             <View key={i} style={styles.guideRow}>
@@ -237,7 +226,74 @@ const QarzDaftariKiritish = () => {
             </View>
           ))}
         </View>
+
+        {/* Eslatma — endi eng pastda, yangi dizayn: ikonali info-satr
+            (chapda doira ikonka + yumshoq fon), amber emas neytral-info. */}
+        <View style={styles.noteCard}>
+          <View style={styles.noteIcon}>
+            <InfoIcon size={rs(16)} color={AMBER} />
+          </View>
+          <Text style={styles.noteText}>
+            {t('Qarz daftariga kiritilgan qarzlar bo‘yicha qarz shartnomasi rasmiylashtirilmaydi. Rasmiy shartnoma uchun «Qarz shartnomasi» bo‘limidan foydalaning.')}
+          </Text>
+        </View>
       </ScrollView>
+
+      {/* SS6: do'kon tanlash MODALI ("Viloyatni tanlang" uslubida). */}
+      <Modal
+        visible={shopPicker}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setShopPicker(false)}
+      >
+        <View style={styles.modalRoot}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShopPicker(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('Do‘konni tanlang')}</Text>
+              <TouchableOpacity
+                onPress={() => setShopPicker(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={shops}
+              keyExtractor={(item: any, i: number) => String(item?.id ?? i)}
+              showsVerticalScrollIndicator={false}
+              style={styles.modalList}
+              ItemSeparatorComponent={() => <View style={styles.modalSep} />}
+              renderItem={({ item: s }: any) => (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={styles.modalRow}
+                  disabled={enteringId != null}
+                  onPress={() => { setShopPicker(false); pickShop(s); }}
+                >
+                  <CircleIcon size={rs(36)} bg={rd.color.primaryTint}>
+                    <StorefrontIcon size={rs(18)} color={BLUE} />
+                  </CircleIcon>
+                  <View style={{ flex: 1, marginLeft: rs(10) }}>
+                    <Text style={styles.modalRowText} numberOfLines={1}>{s.nomi}</Text>
+                    {s.is_xodim_role ? (
+                      <View style={styles.xodimBadge}>
+                        <Text style={styles.xodimBadgeText}>{t('Xodim')}</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.shopSub} numberOfLines={1}>
+                        {[s.region, s.district].filter(Boolean).join(', ') || t('Do‘kon')}
+                      </Text>
+                    )}
+                  </View>
+                  <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -245,6 +301,30 @@ const QarzDaftariKiritish = () => {
 export default QarzDaftariKiritish;
 
 const styles = StyleSheet.create({
+  // SS6: do‘kon tanlash modali (QarzDaftariFaoliyat picker uslubi).
+  modalRoot: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: rs(22) },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11,18,32,0.6)' },
+  modalCard: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(24),
+    paddingTop: rs(16),
+    paddingBottom: rs(14),
+    paddingHorizontal: rs(16),
+    maxHeight: '70%',
+    shadowColor: '#0b1220',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: rs(10) },
+  modalTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
+  modalClose: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.textTertiary, paddingHorizontal: rs(4) },
+  modalList: { flexGrow: 0 },
+  modalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: rs(12), paddingHorizontal: rs(10), borderRadius: rs(12) },
+  modalSep: { height: 1, backgroundColor: rd.color.border, marginHorizontal: rs(10) },
+  modalRowText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.text },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {
@@ -254,17 +334,30 @@ const styles = StyleSheet.create({
     gap: rs(14),
   },
 
-  warnBox: {
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
+  // Eslatma (yangi dizayn) — sahifa pastida, ikonali info-satr. Amber-doira
+  // ikonka + yumshoq surfaceAlt fon + neytral matn (ilgari to'liq amber quti edi).
+  noteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: rs(10),
+    backgroundColor: rd.color.surfaceAlt,
     borderRadius: rs(14),
     padding: rs(13),
+    marginTop: rs(2),
   },
-  warnText: {
+  noteIcon: {
+    width: rs(28),
+    height: rs(28),
+    borderRadius: rs(14),
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noteText: {
+    flex: 1,
     fontFamily: rd.font.regular,
     fontSize: rs(12),
-    color: '#92400E',
+    color: rd.color.textSecondary,
     lineHeight: rs(18),
   },
 

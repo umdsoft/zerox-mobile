@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './src/i18n/index';
-import { LogBox, StyleSheet, View, Linking } from 'react-native';
+import { LogBox, StyleSheet, View, Linking, Keyboard, AppState } from 'react-native';
 import 'react-native-gesture-handler';
 import { useDispatch } from 'react-redux';
 import type { NavigationProp } from '@react-navigation/native';
@@ -57,6 +57,8 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   // menyu bo'lib qolardi (ustma-ust). Shu sabab bu yerda ham yashiriladi.
   'QarzShartnomasi',
   'QarzDaftari',
+  // SS7: "Shaxsiy qarz" ham endi TAB — o'zining RdTabBar'i bor.
+  'ShaxsiyQarz',
   'SelectLanguageScreen',
   'LoginWithPhone',
   'SetLocalPassword',
@@ -88,6 +90,19 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   'QrScan',
   'QrCode',
 ]);
+
+/**
+ * SS9: navigatsiya holatining AKTIV YO'LIDA berilgan nomli marshrut bormi?
+ * Ichma-ich navigatorlar (Drawer > Stack > Tab) bo'ylab pastga yuradi.
+ * Faqat aktiv (`index`) tarmoq tekshiriladi — fon'dagi ekranlar hisobga olinmaydi.
+ */
+const activePathHas = (state: any, name: string): boolean => {
+  if (!state || typeof state.index !== 'number') return false;
+  const route = state.routes?.[state.index];
+  if (!route) return false;
+  if (route.name === name) return true;
+  return activePathHas(route.state, name);
+};
 
 const defaultHandler = ErrorUtils.getGlobalHandler();
 
@@ -130,18 +145,73 @@ const App: React.FC = () => {
   const dispatch = useDispatch();
   const netInfo = useNetInfo();
   const [routeName, setRouteName] = useState<string | undefined>(undefined);
+  // SS11 TUZATISH: pastki menyu IKKI QATOR bo'lib qolish nuqsoni.
+  // Ilgari global menyu FAQAT `routeName` SATRIGA qarab yashirilardi. Ilova fon'dan
+  // qaytganda (svernut → 10 daq → qayta ochish) shu satr ESKIRIB qolar, natijada
+  // tab ekranida RdTabBar bilan birga GlobalBottomBar ham chiqib, ikkita menyu
+  // ustma-ust turardi. Endi qo'shimcha STRUKTURAVIY tekshiruv: aktiv ILDIZ marshruti
+  // `BottomTabNavigator` bo'lsa — demak RdTabBar allaqachon ko'rinyapti, global
+  // menyu KERAK EMAS (nomi eskirgan bo'lsa ham to'g'ri ishlaydi).
+  const [inTabs, setInTabs] = useState<boolean>(false);
+  // Klaviatura ochilganda global pastki menyu (absolyut sibling) OS tomonidan
+  // klaviatura ustiga suriladi va "suzib" ko'rinardi. Klaviatura ochiq bo'lsa yashiramiz.
+  const [kbVisible, setKbVisible] = useState<boolean>(false);
 
   // Joriy ekran nomini kuzatamiz (global pastki menyu ko'rinishini boshqarish uchun).
   useEffect(() => {
     const ref: any = navigationRef.current;
     if (!ref?.addListener) return;
-    const update = () => setRouteName(ref.getCurrentRoute?.()?.name);
+    const update = () => {
+      // OSILIB QOLGAN TOAST — GLOBAL, ISHONCHLI TUZATISH. Amal-ekranlar (qarzni
+      // qaytarish/talab/uzaytirish/voz kechish/olish) muvaffaqiyat toast'ini
+      // ko'rsatib Home'ga qaytaradi. Toast ILDIZda (navigator ustida) render
+      // bo'lgani uchun navigatsiyadan omon qolib, bosh sahifada ~1s osilib qolardi.
+      // Fokus-effekt (Home useFocusEffect) fokus-semantikasiga bog'liq bo'lib
+      // ba'zan ishlamasdi. Bu 'state' listener HAR navigatsiyada o'q uziladi —
+      // shu yerda toast'ni yopamiz: qaysi ekrandan qaysi ekranga o'tsa ham,
+      // navigatsiya boshlanishi bilan toast darhol yo'qoladi (osilish yo'q).
+      Toast.hide();
+      setRouteName(ref.getCurrentRoute?.()?.name);
+      // SS9 ROOT-CAUSE (2-urinish): navigator ierarxiyasi
+      //   Drawer -> "StackNavigator" -> Stack -> "BottomTabNavigator" -> Tab
+      // `getRootState()` DRAWER holatini qaytaradi, uning aktiv marshruti
+      // "StackNavigator". Shu sabab avvalgi `activeRoot === 'BottomTabNavigator'`
+      // tekshiruvi HECH QACHON rost bo'lmagan — nuqson saqlanib qolgan edi.
+      // Endi AKTIV YO'L bo'ylab pastga yuramiz (ichma-ich navigatorlar bo'ylab).
+      try {
+        setInTabs(activePathHas(ref.getRootState?.(), 'BottomTabNavigator'));
+      } catch (_) {
+        setInTabs(false);
+      }
+    };
     update();
     const unsub = ref.addListener('state', update);
-    return unsub;
+    // SS11: ilova FON'DAN qaytganda holatni QAYTA sinxronlaymiz. 'state' hodisasi
+    // fon/faol almashinuvida o'q uzmaydi — shu sabab eskirgan qiymat qolib ketardi.
+    const appSub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') update();
+    });
+    return () => {
+      unsub?.();
+      appSub.remove();
+    };
   }, [isLoading]);
 
-  const showBottomBar = !!routeName && !HIDE_BOTTOM_BAR.has(routeName);
+  // Klaviatura ochilish/yopilishini kuzatamiz (Android: did-show/did-hide ishonchli).
+  useEffect(() => {
+    const showEvt = 'keyboardDidShow';
+    const hideEvt = 'keyboardDidHide';
+    const s = Keyboard.addListener(showEvt, () => setKbVisible(true));
+    const h = Keyboard.addListener(hideEvt, () => setKbVisible(false));
+    return () => {
+      s.remove();
+      h.remove();
+    };
+  }, []);
+
+  // SS11: `inTabs` — nom eskirsa ham ikki menyu chiqmasligining kafolati.
+  const showBottomBar =
+    !!routeName && !HIDE_BOTTOM_BAR.has(routeName) && !inTabs && !kbVisible;
 
   // Handle initial loading timeout
   useEffect(() => {

@@ -4,6 +4,7 @@ import React, {memo} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {t} from 'i18next';
 import {rd, rs} from '../../theme/rd';
+import {fmtUZS, fmtUSD} from '../../helper/money';
 
 // REDIZAYN: eski `style`/`colors`/MainText o'rniga `rd` tizimi. Yig'ish/format
 // mantiqi va navigatsiya O'ZGARMAGAN — faqat vizual qatlam yangi (oq karta, yumaloq,
@@ -22,6 +23,8 @@ const Card = ({
   isHave,
   searchUrl,
   iconType,
+  // kmb=true bo'lsa "UZS"/"USD" + K/M/B qisqartma (so'rov SS17 — faqat Qarz ma'lumoti).
+  kmb,
 }) => {
   const navigation = useNavigation();
 
@@ -64,10 +67,14 @@ const Card = ({
       </View>
       <View style={{marginTop: rs(16)}}>
         <Text allowFontScaling={false} style={styles.sum}>
-          {formatMoney(sumByCurrency(data, 'UZS')) + ' ' + t('som')}
+          {kmb
+            ? fmtUZS(sumByCurrency(data, 'UZS'))
+            : formatMoney(sumByCurrency(data, 'UZS')) + ' ' + t('som')}
         </Text>
         <Text allowFontScaling={false} style={styles.sumUsd}>
-          {formatMoney(sumByCurrency(data, 'USD')) + ' $'}
+          {kmb
+            ? fmtUSD(sumByCurrency(data, 'USD'))
+            : formatMoney(sumByCurrency(data, 'USD')) + ' $'}
         </Text>
       </View>
     </TouchableOpacity>

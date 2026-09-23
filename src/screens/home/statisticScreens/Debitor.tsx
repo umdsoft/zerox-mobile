@@ -14,11 +14,21 @@ import {t} from 'i18next';
 const Debitor = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {type, item, status, person, isHave} = route.params;
+  const {type, item, status, person, isHave, report} = route.params;
+
+  // HISOBOT (report) rejimida TUGALLANGAN (status===2) yoki RAD etilган (3/4)
+  // kontraktда amal tugmalari (qaytarishni talab / muddat uzaytirish / voz kechish)
+  // YASHIRILADI — bu shartnomalar yakunlangan, ular ustidan amal bajarib bo'lmaydi.
+  // Faol ro'yxatда (report yo'q) esa tugmalar avvalgidek ko'rinadi.
+  const hideActions = !!report && [2, 3, 4].includes(Number(item?.status));
 
   return (
     <ScreenLayout title={t('153').replace('\n', ' ')}>
-      {type === 1 ? (
+      {/* FAOL qarz -> DETAIL variant (saytdagi modal bilan bir xil: Qaytarilgan,
+          Qoldiq qarz miqdori, Qarz berilgan sana, Qarzni qaytarish sanasi). Ilgari
+          `type===1` doim STATISTIC ko'rsatardi — unda Qoldiq va Qaytarish sanasi YO'Q
+          edi. Faqat TUGALLANGAN (status===2) bo'lsa hisobot-uslub statistic qoldiriladi. */}
+      {item?.status === 2 ? (
         <StatisticDebitor
           type={type}
           item={item}
@@ -36,55 +46,40 @@ const Debitor = () => {
         />
       )}
 
-      {type === 1 ? null : (
-        <View style={styles.buttonContainer}>
-          <View style={styles.buttonInsideContainer}>
+      {/* Amal tugmalari (so'rov bo'yicha, saytdagidek): "Qarzni qaytarishni talab
+          qilish", "Qarz muddatini uzaytirish", "Qarzdan voz kechish". Ilgari `type===1`
+          (Berilgan qarz) da YASHIRILGAN edi (redizayn statistic-rejim) — endi BERILGAN
+          qarz kontrakt-detalида ham ko'rinadi. Amal ekranlari (FullDebtSelect/
+          DebtDateLength/CharityDebt) allaqachon mavjud va ro'yxatdan o'tgan. */}
+      {/* SS18: KREATIV joylashuv — asosiy amal (talab qilish) to'liq kenglikda,
+          ikkilamchi 2 amal (uzaytirish/voz kechish) yonma-yon, rang bilan ajratilган. */}
+      {!hideActions && (
+        <View style={styles.actions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('FullDebtSelect', {item: item})}
+            activeOpacity={0.85}
+            style={styles.primaryBtn}>
+            <Dollar />
+            <Text allowFontScaling={false} style={styles.primaryText} numberOfLines={1} adjustsFontSizeToFit>
+              {t('351')}
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.secRow}>
             <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('FullDebtSelect', {item: item});
-              }}
-              activeOpacity={0.8}
-              style={styles.registerButton}>
-              <Dollar />
-              <Text
-                allowFontScaling={false}
-                style={styles.buttonText}
-                numberOfLines={1}>
-                {t('351')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.buttonInsideContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('DebtDateLength', {
-                  item: item,
-                  id: item.id,
-                });
-              }}
-              activeOpacity={0.8}
-              style={styles.registerButton}>
+              onPress={() => navigation.navigate('DebtDateLength', {item: item, id: item.id})}
+              activeOpacity={0.85}
+              style={[styles.secBtn, {backgroundColor: rd.color.primary}]}>
               <AskTime />
-              <Text
-                allowFontScaling={false}
-                style={styles.buttonText}
-                numberOfLines={1}>
+              <Text allowFontScaling={false} style={styles.secText} numberOfLines={2}>
                 {t('363')}
               </Text>
             </TouchableOpacity>
-          </View>
-          <View style={styles.buttonInsideContainer}>
             <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('CharityDebt', {item: item});
-              }}
-              activeOpacity={0.8}
-              style={styles.registerButton}>
+              onPress={() => navigation.navigate('CharityDebt', {item: item})}
+              activeOpacity={0.85}
+              style={[styles.secBtn, {backgroundColor: rd.color.primary}]}>
               <CharityDollar />
-              <Text
-                allowFontScaling={false}
-                style={styles.buttonText}
-                numberOfLines={1}>
+              <Text allowFontScaling={false} style={styles.secText} numberOfLines={2}>
                 {t('378')}
               </Text>
             </TouchableOpacity>
@@ -98,28 +93,46 @@ const Debitor = () => {
 export default Debitor;
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    justifyContent: 'center',
+  // SS18: kreativ amal-tugmalar joylashuvi
+  actions: {
+    paddingHorizontal: rs(16),
+    marginTop: rs(16),
+    gap: rs(12),
   },
-  buttonInsideContainer: {
+  primaryBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(16),
-  },
-  registerButton: {
-    width: '90%',
+    gap: rs(8),
     paddingVertical: rs(16),
     backgroundColor: rd.color.primary,
     borderRadius: rd.radius.lg,
+  },
+  primaryText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    color: rd.color.onPrimary,
+    textAlign: 'center',
+  },
+  secRow: {
+    flexDirection: 'row',
+    gap: rs(12),
+  },
+  secBtn: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
+    gap: rs(6),
+    paddingVertical: rs(14),
+    paddingHorizontal: rs(8),
+    borderRadius: rd.radius.lg,
+    minHeight: rs(84),
   },
-  buttonText: {
+  secText: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(14),
+    fontSize: rs(12.5),
     color: rd.color.onPrimary,
-    marginLeft: rs(8),
     textAlign: 'center',
+    lineHeight: rs(16),
   },
 });

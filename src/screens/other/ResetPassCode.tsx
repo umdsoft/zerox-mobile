@@ -13,13 +13,16 @@ import {normalize} from '../../theme/style';
 import {storage} from '../../store/api/token/getToken';
 import {LoginWithPhoneSendPasswordApi} from '../../store/api/auth';
 import Toast from 'react-native-toast-message';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation, useRoute, StackActions } from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import ScreenLayout from '../components/ScreenLayout';
 import Button from '../components/Button';
 import {LockIcon} from '../home/redesign/icons';
+// PIN-tiklash sahifasining KATTA illyustratsiyasi (so'rov bo'yicha — eski kichik qulf
+// ikonasi o'rniga, jarayonga mos "parol tiklash" rasmi, sahifaning 1-yarmini egallaydi).
+import ResetPassImage from '../../images/resetpassport.svg';
 import {rd, rs} from '../../theme/rd';
 
 const ResetPassCode = () => {
@@ -44,12 +47,15 @@ const ResetPassCode = () => {
           }),
         ).unwrap();
         if (response.success) {
-          navigation.navigate('UpdateLocalPassCode');
+          // NAV-FIX: parol tasdiqlandi — bu qadam SARFLANDI. `replace` bilan shu
+          // ekran stekdan chiqadi, aks holda yangi PIN o'rnatish ekranidan orqaga
+          // bosilganda yana parol so'rash ekraniga qaytib qolinardi.
+          navigation.dispatch(StackActions.replace('UpdateLocalPassCode'));
         } else {
           Toast.show({
             type: 'error2',
             position: 'top',
-            props: {title: t('Xatolik!'), desc: t('resetpas')},
+            props: {desc: t('resetpas')},
             visibilityTime: 3000,
             autoHide: true,
             topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -60,7 +66,7 @@ const ResetPassCode = () => {
         Toast.show({
           type: 'error2',
           position: 'top',
-          props: {title: t('Xatolik!'), desc: t('resetpas')},
+          props: {desc: t('resetpas')},
           visibilityTime: 3000,
           autoHide: true,
           topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -71,7 +77,7 @@ const ResetPassCode = () => {
       Toast.show({
         type: 'error2',
         position: 'top',
-        props: {title: t('Xatolik!'), desc: t("Iltimos, qaytadan urinib ko'ring")},
+        props: {desc: t("Iltimos, qaytadan urinib ko'ring")},
         visibilityTime: 3000,
         autoHide: true,
         topOffset: Platform.OS === 'android' ? 5 : normalize(50),
@@ -82,17 +88,15 @@ const ResetPassCode = () => {
   return (
     <ScreenLayout title={t('PIN-kodni tiklash')}>
       <View style={styles.wrap}>
-        {/* Hero */}
-        <View style={styles.hero}>
-          <View style={styles.heroCircle}>
-            <LockIcon size={rs(34)} color={rd.color.primary} />
-          </View>
-          <Text style={styles.title}>{t('PIN-kodni tiklash')}</Text>
-          <Text style={styles.subtitle}>
-            {t('Hisobingiz parolini kiriting — PIN-kod qayta tiklanadi')}
-          </Text>
+        {/* TEPA YARIM — KATTA illyustratsiya (so'rov bo'yicha: eski kichik qulf ikonasi
+            va uning ostidagi "PIN-kodni tiklash" / "Hisobingiz parolini kiriting"
+            matnlari OLIB TASHLANDI; endi yagona vizual markaz — rasm). */}
+        <View style={styles.topHalf}>
+          <ResetPassImage width={rs(250)} height={rs(188)} />
         </View>
 
+        {/* PASTKI YARIM — forma (parol + Davom etish + Parolni unutdingizmi?). */}
+        <View style={styles.bottomHalf}>
         {/* Parol maydoni */}
         <View style={[styles.field, focused && styles.fieldFocused]}>
           <View style={styles.leadIcon}>
@@ -150,6 +154,7 @@ const ResetPassCode = () => {
             <Text style={styles.altLinkText}>{t('33')}</Text>
           </TouchableOpacity>
         )}
+        </View>
       </View>
     </ScreenLayout>
   );
@@ -163,35 +168,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(8),
     paddingTop: rs(12),
   },
-  hero: {
-    alignItems: 'center',
-    marginTop: rs(12),
-    marginBottom: rs(28),
-  },
-  heroCircle: {
-    width: rs(72),
-    height: rs(72),
-    borderRadius: rs(36),
-    backgroundColor: rd.color.primaryTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: rs(18),
-  },
-  title: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(22),
-    color: rd.color.text,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
-    color: rd.color.textSecondary,
-    textAlign: 'center',
-    marginTop: rs(8),
-    lineHeight: rs(20),
-    paddingHorizontal: rs(20),
-  },
+  // Ekran ikkiga bo'linadi: illyustratsiya tepa yarmda (markazda), forma pastki yarmda.
+  topHalf: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  bottomHalf: { flex: 1, paddingTop: rs(8) },
   field: {
     height: rs(56),
     flexDirection: 'row',

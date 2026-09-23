@@ -1,6 +1,18 @@
 import React from 'react';
 
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+/**
+ * SS8 (2026-09-18): 5 ta asosiy bo'lim orasida BARMOQ BILAN SURIB o'tish.
+ *
+ * `createBottomTabNavigator` surishni QO'LLAB-QUVVATLAMAYDI. Shu bois
+ * `material-top-tabs` ishlatiladi — u `react-native-pager-view` ustida
+ * ishlaydi va surishni beradi; panel esa `tabBarPosition: 'bottom'` bilan
+ * PASTDA qoladi va AYNAN o'sha `RdTabBar` chiziladi (ko'rinish o'zgarmaydi).
+ *
+ * ⚠️ Navigator NOMI (`BottomTabNavigator`) va TAB nomlari o'zgarmadi —
+ * `navigate('BottomTabNavigator', { screen })` chaqiruvlari va pastki menyu
+ * rezolveri ishlayverdi.
+ */
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, StyleSheet } from 'react-native';
 
@@ -19,20 +31,46 @@ import QarzDaftari from '../screens/home/modules/QarzDaftari';
 // shaxsiy moliya dashboard'i (ShaxsiyMoliya). `tab:true` param bilan RdHeader'da
 // orqaga tugma yashiriladi (tab — top-level, orqaga tugma kerak emas).
 import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
+// SS7: "Shaxsiy qarz" endi MUSTAQIL pastki bo'lim (ilgari "Shaxsiy moliya"
+// ichidagi karta edi). Tab sifatida ochilganda `tab:true` params orqali
+// RdHeader'da orqaga tugmasi yashiriladi (tab — top-level ekran).
+import FinanceDebts from '../screens/home/modules/FinanceDebts';
 let width = Dimensions.get('window').width;
-let indicatorWidth = width / 4;
-const BottomTabStack = createBottomTabNavigator();
+let indicatorWidth = width / 5;
+const BottomTabStack = createMaterialTopTabNavigator();
 export const BottomTabNavigator = () => {
   const { t } = useTranslation();
 
   return (
     <BottomTabStack.Navigator
-      backBehavior="history"
+      /**
+       * 🔴 SS4 (2026-09-19): "orqaga" tugmasi XRONOLOGIYA bo'yicha emas,
+       * sahifalar KETMA-KETLIGI bo'yicha qaytsin.
+       *
+       * `history` — foydalanuvchi qaysi tartibda kirgan bo'lsa, o'sha tartibda
+       * teskari yuradi: bir necha amaldan keyin "orqaga" bosilsa, ertalabdan
+       * beri ochilgan sahifalar birin-ketin qayta chiqaverardi.
+       * `order` — pastki menyudagi TARTIBDA bitta oldingi bo'limga qaytadi.
+       */
+      backBehavior="order"
+      // Panel PASTDA (ko'rinish bottom-tabs bilan bir xil).
+      tabBarPosition="bottom"
       tabBar={props => <RdTabBar {...props} />}
       screenOptions={{
-        headerShown: false,
-        // Tab o'tishida SLAYD/animatsiya yo'q (darhol).
-        animation: 'none',
+        // SS8: chapdan-o'ngga surish yoqilgan.
+        swipeEnabled: true,
+        /**
+         * 🔴 SS3 (2026-09-19): animatsiya O'CHIRILDI.
+         *
+         * `animationEnabled: true` bo'lganda TUGMA bilan o'tishda ham slayd
+         * ishlardi: masalan Bosh sahifadan Shaxsiy moliyaga o'tganda oradagi
+         * uchta sahifa "videotasma" kabi lip etib ko'rinib ketardi.
+         *
+         * `false` — dasturiy o'tish (pastki menyu, kartalar) DARHOL bo'ladi,
+         * BARMOQ bilan surish esa baribir ishlaydi va tabiiy ergashadi
+         * (pager gestiyasi `swipeEnabled` ga bog'liq, animatsiyaga emas).
+         */
+        animationEnabled: false,
         // lazy:false — barcha tablar ilova ochilishida MOUNT bo'ladi va
         // ma'lumot oldindan yuklanadi. Shunda "Qarz shartnomasi"/"Qarz
         // daftari"ga o'tishda aylanuvchi ZeroX yuklagichi (LottieView)
@@ -59,6 +97,14 @@ export const BottomTabNavigator = () => {
         options={{ title: 'Qarz daftari' }}
         name="QarzDaftari"
         component={QarzDaftari}
+      />
+      {/* SS7: 5-bo'lim — "Shaxsiy qarz" (Qarz daftari bilan Shaxsiy moliya orasida). */}
+      <BottomTabStack.Screen
+        key={'ShaxsiyQarz'}
+        options={{ title: 'Shaxsiy qarz' }}
+        name="ShaxsiyQarz"
+        component={FinanceDebts}
+        initialParams={{ tab: true }}
       />
       <BottomTabStack.Screen
         key={'Statistic'}

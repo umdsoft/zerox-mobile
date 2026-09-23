@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
+import { goHomeSmooth } from "../../helper/finishAction";
 import { style } from '../../theme/style';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -33,6 +34,7 @@ import { font } from '../../theme/font';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
+import { AnimatedIconCircle, RequestExtendIcon } from '../../images/debtActionIcons';
 
 const DebtDateLengthAsk = () => {
   const { item } = useRoute().params;
@@ -63,7 +65,6 @@ const DebtDateLengthAsk = () => {
         Toast.show({
           autoHide: true,
           props: {
-            title: 'Xatolik',
             desc: t('Shartnoma allaqachon tugallangan'),
           },
           visibilityTime: 2000,
@@ -80,7 +81,6 @@ const DebtDateLengthAsk = () => {
         Toast.show({
           autoHide: true,
           props: {
-            title: 'Xatolik',
             desc: t('Shartnoma allaqachon tugallangan'),
           },
           visibilityTime: 2000,
@@ -131,37 +131,28 @@ const DebtDateLengthAsk = () => {
       );
 
       if (status === 201) {
+        // SS5: "Muvaffaqiyatli" sarlavhasi olib tashlandi -> matn bold (descStrong).
         Toast.show({
-          autoHide: true,
+          // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+          autoHide: false,
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t('468'),
           },
-          visibilityTime: 3000,
           position: 'bottom',
           type: 'omad',
         });
-        // socketService.sendNotification({
-        //   id: info.debitor,
-        // });
-        // socketService.emit('notification', user?.data?.id);
-        // socketService.on('notification', data => {
-        //   dispatch(setNotification({notification: data.not}));
-        // });
-        setTimeout(() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'BottomTabNavigator' as never }],
-          });
-          setLoading1(false);
-        }, 2000);
+        // Toast o'qilsin -> yo'qolsin -> so'ng HOME (goHomeSmooth, matn uzunligiga
+        // qarab o'qish vaqti). Freeze yo'q (navigate).
+        setLoading1(false);
+        goHomeSmooth(navigation, t('468'));
         return;
       }
       if (data.msg === 'ex') {
+        // SS5: oldin so'rov yuborilgan holat — "Muvaffaqiyatli" sarlavhasi (xato edi,
+        // bu error toast) olib tashlandi -> matn bold (descStrong).
         Toast.show({
           autoHide: true,
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t(
               'Siz ushbu qarz shartnomasi bo‘yicha so‘rov yuborgansiz. Iltimos, so‘rov natijasini kuting!',
             ),
@@ -178,7 +169,7 @@ const DebtDateLengthAsk = () => {
       setLoading1(false);
       Toast.show({
         autoHide: true,
-        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+        props: { desc: t('Xatolik sodir bo‘ldi') },
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
@@ -199,6 +190,21 @@ const DebtDateLengthAsk = () => {
   const isPlaceholder = settingDate(date) === settingDate(Date.now());
   const disabled = checkingDate(date) || loading1;
 
+  // XAVFSIZ sanalar: DatePicker `info` yuklanmasdan ochilsa (foydalanuvchi tez bossa)
+  // info.end_date/created_at undefined bo'lib min/max Invalid Date bo'lardi ->
+  // "RangeError: Date value out of bounds" CRASH. Endi noto'g'ri sanada default ishlatamiz.
+  const safeMin = (() => {
+    const m = new Date(minimumDate(info?.end_date));
+    return isNaN(m.getTime())
+      ? new Date(new Date().getTime() + 86400000)
+      : m;
+  })();
+  const safeMax = (() => {
+    const c = new Date(info?.created_at);
+    const base = isNaN(c.getTime()) ? new Date() : c;
+    return new Date(new Date(base).setFullYear(base.getFullYear() + 2));
+  })();
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -213,6 +219,13 @@ const DebtDateLengthAsk = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
+          {/* SO'RASH ikonasi — konvert + soat (muddat so'rovi) + yengil puls. */}
+          <View style={styles.iconWrap}>
+            <AnimatedIconCircle size={rs(104)} bg={rd.color.primary}>
+              <RequestExtendIcon width={rs(52)} height={rs(52)} />
+            </AnimatedIconCircle>
+          </View>
+
           <View style={styles.card}>
             <Text allowFontScaling={false} style={styles.hisob}>
               <Trans
@@ -224,9 +237,9 @@ const DebtDateLengthAsk = () => {
                   end: settingDate(info?.end_date),
                 }}
                 components={{
-                  start: (
-                    <MainText size={style.fontSize.xx} ft={font.bold} />
-                  ),
+                  // Shrift barcha so'z va raqamda bir xil — faqat shartnoma raqami
+                  // (id) bosiladigan ko'k havola.
+                  start: <Text allowFontScaling={false} />,
                   id: (
                     <Text
                       allowFontScaling={false}
@@ -236,21 +249,18 @@ const DebtDateLengthAsk = () => {
                           id: info.id,
                         });
                       }}
-                      style={{
-                        color: rd.color.primary,
-                      }}
+                      style={styles.link}
                     />
                   ),
-                  end: (
-                    <TextBold styles={{ fontSize: style.fontSize.xx }} />
-                  ),
+                  end: <Text allowFontScaling={false} style={styles.endBold} />,
                 }}
               />
             </Text>
           </View>
 
+          {/* "Yangi muddatni kiriting" LABEL olib tashlandi — maydon placeholder'ida
+              allaqachon shu matn bor edi (dublikat). */}
           <View style={styles.fieldBlock}>
-            <Text style={styles.label}>{t('369')}</Text>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => setOpen(!open)}
@@ -294,6 +304,8 @@ const DebtDateLengthAsk = () => {
               </Text>
             )}
           </TouchableOpacity>
+          {/* Kontent yuqoriga — qolgan bo'sh joy pastda. */}
+          <View style={styles.spacer} />
         </ScrollView>
       )}
 
@@ -312,14 +324,8 @@ const DebtDateLengthAsk = () => {
           modal={true}
           // add one day to info.end_date
           // i have to check to here leta is bigger than today i need to get that otherwise i will take today
-          minimumDate={new Date(minimumDate(info?.end_date))}
-          maximumDate={
-            new Date(
-              new Date(info?.created_at).setFullYear(
-                new Date(info?.created_at).getFullYear() + 2,
-              ),
-            )
-          } // 2 yil — qarz BERILGAN sanadan (info.created_at), qaytarish sanasidan emas
+          minimumDate={safeMin}
+          maximumDate={safeMax} // 2 yil — qarz BERILGAN sanadan (info.created_at), qaytarish sanasidan emas
           onCancel={() => {
             setOpen(false);
           }}
@@ -411,12 +417,31 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.page,
     flex: 1,
   },
+  // Kontent VERTIKAL MARKAZDA (so'rov bo'yicha biroz pastroq/balansli).
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'center',
     paddingHorizontal: rs(20),
-    paddingTop: rs(8),
-    paddingBottom: rs(24),
+    paddingVertical: rs(24),
   },
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: rs(28),
+  },
+  spacer: { flex: 0 },
+  // Hozirgi qaytarish muddati (sana) — bold (so'rov bo'yicha jirniy).
+  endBold: { fontFamily: rd.font.bold, color: rd.color.text },
+  iconCircle: {
+    width: rs(96),
+    height: rs(96),
+    borderRadius: rs(48),
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Shartnoma raqami havolasi — shrift bir xil, faqat ko'k rang.
+  link: { color: rd.color.primary },
   card: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,

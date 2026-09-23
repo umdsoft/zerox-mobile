@@ -117,7 +117,6 @@ const CreatePassword = () => {
         position: 'top',
         visibilityTime: 3000,
         props: {
-          title: 'Xatolik!',
           desc: t('738'),
         },
       });

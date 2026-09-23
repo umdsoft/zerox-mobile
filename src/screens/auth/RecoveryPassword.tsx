@@ -174,7 +174,8 @@ const RecoveryPassword = () => {
       position: 'bottom',
       type: type,
       props: {
-        title: title,
+        // "Xatolik" sarlavhasi OLIB tashlandi -> desc yagona QALIN matn (descStrong),
+        // ilovadagi boshqa toast'lar bilan bir xil konvensiya (so'rov bo'yicha).
         desc: t(description),
       },
     });
@@ -291,20 +292,25 @@ const RecoveryPassword = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
-          </TouchableOpacity>
+          {/* HEADER — orqaga tugma + sarlavha BIR QATORда (so'rov: sarlavha tepaда,
+              orqaga yonида; shrift kichraytirilди). */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <ChevronLeft size={rs(20)} color={rd.color.onPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {t('678')}
+            </Text>
+          </View>
 
-          {/* Hero */}
-          {/* Kichik ikonka-doira o'rniga to'liq illyustratsiya (eski ilovadagidek) */}
+          {/* Hero — illyustratsiya + izoh. SS24: ikonka YANADA KATTAROQ (Tasdiqlash
+              tugmasi ostidagi bo'sh joy yo'qolishi uchun). */}
           <View style={styles.hero}>
-            <NewPasswordIllustration width={rs(206)} height={rs(162)} />
-            <Text style={styles.title}>{t('678')}</Text>
+            <NewPasswordIllustration width={rs(196)} height={rs(150)} />
             <Text style={styles.subtitle}>{t('66')}</Text>
           </View>
 
@@ -365,21 +371,35 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: rs(24),
-    paddingBottom: rs(28),
+    paddingBottom: rs(14),
+  },
+  // Header — orqaga + sarlavha bir qatorда (so'rov).
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(12),
+    marginTop: rs(8),
+  },
+  headerTitle: {
+    flex: 1,
+    fontFamily: rd.font.bold,
+    // Kichraytirildi (so'rov) — RdHeader sarlavhasidek (rs16).
+    fontSize: rs(16),
+    color: rd.color.text,
   },
   backBtn: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    // TO'LIQ KO'K orqaga tugma — ilovaning boshqa sahifalaridagi (RdHeader) orqaga
+    // tugmasi bilan BIR XIL: to'ldirilgan ko'k doira + OQ chevron (so'rov bo'yicha).
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(20), marginBottom: rs(24) },
+  // Tasdiqlash tugmasi sig'ishi uchun ixchamlashtirildi (so'rov).
+  hero: { alignItems: 'center', marginTop: rs(8), marginBottom: rs(6) },
   heroCircle: {
     width: rs(72),
     height: rs(72),
@@ -389,26 +409,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: rs(18),
   },
-  title: { fontFamily: rd.font.bold, fontSize: rs(24), color: rd.color.text },
+  title: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.text },
   subtitle: {
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(12),
     color: rd.color.textSecondary,
     textAlign: 'center',
-    marginTop: rs(8),
-    lineHeight: rs(20),
+    marginTop: rs(4),
+    lineHeight: rs(16),
     paddingHorizontal: rs(12),
   },
 
-  fieldBlock: { marginTop: rs(16) },
+  fieldBlock: { marginTop: rs(10) },
   label: {
     fontFamily: rd.font.medium,
-    fontSize: rs(13),
+    fontSize: rs(12.5),
     color: rd.color.textSecondary,
-    marginBottom: rs(8),
+    marginBottom: rs(5),
   },
   field: {
-    height: rs(56),
+    height: rs(48),
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: rd.color.surface,
@@ -429,25 +449,25 @@ const styles = StyleSheet.create({
   },
   eyeBtn: { paddingLeft: rs(8), height: '100%', justifyContent: 'center' },
 
-  validationContainer: { marginTop: rs(16), marginBottom: rs(4) },
+  validationContainer: { marginTop: rs(6), marginBottom: rs(2) },
   validationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: rs(8),
+    marginBottom: rs(3),
     gap: rs(8),
   },
   validationText: {
     fontFamily: rd.font.regular,
-    fontSize: rs(13),
+    fontSize: rs(11.5),
   },
 
   button: {
-    height: rs(54),
+    height: rs(48),
     borderRadius: rd.radius.lg,
     backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(20),
+    marginTop: rs(8),
     shadowColor: rd.color.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
@@ -461,7 +481,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(16),
+    // Kichraytirildi (so'rov: qolgan so'zlar bilan bir xil) — 16->14.
+    fontSize: rs(14),
     color: rd.color.onPrimary,
   },
 });

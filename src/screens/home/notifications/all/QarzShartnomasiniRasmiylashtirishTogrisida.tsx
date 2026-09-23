@@ -1,14 +1,14 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { settingDate } from '../../../../helper';
 import { sortText } from '../../../components/StatisticCard';
 import { useDispatch, useSelector } from 'react-redux';
 import ReturnName from '../../../../helper/returnName';
 import { t } from 'i18next';
 import Toast from 'react-native-toast-message';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import MainText from '../../../components/MainText';
 import { expire_passport_check } from '../../../../helper/timeChecker';
 import { checkExpire } from '../../../../store/reducers/HomeReducer';
@@ -192,7 +192,7 @@ export default memo(QarzShartnomasiniRasmiylashtirishTogrisida);
 
 const styles = StyleSheet.create({
   notification: {
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx + 1,
     fontFamily: style.fontFamilyMedium,
     color: style.textColor,
   },

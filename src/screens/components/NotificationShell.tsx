@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontFamily: rd.font.semibold,
-    fontSize: rs(14.5),
+    fontSize: rs(15.5),
     color: rd.color.text,
-    lineHeight: rs(20),
+    lineHeight: rs(21),
   },
   body: { marginTop: rs(8) },
   dateRow: { flexDirection: 'row', alignItems: 'center' },
@@ -252,10 +252,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: rs(12),
   },
+  // Sana/vaqt — bildirishnoma matnidek QORA (ilgari textTertiary/xira edi) va
+  // matn shrifti hajmiga yaqin (rs12.5, medium).
   meta: {
-    fontSize: rs(12),
-    fontFamily: rd.font.regular,
-    color: rd.color.textTertiary,
+    fontSize: rs(13.5),
+    fontFamily: rd.font.medium,
+    color: rd.color.text,
   },
   btn: {
     backgroundColor: rd.color.primary,
@@ -278,6 +280,7 @@ const styles = StyleSheet.create({
     fontSize: rs(13.5),
     fontFamily: rd.font.semibold,
     color: rd.color.onPrimary,
+    textAlign: 'center',
   },
   btnTextGhost: { color: rd.color.textSecondary },
 });

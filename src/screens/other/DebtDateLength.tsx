@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
+import { goHomeSmooth } from "../../helper/finishAction";
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -35,6 +36,7 @@ import { getCreditorDataAndDebitorData } from '../../store/api/home';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
+import { AnimatedIconCircle, ExtendTermIcon } from '../../images/debtActionIcons';
 
 const DebtDateLength = () => {
   const { item } = useRoute().params;
@@ -107,7 +109,6 @@ const DebtDateLength = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t(
               'Ushbu qarz shartnomasi bo‘yicha Sizga so‘rov yuborilgan. Bildirishnomalar bo‘limi orqali so‘rov bilan tanishing.',
             ),
@@ -118,18 +119,19 @@ const DebtDateLength = () => {
       }
 
       if (status === 201 || data.success) {
+        // SS3: oldin `title: t('237')` ISHLATILGAN edi — t('237') = "<name>{{name}}
+        // </name> ...ruxsat so‘ramoqda" (BUTUNLAY BOSHQA kalit; t() `<name>` markupни
+        // parse qilmaydi -> toastда literal "<name>{{name}}</name>..." chiqardi). To'g'ri
+        // xabar: FAQAT desc t('375') = "Qarz muddati uzaytirildi." (sarlavhasiz -> bold).
         Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
+          // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+          autoHide: false,
           position: 'bottom',
           type: 'omad',
-          props: { title: t('237'), desc: t('375') },
+          props: { desc: t('375') },
         });
         dispatch(getCreditorDataAndDebitorData());
-        setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
-          setLoading1(false);
-        }, 2000);
+        goHomeSmooth(navigation, t('375'));
         // socketService.sendNotification({id: info.creditor});
         // socketService.emit('notification', user?.data?.id);
         // socketService.on('notification', data => {
@@ -146,7 +148,7 @@ const DebtDateLength = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: { title: 'Xatolik', desc: t('Xatolik!') },
+        props: { desc: t('Xatolik!') },
       });
     } catch (error) {
       console.warn(error);
@@ -155,13 +157,27 @@ const DebtDateLength = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+        props: { desc: t('Xatolik sodir bo‘ldi') },
       });
     }
   };
 
   const isPlaceholder = settingDate(date) === settingDate(Date.now());
   const canSubmit = check === true && loading1 === false;
+
+  // XAVFSIZ sanalar: DatePicker HAR DOIM mount bo'ladi (open=false bo'lsa ham). `info`
+  // dastlab {} bo'lgani uchun info.created_at/end_date undefined -> `new Date(undefined)`
+  // Invalid Date -> DatePicker "RangeError: Date value out of bounds" bilan CRASH berardi.
+  // Endi noto'g'ri sanalarda mantiqiy default (bugun / bugun+2yil) ishlatamiz.
+  const safeMax = (() => {
+    const c = new Date(info?.created_at);
+    const base = isNaN(c.getTime()) ? new Date() : c;
+    return new Date(new Date(base).setFullYear(base.getFullYear() + 2));
+  })();
+  const safeMin = (() => {
+    const m = new Date(plus_day(info?.end_date));
+    return isNaN(m.getTime()) ? new Date() : m;
+  })();
 
   return (
     <View style={styles.container}>
@@ -175,6 +191,13 @@ const DebtDateLength = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
+          {/* UZAYTIRISH ikonasi — soat + oldinga yoy strelka + yengil puls. */}
+          <View style={styles.iconWrap}>
+            <AnimatedIconCircle size={rs(108)} bg={rd.color.primary}>
+              <ExtendTermIcon width={rs(56)} height={rs(56)} />
+            </AnimatedIconCircle>
+          </View>
+
           <View style={styles.card}>
             <Text
               allowFontScaling={false}
@@ -189,9 +212,9 @@ const DebtDateLength = () => {
                   end: settingDate(info?.end_date),
                 }}
                 components={{
-                  start: (
-                    <MainText size={rs(16)} ft={rd.font.bold} />
-                  ),
+                  // Shrift BARCHA so'z va raqamda bir xil — faqat shartnoma raqami
+                  // (count) bosiladigan ko'k havola (rang farqi, shrift emas).
+                  start: <Text allowFontScaling={false} />,
                   count: (
                     <Text
                       allowFontScaling={false}
@@ -201,27 +224,25 @@ const DebtDateLength = () => {
                           id: info.id,
                         });
                       }}
-                      style={{
-                        color: rd.color.primary,
-                      }}
+                      style={styles.link}
                     />
                   ),
-                  end: (
-                    <TextBold styles={{ fontSize: rs(16) }} />
-                  ),
+                  end: <Text allowFontScaling={false} style={styles.endBold} />,
                 }}
               />
             </Text>
           </View>
 
+          {/* "Yangi muddatni kiriting" LABEL olib tashlandi — maydon placeholder'ida
+              allaqachon shu matn bor edi (dublikat). */}
           <View style={styles.fieldBlock}>
-            <Text style={styles.label}>{t('369')}</Text>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => setOpen(!open)}
               style={styles.field}
             >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.fieldValue,
                   isPlaceholder && styles.fieldPlaceholder,
@@ -249,6 +270,7 @@ const DebtDateLength = () => {
               onValueChange={() => setCheck(!check)}
             />
             <Text
+              allowFontScaling={false}
               onPress={() => {
                 navigation.navigate('Dalol', {
                   type: 3,
@@ -275,6 +297,7 @@ const DebtDateLength = () => {
               <ActivityIndicator size={'small'} color={rd.color.onPrimary} />
             ) : (
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.textButton,
                   !canSubmit && styles.textButtonDisabled,
@@ -332,18 +355,12 @@ const DebtDateLength = () => {
           setOpen(false);
         }}
         title={t('801')}
-        maximumDate={
-          new Date(
-            new Date(info?.created_at).setFullYear(
-              new Date(info?.created_at).getFullYear() + 2,
-            ),
-          )
-        } // 2 yil — qarz BERILGAN sanadan (created_at), qaytarish sanasidan emas
+        maximumDate={safeMax} // 2 yil — qarz BERILGAN sanadan (created_at), qaytarish sanasidan emas
         onConfirm={date => {
           setDate(date);
           setOpen(false);
         }}
-        minimumDate={new Date(plus_day(info?.end_date))}
+        minimumDate={safeMin}
       />
 
       {/* <DateModal
@@ -396,6 +413,26 @@ const styles = StyleSheet.create({
     paddingTop: rs(8),
     paddingBottom: rs(24),
   },
+  // Amal ikonasi — matn ustida, biroz pastroqда (so'rov bo'yicha).
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: rs(52),
+    marginBottom: rs(28),
+  },
+  iconCircle: {
+    width: rs(104),
+    height: rs(104),
+    borderRadius: rs(52),
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Shartnoma raqami havolasi — shrift bir xil, faqat ko'k rang.
+  link: { color: rd.color.primary },
+  // Hozirgi qaytarish muddati (sana) — BOLD (so'rov bo'yicha jirniy). Ilgari bu stil
+  // ta'riflanmagan edi -> styles.endBold undefined -> bold qo'llanmasdan qolgan edi.
+  endBold: { fontFamily: rd.font.bold, color: rd.color.text },
   card: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
@@ -429,9 +466,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(16),
     justifyContent: 'center',
   },
+  // Shrift tepadagi matn (hisob) bilan uyg'un — biroz kichikroq/bir xil (so'rov bo'yicha).
   fieldValue: {
     fontFamily: rd.font.medium,
-    fontSize: rs(15),
+    fontSize: rs(14),
     color: rd.color.text,
   },
   fieldPlaceholder: {
@@ -446,6 +484,7 @@ const styles = StyleSheet.create({
     width: rs(20),
     height: rs(20),
   },
+  // Yuqoridagi matn (hisob) bilan bir xil o'lchamга yaqin (so'rov bo'yicha).
   checkText: {
     fontFamily: rd.font.medium,
     fontSize: rs(14),
@@ -454,7 +493,7 @@ const styles = StyleSheet.create({
     marginLeft: rs(10),
   },
   textButton: {
-    fontSize: rs(16),
+    fontSize: rs(14),
     fontFamily: rd.font.semibold,
     color: rd.color.onPrimary,
   },

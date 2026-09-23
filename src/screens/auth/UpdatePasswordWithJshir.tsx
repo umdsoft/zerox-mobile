@@ -69,7 +69,6 @@ const UpdatePasswordWithJshir = () => {
         type: 'error2',
         position: 'bottom',
         props: {
-          title: 'Xatolik!',
           desc: t(
             "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.",
           ),
@@ -108,7 +107,6 @@ const UpdatePasswordWithJshir = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t("Bu telefon raqami ro'yxatdan o'tmagan."),
           },
           visibilityTime: 3000,
@@ -120,7 +118,6 @@ const UpdatePasswordWithJshir = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t('Xatolik!'),
           },
           visibilityTime: 3000,
@@ -137,7 +134,6 @@ const UpdatePasswordWithJshir = () => {
         type: 'error2',
         position: 'bottom',
         props: {
-          title: 'Xatolik!',
           desc: t('Xatolik!'),
         },
         visibilityTime: 3000,

@@ -74,7 +74,6 @@ const RegisterWithPeople = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t(
               "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.",
             ),
@@ -98,7 +97,6 @@ const RegisterWithPeople = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t(
               "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.",
             ),
@@ -133,7 +131,7 @@ const RegisterWithPeople = () => {
             type: 'error2',
             position: 'bottom',
             props: {
-              title: 'Xatolik!',
+              // "Xatolik!" sarlavhasi olib tashlandi (so'rov bo'yicha) — matn (jirniy) qoladi.
               desc: t(
                 'Ushbu telefon raqami tizimda ro‘yxatga olingan. Iltimos, ro‘yxatdan o‘tish uchun boshqa telefon raqamidan foydalaning',
               ),
@@ -150,7 +148,7 @@ const RegisterWithPeople = () => {
             type: 'error2',
             position: 'bottom',
             props: {
-              title: 'Xatolik!',
+              // "Xatolik!" sarlavhasi olib tashlandi (so'rov bo'yicha) — matn (jirniy) qoladi.
               desc: t(
                 'Ushbu telefon raqami tizimda ro‘yxatga olingan. Iltimos, ro‘yxatdan o‘tish uchun boshqa telefon raqamidan foydalaning',
               ),
@@ -168,7 +166,6 @@ const RegisterWithPeople = () => {
             type: 'error2',
             position: 'bottom',
             props: {
-              title: 'Xatolik!',
               desc: t(
                 "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.",
               ),

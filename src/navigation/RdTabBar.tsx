@@ -7,6 +7,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
+  CoinIcon,
   ContractIcon,
   HomeIcon,
   IconProps,
@@ -17,17 +18,21 @@ import { rd, rs } from '../theme/rd';
 
 /**
  * Tab tartibi BottomTabNavigator ekranlari bilan POZITSION mos:
- * Home, QarzShartnomasi, QarzDaftari, Statistic — barchasi HAQIQIY TAB
- * (darhol almashadi, slayd yo'q).
+ * Home, QarzShartnomasi, QarzDaftari, ShaxsiyQarz, Statistic — barchasi
+ * HAQIQIY TAB (darhol almashadi, slayd yo'q).
  */
 const TABS: {
   label: string;
   Icon: (p: IconProps) => JSX.Element;
 }[] = [
   // Yorliqda so'z MANTIQIY joyda sinadi ("Qarz" tepada, moduli pastda).
-  { label: 'Asosiy', Icon: HomeIcon },
+  // "Asosiy" -> "Bosh\nsahifa" (so'rov bo'yicha) — endi u ham 2 qatorli, qolgan
+  // tablar (Qarz shartnomasi/daftari, Shaxsiy moliya) bilan bir xil joylashadi.
+  { label: 'Bosh\nsahifa', Icon: HomeIcon },
   { label: 'Qarz\nshartnomasi', Icon: ContractIcon },
   { label: 'Qarz\ndaftari', Icon: LedgerIcon },
+  // SS7: yangi 5-bo'lim — "Shaxsiy qarz" (ilgari Shaxsiy moliya ichida edi).
+  { label: 'Shaxsiy\nqarz', Icon: CoinIcon },
   // "Statistika" -> "Shaxsiy moliya" (so'rov bo'yicha) — moliya/hamyon ikonasi.
   { label: 'Shaxsiy\nmoliya', Icon: WalletIcon },
 ];
@@ -57,7 +62,7 @@ const RdTabBar = ({ state, navigation }: any) => {
             style={styles.item}
             onPress={onPress}
           >
-            <tab.Icon size={rs(24)} color={active ? rd.color.primary : rd.color.textTertiary} />
+            <tab.Icon size={rs(22)} color={active ? rd.color.primary : rd.color.textTertiary} />
             <Text
               numberOfLines={2}
               style={[styles.label, active && styles.labelActive]}
@@ -80,7 +85,7 @@ const styles = StyleSheet.create({
   // Root SafeAreaView allaqachon pastki inset qo'llaydi — bu yerda takrorlanmaydi.
   wrap: { paddingHorizontal: rs(12), paddingTop: rs(8), paddingBottom: rs(8), backgroundColor: rd.color.page },
   bar: {
-    height: rs(77),
+    height: rs(80),
     paddingHorizontal: rs(8),
     flexDirection: 'row',
     // Yorliqlar TEPADAN boshlanadi (flex-start) — barning ortiqcha balandligi
@@ -100,20 +105,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     gap: rs(4),
-    paddingHorizontal: rs(2),
+    // SS7: endi 5 ta bo'lim — har bir element ~20% torroq.
+    paddingHorizontal: rs(1),
     paddingTop: rs(10),
   },
-  // 2-qatorli yorliq ("Qarz\nshartnomasi" ...) ning 2-qatori KESILMASIN:
-  // balandlik 2 qatorga yetadigan qilib oshirildi (rs(28)) va Android'da pastki
-  // harflar (descender) kesilmasligi uchun includeFontPadding:false.
+  // 2-qatorli yorliq ("Qarz\nshartnomasi" ...) ning 2-qator 'y' descenderi KESILMASIN.
+  // YAKUNIY SABAB (batch-9): oldingi `height:rs(34)` + `textAlignVertical:'center'`
+  // 2-qator descenderini label QUTISI ichida kesardi (real qurilmalarda shrift metrikasi
+  // balandroq → 34px yetmasdi). Fixed height va textAlignVertical OLIB TASHLANDI —
+  // label endi tabiiy o'lchamda (includeFontPadding default=true descenderni to'liq
+  // saqlaydi), bar (rs(80)) ichida yetarli bo'sh joy bor, hech narsa kesilmaydi.
   label: {
     fontFamily: rd.font.medium,
-    fontSize: rs(9.5),
-    lineHeight: rs(12),
-    height: rs(28),
-    includeFontPadding: false,
+    // SS7: 5 bo'limda "shartnomasi" sig'ishi uchun 9.5 -> 8.8.
+    fontSize: rs(8.8),
+    lineHeight: rs(13),
     textAlign: 'center',
-    textAlignVertical: 'top',
     color: rd.color.textTertiary,
   },
   labelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },

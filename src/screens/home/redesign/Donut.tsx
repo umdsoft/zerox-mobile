@@ -1,6 +1,6 @@
 /**
  * Donut.tsx — Shartnomalar holati halqasimon diagrammasi (react-native-svg).
- * Har segment qiymatga proporsional yoy; markazда umumiy son + label.
+ * Har segment qiymatga proporsional yoy; markazda umumiy son + label.
  */
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -15,6 +15,8 @@ type Props = {
   strokeWidth?: number;
   centerValue: string;
   centerLabel: string;
+  /** Markazdagi qiymat shrifti — uzun kompakt matn ("68,2 M") uchun kichraytiriladi. */
+  valueSize?: number;
 };
 
 const Donut = ({
@@ -23,6 +25,7 @@ const Donut = ({
   strokeWidth = 11,
   centerValue,
   centerLabel,
+  valueSize,
 }: Props) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -57,8 +60,15 @@ const Donut = ({
           })}
         </G>
       </Svg>
-      <View style={styles.center} pointerEvents="none">
-        <Text style={styles.value}>{centerValue}</Text>
+      {/* Matn halqa ichida qolsin — yon tomonda halqa qalinligicha bo'shliq. */}
+      <View style={[styles.center, { paddingHorizontal: strokeWidth + 4 }]} pointerEvents="none">
+        <Text
+          style={[styles.value, valueSize ? { fontSize: valueSize } : null]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}>
+          {centerValue}
+        </Text>
         <Text style={styles.label}>{centerLabel}</Text>
       </View>
     </View>

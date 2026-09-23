@@ -14,13 +14,20 @@ export type DebtTab = 'all' | 'active' | 'near' | 'overdue';
 export type DebtRole = 'debitor' | 'creditor';
 
 export const DEBT_NAV = {
+  // MUHIM: `/contract/return` — SAYT (pages/debt-list) aynan shu endpointни ishlatadi.
+  // U faqat QOLDIQLI (residual > 0) FAOL qarzlarni qaytaradi — dashboard kartasi
+  // (Berilgan/Olingan qarz summasi) bilan TO'LIQ mos keladi. Tugallangan (qoldiq=0) va
+  // rad etilgan shartnomalar bu ro'yxatga TUSHMAYDI (ular hisobotga tegishli).
+  // Ilgari `/contract/report` ishlatilib, barcha (yoki status-2) shartnomalar chiqib,
+  // saytdagi 10 o'rniga 27 ta (tugallanganlar bilan) ko'rinardi.
+  // Izlash esa /contract/report/search'da qoladi (server tomon telefon+ism qidiruvi).
   creditor: {
     // "Kreditor qarzdorlik" -> "Olingan qarz" (so'rov bo'yicha).
     title: 'Olingan qarz',
     type: 3,
     person: 'creditor',
     isHave: false,
-    url: '/contract/report?type=creditor&page=1&limit=1000&status=all&start=0&end=0',
+    url: '/contract/return?type=creditor&page=1&limit=1000&start=0&end=0',
     searchUrl: '/contract/report/search?type=creditor&page=1&limit=500&search=',
     iconType: 3,
   },
@@ -30,7 +37,7 @@ export const DEBT_NAV = {
     type: 1,
     person: 'debitor',
     isHave: false,
-    url: '/contract/report?type=debitor&page=1&limit=1000&status=all&start=0&end=0',
+    url: '/contract/return?type=debitor&page=1&limit=1000&start=0&end=0',
     searchUrl: '/contract/report/search?type=debitor&page=1&limit=500&search=',
     iconType: 3,
   },
@@ -45,5 +52,11 @@ export const DEBT_NAV = {
 export const debtNav = (role: DebtRole, initialTab: DebtTab = 'all', title?: string) => ({
   ...DEBT_NAV[role],
   initialTab,
+  // "Muddati o'tgan" / "Muddati oz qolgan" — bu MAXSUS sahifalar FAQAT o'sha
+  // kategoriyani ko'rsatsin va tablar (Barchasi/oz qolgan/o'tgan) BO'LMASIN
+  // (so'rov bo'yicha). `all` uchun esa tablar qoladi.
+  ...(initialTab === 'near' || initialTab === 'overdue'
+    ? { lockTab: initialTab }
+    : null),
   ...(title ? { title } : null),
 });

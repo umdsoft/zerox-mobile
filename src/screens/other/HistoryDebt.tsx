@@ -18,6 +18,16 @@ import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
 
+// FISH -> TitleCase (server BOSH HARFLI beradi -> "BOBUROV BOBUR" -> "Boburov Bobur").
+const titleCase = (s?: string) =>
+  String(s || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
 const HistoryDebt = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
@@ -68,11 +78,17 @@ const HistoryDebt = () => {
             placeholder={t('216') + '...'}
             keyboardType="default"
             onChangeText={text => {
-              let a = data?.filter(obj =>
-                JSON.stringify(obj)
-                  .toLowerCase()
-                  .includes(text.toLowerCase()),
-              );
+              // FISH + telefon + ID(uid) + kompaniya bo'yicha qidiruv (nafaqat FISH).
+              const q = text.trim().toLowerCase();
+              const a = data?.filter(obj => {
+                const name = `${obj?.last_name || ''} ${obj?.first_name ||
+                  ''} ${obj?.middle_name || ''} ${obj?.company || ''}`.toLowerCase();
+                const phone = String(obj?.phone || '').toLowerCase();
+                const uid = String(obj?.uid || '').toLowerCase();
+                return (
+                  name.includes(q) || phone.includes(q) || uid.includes(q)
+                );
+              });
               setSearchData(a);
               setSearch(text);
             }}
@@ -89,8 +105,10 @@ const HistoryDebt = () => {
           renderItem={({ item, index }) => {
             const name =
               item.type === 2
-                ? `${item?.last_name} ${item.first_name} ${item.middle_name}`
-                : item?.company;
+                ? titleCase(
+                    `${item?.last_name} ${item.first_name} ${item.middle_name}`,
+                  )
+                : titleCase(item?.company);
             return (
               <TouchableOpacity
                 key={item.id}

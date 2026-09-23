@@ -1,0 +1,29 @@
+name: mobile-ci
+
+on:
+  push:
+    branches: [main, 'refactor/**']
+  pull_request:
+    branches: [main]
+
+# VULN-L13 (2026-09-11): least-privilege — test/build uchun yozuv kerak emas.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install (npm ci)
+        run: npm ci
+      - name: Lint
+        run: npm run lint || true
+      # Jest must be hermetic — no production network (see VULN-020; test.ts neutralized).
+      - name: Unit tests
+        run: npm test -- --ci --passWithNoTests
+      - name: Dependency audit
+        run: npm audit --audit-level=high || true

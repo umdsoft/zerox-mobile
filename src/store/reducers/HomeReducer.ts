@@ -109,6 +109,13 @@ const HomeReducer = createSlice({
       state.pagination.loading = true;
     });
     builder.addCase(HomeApi.fulfilled, (state, action) => {
+      // Payload yo'q bo'lsa (sessiya-guard yoki muvaffaqiyatsiz status) MAVJUD
+      // ma'lumotni O'CHIRMAYMIZ — aks holda joriy foydalanuvchi bo'shab qolardi.
+      if (!action.payload) {
+        state.loading = false;
+        state.pagination.loading = false;
+        return;
+      }
       state.home = action.payload?.home;
       state.user = action.payload?.user;
       // /home/analytics — bosh sahifa dashboard'i (sog'liq ball, agregatlar, alertlar).
@@ -134,7 +141,10 @@ const HomeReducer = createSlice({
       state.pagination.loading = false;
     });
     builder.addCase(getMe.fulfilled, (state, action) => {
-      state.user = action.payload?.user;
+      // Faqat haqiqiy foydalanuvchi kelганда yozamiz (stale-guard/xato → o'chirmaymiz).
+      if (action.payload?.user) {
+        state.user = action.payload.user;
+      }
     });
     builder.addCase(getNotifications.fulfilled, (state, action) => {
       state.pagination.total = action?.payload?.pagination.total;
@@ -149,11 +159,22 @@ const HomeReducer = createSlice({
       },
     );
     builder.addCase(getCreditorAndDebitorData.fulfilled, (state, action) => {
+      // Payload yo'q (stale-guard/xato) → mavjud ma'lumotни saqlaymiz.
+      if (!action.payload) {
+        return;
+      }
       state.home = action.payload?.home;
-      state.user = action.payload?.user;
+      if (action.payload?.user) {
+        state.user = action.payload.user;
+      }
     });
     builder.addCase(getNotificationWithPage.fulfilled, (state, action) => {
-      state.notification.bild = action.payload?.notification.data;
+      // Null-safe: tarmoq xatosida thunk `undefined` qaytaradi — ilgari
+      // `payload?.notification.data` (`.data` himoyasiz) CRASH berardi. Endi faqat
+      // haqiqiy ma'lumot kelганда yozamiz.
+      if (action.payload?.notification?.data) {
+        state.notification.bild = action.payload.notification.data;
+      }
     });
 
     builder.addCase(onGetContract.fulfilled, (state, action) => {

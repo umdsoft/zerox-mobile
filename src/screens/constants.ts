@@ -12,6 +12,20 @@ const HOST = 'https://tb.zerox.uz';
 const URL = `${HOST}/api/v1`;
 export const SOCKET_URL = HOST;
 
+// PDF xizmati (pdf.zerox.uz) HAM prod, HAM test'ga xizmat qiladi, lekin har biri
+// O'Z bazasidan o'qiydi: prod act.php/index.php -> admin_zerox; test
+// act_test.php/index_test.php -> admin_zerox_test. Shu bois DB-bog'liq PDF'lar
+// (dalolatnoma, to'liq shartnoma) test build'da `*_test.php` variantini chaqiradi.
+// HOST 'app.zerox.uz' ga almashtirilganda AVTOMATIK prod act.php/index.php ga qaytadi.
+const IS_TEST_ENV = HOST.includes('tb.zerox.uz');
+export const PDF_HOST = 'https://pdf.zerox.uz';
+export const PDF_ACT_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'act_test.php' : 'act.php'}`;
+export const PDF_INDEX_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'index_test.php' : 'index.php'}`;
+// So'rov SS5: oferta ham DB-bog'liq (users jadvali). Test build'da oferta_test.php
+// (admin_zerox_test) chaqirilmasa, test user "Hujjat topilmadi" (404) oladi va
+// oferta ochilmaydi -> tasdiqlab bo'lmaydi. Toggle bilan tuzatildi.
+export const PDF_OFERTA_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'oferta_test.php' : 'oferta.php'}`;
+
 const createStatus = 201;
 const errorStatus = 400;
 const successStatus = 200;

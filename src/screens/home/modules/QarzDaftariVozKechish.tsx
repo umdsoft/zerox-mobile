@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
+import { toastAfterBack } from '../../../helper/finishAction';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -120,7 +121,6 @@ const QarzDaftariVozKechish = () => {
   const qarz: any = (data as any)?.data;
 
   const [summaRaw, setSummaRaw] = React.useState('');
-  const [izoh, setIzoh] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
 
   if (loading) return <Loading />;
@@ -150,16 +150,28 @@ const QarzDaftariVozKechish = () => {
         {
           summa: Number(summaRaw),
           valyuta,
-          izoh: izoh.trim() || undefined,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      Toast.show({ type: 'omad', props: { title: t('Voz kechildi') } });
-      navigation.goBack();
+      // SS9-3: matn to'liq jumla.
+      // SS7: bildirishnoma sahifaning PASTKI qismida (tepada sarlavha ustiga tushardi).
+      // 🔴 SS11 ILDIZ SABAB: App.tsx navigatsiya 'state' listeneri HAR
+      // navigatsiyada Toast.hide() chaqiradi. Toast `goBack()` dan OLDIN
+      // ko'rsatilgani uchun u darhol o'chib ketardi — shuning uchun
+      // "Siz qarzdan voz kechdingiz." xabari hech qachon ko'rinmasdi.
+      // Endi: avval orqaga qaytamiz, keyin toast (pastda) chiqadi.
+      toastAfterBack(navigation, () =>
+        Toast.show({
+          type: 'omad',
+          position: 'bottom',
+          visibilityTime: 3500,
+          props: { desc: t('Siz qarzdan voz kechdingiz.') },
+        }),
+      );
     } catch (error: any) {
       Toast.show({
         type: 'error2',
-        text1: error?.response?.data?.message || t('Xatolik yuz berdi'),
+        props: { desc: error?.response?.data?.message || t('Xatolik yuz berdi') },
       });
     } finally {
       setSubmitting(false);
@@ -234,7 +246,7 @@ const QarzDaftariVozKechish = () => {
               { label: '25%', pct: 25 },
               { label: '50%', pct: 50 },
               { label: '75%', pct: 75 },
-              { label: 'Hammasi', pct: 100 },
+              { label: '100%', pct: 100 },
             ].map(c => (
               <TouchableOpacity
                 key={c.label}
@@ -242,26 +254,12 @@ const QarzDaftariVozKechish = () => {
                 style={styles.chip}
                 onPress={() => setChip(c.pct)}
               >
-                <Text style={styles.chipText}>{c.label === 'Hammasi' ? t('Hammasi') : c.label}</Text>
+                <Text style={styles.chipText}>{c.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Izoh */}
-          <Text style={[styles.fieldLabel, { marginTop: rs(16) }]}>
-            {t('Izoh (ixtiyoriy)')}
-          </Text>
-          <View style={[styles.inputWrap, styles.inputWrapMultiline]}>
-            <TextInput
-              style={[styles.input, styles.inputMultiline]}
-              value={izoh}
-              onChangeText={setIzoh}
-              placeholder={t('Sabab yoki qo‘shimcha ma’lumot...')}
-              placeholderTextColor={rd.color.textTertiary}
-              multiline
-              textAlignVertical="top"
-            />
-          </View>
+          {/* SS9-2: "Izoh (ixtiyoriy)" maydoni OLIB TASHLANDI (so‘rov bo‘yicha). */}
         </View>
 
         {/* 4. Hisob-kitob */}

@@ -97,6 +97,8 @@ type Item = {
 const MENU: Item[] = [
   { key: 'qr', label: 'QR-kod', Icon: QrIcon, route: 'QrCode' },
   { key: 'yoriqnoma', label: "Foydalanish yo'riqnomasi", Icon: HelpIcon, route: 'UseTerm' },
+  // So'rov SS6: "Ulangan qurilmalar" chap menyudan OLINDI — endi shaxsiy
+  // kabinet > Xavfsizlik bo'limida (Security.tsx).
   { key: 'share', label: 'Ilovani ulashish', Icon: ShareIcon, action: 'share' },
   { key: 'support', label: "Qo'llab-quvvatlash xizmati", Icon: MessageIcon, route: 'Support' },
   // Tariflar `Types` ekrani tarif PDF'ini (pdf.zerox.uz/tarif_<til>.pdf) ochadi.

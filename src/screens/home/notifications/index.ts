@@ -1,3 +1,4 @@
+import GapTaklif from './all/GapTaklif';
 import MalumotniKorishgaRadEtildi from './all/MalumotniKorishgaRadEtildi';
 import MalumotniKorishgaRuxsatBerildi from './all/MalumotniKorishgaRuxsatBerildi';
 import NewUser from './all/NewUser';
@@ -23,6 +24,7 @@ import QarzToliqQaytarilganli from './all/QarzToliqQaytarilganli';
 import RecoveryPassword from './all/RecoveryPassword';
 
 export {
+  GapTaklif,
   MalumotniKorishgaRadEtildi,
   MalumotniKorishgaRuxsatBerildi,
   NewUser,

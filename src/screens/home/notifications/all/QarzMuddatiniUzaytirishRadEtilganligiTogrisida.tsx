@@ -2,9 +2,9 @@ import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { style } from '../../../../theme/style';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
@@ -35,7 +35,7 @@ const QarzMuddatiniUzaytirishRadEtilganligiTogrisida = ({
       }}
       style={[
         {
-          fontSize: style.fontSize.xx - 2,
+          fontSize: style.fontSize.xx + 1,
           fontFamily: style.fontFamilyMedium,
           color: style.textColor,
         },

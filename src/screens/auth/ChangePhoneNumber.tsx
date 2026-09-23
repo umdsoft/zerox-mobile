@@ -131,7 +131,7 @@ const ChangePhoneNumber = () => {
           visibilityTime: 2500,
           position: 'bottom',
           type: 'error2',
-          props: { title: t('708') },
+          props: { desc: t('708') },
         });
       }
     } catch (error) {

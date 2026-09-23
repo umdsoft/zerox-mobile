@@ -29,7 +29,7 @@ import QarzShartnomasiRuxsatSorash from './notifications/all/QarzShartnomasiRuxs
 import QarzniQaytarishRadQilinganligi from './notifications/all/QarzniQaytarishRadQilinganligi';
 import OtherHeader from '../components/OtherHeader';
 import RdHeader from './redesign/RdHeader';
-import { BellIcon } from './redesign/icons';
+import { BellIcon, NewsIcon } from './redesign/icons';
 import { rd, rs } from '../../theme/rd';
 import QarzShartnomasiRejectTime from './notifications/all/QarzShartnomasiRejectTime';
 import PulMablagOtkazilganligi from './notifications/all/PulMablagOtkazilganligi';
@@ -53,8 +53,20 @@ import { t } from 'i18next';
 import socketService from '../../helper/socketService';
 
 import Eslatma from './notifications/all/Eslatma';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  LinearTransition,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import ExpirePassport from './notifications/all/Expire_Passport';
+// SS8: Gap uchrashuviga taklif (type = 40)
+import GapTaklif from './notifications/all/GapTaklif';
+// SS20: Shaxsiy moliya faolsizlik eslatmasi (3 kun kiritilmadi).
+import MoliyaEslatma from './notifications/all/MoliyaEslatma';
 
 type ObjType = {
   act: string;
@@ -67,11 +79,42 @@ type ObjType = {
   res?: string;
 };
 
-// Professional bo'sh holat (bildirishnoma/yangilik yo'q).
-const RdEmpty = ({ text }: { text: string }) => (
+// Qo'ng'iroqcha "jiringlaydi" — chapga-o'ngga tebranish (bo'sh bildirishnoma holati).
+const RingingBell = () => {
+  const rot = useSharedValue(0);
+  useEffect(() => {
+    rot.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 110 }),
+        withTiming(-1, { duration: 220 }),
+        withTiming(0.6, { duration: 180 }),
+        withTiming(-0.4, { duration: 150 }),
+        withTiming(0, { duration: 110 }),
+        withDelay(1500, withTiming(0, { duration: 1 })),
+      ),
+      -1,
+      false,
+    );
+  }, [rot]);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rot.value * 14}deg` }],
+  }));
+  return (
+    <Animated.View style={style}>
+      <BellIcon size={rs(34)} color={rd.color.primary} />
+    </Animated.View>
+  );
+};
+
+// Professional bo'sh holat. news=true -> yangiliklar ikonkasi; aks holda jiringlovchi qo'ng'iroq.
+const RdEmpty = ({ text, news }: { text: string; news?: boolean }) => (
   <View style={styles.rdEmpty}>
     <View style={styles.rdEmptyCircle}>
-      <BellIcon size={rs(34)} color={rd.color.textTertiary} />
+      {news ? (
+        <NewsIcon size={rs(34)} color={rd.color.primary} />
+      ) : (
+        <RingingBell />
+      )}
     </View>
     <Text allowFontScaling={false} style={styles.rdEmptyText}>
       {text}
@@ -144,7 +187,7 @@ const News = () => {
         keyExtractor={({ id }) => id?.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: rs(16), paddingBottom: rs(16) }}
-        ListEmptyComponent={<RdEmpty text={t('pp1')} />}
+        ListEmptyComponent={<RdEmpty text={t('Yangiliklar mavjud emas')} news />}
         renderItem={({ item, index }) => {
           return <NewsNotificationCard data={item} key={index} />;
         }}
@@ -179,6 +222,39 @@ const Bildrishnoma = () => {
       .finally(() => setLoading(false));
   }, [dispatch]);
 
+  // Spinner KO'RSATMAY yangilash — real-time push kelganda ro'yxatni jimgina
+  // yangilaydi (pull-to-refresh aylanasi chaqnamaydi).
+  const silentRefresh = useCallback(() => {
+    dispatch(getNotificationWithPage({ page: 1 }))
+      .unwrap()
+      .catch(() => {});
+  }, [dispatch]);
+
+  // ITEM 9 — REAL-TIME bildirishnomalar (web ↔ mobil, refresh-siz).
+  // Global socketService handler'i (`reciveNotification`) Redux'ni yangilaydi va
+  // `Bildrishnoma` useSelector orqali unga ulangan, lekin ba'zi holatlarda
+  // (appState poygasi, uzun-turgan ekran, socket qayta-ulanishi) UI kechikardi.
+  // Bu ekran-darajali listener `recive_notification` kelishi bilan serverdan eng
+  // so'nggi ro'yxatni KAFOLATLI tortib oladi — foydalanuvchi hech nima bosmasdan
+  // yangi bildirishnomani darhol ko'radi. Ekrandan chiqilganda tozalanadi.
+  useEffect(() => {
+    // Ekran ochilishida bir marta yangilaymiz (Redux eskirgan bo'lishi mumkin).
+    silentRefresh();
+
+    const onLive = () => silentRefresh();
+    socketService.on('recive_notification', onLive);
+
+    // Ekran ochiq — realtime shart. Socket uzilgan bo'lsa qayta ulanamiz.
+    const s = socketService.getSocket();
+    if (s && !s.connected) {
+      s.connect();
+    }
+
+    return () => {
+      socketService.off('recive_notification', onLive);
+    };
+  }, [silentRefresh]);
+
   // Notoficationni o'chirish
   const okay = useCallback(
     async (idx, type) => {
@@ -201,7 +277,7 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: { title: 'Muvaffaqiyatli', desc: toastMessage(type) },
+            props: { desc: toastMessage(type) },
             type: 'omad',
             visibilityTime: 2000,
           });
@@ -210,7 +286,7 @@ const Bildrishnoma = () => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+          props: { desc: t('Xatolik sodir bo‘ldi') },
           type: 'error2',
           visibilityTime: 2000,
         });
@@ -268,7 +344,6 @@ const Bildrishnoma = () => {
             autoHide: true,
             position: 'bottom',
             props: {
-              title: 'Muvaffaqiyatli',
               desc: t('264'),
             },
             type: 'omad',
@@ -291,7 +366,6 @@ const Bildrishnoma = () => {
           autoHide: true,
           position: 'bottom',
           props: {
-            title: 'Xatolik',
             desc: t('294'),
           },
           type: 'error2',
@@ -309,7 +383,6 @@ const Bildrishnoma = () => {
         autoHide: true,
         position: 'bottom',
         props: {
-          title: 'Xatolik',
           desc: t('294'),
         },
         type: 'error2',
@@ -371,8 +444,8 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: { title: 'Muvaffaqiyatli', desc: t('261') },
-            type: 'omad',
+            props: { desc: t('261') },
+            type: 'error2',
             visibilityTime: 3000,
           });
         }
@@ -384,7 +457,7 @@ const Bildrishnoma = () => {
         Toast.show({
           autoHide: true,
           position: 'bottom',
-          props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+          props: { desc: t('Xatolik sodir bo‘ldi') },
           type: 'error2',
           visibilityTime: 3000,
         });
@@ -415,10 +488,9 @@ const Bildrishnoma = () => {
           autoHide: true,
           position: 'bottom',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: status === 1 ? t('264') : t('261'),
           },
-          type: 'omad',
+          type: status === 1 ? 'omad' : 'error2',
           visibilityTime: 3000,
         });
         dispatch(filter_notification(item.id));
@@ -430,7 +502,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+        props: { desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -460,10 +532,9 @@ const Bildrishnoma = () => {
           autoHide: true,
           position: 'bottom',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: status === 1 ? t('264') : t('261'),
           },
-          type: 'omad',
+          type: status === 1 ? 'omad' : 'error2',
           visibilityTime: 3000,
         });
         dispatch(filter_notification(item.id));
@@ -476,7 +547,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+        props: { desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -506,7 +577,7 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: { title: 'Muvaffaqiyatli', desc: t('264') },
+            props: { desc: t('264') },
             type: 'omad',
             visibilityTime: 3000,
           });
@@ -515,8 +586,8 @@ const Bildrishnoma = () => {
           Toast.show({
             autoHide: true,
             position: 'bottom',
-            props: { title: 'Muvaffaqiyatli', desc: t('261') },
-            type: 'omad',
+            props: { desc: t('261') },
+            type: 'error2',
             visibilityTime: 3000,
           });
         }
@@ -536,7 +607,7 @@ const Bildrishnoma = () => {
       Toast.show({
         autoHide: true,
         position: 'bottom',
-        props: { title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi') },
+        props: { desc: t('Xatolik sodir bo‘ldi') },
         type: 'error2',
         visibilityTime: 3000,
       });
@@ -787,19 +858,27 @@ const Bildrishnoma = () => {
 
       case 35:
         return <ExpirePassport item={item} okay={okay} key={id} />;
+      // SS8: Gap uchrashuviga taklif — lokatsiya, borish/bormaslik, karta, summa.
+      case 40:
+        return <GapTaklif item={item} okay={okay} navigation={navigation} key={id} />;
+      // SS20: Shaxsiy moliya — 3 kun daromad/xarajat kiritilmadi.
+      case 41:
+        return <MoliyaEslatma item={item} okay={okay} navigation={navigation} key={id} />;
       default:
         return <Text key={id}>{t('Xatolik sodir bo‘ldi')}</Text>;
     }
   };
 
-  const EmptyListComponent = () => <RdEmpty text={t('177')} />;
+  const EmptyListComponent = () => (
+    <RdEmpty text={t('Bildirishnomalar mavjud emas')} />
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: rd.color.page }}>
       <Animated.FlatList
         ref={listRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: rs(16), paddingBottom: rs(16) }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: rs(16), paddingBottom: rs(16) }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={rd.color.primary} />
         }

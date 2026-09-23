@@ -1,5 +1,6 @@
 import {
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StatusBar,
@@ -33,9 +34,8 @@ import {
 } from './authKit';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
-import { checkPhoneTime } from '../../helper/timeChecker';
 import { rd, rs } from '../../theme/rd';
-import { LockIcon } from '../home/redesign/icons';
+import { LockIcon, MessageIcon } from '../home/redesign/icons';
 
 const LoginWithPhone = () => {
   const dispatch = useDispatch();
@@ -51,7 +51,13 @@ const LoginWithPhone = () => {
   const SendLogin = async () => {
     try {
       setLoading(true);
-      if (await checkPhoneTime()) {
+      // checkPhoneTime() gate OLIB TASHLANDI (so'rov bo'yicha): u ba'zi qurilmalarda
+      // (server-vaqt fetch/parse xatosi) false qaytarib, "vaqt tafovuti" toastini
+      // ko'rsatib login'ni butunlay bloklardi — xato parol ham, TO'G'RI parol ham
+      // kira olmasdi. Endi login to'g'ridan-to'g'ri backend'ga boradi: backend
+      // invalid-credentials (qolgan urinishlar) / account-blocked (30 daq) / success
+      // ni to'g'ri qaytaradi. Blok braces balansda qoladi.
+      {
         const response = await dispatch(
           LoginWithPhoneSendPasswordApi({
             phone: phone.replace(/\s/g, ''),
@@ -135,6 +141,10 @@ const LoginWithPhone = () => {
         }
 
         if (response.success) {
+          // Sessiya izolyatsiyasi: yangi foydalanuvchi kirishidan OLDIN oldingi
+          // foydalanuvchining Redux ma'lumotlarini tozalaymiz (agar logout to'liq
+          // ishlamagan bo'lsa ham aralashmaydi).
+          dispatch({ type: 'RESET_STORE' });
           storage.set('token', response.token);
           // 7-kunlik refreshToken'ни saqlaymiz — token eskirganda avto-yangilash uchun.
           if (response.refreshToken) {
@@ -373,6 +383,18 @@ const LoginWithPhone = () => {
               <Text style={styles.registerLink}>{t('36')}</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Qo'llab-quvvatlash — kichik, chiroyli LINK (ikon+matn), biroz pastroqда;
+              kirishда muammo bo'lsa Telegram botga murojaat. */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => Linking.openURL('https://t.me/zeroxuz_bot')}
+            style={styles.supportBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MessageIcon size={rs(13)} color={rd.color.primary} />
+            <Text style={styles.supportText}>{t('support')}</Text>
+          </TouchableOpacity>
           {/* "Ma'lumotlaringiz shifrlangan..." qatori olib tashlandi (so'rov bo'yicha). */}
           </AuthReveal>
           </View>
@@ -459,6 +481,20 @@ const styles = StyleSheet.create({
   registerLink: {
     fontFamily: rd.font.semibold,
     fontSize: rs(13.5),
+    color: rd.color.primary,
+  },
+  // Kichik, chiroyli link (quti emas) — biroz pastroqда, markazда, ikon+matn.
+  supportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: rs(5),
+    marginTop: rs(28),
+    paddingVertical: rs(6),
+  },
+  supportText: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(11.5),
     color: rd.color.primary,
   },
 });

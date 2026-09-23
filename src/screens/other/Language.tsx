@@ -16,7 +16,7 @@ import CheckIcon from '../../images/Check';
 
 import { useTranslation } from 'react-i18next';
 import ScreenLayout from '../components/ScreenLayout';
-import { storage } from '../../store/api/token/getToken';
+import { prefsStorage, storage } from '../../store/api/token/getToken';
 import { t } from 'i18next';
 import { onPostDefaultLang } from '../../store/api/home';
 import { useDispatch, useSelector } from 'react-redux';
@@ -96,6 +96,20 @@ const Language = () => {
   const onChangeLanguage = useCallback(
     async text => {
       i18n.changeLanguage(text);
+      /**
+       * 🔴 ILDIZ SABAB (2026-09-18): til tanlansa ham ilova QAYTA ochilganda
+       * LOTINGA qaytardi.
+       *
+       * Sabab — IKKI XIL xotira: bu yerda `storage` (shifrlangan MMKV) ga
+       * yozilardi, `src/i18n/index.ts` esa modul yuklanishida `prefsStorage`
+       * (oddiy, SINXRON MMKV) dan O'QIYDI (shifrlangani o'sha paytda hali
+       * tayyor bo'lmaydi). Ya'ni tanlov saqlanar, lekin hech qachon
+       * qayta o'qilmasdi va `fallbackLng: 'uz'` ishga tushardi.
+       *
+       * Birinchi ishga tushirishdagi til tanlash ekrani (`SelectLanguageScreen`)
+       * ikkalasiga ham yozadi — shuning uchun u ishlardi. Endi bu yerda ham.
+       */
+      prefsStorage.set('lang', text);
       storage.set('lang', text);
       try {
         await dispatch(

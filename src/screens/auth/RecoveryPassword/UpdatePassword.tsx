@@ -21,7 +21,7 @@ import Loading from '../../components/Loading';
 import { URL } from '../../constants';
 import { t } from 'i18next';
 import { rd, rs } from '../../../theme/rd';
-import { ChevronLeft, LockIcon } from '../../home/redesign/icons';
+import { ChevronLeft, LockIcon, LockResetIcon } from '../../home/redesign/icons';
 
 // Kichik "check" ikonkasi — checklist uchun (bajarilgan shart yashil ✓ bilan).
 const Check = ({ color }: { color: string }) => (
@@ -228,23 +228,25 @@ const UpdatePassword = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Orqaga */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
-          </TouchableOpacity>
-
-          {/* Hero */}
-          <View style={styles.hero}>
-            <View style={styles.heroCircle}>
-              <LockIcon size={rs(34)} color={rd.color.primary} />
-            </View>
-            <Text style={styles.title} allowFontScaling={false}>
+          {/* HEADER — orqaga + sarlavha bir qatorда (so'rov: sarlavha tepaда). */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <ChevronLeft size={rs(20)} color={rd.color.onPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1} allowFontScaling={false}>
               {t('729')}
             </Text>
+          </View>
+
+          {/* Hero — ikonka + izoh. Ikonka KATTAROQ + parol-tiklash ikonasi (so'rov SS19). */}
+          <View style={styles.hero}>
+            <View style={styles.heroCircle}>
+              <LockResetIcon size={rs(40)} color={rd.color.primary} strokeWidth={2.1} />
+            </View>
             <Text style={styles.subtitle} allowFontScaling={false}>
               {t('66')}
             </Text>
@@ -363,6 +365,19 @@ const styles = StyleSheet.create({
     paddingBottom: rs(28),
   },
   // TO'LDIRILGAN KO'K orqaga knopkasi (oq/kulrang sezilmasdi).
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(12),
+    marginTop: rs(8),
+  },
+  headerTitle: {
+    flex: 1,
+    fontFamily: rd.font.bold,
+    // So'rov SS19: sarlavha biroz KATTAROQ (16→18).
+    fontSize: rs(18),
+    color: rd.color.text,
+  },
   backBtn: {
     width: rs(40),
     height: rs(40),
@@ -370,18 +385,18 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(16), marginBottom: rs(26) },
+  // So'rov SS19: ikonka+kontent pastroqqa (tepadagi/pastdagi bo'shliq kamayadi).
+  hero: { alignItems: 'center', marginTop: rs(22), marginBottom: rs(24) },
   heroCircle: {
-    width: rs(72),
-    height: rs(72),
-    borderRadius: rs(36),
+    width: rs(88),
+    height: rs(88),
+    borderRadius: rs(44),
     backgroundColor: rd.color.primaryTint,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(18),
+    marginBottom: rs(20),
   },
   title: { fontFamily: rd.font.bold, fontSize: rs(23), color: rd.color.text },
   subtitle: {
@@ -450,7 +465,8 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: rs(28),
+    // So'rov SS19: kontentni pastga surib, tugma ostidagi bo'shliqni yopamiz.
+    marginTop: rs(36),
     shadowColor: rd.color.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,

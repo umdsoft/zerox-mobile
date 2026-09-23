@@ -18,6 +18,7 @@ import axios from 'axios';
 import {URL} from '../constants';
 import Loading from '../components/Loading';
 import {storage} from '../../store/api/token/getToken';
+import {Store} from '../../store/store/Store';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../theme/rd';
@@ -55,9 +56,20 @@ const Register = () => {
           lang: i18n.language,
         });
         if (data.success && data?.token) {
+          // SESSIYA IZOLYATSIYASI: yangi (yuridik) foydalanuvchi kirishidan OLDIN
+          // oldingi foydalanuvchining Redux ma'lumotlarini tozalaymiz (telefon-login
+          // yo'lidagi bilan bir xil — aks holda oldingi foydalanuvchi aralashardi).
+          Store.dispatch({type: 'RESET_STORE'});
           storage.set('token', data?.token);
           if (data?.refreshToken) {
             storage.set('refreshToken', data.refreshToken);
+          }
+          // Sessiya-guard uchun user_id — javobda bo'lsa yozamiz, aks holda eski
+          // qiymat qolmasin (RESET_STORE Redux'ni tozalaydi, MMKV user_id'ni yangilaymiz).
+          if (data?.sad ?? data?.id) {
+            storage.set('user_id', String(data?.sad ?? data?.id));
+          } else {
+            storage.delete('user_id');
           }
           navigation.reset({
             routes: [
@@ -92,7 +104,6 @@ const Register = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: t('Xatolik'),
             desc: t(
               'Hurmatli foydalanuvchi, e-imzo orqali jismoniy shaxs sifatida ilovadan foydalana olmaysiz.',
             ),
@@ -109,7 +120,6 @@ const Register = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          title: t('Xatolik'),
           desc: t(
             'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
           ),

@@ -166,6 +166,7 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
                 type: 1,
                 person: 'debitor',
                 isHave: false,
+                report: true,
                 url: '/contract/report?type=debitor&page=1&limit=1000&status=all&start=0&end=0',
                 searchUrl:
                   '/contract/report/search?type=debitor&page=1&limit=500&search=',
@@ -177,6 +178,7 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
                 type: 3,
                 person: 'creditor',
                 isHave: false,
+                report: true,
                 url: '/contract/report?type=creditor&page=1&limit=1000&status=all&start=0&end=0',
                 searchUrl:
                   '/contract/report/search?type=creditor&page=1&limit=500&search=',

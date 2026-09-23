@@ -23,6 +23,7 @@ import { storage } from '../../../store/api/token/getToken';
 
 import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
+import { PDF_INDEX_URL } from '../../constants';
 
 const DownloadStatistic = () => {
   // paramssiz ochilsa ham crash bermasin (guard).
@@ -41,7 +42,7 @@ const DownloadStatistic = () => {
     })
       .fetch(
         'GET',
-        `https://pdf.zerox.uz/index.php?id=${item?.uid}&download=0&lang=${lang}`,
+        `${PDF_INDEX_URL}?id=${item?.uid}&download=0&lang=${lang}`,
       )
       .then(async res => {
         ReactNativeBlobUtil.fs.cp(
@@ -78,7 +79,7 @@ const DownloadStatistic = () => {
         //   visibilityTime: 3000,
         //   position: 'bottom',
         //   type: 'error2',
-        //   props: {title: 'Xatolik', desc: 'Ulashish amalga oshmadi.'},
+        //   props: {desc: 'Ulashish amalga oshmadi.'},
         // });
       });
   };
@@ -89,7 +90,7 @@ const DownloadStatistic = () => {
       visibilityTime: 2000,
       position: 'bottom',
       type: 'omad',
-      props: { title: 'Muvaffaqiyatli', desc: t('789') + '...' },
+      props: { desc: t('789') + '...' },
     });
     try {
       const lang = storage.getString('lang');
@@ -100,7 +101,7 @@ const DownloadStatistic = () => {
         Platform.OS === 'android'
           ? `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`
           : `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`;
-      const downloadUrl = `https://pdf.zerox.uz/index.php?id=${
+      const downloadUrl = `${PDF_INDEX_URL}?id=${
         item?.uid
       }&download=0&lang=${storage.getString('lang') || 'uz'}`;
 
@@ -157,7 +158,7 @@ const DownloadStatistic = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: { title: 'Xatolik', desc: t('down_error') },
+        props: { desc: t('down_error') },
       });
     }
   };
@@ -218,7 +219,7 @@ const DownloadStatistic = () => {
             trustAllCerts={false}
             enablePaging={true}
             source={{
-              uri: `https://pdf.zerox.uz/index.php?id=${
+              uri: `${PDF_INDEX_URL}?id=${
                 item?.uid
               }&download=0&lang=${storage.getString('lang') || 'uz'}`,
               method: 'GET',

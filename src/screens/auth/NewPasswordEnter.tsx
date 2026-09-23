@@ -84,10 +84,15 @@ const NewPasswordEnter = () => {
           visibilityTime: 2000,
           position: 'bottom',
           type: 'omad',
-          props: {title: t('Muvaffaqiyatli'), desc: t('changepassword')},
+          props: {desc: t('changepassword')},
         });
         setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
+          // NAV-FIX: parol TIKLANDI — oqim tugadi. Parol tiklashda foydalanuvchi
+          // tizimga kirmagan bo'ladi, ya'ni `BottomTabNavigator` stekda YO'Q →
+          // `navigate` uni USTIGA qo'yardi va bosh sahifadan orqaga bosilganda
+          // yana parol kiritish formasi chiqardi. `reset` butun tiklash stekini
+          // tozalaydi (kirgan holatda ham to'g'ri ishlaydi).
+          navigation.reset({ index: 0, routes: [{ name: 'BottomTabNavigator' }] });
         }, 2000);
       }
     } catch (error) {

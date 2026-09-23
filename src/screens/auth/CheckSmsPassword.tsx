@@ -16,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, StackActions } from '@react-navigation/native';
 import BackgroundTimer from 'react-native-background-timer';
 import { useKeepAwake } from '@sayem314/react-native-keep-awake';
 import Toast from 'react-native-toast-message';
@@ -27,12 +27,35 @@ import { useDispatch, useSelector } from 'react-redux';
 import Loading from '../components/Loading';
 import { OtpInput } from 'react-native-otp-entry';
 import { GradientIconBadge } from '../components/BrandLockup';
+import Svg, { Path, Polyline } from 'react-native-svg';
 
 // Utils
 import { normalize } from '../../theme/style';
 import { secToMin } from '../other/SaveUserDetails';
 import { rd, rs } from '../../theme/rd';
-import { ChevronLeft, MessageIcon } from '../home/redesign/icons';
+import { ChevronLeft } from '../home/redesign/icons';
+
+// TASDIQLASH KODI ikonasi — qalqon + belgi (kod tasdiqlandi/xavfsiz). Suhbat
+// pufakchasi o'rniga (so'rov bo'yicha — "tasdiqlash kodini kiritishni" ifodalaydi).
+const SmsCheckIcon = ({ size = 46, color = rd.color.primary }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M12 2.5 L19.5 5.4 V11 C19.5 15.9 16.2 19.4 12 21.4 C7.8 19.4 4.5 15.9 4.5 11 V5.4 Z"
+      stroke={color}
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Polyline
+      points="8.6 11.4 10.9 13.8 15.4 9"
+      stroke={color}
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+  </Svg>
+);
 
 // API
 import { SmsCheckCodeApi, RegisterResendSmsApi } from '../../store/api/auth';
@@ -44,6 +67,21 @@ import {
 
 const CODE_LENGTH = 5;
 
+// Resend xato xabarini foydalanuvchi tushunadigan matnга aylantiradi (texnik xom
+// kodlar — "database-error", "ip-blocked", "network-error" — chiqmasin).
+const resendErrMsg = (m?: string): string => {
+  if (m === 'ip-blocked')
+    return t('Juda ko‘p urinish aniqlandi. Iltimos, biroz vaqtdan so‘ng qayta urinib ko‘ring.');
+  if (m === 'user-already-exist')
+    return t('Bu telefon raqami allaqachon ro‘yxatdan o‘tgan.');
+  // Faqat TAYYOR (chiroyli) jumla — bo'shliqli matn — o'zini ko'rsatamiz (masalan SMS
+  // rate-limit "Juda ko'p SMS so'rovi..."). Texnik kod (bo'shliqsiz kebab-case) bo'lsa
+  // umumiy xabar: "database-error"/"code-exit" kabilar foydalanuvchiga chiqmaydi.
+  if (typeof m === 'string' && /\s/.test(m.trim()))
+    return m;
+  return t('Kod yuborishda xatolik. Birozdan so‘ng qayta urinib ko‘ring.');
+};
+
 const CheckSmsPassword = () => {
   useKeepAwake();
 
@@ -52,8 +90,8 @@ const CheckSmsPassword = () => {
   const dispatch = useDispatch();
   const { phone } = route.params;
 
-  // Refs for OTP input fields
-  const inputRefs = useRef<null[]>([]);
+  // OTP input imperative handle (setValue) — SMS avtomatik to'ldirish uchun.
+  const inputRefs = useRef<any>(null);
 
   // State
   const [code, setCode] = useState('');
@@ -111,14 +149,16 @@ const CheckSmsPassword = () => {
 
       if (response.success) {
         stopTimer();
-        navigation.navigate('CreatePassword', { phone: phone, code: code });
+        // NAV-FIX: `navigate` EMAS, `replace`. SMS kodi ALLAQACHON ISHLATILGAN —
+        // CreatePassword'dan orqaga bosilganda shu ekranga qaytish mumkin emas
+        // (eski kod bilan qayta tasdiqlab bo'lmaydi, foydalanuvchi tiqilib qoladi).
+        navigation.dispatch(StackActions.replace('CreatePassword', { phone: phone, code: code }));
       } else if (response.message === 'code-exit') {
         setCode('');
         Toast.show({
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t('738'),
           },
           visibilityTime: 3000,
@@ -132,7 +172,6 @@ const CheckSmsPassword = () => {
           type: 'error2',
           position: 'bottom',
           props: {
-            title: 'Xatolik!',
             desc: t('expired'),
           },
           visibilityTime: 3000,
@@ -147,7 +186,6 @@ const CheckSmsPassword = () => {
         type: 'error2',
         position: 'bottom',
         props: {
-          title: 'Xatolik!',
           desc: t('738'),
         },
         visibilityTime: 3000,
@@ -157,15 +195,17 @@ const CheckSmsPassword = () => {
     }
   };
 
-  // Handle SMS resend
+  // Handle SMS resend — backend `/user/register step:1` kodni qayta generatsiya qilib
+  // SMS yuboradi (User.js: is_active==2 && code!=null bo'lsa). Muvaffaqiyat -> yangi
+  // kod + timer qayta boshlanadi. Toastlar sarlavhasiz (yagona bold matn).
   const handleResendSms = async () => {
     try {
       const response = await dispatch(
         RegisterResendSmsApi(phone.replace(/\s/g, '')),
       ).unwrap();
 
-      if (response.success) {
-        setIsRetryEnabled(true);
+      if (response?.success) {
+        setCode('');
         startTimer();
         setAutoFocus(true);
         Toast.show({
@@ -174,32 +214,28 @@ const CheckSmsPassword = () => {
           position: 'bottom',
           type: 'omad',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t('Tasdiqlash kodi qayta yuborildi'),
           },
         });
-      }
-
-      if (!response.success) {
+      } else {
         Toast.show({
           type: 'error2',
           position: 'bottom',
           props: {
-            desc: t('Xatolik!'),
+            desc: resendErrMsg(response?.message),
           },
           visibilityTime: 3000,
           autoHide: true,
           topOffset: Platform.OS === 'android' ? 5 : normalize(50),
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error resending SMS:', err);
-      setCode('');
       Toast.show({
         type: 'error2',
         position: 'bottom',
         props: {
-          desc: t('Xatolik!'),
+          desc: resendErrMsg(err?.message),
         },
         visibilityTime: 3000,
         autoHide: true,
@@ -224,7 +260,14 @@ const CheckSmsPassword = () => {
 
   // Render timer component
   const renderTimer = useMemo(
-    () => <Text style={styles.timerText}>{secToMin(timer)}</Text>,
+    () => (
+      <Text
+        style={styles.timerText}
+        numberOfLines={1}
+        allowFontScaling={false}>
+        {secToMin(timer)}
+      </Text>
+    ),
     [timer],
   );
 
@@ -252,17 +295,16 @@ const CheckSmsPassword = () => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <ChevronLeft size={rs(22)} color={rd.color.text} />
+            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
           </TouchableOpacity>
 
-          {/* Hero */}
+          {/* Hero — SMS tasdiqlash ikonasi (kattaroq) + faqat ko'rsatma matni.
+              "Ro'yxatdan o'tish" sarlavhasi va telefon raqami OLIB TASHLANDI (so'rov bo'yicha). */}
           <View style={styles.hero}>
-            <GradientIconBadge size={rs(84)}>
-              <MessageIcon size={rs(34)} color={rd.color.primary} />
+            <GradientIconBadge size={rs(116)}>
+              <SmsCheckIcon size={rs(56)} color={rd.color.primary} />
             </GradientIconBadge>
-            <Text style={styles.title}>{t('36')}</Text>
             <Text style={styles.subtitle}>{t('54')}</Text>
-            <Text style={styles.phone}>{phone}</Text>
           </View>
 
           {/* Kod kiritish */}
@@ -319,6 +361,7 @@ const CheckSmsPassword = () => {
               disabled={!isRetryEnabled}
             >
               <Text
+                allowFontScaling={false}
                 style={[
                   styles.resendLink,
                   !isRetryEnabled && { color: rd.color.textTertiary },
@@ -361,19 +404,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(24),
     paddingBottom: rs(28),
   },
+  // Orqaga tugma — KO'K (so'rov bo'yicha).
   backBtn: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    backgroundColor: rd.color.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: rs(8),
   },
 
-  hero: { alignItems: 'center', marginTop: rs(24), marginBottom: rs(32) },
+  // Ikona kattaroq -> kontent (5 kod card + resend + davom) yanada pastroq.
+  hero: { alignItems: 'center', marginTop: rs(56), marginBottom: rs(64) },
   title: {
     fontFamily: rd.font.bold,
     fontSize: rs(24),
@@ -382,10 +425,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(14),
     color: rd.color.textSecondary,
     textAlign: 'center',
-    marginTop: rs(8),
+    marginTop: rs(18),
     lineHeight: rs(20),
     paddingHorizontal: rs(16),
   },
@@ -410,14 +453,21 @@ const styles = StyleSheet.create({
     gap: rs(6),
     marginTop: rs(22),
   },
+  // Timer QAT'IY kenglikda + teng-enli raqamlar (tabular-nums) + 1 QATOR — raqam
+  // o'zgarganda "Kodni qayta yuborish" surilmasin VA timer 2-qatorga tushmasin.
+  // Shrift subtitle ("Telefon raqamingizga...") bilan bir xil o'lchamda (rs14) —
+  // ilgari rs13.5 kichik ko'rinardi (yoshi kattalar uchun).
   timerText: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(13.5),
+    fontSize: rs(14),
     color: rd.color.primary,
+    minWidth: rs(54),
+    textAlign: 'left',
+    fontVariant: ['tabular-nums'],
   },
   resendLink: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(13.5),
+    fontSize: rs(14),
     color: rd.color.primary,
   },
 

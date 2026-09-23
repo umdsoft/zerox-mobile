@@ -7,11 +7,12 @@
  * - Tugmalar useNavigation orqali real ekranlarga o'tadi.
  * Ma'lumot hozircha statik (Figma bilan bir xil) — keyin Redux/backendga ulanadi.
  */
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Modal,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -22,16 +23,19 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { HomeApi } from '../../../store/api/home';
+import Toast from 'react-native-toast-message';
+import { HomeApi, getNotificationWithPage } from '../../../store/api/home';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { compactMoney, compactUsd, compactUzs } from '../../../helper/money';
+import { compactMoney, compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
 import { DEBT_NAV, debtNav } from './debtNav';
 // Rasmiy "ZeroX" wordmark (logotipning matn qismi) — header uchun.
 import ZeroXWordmark from '../../../images/TextAndLogo';
 import { useFetch } from '../../../hooks/useFetch';
+// SS13: bosh sahifa summalari TANLANGAN do'konga bo'ysunadi.
+import { ownShopQuery, useQarzShop } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
 import Donut from './Donut';
 import {
@@ -39,6 +43,8 @@ import {
   ArrowUpRight,
   BarChartIcon,
   BellIcon,
+  BulbIcon,
+  InfoIcon,
   ChevronRight,
   ClockIcon,
   CoinIcon,
@@ -52,6 +58,7 @@ import {
   SearchIcon,
   TransferIcon,
   UserIcon,
+  WarningIcon,
 } from './icons';
 
 type Nav = (route: string, params?: object) => void;
@@ -173,7 +180,9 @@ const Header = ({
         <BellIcon color={rd.color.text} size={rs(24)} />
         {badge > 0 && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+            <Text style={styles.badgeText} allowFontScaling={false} numberOfLines={1}>
+              {badge > 99 ? '99+' : badge}
+            </Text>
           </View>
         )}
       </TouchableOpacity>
@@ -384,20 +393,32 @@ const HeroBanner = ({
   return (
     <View style={styles.hero}>
       <Grad id="heroGrad" colors={GRAD.brand} />
-      <Text style={styles.heroTitle} numberOfLines={2}>
-        {t('Xush kelibsiz, {{name}}!', { name })}
+      {/* allowFontScaling={false} — ILDIZ SABAB (SS4): usiz Samsung "katta shrift"
+          sozlamasi hero matnlarini kattalashtirib, chip label 2-qatori hero'ning
+          overflow:hidden kesilgan pastki chetiga tushib, kartalar ustiga "oq blur"
+          bo'lib ko'rinardi. Endi matn dizayn o'lchamida qat'iy — hech narsa kesilmaydi. */}
+      <Text style={styles.heroTitle} numberOfLines={2} allowFontScaling={false}>
+        {name ? t('Xush kelibsiz, {{name}}!', { name }) : t('Xush kelibsiz!')}
       </Text>
-      <Text style={styles.heroSub} numberOfLines={2}>
+      <Text style={styles.heroSub} numberOfLines={2} allowFontScaling={false}>
         {t('Shartnomalarni elektron rasmiylashtiring va oson boshqaring.')}
       </Text>
       <View style={styles.heroChips}>
         <View style={styles.heroChip}>
-          <Text style={styles.heroChipValue}>{score}</Text>
-          <Text style={styles.heroChipLabel}>{t('Moliyaviy sog‘liq')}</Text>
+          <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
+            {score}
+          </Text>
+          <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
+            {t('Moliyaviy sog‘liq')}
+          </Text>
         </View>
         <View style={styles.heroChip}>
-          <Text style={styles.heroChipValue}>{t(status)}</Text>
-          <Text style={styles.heroChipLabel}>{t('Holat')}</Text>
+          <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
+            {t(status)}
+          </Text>
+          <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
+            {t('Holat')}
+          </Text>
         </View>
       </View>
     </View>
@@ -434,13 +455,25 @@ const MetricCard = ({
       activeOpacity={comingSoon ? 1 : 0.85}
       disabled={comingSoon}
       onPress={onPress}
-      style={[styles.metricCard, comingSoon && styles.metricCardSoon]}
+      style={[
+        styles.metricCard,
+        // SS1-2 (2026-09-21): bu ikki karta modul kartalaridan AJRALIB
+        // tursin — o'z rangidan juda yengil fon va chegara oladi.
+        !comingSoon && { backgroundColor: accent + '0D', borderColor: accent + '33' },
+        comingSoon && styles.metricCardSoon,
+      ]}
     >
       <View style={[styles.metricAccent, { backgroundColor: accent }]} />
       <View style={styles.metricHead}>
         <CircleIcon size={rs(32)} bg={accentBg}>
           <Icon size={rs(17)} color={accent} />
         </CircleIcon>
+        {/* SS1-1: yorliq ikonka TAGIDA emas, O'NG TOMONIDA. */}
+        {!comingSoon ? (
+          <Text style={styles.metricLabelInline} numberOfLines={2}>
+            {t(label)}
+          </Text>
+        ) : null}
         {comingSoon ? (
           <View style={styles.soonBadge}>
             <Text style={styles.soonText}>{t('Tez kunda')}</Text>
@@ -454,9 +487,7 @@ const MetricCard = ({
         </>
       ) : (
         <>
-          <Text style={styles.metricLabel} numberOfLines={1}>
-            {t(label)}
-          </Text>
+          {/* SS1-1: yorliq endi yuqorida, ikonka yonida chiziladi. */}
           {loading ? (
             // Dashboard (shartnoma+daftar birlashgan summa) hali kelmagan —
             // qisman/xato raqam KO'RSATILMAYDI (aks holda keyin sakraydi).
@@ -487,6 +518,11 @@ const ModuleWithSubs = ({
   credUzs,
   credUsd,
   onPress,
+  // So'rov SS20: Shaxsiy moliya kartasi uchun yorliqlar (Daromadlar/Xarajatlar).
+  debLabel,
+  credLabel,
+  // So'rov SS1: strelka o'rniga lampochka — bosilsa bo'lim izohi (info) modalда chiqadi.
+  info,
 }: {
   title: string;
   Icon: (p: IconProps) => JSX.Element;
@@ -495,8 +531,12 @@ const ModuleWithSubs = ({
   credUzs: string;
   credUsd: string;
   onPress: () => void;
+  debLabel?: string;
+  credLabel?: string;
+  info?: string;
 }) => {
   const { t } = useTranslation();
+  const [infoOpen, setInfoOpen] = React.useState(false);
   return (
     <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
       <View style={styles.moduleHead}>
@@ -504,7 +544,20 @@ const ModuleWithSubs = ({
           <Icon size={rs(20)} color={rd.color.primary} />
         </CircleIcon>
         <Text style={styles.moduleTitle}>{t(title)}</Text>
-        <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+        {info ? (
+          <TouchableOpacity
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={e => {
+              e.stopPropagation();
+              setInfoOpen(true);
+            }}
+            style={styles.moduleInfoBtn}>
+            {/* So'rov: lampochka o'rniga ixcham, chiroyli "i" (info) belgisi. */}
+            <InfoIcon size={rs(15)} color={rd.color.textTertiary} />
+          </TouchableOpacity>
+        ) : (
+          <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+        )}
       </View>
       <View style={styles.moduleSubRow}>
         <View style={[styles.moduleSub, { backgroundColor: rd.color.successBg }]}>
@@ -512,16 +565,50 @@ const ModuleWithSubs = ({
             {debUzs}
           </Text>
           {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
-          <Text style={styles.moduleSubLabel}>{t('Debitor')}</Text>
+          <Text style={styles.moduleSubLabel}>{t(debLabel || 'Berilgan qarz')}</Text>
         </View>
         <View style={[styles.moduleSub, { backgroundColor: rd.color.errorBg }]}>
           <Text style={[styles.moduleSubAmt, { color: rd.color.error }]} numberOfLines={1} adjustsFontSizeToFit>
             {credUzs}
           </Text>
           {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
-          <Text style={styles.moduleSubLabel}>{t('Kreditor')}</Text>
+          <Text style={styles.moduleSubLabel}>{t(credLabel || 'Olingan qarz')}</Text>
         </View>
       </View>
+
+      {/* So'rov SS1: bo'lim izohi — kichik ma'lumot oynasi (lampochka bosilganda). */}
+      {info ? (
+        <Modal
+          visible={infoOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setInfoOpen(false)}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.infoOverlay}
+            onPress={() => setInfoOpen(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.infoSheet} onPress={() => {}}>
+              <View style={styles.infoHeadRow}>
+                <CircleIcon size={rs(34)} bg="#fef3c7">
+                  <BulbIcon size={rs(18)} color="#f59e0b" />
+                </CircleIcon>
+                <Text style={styles.infoTitle}>{t(title)}</Text>
+              </View>
+              <Text allowFontScaling={false} style={styles.infoText}>
+                {t(info)}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.infoBtn}
+                onPress={() => setInfoOpen(false)}>
+                <Text allowFontScaling={false} style={styles.infoBtnText}>
+                  {t('Tushunarli')}
+                </Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      ) : null}
     </TouchableOpacity>
   );
 };
@@ -584,6 +671,10 @@ const toMln = (n: number) => compactMoney(n);
 // daftar'dan faqat shartnomaga "sakrab", keyin qaytadi. Kesh bilan remount'da
 // darhol oldingi BIRLASHGAN qiymat ko'rsatiladi (sakrash yo'q).
 let dashboardCache: any = null;
+// SS13: kesh QAYSI do'kon uchun olinganini ham eslab qolamiz. Aks holda do'kon
+// almashtirilib ekran qayta mount bo'lsa, oldingi do'konning summalari bir zum
+// ko'rinib qolardi (foydalanuvchi uchun "filtr ishlamadi" degan taassurot).
+let dashboardCacheScope: string | null = null;
 
 // Bitta valyuta bo'yicha yig'indi (konvertatsiyasiz — USD'ni alohida ko'rsatish uchun).
 const sumCur = (rows: any[] | undefined, cur: string) =>
@@ -610,7 +701,14 @@ const titleCase = (s: string) =>
 // counterparty ismi, summa, valyuta, sana). Yo'nalish joriy foydalanuvchi id'iga
 // qarab: creditor === myId → menga qarzdor (+), debitor === myId → men qarzdor (−).
 const buildRecentOps = (bild?: any[], myId?: number): RecentOp[] =>
-  (bild || []).slice(0, 5).map((n, i) => {
+  (bild || [])
+    // Faqat SUMMASI bor qarz amaliyotlari ko'rsatiladi. Ruxsat/info turlari
+    // (19=ma'lumot so'rash, 30/31=ruxsat berildi/rad, 25=yangi foydalanuvchi ...)
+    // summaga ega emas → ilgari "+0" bo'lib chiqardi. Ular bu "so'nggi amaliyotlar"
+    // ro'yxatida ko'rsatilmaydi (to'liq ro'yxat Bildirishnomalar bo'limida qoladi).
+    .filter(n => Number(n?.amount ?? n?.residual_amount ?? 0) > 0)
+    .slice(0, 5)
+    .map((n, i) => {
     const iAmCreditor = Number(n?.creditor) === Number(myId);
     const positive = iAmCreditor; // men qarz berganman → menga qarzdor
     const first = iAmCreditor ? n?.d_first_name : n?.c_first_name;
@@ -630,6 +728,94 @@ const buildRecentOps = (bild?: any[], myId?: number): RecentOp[] =>
       positive,
     };
   });
+
+// ── OGOHLANTIRISHLAR (web bilan bir xil). Manba: analytics.alerts[] — har biri
+// { type:'danger'|'warning'|'info', code, count? }. Kod → sarlavha xaritasi
+// (web lang/uz.js bilan mos). Ilgari bu bo'lim so'nggi qarz amaliyotlarini
+// ("Bunyodbek Boltayev +130 000") ko'rsatardi; endi web'dagidek ALERT-lar.
+const ALERT_TITLE: Record<string, string> = {
+  expiring_debitor: 'Muddati oz qolgan debitor shartnomalar',
+  expiring_creditor: 'Muddati oz qolgan kreditor shartnomalar',
+  expired_debitor: 'Muddati o‘tgan debitor shartnomalar',
+  expired_creditor: 'Muddati o‘tgan kreditor shartnomalar',
+  overdue_debts: 'Muddati o‘tgan shaxsiy qarzlar',
+  budget_exceeded: 'Oylik byudjet oshib ketdi!',
+  budget_warning: 'Byudjet chegarasiga yaqinlashmoqda',
+  upcoming_payments: 'Yaqinlashayotgan qarz to‘lovlari',
+};
+
+// Alert "Ko'rish" → mobil ekran (web getAlertLink'ga ekvivalent).
+const goAlert = (nav: any, code: string) => {
+  switch (code) {
+    case 'expired_debitor':
+      return nav('SearchDebitor', debtNav('debitor', 'overdue', 'Muddati o‘tgan qarzlar'));
+    case 'expired_creditor':
+      return nav('SearchDebitor', debtNav('creditor', 'overdue', 'Muddati o‘tgan qarzlar'));
+    case 'expiring_debitor':
+      return nav('SearchDebitor', debtNav('debitor', 'near', 'Muddati yaqin qarzlar'));
+    case 'expiring_creditor':
+      return nav('SearchDebitor', debtNav('creditor', 'near', 'Muddati yaqin qarzlar'));
+    // byudjet / shaxsiy qarzlar / to'lovlar — Shaxsiy moliya TAB'iga (Statistic).
+    // SS6: ilgari standalone 'ShaxsiyMoliya' ekraniga o'tardi → RdTabBar + GlobalBottomBar
+    // IKKALASI chiqib IKKI pastki menyu bo'lardi. Endi to'g'ridan-to'g'ri tabga (bitta bar).
+    default:
+      return nav('BottomTabNavigator', { screen: 'Statistic' });
+  }
+};
+
+const HomeAlerts = ({ alerts, nav }: { alerts?: any[]; nav: any }) => {
+  const { t } = useTranslation();
+  const list = (alerts || []).filter((a: any) => ALERT_TITLE[a?.code]);
+  if (list.length === 0) {
+    return (
+      <View style={styles.alertEmpty}>
+        <BellIcon size={rs(20)} color={rd.color.textTertiary} />
+        <Text style={styles.alertEmptyText}>{t('Ogohlantirishlar mavjud emas')}</Text>
+      </View>
+    );
+  }
+  return (
+    <View style={{ gap: rs(10) }}>
+      {list.map((a: any, i: number) => {
+        const color =
+          a.type === 'danger'
+            ? rd.color.error
+            : a.type === 'warning'
+            ? rd.color.warning
+            : rd.color.primary;
+        const bg =
+          a.type === 'danger'
+            ? rd.color.errorBg
+            : a.type === 'warning'
+            ? rd.color.warningBg
+            : rd.color.primaryTint;
+        return (
+          <TouchableOpacity
+            key={i}
+            activeOpacity={0.7}
+            onPress={() => goAlert(nav, a.code)}
+            style={[styles.alertRow, { backgroundColor: bg }]}
+          >
+            <View style={styles.alertIcon}>
+              <WarningIcon size={rs(16)} color={color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.alertTitle} numberOfLines={2}>
+                {t(ALERT_TITLE[a.code])}
+              </Text>
+              {a.count ? (
+                <Text style={styles.alertSub}>
+                  {a.count} {t('ta')}
+                </Text>
+              ) : null}
+            </View>
+            <Text style={[styles.alertView, { color }]}>{t('Ko‘rish')}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
 
 const HomeRedesign = () => {
   const { t } = useTranslation();
@@ -678,6 +864,36 @@ const HomeRedesign = () => {
       });
   }, [myId]);
 
+  // REAL-TIME KAFOLATI (Home). Muammo edi: foydalanuvchi Home'да o'tirганда socket
+  // o'lib qolса (server uzsa yoki hech ulanmasa), `recive_notification` kelmасdi va
+  // yangi bildirishnoma FAQAT Bildirishnomalar bo'limiga kirilганда ko'rinardi.
+  // YECHIM: Home fokusда (va har 20s) socket tirikligini tekshiramiz — o'lik bo'lsa
+  // qayta ulaymiz; hamda bildirishnoma ro'yxatini JIM (loading flash'siz) yangilaymiz,
+  // shunда socket o'lik turган paytда o'tkazib yuborilган bildirishnomalar ham chiqadi.
+  useFocusEffect(
+    React.useCallback(() => {
+      // OSILIB QOLGAN TOAST'NI DARHOL YOPAMIZ (global). Amal-ekranlar (qarzni
+      // qaytarish/talab/uzaytirish/voz kechish) muvaffaqiyat toast'ini ko'rsatib,
+      // so'ng Home'ga qaytaradi. Toast ILDIZ (navigator ustida) render bo'lgani
+      // uchun, Toast.hide()+navigate bir tikда bajarilsa ham hide-animatsiyasi
+      // Home bilan yopishib ~1s ko'rinib turardi. Home fokusга kelishi bilan
+      // shu yerда darhol yopamiz — har qanday amal-ekrandан kelsa ham ishlaydi.
+      Toast.hide();
+      const ensureSocketAlive = () => {
+        if (!myId) return;
+        const s = socketService.getSocket();
+        if (s && !s.connected) {
+          s.connect();
+        }
+      };
+      ensureSocketAlive();
+      // Jim catch-up — faqat bildirishnoma ro'yxati (home kartalari loading flash bermaydi).
+      dispatch(getNotificationWithPage({ page: 1 }) as any);
+      const iv = setInterval(ensureSocketAlive, 20000);
+      return () => clearInterval(iv);
+    }, [myId, dispatch]),
+  );
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     (dispatch(HomeApi({ page: 1 }) as any) as any)
@@ -686,9 +902,12 @@ const HomeRedesign = () => {
       .finally(() => setRefreshing(false));
   }, [dispatch]);
 
-  // Ism (login qilinganda real; yuklanmagunicha neytral placeholder — demo emas).
+  // Ism: FAQAT identifikatsiyadan o'tgan (is_active === 1) va ismi bor foydalanuvchiga
+  // "Xush kelibsiz, {ism}!"; aks holda (identifikatsiyasiz yoki ism yo'q) — shunchaki
+  // "Xush kelibsiz!" (so'rov bo'yicha; "Foydalanuvchi" default nomi endi ishlatilmaydi).
+  const isIdentified = storeUser?.data?.is_active === 1;
   const first = storeUser?.data?.first_name;
-  const name = first || (isLoggedIn ? 'Foydalanuvchi' : user.name);
+  const name = isIdentified && first ? first : '';
   // `initials` olib tashlandi — sarlavhadagi "BB" doirasi o'rniga endi odam
   // ikonkasi turadi, shuning uchun bosh harflar hisoblanmaydi.
 
@@ -716,20 +935,40 @@ const HomeRedesign = () => {
   //      olingan_qarz.{shartnoma,daftari}.{uzs,usd}   → KREDITOR (men qarzdor)
   //    Yuqoridagi metrik kartalar = shartnoma + daftar (birlashgan).
   //    Modul kartalari esa har biri O'Z modulini ko'rsatadi.
-  const daftariDash = useFetch({ url: `${URL}/qarz-daftari/dashboard`, method: 'GET' });
+  // SS13 (2026-09-15): bosh sahifa dashboard'i TANLANGAN DO'KONGA bo'ysunadi.
+  // Ildiz sabab: bu chaqiruvda `faoliyat_id` YO'Q edi, shu bois "Qarz daftari"
+  // bo'limida bitta do'kon tanlansa ham bosh sahifadagi "Berilgan/Olingan qarz"
+  // va "Qarz daftari" kartalari BARCHA do'konlar yig'indisini ko'rsatardi.
+  // (`QarzDaftari` ekrani filtrni allaqachon yuborardi — ikki ekran bir-biriga
+  // zid raqam chiqarardi.) Backend faqat DAFTAR so'rovlarini filtrlaydi;
+  // shartnoma va shaxsiy qarz do'kondan tashqarida bo'lgani uchun o'zgarmaydi.
+  // Do'kon o'zgarsa komponent qayta render bo'ladi -> quyidagi URL yangilanadi.
+  useQarzShop();
+  // SS-F (2026-09-16): `ownShopQuery` — `shopQuery` dan farqi shuki, foydalanuvchi
+  // XODIM bo'lgan BEGONA do'kon tanlangan bo'lsa filtr YUBORILMAYDI va bosh
+  // sahifa faqat O'Z ma'lumotlarini ko'rsatadi. Talab: "Xodim ishlaydigan
+  // do'konning qarzlari bosh sahifadagi umumiy kartalarda qayd etilmasin".
+  const homeShopQs = ownShopQuery('?');
+  const daftariDash = useFetch({
+    url: `${URL}/qarz-daftari/dashboard${homeShopQs}`,
+    method: 'GET',
+  });
   const dashFresh: any = (daftariDash.data as any)?.data || daftariDash.data || {};
   // Yangi javob TO'LIQ kelgan bo'lsa keshni yangilaymiz; aks holda (remount'da
   // bo'sh bo'lganda) oldingi keshdan foydalanamiz -> summalar sakramaydi.
   const dashValid = !!(dashFresh?.berilgan_qarz || dashFresh?.olingan_qarz);
   if (dashValid) {
     dashboardCache = dashFresh;
+    dashboardCacheScope = homeShopQs;
   }
-  const dd: any = dashValid ? dashFresh : dashboardCache || {};
+  // Kesh faqat AYNAN shu do'kon uchun olingan bo'lsa ishlatiladi.
+  const cacheUsable = dashboardCacheScope === homeShopQs ? dashboardCache : null;
+  const dd: any = dashValid ? dashFresh : cacheUsable || {};
   // Metrik kartalar (Berilgan/Olingan qarz) BIRLASHGAN summasi (shartnoma+daftar)
   // faqat dashboard TAYYOR bo'lganda ko'rsatiladi. Aks holda birinchi yuklashda
   // avval faqat-shartnoma summasi chiqib, keyin daftar qo'shilib SAKRAB ketardi.
   // Kesh bo'lsa (keyingi mount'lar) darhol tayyor -> skeleton ko'rinmaydi.
-  const dashReady = dashValid || !!dashboardCache;
+  const dashReady = dashValid || !!cacheUsable;
   const numv = (v: any) => Number(v || 0);
   const bqDash = dd?.berilgan_qarz;
   const oqDash = dd?.olingan_qarz;
@@ -743,15 +982,24 @@ const HomeRedesign = () => {
   const dfDebUSD = numv(bqDash?.daftari?.usd);
   const dfCredUZS = numv(oqDash?.daftari?.uzs);
   const dfCredUSD = numv(oqDash?.daftari?.usd);
-  // Birlashgan (yuqori metrik kartalar).
-  const totDebUZS = shDebUZS + dfDebUZS;
-  const totDebUSD = shDebUSD + dfDebUSD;
-  const totCredUZS = shCredUZS + dfCredUZS;
-  const totCredUSD = shCredUSD + dfCredUSD;
+  // SS2-1 (2026-09-14): SHAXSIY QARZ (personal_debts) ham qarzning uchinchi
+  // manbasi — "Berilgan qarz"/"Olingan qarz" metrik kartalari endi uni ham
+  // hisobga oladi. Modul kartalari (Qarz shartnomasi / Qarz daftari) esa
+  // avvalgidek FAQAT o'z modulini ko'rsatadi — ularga tegilmadi.
+  const pjDebUZS = numv(bqDash?.shaxsiy?.uzs);
+  const pjDebUSD = numv(bqDash?.shaxsiy?.usd);
+  const pjCredUZS = numv(oqDash?.shaxsiy?.uzs);
+  const pjCredUSD = numv(oqDash?.shaxsiy?.usd);
+  // Birlashgan (yuqori metrik kartalar) = shartnoma + daftar + shaxsiy.
+  const totDebUZS = shDebUZS + dfDebUZS + pjDebUZS;
+  const totDebUSD = shDebUSD + dfDebUSD + pjDebUSD;
+  const totCredUZS = shCredUZS + dfCredUZS + pjCredUZS;
+  const totCredUSD = shCredUSD + dfCredUSD + pjCredUSD;
 
-  // Karta summa matnlari: UZS (asosiy) + USD (ikkilamchi, faqat > 0 bo'lsa).
-  const uzsText = (n: number) => compactUzs(n);
-  const usdText = (n: number) => (n > 0 ? compactUsd(n) : '');
+  // Karta summa matnlari — so'rov bo'yicha: "UZS"/"USD" + K/M/B qisqartma;
+  // qarz bo'lmasa ham "0 UZS"/"0 USD" DOIM ko'rsatiladi (ikkala qator turadi).
+  const uzsText = (n: number) => fmtUZS(n);
+  const usdText = (n: number) => fmtUSD(n);
 
   // Qarzdorlik shartnomalari soni (real bo'lsa massiv uzunligi, aks holda demo).
   const credCount = useReal ? (Array.isArray(cred?.data) ? cred.data.length : 0) : 12;
@@ -883,28 +1131,15 @@ const HomeRedesign = () => {
               nav('SearchDebitor', { ...DEBT_NAV.creditor, view: 'select' })
             }
           />
-          <MetricCard
-            accent={rd.color.primary}
-            accentBg={rd.color.primaryTint}
-            Icon={CoinIcon}
-            label="Oylik xarajat"
-            value="0"
-            comingSoon
-          />
-          <MetricCard
-            accent="#7c5cff"
-            accentBg="#efe9fd"
-            Icon={BarChartIcon}
-            label="Maqsadlar"
-            value="0%"
-            comingSoon
-          />
+          {/* "Oylik xarajat" va "Maqsadlar" kartalari OLIB tashlandi (so'rov) —
+              bu ma'lumotlar Shaxsiy moliya bo'limida ko'rsatiladi. */}
         </View>
 
         {/* Qarz shartnomasi — FAQAT shartnoma summasi + shartnoma ikonasi. */}
         <ModuleWithSubs
           title="Qarz shartnomasi"
           Icon={ContractIcon}
+          info="Qarz shartnomasi asosida pul bersangiz, elektron shartnomaga ega bo‘lasiz. Har bir shartnoma ikki taraf tomonidan tasdiqlanadi va yuridik kuchga ega bo‘ladi. Berilgan qarz — siz bergan, olingan qarz — siz olgan qarz mablag‘lari."
           debUzs={uzsText(shDebUZS)}
           debUsd={usdText(shDebUSD)}
           credUzs={uzsText(shCredUZS)}
@@ -915,28 +1150,28 @@ const HomeRedesign = () => {
         <ModuleWithSubs
           title="Qarz daftari"
           Icon={LedgerIcon}
+          info="Qarz daftari — savdo faoliyatida qarz muammolaridan qutulish uchun oson yechim. Rasmiy shartnoma tuzmasdan qarz savdolarini tizimda tez va oson ro‘yxatga olasiz. Muddatli eslatmalar esa mijozlarga qarzlarni vaqtida qaytarishga undaydi."
           debUzs={uzsText(dfDebUZS)}
           debUsd={usdText(dfDebUSD)}
           credUzs={uzsText(dfCredUZS)}
           credUsd={usdText(dfCredUSD)}
           onPress={() => nav('QarzDaftari')}
         />
-        <ModuleSoon Icon={CoinIcon} title="Shaxsiy moliya" onPress={() => nav('ShaxsiyMoliya')} />
-
-        {/* Ogohlantirishlar — "Barchasi" endi BILDIRISHNOMALAR emas, MUDDATI
-            YAQINLASHAYOTGAN qarz shartnomalari ro'yxatini ochadi (so'rov bo'yicha). */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('Ogohlantirishlar')}</Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() =>
-              nav('SearchDebitor', debtNav('debitor', 'near', 'Muddati yaqin qarzlar'))
-            }
-          >
-            <Text style={styles.sectionLink}>{t('Barchasi')}</Text>
-          </TouchableOpacity>
-        </View>
-        <RecentOperations ops={recentOpsData} />
+        {/* SS1: Bosh sahifada "Shaxsiy moliya" o'rniga "Shaxsiy qarz" — Debitor
+            (qarzga berdim=lent, yashil) / Kreditor (qarzga oldim=borrowed, qizil),
+            UZS+USD alohida. Ma'lumot Shaxsiy moliya (analytics.finance) qarzlaridan. */}
+        <ModuleWithSubs
+          title="Shaxsiy qarz"
+          Icon={CoinIcon}
+          info="Shaxsiy qarz — bu tanishlaringiz bilan o‘zaro oldi-berdi munosabatlaringiz. Bergan va olgan qarzlaringizni tizimda ro‘yxatdan o‘tkazish orqali moliyaviy holatingizni doimiy kuzatib borasiz."
+          debLabel="Berilgan qarz"
+          credLabel="Olingan qarz"
+          debUzs={uzsText(numv(analytics?.debts?.lent_uzs))}
+          debUsd={usdText(numv(analytics?.debts?.lent_usd))}
+          credUzs={uzsText(numv(analytics?.debts?.borrowed_uzs))}
+          credUsd={usdText(numv(analytics?.debts?.borrowed_usd))}
+          onPress={() => nav('FinanceDebts')}
+        />
       </ScrollView>
     </View>
   );
@@ -989,21 +1224,28 @@ const styles = StyleSheet.create({
   avatar: { width: rs(40), height: rs(40), borderRadius: rs(20), overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   // avatarText / greeting / userName olib tashlandi — sarlavhada endi matn yo'q
   // (salom + ism talab bo'yicha chiqarildi, avatar ichida odam ikonkasi turadi).
+  // Kattaroq + raqam markazда to'liq sig'adi (allowFontScaling=false bilan birga).
   badge: {
     position: 'absolute',
-    top: -5,
-    right: -6,
-    minWidth: rs(18),
-    height: rs(18),
-    paddingHorizontal: 4,
-    borderRadius: rs(9),
+    top: -6,
+    right: -7,
+    minWidth: rs(20),
+    height: rs(20),
+    paddingHorizontal: rs(4),
+    borderRadius: rs(10),
     backgroundColor: rd.color.error,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: rd.color.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontFamily: rd.font.bold, fontSize: rs(10), color: rd.color.onPrimary },
+  badgeText: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(10.5),
+    lineHeight: rs(13),
+    color: rd.color.onPrimary,
+    textAlign: 'center',
+  },
 
   // Content
   scroll: { flex: 1 },
@@ -1022,13 +1264,15 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(16.5), color: rd.color.onPrimary },
+  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.onPrimary },
   heroSub: {
     fontFamily: rd.font.regular,
-    fontSize: rs(11.5),
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: rs(4),
-    lineHeight: rs(15.5),
+    // So'rov (SS1): butun card matni "1,7 mln" (metric summa) kabi KATTA bo'lsin.
+    // 11.5→12.5→13.5→15.
+    fontSize: rs(15),
+    color: 'rgba(255,255,255,0.92)',
+    marginTop: rs(5),
+    lineHeight: rs(20),
   },
   heroChips: { flexDirection: 'row', gap: rs(8), marginTop: rs(11) },
   heroChip: {
@@ -1039,18 +1283,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(10),
     alignItems: 'center',
   },
+  // SS1-3 (2026-09-21): QIYMAT (100 / A'lo) yorlig'idan KICHIK edi
+  // (13.5 va 14.5) — teskari ierarxiya. Endi qiymat ustun.
   heroChipValue: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.onPrimary },
   heroChipLabel: {
+    // Chip yorlig'i (Moliyaviy sog'liq / Holat) KATTAROQ (rs14.5; ilgari 10→12.5→13).
     fontFamily: rd.font.medium,
-    fontSize: rs(10),
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: rs(2),
+    fontSize: rs(14.5),
+    color: 'rgba(255,255,255,0.92)',
+    marginTop: rs(3),
   },
 
   // Blok sarlavhasi
   blockTitle: {
     fontFamily: rd.font.bold,
-    fontSize: rs(17),
+    fontSize: rs(15),
     color: rd.color.text,
     marginTop: rs(4),
     marginBottom: rs(-4),
@@ -1081,8 +1328,10 @@ const styles = StyleSheet.create({
   metricHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: rs(10),
+    // SS1-1: yorliq ikonka yonida — `space-between` uni o'ng chekkaga
+    // itarib yuborardi, shu bois chapga tekislanadi.
+    justifyContent: 'flex-start',
+    marginBottom: rs(8),
     marginTop: rs(2),
   },
   soonBadge: {
@@ -1092,10 +1341,22 @@ const styles = StyleSheet.create({
     paddingVertical: rs(3),
   },
   soonText: { fontFamily: rd.font.semibold, fontSize: rs(10), color: rd.color.primary },
-  metricLabel: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
-  metricUzs: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.text, marginTop: rs(4) },
-  metricUsd: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.textTertiary, marginTop: rs(2) },
-  metricValueBig: { fontFamily: rd.font.bold, fontSize: rs(24), color: rd.color.text },
+  metricLabel: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: rd.color.textSecondary },
+  // SS1-1 (2026-09-21): ikonka YONIDAGI yorliq.
+  metricLabelInline: {
+    flex: 1,
+    marginLeft: rs(8),
+    fontFamily: rd.font.semibold,
+    fontSize: rs(11.5),
+    color: rd.color.textSecondary,
+    lineHeight: rs(14),
+  },
+  // fontSize rs(15): uzun pul matnlari (`adjustsFontSizeToFit`) ~14.5'ga kichrayadi;
+  // qisqa "37%" esa bazaда qolardi. Bazani 17→15 tushirib, foiz ham pul kartalari
+  // bilan bir xil ko'rinadi (ilgari "37%" boshqa kartalardagi raqamdan katta edi).
+  metricUzs: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.text, marginTop: rs(4) },
+  metricUsd: { fontFamily: rd.font.semibold, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
+  metricValueBig: { fontFamily: rd.font.bold, fontSize: rs(19), color: rd.color.text },
   // Summa hali tayyor emas — skeleton (metricUzs balandligiga mos, layout siljimaydi).
   metricSkeleton: {
     height: rs(18),
@@ -1116,10 +1377,49 @@ const styles = StyleSheet.create({
   },
   moduleSoonCard: { opacity: 0.8 },
   moduleHead: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
-  moduleTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(15.5), color: rd.color.text },
+  moduleTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
+  // SS1: lampochka tugma + bo'lim izohi modal
+  moduleInfoBtn: {
+    width: rs(24),
+    height: rs(24),
+    borderRadius: rs(12),
+    backgroundColor: rd.color.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(28),
+  },
+  infoSheet: {
+    width: '100%',
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(20),
+    padding: rs(20),
+  },
+  infoHeadRow: { flexDirection: 'row', alignItems: 'center', gap: rs(10), marginBottom: rs(12) },
+  infoTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
+  infoText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13.5),
+    lineHeight: rs(20),
+    color: rd.color.textSecondary,
+  },
+  infoBtn: {
+    marginTop: rs(18),
+    height: rs(46),
+    borderRadius: rd.radius.lg,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBtnText: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.onPrimary },
   moduleSubRow: { flexDirection: 'row', gap: rs(10), marginTop: rs(14) },
   moduleSub: { flex: 1, borderRadius: rs(14), padding: rs(12) },
-  moduleSubAmt: { fontFamily: rd.font.bold, fontSize: rs(15) },
+  moduleSubAmt: { fontFamily: rd.font.bold, fontSize: rs(13) },
   moduleSubUsd: { fontFamily: rd.font.semibold, fontSize: rs(12), color: rd.color.textSecondary, marginTop: rs(1) },
   moduleSubLabel: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(4) },
 
@@ -1134,7 +1434,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: rs(12) },
   stat: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   statLabel: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.onPrimaryMuted },
-  statValue: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.onPrimary, marginTop: 1 },
+  statValue: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.onPrimary, marginTop: 1 },
 
   // Quick actions
   actionsRow: { flexDirection: 'row', gap: rs(10) },
@@ -1200,7 +1500,7 @@ const styles = StyleSheet.create({
     paddingVertical: rs(5),
     marginTop: rs(9),
   },
-  debtUsd: { fontFamily: rd.font.bold, fontSize: rs(14.5), color: rd.color.onPrimary },
+  debtUsd: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.onPrimary },
   debtCount: {
     fontFamily: rd.font.medium,
     fontSize: rs(12),
@@ -1210,7 +1510,7 @@ const styles = StyleSheet.create({
 
   // Generic card
   card: { backgroundColor: rd.color.surface, borderRadius: rs(20), padding: rs(16) },
-  cardTitle: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
+  cardTitle: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
 
   // Contracts
   contractsRow: { flexDirection: 'row', alignItems: 'center', gap: rs(16) },
@@ -1230,12 +1530,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(14),
     paddingVertical: rs(13),
   },
-  warningText: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(13.5), color: rd.color.text },
+  warningText: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.text },
 
   // Section header
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontFamily: rd.font.semibold, fontSize: rs(16), color: rd.color.text },
+  sectionTitle: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
   sectionLink: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.primary },
+
+  // Ogohlantirishlar (alert-lar)
+  alertRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(12),
+    borderRadius: rd.radius.lg,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
+  },
+  alertIcon: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rs(17),
+    backgroundColor: rd.color.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertTitle: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.text },
+  alertSub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+    marginTop: rs(2),
+  },
+  alertView: { fontFamily: rd.font.semibold, fontSize: rs(13) },
+  alertEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: rs(28),
+    gap: rs(8),
+  },
+  alertEmptyText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textTertiary,
+  },
 
   // Recent ops
   opsCard: { backgroundColor: rd.color.surface, borderRadius: rs(16), padding: rs(4) },

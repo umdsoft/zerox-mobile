@@ -1,5 +1,6 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
+import { goHomeSmooth } from "../../../helper/finishAction";
 import {style} from '../../../theme/style';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {sortText} from '../../components/StatisticCard';
@@ -15,6 +16,8 @@ import {URL} from '../../constants';
 import {settingDate} from '../../../helper';
 import ScreenLayout from '../../components/ScreenLayout';
 import {rd, rs} from '../../../theme/rd';
+import { AnimatedIconCircle } from '../../../images/debtActionIcons';
+import CharityDollar from '../../../images/CharityDollar';
 
 import {useDispatch, useSelector} from 'react-redux';
 import {setNotification} from '../../../store/reducers/HomeReducer';
@@ -31,6 +34,9 @@ const CharityDebt = () => {
   const navigation = useNavigation();
   const [info, setInfo] = useState([]);
   const [loading, setLoading] = useState(false);
+  // SS9: voz-kechish POST'i uchun in-flight bayroq (ikki marta bosishда dublikat
+  // SMS/so'rov yuborilmasligi uchun). loading esa faqat boshlang'ich GET uchun.
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     getData();
@@ -54,8 +60,10 @@ const CharityDebt = () => {
   };
 
   const onPress = async () => {
+    if (submitting) return; // dublikat SMS/so'rov himoyasi
     const token = storage.getString('token');
     try {
+      setSubmitting(true);
       const {data, status} = await axios.post(
         URL + '/contract/vos-kechish',
         {
@@ -84,7 +92,6 @@ const CharityDebt = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t(
               'Ushbu qarz shartnomasi bo‘yicha Sizga so‘rov yuborilgan. Bildirishnomalar bo‘limi orqali so‘rov bilan tanishing.',
             ),
@@ -92,20 +99,19 @@ const CharityDebt = () => {
         });
       }
       if (status === 201) {
+        // SS4: "Muvaffaqiyatli" sarlavhasi olib tashlandi -> "Qarzdan voz kechildi."
+        // yagona bold matn (descStrong).
         Toast.show({
-          autoHide: true,
-          visibilityTime: 2000,
+          // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+          autoHide: false,
           position: 'bottom',
           type: 'omad',
           props: {
-            title: 'Muvaffaqiyatli',
             desc: t('792'),
           },
         });
         dispatch(HomeApi({page: 1}));
-        setTimeout(() => {
-          navigation.navigate('BottomTabNavigator');
-        }, 2000);
+        goHomeSmooth(navigation, t('792'));
       }
 
       // socketService.sendNotification({id: info?.creditor});
@@ -120,20 +126,32 @@ const CharityDebt = () => {
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {title: 'Xatolik', desc: t('Xatolik sodir bo‘ldi')},
+        props: {desc: t('Xatolik sodir bo‘ldi')},
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <ScreenLayout title={t('378')} scroll>
-        {loading ? (
+    <ScreenLayout title={t('378')} scroll={false}>
+      {loading ? (
+        <View style={styles.loadingWrap}>
           <Loading />
-        ) : (
-            <View style={styles.content}>
+        </View>
+      ) : (
+        <View style={styles.centerWrap}>
+          {/* Voz kechish ikonasi — debt-detal "Qarzdan voz kechish" tugmasi bilan
+              IZCHIL: chizilgan $ (CharityDollar). */}
+          <View style={styles.iconWrap}>
+            <AnimatedIconCircle size={rs(104)} bg={rd.color.primary}>
+              <CharityDollar width={rs(48)} height={rs(52)} />
+            </AnimatedIconCircle>
+          </View>
+
+          {/* Xabar + checkbox + Tasdiqlash. */}
+          <View style={styles.bottom}>
               <View style={styles.card}>
-                {/* 375 */}
-                {/*   {sortText(info?.residual_amount)} {info?.currency} */}
                 <Text allowFontScaling={false} style={styles.hisob}>
                   <Trans
                     t={t}
@@ -147,13 +165,11 @@ const CharityDebt = () => {
                       end: settingDate(info?.created_at),
                     }}
                     components={{
-                      start: (
-                        <TextBold styles={{fontSize: style.fontSize.xx}} />
-                      ),
-                      currancy: (
-                        <TextBold styles={{fontSize: style.fontSize.xx}} />
-                      ),
-                      sum: <TextBold styles={{fontSize: style.fontSize.xx}} />,
+                      // Shrift barcha so'z va raqamda bir xil — faqat shartnoma
+                      // raqami (id) bosiladigan ko'k havola.
+                      start: <Text allowFontScaling={false} />,
+                      currancy: <Text allowFontScaling={false} />,
+                      sum: <Text allowFontScaling={false} style={styles.sumBold} />,
                       id: (
                         <Text
                           allowFontScaling={false}
@@ -163,12 +179,10 @@ const CharityDebt = () => {
                               id: info.id,
                             });
                           }}
-                          style={{
-                            color: style.blue,
-                          }}
+                          style={styles.link}
                         />
                       ),
-                      end: <TextBold styles={{fontSize: style.fontSize.xx}} />,
+                      end: <Text allowFontScaling={false} />,
                     }}
                   />
                 </Text>
@@ -197,21 +211,28 @@ const CharityDebt = () => {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={onPress}
-                disabled={!check}
-                style={[styles.primaryBtn, !check && styles.primaryBtnDisabled]}>
-                <Text
-                  allowFontScaling={false}
-                  style={[
-                    styles.primaryBtnText,
-                    !check && styles.primaryBtnTextDisabled,
-                  ]}>
-                  {t('93')}
-                </Text>
+                disabled={!check || submitting}
+                style={[
+                  styles.primaryBtn,
+                  !check && styles.primaryBtnDisabled,
+                  submitting && {opacity: 0.6},
+                ]}>
+                {submitting ? (
+                  <ActivityIndicator size="small" color={rd.color.onPrimary} />
+                ) : (
+                  <Text
+                    allowFontScaling={false}
+                    style={[
+                      styles.primaryBtnText,
+                      !check && styles.primaryBtnTextDisabled,
+                    ]}>
+                    {t('93')}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
+        </View>
           )}
-
-      {/* <Toast config={toastConfig} /> */}
     </ScreenLayout>
   );
 };
@@ -219,6 +240,19 @@ const CharityDebt = () => {
 export default CharityDebt;
 
 const styles = StyleSheet.create({
+  loadingWrap: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  // Ikona + kontent guruhi VERTIKAL MARKAZDA (balansli).
+  centerWrap: {flex: 1, justifyContent: 'center'},
+  iconWrap: {
+    alignItems: 'center',
+    marginBottom: rs(30),
+  },
+  // Past yarim — kontent.
+  bottom: {paddingBottom: rs(20)},
+  // Shartnoma raqami havolasi — shrift bir xil, faqat ko'k rang.
+  link: {color: rd.color.primary},
+  // Summa (masalan "11 USD") — bold (so'rov bo'yicha jirniy).
+  sumBold: {fontFamily: rd.font.bold, color: rd.color.text},
   content: {
     paddingHorizontal: rs(16),
     paddingTop: rs(20),

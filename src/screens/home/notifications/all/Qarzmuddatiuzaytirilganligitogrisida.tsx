@@ -3,9 +3,9 @@ import React, { memo } from 'react';
 import { rd, rs } from '../../../../theme/rd';
 
 import { settingDate } from '../../../../helper';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 

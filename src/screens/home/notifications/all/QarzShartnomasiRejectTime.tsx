@@ -3,22 +3,38 @@ import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
 
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
 import { useSelector } from 'react-redux';
+// FISH -> TitleCase; otasining ismi qo'shimchasi ("o'g'li"/"qizi") KICHIK harfда qoladi.
+const titleCase = (s: string) =>
+  String(s || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w =>
+      /^(o.?g.?li|ug.?li|qizi)$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1),
+    )
+    .join(' ');
+
 export const getFullName = (role: string, item: any) => {
   if (role === 'sender') {
-    return item.creditor === item.csender
-      ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
-      : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`;
+    return titleCase(
+      item.creditor === item.csender
+        ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
+        : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`,
+    );
   } else if (role === 'receiver') {
-    return item.creditor === item.creciver
-      ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
-      : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`;
+    return titleCase(
+      item.creditor === item.creciver
+        ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
+        : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`,
+    );
   }
   return '';
 };
@@ -86,6 +102,6 @@ const styles = {
   number: {
     fontFamily: style.fontFamilyMedium,
     color: rd.color.primary,
-    fontSize: style.fontSize.xx - 2,
+    fontSize: style.fontSize.xx + 1,
   },
 };

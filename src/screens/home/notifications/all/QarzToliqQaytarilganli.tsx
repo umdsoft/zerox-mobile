@@ -3,9 +3,9 @@ import React, { memo } from 'react';
 
 import { style } from '../../../../theme/style';
 import { sortText } from '../../../components/StatisticCard';
-import TextBold from '../../../components/TextBold';
+import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
-import TransText from '../../../components/TransText';
+import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import { font } from '../../../../theme/font';
@@ -61,7 +61,7 @@ const Qarzqaytarilganligitogrisida = ({
               style={{ color: rd.color.primary }}
             />
           ),
-          start: <MainText ft={font.medium} size={style.fontSize.xx - 2} />,
+          start: <MainText ft={font.medium} size={style.fontSize.xx + 1} />,
           sum: <TextBold />,
           qoldiq: <TextBold />,
         }}

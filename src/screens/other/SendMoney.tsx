@@ -24,7 +24,10 @@ import { useDispatch } from 'react-redux';
 import { t } from 'i18next';
 import socketService from '../../helper/socketService';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
+import { goHomeSmooth } from '../../helper/finishAction';
 import { rd, rs } from '../../theme/rd';
+import { AnimatedIconCircle } from '../../images/debtActionIcons';
+import { AnimatedTransferIcon } from '../home/redesign/icons';
 
 const SendMoney = () => {
   const navigation = useNavigation();
@@ -50,7 +53,6 @@ const SendMoney = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          title: 'Xatolik',
           desc: t("Siz o'zingizga pul o'tkaza olmaysiz."),
         },
       });
@@ -64,7 +66,6 @@ const SendMoney = () => {
           position: 'bottom',
           type: 'error2',
           props: {
-            title: 'Xatolik',
             desc: t('828'),
           },
         });
@@ -86,12 +87,13 @@ const SendMoney = () => {
 
           if (data.success) {
             Toast.show({
-              autoHide: true,
-              visibilityTime: 3000,
+              // autoHide: false -> toast goHomeSmooth hide qilgunча turadi (o'qilsin).
+              autoHide: false,
               position: 'bottom',
               type: 'omad',
               props: {
-                title: 'Muvaffaqiyatli',
+                // "Muvaffaqiyatli" sarlavhasi olib tashlandi -> matn yagona qalin
+                // (descStrong), boshqa toast'lar bilan bir xil.
                 desc: t('639'),
               },
             });
@@ -111,12 +113,9 @@ const SendMoney = () => {
               id: '',
             });
             setLoading(false);
-            setTimeout(() => {
-              navigation.reset({
-                routes: [{ name: 'BottomTabNavigator' }],
-                index: 0,
-              });
-            }, 2000);
+            // Toast o'qilsin -> yo'qolsin -> so'ng HOME (matn uzunligiga qarab
+            // o'qish vaqti; freeze yo'q — navigate).
+            goHomeSmooth(navigation, t('639'));
           }
         } else {
           setSum('');
@@ -133,7 +132,6 @@ const SendMoney = () => {
             position: 'bottom',
             type: 'error2',
             props: {
-              title: 'Xatolik',
               desc: t('294'),
             },
           });
@@ -148,7 +146,6 @@ const SendMoney = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          title: 'Xatolik',
           desc: t('826'),
         },
       });
@@ -167,10 +164,12 @@ const SendMoney = () => {
       );
 
       if (data.success && data.data) {
+        // FISHни TO'LIQ saqlaymiz (ilgari slice(0,1) initsial edi) — ko'rsatishда
+        // MASKALANADI (saytdagidek: B******V B*******K).
         setClient({
-          first_name: data?.data?.first_name?.slice(0, 1) ?? '',
+          first_name: data?.data?.first_name ?? '',
           last_name: data?.data?.last_name ?? '',
-          middle_name: data?.data?.middle_name?.slice(0, 1) ?? '',
+          middle_name: data?.data?.middle_name ?? '',
           id: data?.data?.id,
         });
       } else {
@@ -240,6 +239,14 @@ const SendMoney = () => {
     return text?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') || 0;
   };
 
+  // FISH niqoblash — birinchi va oxirgi harf ko'rinadi, o'rtasi yulduzcha
+  // (saytdagidek: "BOLTAYEV" -> "B******V").
+  const maskName = (s?: string) => {
+    const str = String(s || '').trim();
+    if (str.length <= 2) return str;
+    return str[0] + '*'.repeat(str.length - 2) + str[str.length - 1];
+  };
+
   const renderSum = useMemo(() => {
     return (
       <View style={styles.fieldGroup}>
@@ -295,15 +302,20 @@ const SendMoney = () => {
           </Text>
         </View>
 
+        {/* Harakatlanuvchi hero — hisobdan hisobga pul o'tkazishni ifodalaydi.
+            Doira yengil pulslanadi + strelkalar QARAMA-QARSHI siljib turadi
+            (so'rov: strelkalar harakatlanuvchi bo'lsin — pul oqishi). */}
+        <View style={styles.heroWrap}>
+          <AnimatedIconCircle size={rs(84)} bg={rd.color.primary}>
+            <AnimatedTransferIcon size={rs(40)} color="#fff" />
+          </AnimatedIconCircle>
+        </View>
+
         <View style={styles.form}>
           {renderId}
           {client.id ? (
             <Text style={styles.clientText} allowFontScaling={false}>
-              {client.first_name +
-                '.' +
-                client.middle_name +
-                '.' +
-                client.last_name}
+              {maskName(client.last_name)} {maskName(client.first_name)}
             </Text>
           ) : null}
           {renderSum}
@@ -354,6 +366,11 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.bold,
     fontSize: rs(28),
     color: rd.color.onPrimary,
+  },
+  heroWrap: {
+    alignItems: 'center',
+    marginTop: rs(28),
+    marginBottom: rs(8),
   },
   form: {
     marginTop: rs(20),

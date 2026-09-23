@@ -41,7 +41,13 @@ const ToastCard = ({
           </Text>
         )}
         {!!desc && (
-          <Text allowFontScaling={false} style={styles.desc} numberOfLines={3}>
+          // Sarlavha (title) BERILMAGANDA desc yagona xabar bo'ladi — u holda uni
+          // QALIN (jirniy) va to'q rangda ko'rsatamiz (so'rov bo'yicha: ba'zi toastlarda
+          // "Xatolik!"/"Muvaffaqiyatli" sarlavhasi olib tashlanib, matnning o'zi bold bo'lsin).
+          <Text
+            allowFontScaling={false}
+            style={[styles.desc, !title && styles.descStrong]}
+            numberOfLines={title ? 3 : 4}>
             {desc}
           </Text>
         )}
@@ -149,6 +155,12 @@ const styles = StyleSheet.create({
     fontSize: rs(13),
     color: rd.color.textSecondary,
     lineHeight: rs(18),
+  },
+  // Sarlavhasiz toastda matn yagona bo'lgani uchun QALIN + to'q rang (jirniy).
+  descStrong: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(13.5),
+    color: rd.color.text,
   },
   baseText1: {
     fontFamily: rd.font.semibold,

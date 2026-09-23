@@ -15,7 +15,7 @@ import FaceIdIcon from '../../images/faceid';
 import ScreenLayout from '../components/ScreenLayout';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
-import { ChevronRight } from '../home/redesign/icons';
+import { ChevronRight, MonitorIcon } from '../home/redesign/icons';
 
 const rnBiometrics = new ReactNativeBiometrics();
 
@@ -49,7 +49,7 @@ const Security = () => {
 
   const renderSwitch = useMemo(() => {
     return (
-      <View style={[styles.row, styles.rowDivider]}>
+      <View style={[styles.row, styles.rowCard]}>
         <View style={styles.rowLeft}>
           <View style={styles.iconCircle}>
             {Platform.OS === 'ios' ? (
@@ -89,13 +89,15 @@ const Security = () => {
           style={styles.lottie}
         />
       </View>
-      <View style={styles.card}>
+      {/* 3 band — HAR BIRI ALOHIDA KARTA (so'rov bo'yicha; ilgari bitta kartaда
+          divider bilan birlashib turardi). */}
+      <View style={styles.cardList}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => {
             navigation.navigate('RecoveryPassword', { type: 1 });
           }}
-          style={styles.row}
+          style={[styles.row, styles.rowCard]}
         >
           <View style={styles.rowLeft}>
             <View style={styles.iconCircle}>
@@ -112,7 +114,7 @@ const Security = () => {
           onPress={() => {
             navigation.navigate('ChangeLocalPassword');
           }}
-          style={[styles.row, styles.rowDivider]}
+          style={[styles.row, styles.rowCard]}
         >
           <View style={styles.rowLeft}>
             <View style={styles.iconCircle}>
@@ -124,6 +126,8 @@ const Security = () => {
           </View>
           <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
         </TouchableOpacity>
+        {/* SS9 (2026-09-18): "Ulangan qurilmalar" bu yerdan SHAXSIY KABINETga
+            ko'chirildi (Xavfsizlik bandi ostida, "Chiqish" ustida) — so'rov. */}
         {support ? renderSwitch : null}
       </View>
       {/* Menyu bandlari juda pastga tushmasin — ozgina bo'sh joy qoldiramiz. */}
@@ -140,12 +144,13 @@ const styles = StyleSheet.create({
   top: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   bottomGap: { flex: 0.45 },
   lottie: { width: rs(150), height: rs(150) },
-  card: {
+  // Har band ALOHIDA karta — orasida bo'shliq.
+  cardList: { gap: rs(12) },
+  rowCard: {
     backgroundColor: rd.color.surface,
     borderWidth: 1,
     borderColor: rd.color.border,
     borderRadius: rd.radius.lg,
-    overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
@@ -153,10 +158,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: rs(12),
     paddingHorizontal: rs(14),
-  },
-  rowDivider: {
-    borderTopWidth: 1,
-    borderTopColor: rd.color.border,
   },
   rowLeft: {
     flexDirection: 'row',
