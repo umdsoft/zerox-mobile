@@ -1,10 +1,11 @@
 /**
- * GlobalBottomBar.tsx — Butun ilova bo'ylab doimiy pastki menyu.
+ * GlobalBottomBar.tsx — Butun ilova bo'ylab YAGONA pastki menyu.
  *
- * Asosiy tablar (Home/TakeDebt/GiveDebt/Statistic) o'zining RdTabBar'iga ega; bu global
- * bar esa DETAL/oqim ekranlarida ko'rsatiladi (qulaylik uchun — har sahifadan asosiy
- * bo'limlarga tez o'tish). App.tsx uni layout SIBLINGI sifatida joylaydi (overlay emas)
- * — shu sabab ekran kontenti ustini yopmaydi.
+ * SS-DEV (2026-09-24): ilgari tab ekranlarida navigator ichidagi RdTabBar,
+ * detal ekranlarida esa shu bar ko'rsatilardi — ikkalasi almashganda bar
+ * ~1 s yo'qolib qayta chiqardi. Endi RdTabBar YO'Q: bar App.tsx'da bir marta,
+ * barcha ekranlarda (auth/kamera oqimidan tashqari) layout SIBLINGI sifatida
+ * turadi (overlay emas) — shu sabab ekran kontenti ustini yopmaydi.
  *
  * Bosilganda BottomTabNavigator ichidagi tegishli tab'ga o'tadi.
  */
@@ -20,7 +21,8 @@ import {
   WalletIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
-import { StackActions } from '@react-navigation/native';
+import { StackActions, TabActions } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { navigationRef } from './NavigationRef';
 
 /**
@@ -162,6 +164,19 @@ const sectionOf = (routeName?: string): string | undefined => {
  * qo'shadi). Shunda stekda BottomTabNavigator DOIM bitta bo'lib qoladi va
  * "orqaga" bitta oldingi sahifaga oladi.
  */
+/**
+ * SS-DEV (2026-09-24): AKTIV yo'l bo'ylab `BottomTabNavigator` FOKUSDA turgan
+ * bo'lsa — uning holatini qaytaradi (tab ekranida turibmiz). Ustiga detal
+ * ekran push qilingan bo'lsa `undefined` (u holda popTo ishlatiladi).
+ */
+const focusedTabState = (state: any): any => {
+  if (!state?.routes?.length) return undefined;
+  const r = state.routes[state.index ?? 0];
+  if (!r) return undefined;
+  if (r.name === 'BottomTabNavigator') return r.state;
+  return focusedTabState(r.state);
+};
+
 const goTab = (item: { tab: string; route?: string }) => {
   const ref: any = navigationRef.current;
   if (!ref) return;
@@ -169,15 +184,33 @@ const goTab = (item: { tab: string; route?: string }) => {
     ref.dispatch(StackActions.popTo(item.route));
     return;
   }
+  // SS-DEV (2026-09-24): bar endi TAB ekranlarida ham shu komponent (RdTabBar
+  // olib tashlandi). Tab ichida turganda popTo emas — to'g'ridan-to'g'ri tab
+  // navigatoriga `jumpTo` (darhol almashadi, stek o'zgarmaydi).
+  try {
+    const ts = focusedTabState(ref.getRootState?.());
+    if (ts?.key) {
+      const cur = ts.routes?.[ts.index ?? 0]?.name;
+      if (cur !== item.tab) {
+        ref.dispatch({ ...TabActions.jumpTo(item.tab), target: ts.key });
+      }
+      return;
+    }
+  } catch (_) {}
   ref.dispatch(StackActions.popTo('BottomTabNavigator', { screen: item.tab }));
 };
 
 const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   // `activeTab` har navigatsiyada o'zgaradi -> qayta render -> bu qiymat yangi.
   const section = sectionOf(activeTab);
+  // SS-DEV (2026-09-24): iPhone'da bar "yuqoriroq" turardi — ildiz SafeAreaView
+  // pastki inset (34pt) + shu yerdagi paddingBottom(8) qo'shilardi. Inset bor
+  // qurilmada qo'shimcha padding KERAK EMAS (home-indicator maydoni o'zi bo'shliq).
+  const padBottom = insets.bottom > 0 ? 0 : rs(8);
   return (
-  <View style={styles.wrap}>
+  <View style={[styles.wrap, { paddingBottom: padBottom }]}>
     <View style={styles.bar}>
       {TABS.map(item => {
         const active = section === item.tab;
@@ -212,7 +245,6 @@ const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: rs(12),
     paddingTop: rs(8),
-    paddingBottom: rs(8),
     backgroundColor: rd.color.page,
   },
   bar: {

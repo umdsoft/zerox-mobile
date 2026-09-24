@@ -40,6 +40,21 @@ const fmtDateDots = (raw?: string): string => {
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 
+/**
+ * SS-DEV (2026-09-24): davra muddati o'tganmi. Backend `round_expired`
+ * bayrog'i bo'lsa o'sha; bo'lmasa `due_date` KUNI bugundan oldinmi.
+ * Muddati o'tgan taklif uchun "Boraman / Bora olmayman" ko'rsatilmaydi.
+ */
+const isInviteExpired = (info: any): boolean => {
+  if (typeof info?.round_expired === 'boolean') return info.round_expired;
+  const m = String(info?.due_date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return false;
+  const due = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return due < today;
+};
+
 const GapTaklif = ({ item, okay, navigation }: any) => {
   const roundId = item?.gap_round_id;
   const [info, setInfo] = React.useState<any>(null);
@@ -202,7 +217,7 @@ const GapTaklif = ({ item, okay, navigation }: any) => {
           {/* SS15: "Boraman / Bora olmayman" FAQAT uchrashuv joyi kiritilgan
               bo'lsa. Joy noma'lum bo'lsa a'zo boraman deb javob bera olmaydi —
               tugmalarni ko'rsatish chalg'itardi. */}
-          {!!info.venue && (
+          {!!info.venue && !isInviteExpired(info) && (
           <View style={styles.btnRow}>
             {/* SS8: ikonkalar OLIB TASHLANDI (so'rov) — faqat matn.
                 Javob berilgach tanlanmagan tugma so'nadi: u endi bosilmaydi. */}

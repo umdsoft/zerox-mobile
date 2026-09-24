@@ -146,11 +146,12 @@ const QarzDaftariKalendar = () => {
     <View style={styles.repRow}>
       <Text allowFontScaling={false} style={styles.repLabel}>{label}</Text>
       <View style={styles.repVals}>
+        {/* SS-DEV (2026-09-24): valyuta TANLANGANIGA mos (ilgari doim UZS yozilardi). */}
         <Text allowFontScaling={false} style={[styles.repVal, { color: BER_COLOR }]} numberOfLines={1}>
-          +{fMoney(ber)}
+          +{fMoney(ber, cur)}
         </Text>
         <Text allowFontScaling={false} style={[styles.repVal, { color: UND_COLOR }]} numberOfLines={1}>
-          {fMoney(und)}
+          {fMoney(und, cur)}
         </Text>
       </View>
     </View>
@@ -198,7 +199,7 @@ const QarzDaftariKalendar = () => {
             style={[styles.sumValueSm, { color: BER_COLOR }]}
             numberOfLines={1}
             adjustsFontSizeToFit>
-            {fMoney(totBer)}
+            {fMoney(totBer, cur)}
           </Text>
         </View>
         <View style={styles.sumCard}>
@@ -208,7 +209,7 @@ const QarzDaftariKalendar = () => {
             style={[styles.sumValueSm, { color: UND_COLOR }]}
             numberOfLines={1}
             adjustsFontSizeToFit>
-            {fMoney(totUnd)}
+            {fMoney(totUnd, cur)}
           </Text>
         </View>
       </View>

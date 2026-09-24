@@ -33,12 +33,15 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import {
+  CheckCircleIcon,
+  InfoIcon,
   MessageIcon,
   PencilIcon,
   PhoneCallIcon,
   PhoneIcon,
   StorefrontIcon,
   UserIcon,
+  WarningIcon,
 } from '../redesign/icons';
 import { financeApi } from './financeApi';
 import { fDate, fMoney, num } from './financeMoney';
@@ -53,6 +56,61 @@ const isOverdue = (d: any): boolean => {
   if (!d?.due_date || isDone(d)) return false;
   const t = new Date(String(d.due_date).slice(0, 10)).getTime();
   return !isNaN(t) && t < Date.now();
+};
+
+type Reliability = { level: 'none' | 'reliable' | 'medium' | 'risky'; total: number; on_time: number; late: number };
+
+/**
+ * SS-DEV (2026-09-24): TAVSIYA — kontragentning oldingi qarzlarini o'z vaqtida
+ * qaytarganiga qarab ishonchlilik. Backend `computeReliability`
+ * (PersonalDebtController) bilan AYNAN bir xil qoida — `GET /finance/debts/:id`
+ * javobidagi `reliability` bo'lsa u ustun, bo'lmasa ro'yxatdan shu yerda
+ * hisoblanadi (ro'yxat `payments` bilan keladi):
+ *   - yopilgan qarz: oxirgi HAQIQIY to'lov (marker yozuvlarsiz) muddatdan
+ *     kechikmagan → o'z vaqtida, aks holda kech; muddatsiz yopilgan → ijobiy;
+ *   - muddati o'tgan FAOL qarz → kech (salbiy signal).
+ *   ratio ≥ 0.8 → ishonchli, ≥ 0.5 → o'rtacha, aks holda ehtiyot bo'ling.
+ */
+const computeReliability = (debts: any[]): Reliability => {
+  let onTime = 0;
+  let late = 0;
+  const DAY = 86400000;
+  for (const d of debts) {
+    if (d?.is_shop_debt) continue; // do'kon qaydlari — boshqa daftar, hisobga olinmaydi
+    if (d?.status === 'completed') {
+      const pays = (d.payments || []).filter(
+        (p: any) => !/^__(increase|forgive)__/.test(String(p?.notes || '')),
+      );
+      let lastPay = 0;
+      for (const p of pays) {
+        const t = new Date(String(p.payment_date || p.created_at || '').replace(' ', 'T')).getTime();
+        if (!isNaN(t) && t > lastPay) lastPay = t;
+      }
+      if (d.due_date && lastPay) {
+        if (lastPay <= new Date(String(d.due_date).slice(0, 10)).getTime() + DAY) onTime++;
+        else late++;
+      } else {
+        onTime++;
+      }
+    } else if (d?.status === 'active' && d?.due_date && new Date(String(d.due_date).slice(0, 10)).getTime() < Date.now()) {
+      late++;
+    }
+  }
+  const total = onTime + late;
+  let level: Reliability['level'] = 'none';
+  if (total > 0) {
+    const ratio = onTime / total;
+    level = ratio >= 0.8 ? 'reliable' : ratio >= 0.5 ? 'medium' : 'risky';
+  }
+  return { level, total, on_time: onTime, late };
+};
+
+// Sayt (`lang/uz.js` finance.rel_*) bilan bir xil matnlar.
+const REL_TEXT: Record<Reliability['level'], { title: string; desc: string; color: string; bg: string }> = {
+  none: { title: 'Hozircha ma’lumot yo‘q', desc: 'Bu shaxs bilan avvalgi qarz tarixi mavjud emas.', color: '#6b7280', bg: '#f3f4f6' },
+  reliable: { title: 'Ishonchli', desc: 'Oldingi qarzlarini asosan o‘z vaqtida qaytargan.', color: '#15803d', bg: '#f0fdf4' },
+  medium: { title: 'O‘rtacha', desc: 'Qarzlarini ba’zan kechiktirib qaytargan.', color: '#b45309', bg: '#fffbeb' },
+  risky: { title: 'Ehtiyot bo‘ling', desc: 'Qarzlarini ko‘pincha kechiktirib qaytargan.', color: '#b91c1c', bg: '#fef2f2' },
 };
 
 /** +998 dan keyingi 9 raqam -> "90 123 45 67". */
@@ -133,6 +191,29 @@ const FinanceDebtGroup = () => {
    */
   const ownItems = list.filter((d) => !d.is_mirror);
   const canEdit = !isShop && ownItems.length > 0;
+
+  // SS-DEV (2026-09-24): TAVSIYA — serverdan (o'z qaydim bo'lsa `GET /finance/debts/:id`
+  // javobidagi `reliability`), kelmasa ro'yxatdan mahalliy hisob.
+  const [serverRel, setServerRel] = React.useState<Reliability | null>(null);
+  const firstOwnId = ownItems.length ? ownItems[0].id : null;
+  React.useEffect(() => {
+    let alive = true;
+    if (!firstOwnId || isShop) return;
+    financeApi
+      .getDebtById(firstOwnId)
+      .then((r) => {
+        const rel = r?.data?.reliability;
+        if (alive && rel && typeof rel.level === 'string') setServerRel(rel);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [firstOwnId, isShop]);
+  const reliability: Reliability = React.useMemo(
+    () => serverRel || computeReliability(list),
+    [serverRel, list],
+  );
 
   const saveEdit = async () => {
     if (saving) return;
@@ -366,6 +447,40 @@ const FinanceDebtGroup = () => {
           })}
         </View>
 
+        {/* 2a. TAVSIYA (SS-DEV 2026-09-24) — saytdagi "Tavsiya" bloki:
+            oldingi qarzlarini o'z vaqtida qaytarganiga qarab. Do'kon
+            sahifasida ko'rsatilmaydi (do'kon qaydlari — boshqa daftar). */}
+        {!isShop && (() => {
+          const rt = REL_TEXT[reliability.level] || REL_TEXT.none;
+          const RelIcon =
+            reliability.level === 'reliable'
+              ? CheckCircleIcon
+              : reliability.level === 'none'
+              ? InfoIcon
+              : WarningIcon;
+          return (
+            <View style={styles.relCard}>
+              <Text allowFontScaling={false} style={styles.relTitle}>{t('Tavsiya')}</Text>
+              <View style={[styles.relBox, { backgroundColor: rt.bg }]}>
+                <View style={[styles.relIcon, { backgroundColor: rt.color + '1A' }]}>
+                  <RelIcon size={rs(18)} color={rt.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text allowFontScaling={false} style={[styles.relLevel, { color: rt.color }]}>
+                    {t(rt.title)}
+                  </Text>
+                  <Text allowFontScaling={false} style={styles.relDesc}>
+                    {t(rt.desc)}
+                    {reliability.total > 0
+                      ? ` (${reliability.on_time}/${reliability.total} ${t('o‘z vaqtida')})`
+                      : ''}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          );
+        })()}
+
         {/* 2b. AMALLAR — shu kontragent bilan (SS4). */}
         <View style={styles.actRow}>
           <TouchableOpacity
@@ -385,19 +500,21 @@ const FinanceDebtGroup = () => {
         {/* Sof balans MUSBAT bo'lsa — menga qarzdor: talab/voz kechish. */}
         {netAll > 0 && actionable.length > 0 && (
           <View style={styles.actRow}>
+            {/* SS-DEV (2026-09-24): chegara chizig'i OLIB TASHLANDI — tugmalar
+                "Qarz berish / Qarz olish" kabi TO'LDIRILGAN (amber / qizil). */}
             <TouchableOpacity
               activeOpacity={0.85}
-              style={[styles.actBtnSoft, { borderColor: '#f59e0b', backgroundColor: '#f59e0b14' }]}
+              style={[styles.actBtnSoft, styles.actBtnAmber]}
               onPress={() => setPickFor('demand')}>
-              <Text allowFontScaling={false} style={[styles.actBtnSoftText, { color: '#b45309' }]}>
+              <Text allowFontScaling={false} style={styles.actBtnSoftText}>
                 {t('Qaytarishni talab qilish')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.85}
-              style={[styles.actBtnSoft, { borderColor: RED, backgroundColor: RED + '12' }]}
+              style={[styles.actBtnSoft, { backgroundColor: RED }]}
               onPress={() => setPickFor('forgive')}>
-              <Text allowFontScaling={false} style={[styles.actBtnSoftText, { color: RED }]}>
+              <Text allowFontScaling={false} style={styles.actBtnSoftText}>
                 {t('Qarzdan voz kechish')}
               </Text>
             </TouchableOpacity>
@@ -769,17 +886,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: '#fff' },
+  // SS-DEV (2026-09-24): to'ldirilgan uslub (actBtn bilan bir xil), chegara yo'q.
   actBtnSoft: {
     flex: 1,
     minHeight: rs(46),
     borderRadius: rd.radius.md,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: rs(8),
     paddingVertical: rs(8),
   },
-  actBtnSoftText: { fontFamily: rd.font.semibold, fontSize: rs(12), textAlign: 'center' },
+  actBtnAmber: { backgroundColor: '#f59e0b' },
+  actBtnSoftText: { fontFamily: rd.font.semibold, fontSize: rs(12.5), textAlign: 'center', color: '#fff' },
+  // SS-DEV (2026-09-24): Tavsiya kartasi (saytdagi bilan bir xil tuzilma).
+  relCard: {
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(18),
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(14),
+    marginBottom: rs(2),
+  },
+  relTitle: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.textTertiary, marginBottom: rs(8) },
+  relBox: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10), borderRadius: rd.radius.md, padding: rs(10) },
+  relIcon: { width: rs(34), height: rs(34), borderRadius: rs(10), alignItems: 'center', justifyContent: 'center' },
+  relLevel: { fontFamily: rd.font.bold, fontSize: rs(13.5) },
+  relDesc: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, lineHeight: rs(17), marginTop: rs(2) },
   tplRow: {
     backgroundColor: rd.color.surfaceAlt,
     borderRadius: rd.radius.md,

@@ -46,18 +46,14 @@ LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
 //  - auth/onboarding oqimi (login, PIN, ro'yxatdan o'tish, parol tiklash)
 //  - kamera/MyID/QR skaner (pastki menyu mos emas)
 // Qolgan barcha detal ekranlarda global menyu ko'rinadi (qulaylik uchun).
+// SS-DEV (2026-09-24): pastki menyu endi YAGONA — BottomTabNavigator ichidagi
+// RdTabBar OLIB TASHLANDI, tab ekranlarida ham shu GlobalBottomBar ko'rinadi.
+// Ilgari tab ↔ detal o'tishida ikki xil bar almashinar (state hodisasi
+// kechikib), bar ~1 s yo'qolib qayta chiqardi (flicker). Endi bar hech qachon
+// almashmaydi — faqat faol bo'lim rangi o'zgaradi.
 const HIDE_BOTTOM_BAR = new Set<string>([
-  'Home',
   'TakeDebt',
   'GiveDebt',
-  'Statistic',
-  // QarzShartnomasi/QarzDaftari endi BottomTabNavigator ICHIDAGI tab —
-  // ular o'zining RdTabBar'ini ko'rsatadi. Global bar ham chiqsa IKKI pastki
-  // menyu bo'lib qolardi (ustma-ust). Shu sabab bu yerda ham yashiriladi.
-  'QarzShartnomasi',
-  'QarzDaftari',
-  // SS7: "Shaxsiy qarz" ham endi TAB — o'zining RdTabBar'i bor.
-  'ShaxsiyQarz',
   'SelectLanguageScreen',
   'LoginWithPhone',
   'SetLocalPassword',
@@ -90,19 +86,6 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   'QrCode',
 ]);
 
-/**
- * SS9: navigatsiya holatining AKTIV YO'LIDA berilgan nomli marshrut bormi?
- * Ichma-ich navigatorlar (Drawer > Stack > Tab) bo'ylab pastga yuradi.
- * Faqat aktiv (`index`) tarmoq tekshiriladi — fon'dagi ekranlar hisobga olinmaydi.
- */
-const activePathHas = (state: any, name: string): boolean => {
-  if (!state || typeof state.index !== 'number') return false;
-  const route = state.routes?.[state.index];
-  if (!route) return false;
-  if (route.name === name) return true;
-  return activePathHas(route.state, name);
-};
-
 // 2026-09-23: global JS error handler endi FAQAT index.js'da (bitta joy, RN default
 // handler'iga zanjirlangan). Bu yerdagi nusxa index.js tomonidan baribir ustidan
 // yozilardi va `crashlytics().crash()` (test-crash API) ni chaqirardi.
@@ -129,14 +112,8 @@ const App: React.FC = () => {
   const dispatch = useDispatch();
   const netInfo = useNetInfo();
   const [routeName, setRouteName] = useState<string | undefined>(undefined);
-  // SS11 TUZATISH: pastki menyu IKKI QATOR bo'lib qolish nuqsoni.
-  // Ilgari global menyu FAQAT `routeName` SATRIGA qarab yashirilardi. Ilova fon'dan
-  // qaytganda (svernut → 10 daq → qayta ochish) shu satr ESKIRIB qolar, natijada
-  // tab ekranida RdTabBar bilan birga GlobalBottomBar ham chiqib, ikkita menyu
-  // ustma-ust turardi. Endi qo'shimcha STRUKTURAVIY tekshiruv: aktiv ILDIZ marshruti
-  // `BottomTabNavigator` bo'lsa — demak RdTabBar allaqachon ko'rinyapti, global
-  // menyu KERAK EMAS (nomi eskirgan bo'lsa ham to'g'ri ishlaydi).
-  const [inTabs, setInTabs] = useState<boolean>(false);
+  // SS-DEV (2026-09-24): `inTabs` holati OLIB TASHLANDI — tab ichidagi alohida
+  // RdTabBar yo'q, shu bois "ikki menyu" xavfi ham, almashinuv flicker'i ham yo'q.
   // Klaviatura ochilganda global pastki menyu (absolyut sibling) OS tomonidan
   // klaviatura ustiga suriladi va "suzib" ko'rinardi. Klaviatura ochiq bo'lsa yashiramiz.
   const [kbVisible, setKbVisible] = useState<boolean>(false);
@@ -156,17 +133,6 @@ const App: React.FC = () => {
       // navigatsiya boshlanishi bilan toast darhol yo'qoladi (osilish yo'q).
       Toast.hide();
       setRouteName(ref.getCurrentRoute?.()?.name);
-      // SS9 ROOT-CAUSE (2-urinish): navigator ierarxiyasi
-      //   Drawer -> "StackNavigator" -> Stack -> "BottomTabNavigator" -> Tab
-      // `getRootState()` DRAWER holatini qaytaradi, uning aktiv marshruti
-      // "StackNavigator". Shu sabab avvalgi `activeRoot === 'BottomTabNavigator'`
-      // tekshiruvi HECH QACHON rost bo'lmagan — nuqson saqlanib qolgan edi.
-      // Endi AKTIV YO'L bo'ylab pastga yuramiz (ichma-ich navigatorlar bo'ylab).
-      try {
-        setInTabs(activePathHas(ref.getRootState?.(), 'BottomTabNavigator'));
-      } catch (_) {
-        setInTabs(false);
-      }
     };
     update();
     const unsub = ref.addListener('state', update);
@@ -193,9 +159,8 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // SS11: `inTabs` — nom eskirsa ham ikki menyu chiqmasligining kafolati.
   const showBottomBar =
-    !!routeName && !HIDE_BOTTOM_BAR.has(routeName) && !inTabs && !kbVisible;
+    !!routeName && !HIDE_BOTTOM_BAR.has(routeName) && !kbVisible;
 
   // Handle initial loading timeout
   useEffect(() => {
@@ -301,7 +266,13 @@ const App: React.FC = () => {
         <ExpirePassportModal />
       </I18nextProvider>
       </View>
-      <Toast config={toastConfig} />
+      {/* SS-DEV (2026-09-24): toast iPhone'da Dynamic Island / status bar OSTIDA
+          qolib ketardi (standart topOffset=40 < insets.top). Endi xavfsiz
+          maydon + 8 — iOS/Android ikkalasida status bar ostida ko'rinadi. */}
+      <Toast config={toastConfig} topOffset={insets.top + 8} />
+      {/* SS-DEV (2026-09-24): pastki xavfsiz maydon (home indicator) chizig'i
+          ilgari OQ edi — sahifa fonи (#f5f7fb) bilan tab bar ostida OQ
+          "bo'shliq" bo'lib ko'rinardi. Endi sahifa rangida. */}
       <View
         style={{
           position: 'absolute',
@@ -309,7 +280,7 @@ const App: React.FC = () => {
           left: 0,
           right: 0,
           height: insets.bottom,
-          backgroundColor: '#fff',
+          backgroundColor: '#f5f7fb',
         }}
       />
     </SafeAreaView>

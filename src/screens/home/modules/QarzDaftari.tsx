@@ -1221,20 +1221,22 @@ const styles = StyleSheet.create({
   },
   warnText: {
     // SS5-2 (2026-09-21): ogohlantirish matni kichraytirildi.
+    // SS-DEV (2026-09-24): yana kichikroq (11 -> 10) — so'rov bo'yicha.
     fontFamily: rd.font.regular,
-    fontSize: rs(11),
+    fontSize: rs(10),
     color: '#92400E',
-    lineHeight: rs(16),
+    lineHeight: rs(14.5),
   },
   warnClose: {
     alignSelf: 'flex-start',
     backgroundColor: AMBER,
     borderRadius: rd.radius.pill,
-    paddingHorizontal: rs(14),
-    paddingVertical: rs(7),
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(5),
     marginTop: rs(2),
   },
-  warnCloseText: { fontFamily: rd.font.semibold, fontSize: rs(12), color: '#fff' },
+  // SS-DEV (2026-09-24): "Tushundim" ham kichikroq (12 -> 10.5).
+  warnCloseText: { fontFamily: rd.font.semibold, fontSize: rs(10.5), color: '#fff' },
 
   // Empty
   emptyBox: { alignItems: 'center', gap: rs(8), paddingVertical: rs(24) },

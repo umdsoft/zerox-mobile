@@ -107,10 +107,18 @@ const ContractModal = () => {
   const markLoaded = useCallback(() => {
     if (loadedAtRef.current) return;
     loadedAtRef.current = Date.now();
-    if (fallbackTimerRef.current) {
-      clearTimeout(fallbackTimerRef.current);
-      fallbackTimerRef.current = null;
-    }
+    /**
+     * SS-DEV (2026-09-24, qayta tekshiruv): ilgari yuklanish bilan fallback
+     * taymeri O'CHIRILARDI. Android'da `enablePaging` bilan `onLoadComplete`
+     * kelib, `onPageChanged` UMUMAN kelmasa (ba'zi qurilmalarda kuzatilgan)
+     * ko'p sahifali hujjatda `maxPage` hech qachon `allPage`ga yetmas —
+     * foydalanuvchi ABADIY qamalib qolardi. Endi fallback taymeri YUKLANISHDAN
+     * boshlab qayta sanaladi (FALLBACK_MS) va faqat HAQIQIY sahifa hodisasi
+     * kelganda o'chiriladi (pastda, onPageChanged). Ungacha darvoza bloklangan
+     * bo'lib turadi: Tasdiqlash ham, checkbox ham ishlamaydi.
+     */
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    fallbackTimerRef.current = setTimeout(() => setEventsFallback(true), FALLBACK_MS);
     readTimerRef.current = setTimeout(() => setReadTimerDone(true), MIN_READ_MS);
   }, []);
 
@@ -278,6 +286,12 @@ const ContractModal = () => {
                   // Android'dagi soxta "oxirgi sahifa" hodisasi; hisobga olinmaydi.
                   if (Date.now() - loadedAtRef.current < SETTLE_MS) {
                     return;
+                  }
+                  // SS-DEV (2026-09-24): HAQIQIY sahifa hodisasi keldi — sahifa
+                  // darvozasi ishlayapti, vaqt-fallback endi kerak emas.
+                  if (fallbackTimerRef.current) {
+                    clearTimeout(fallbackTimerRef.current);
+                    fallbackTimerRef.current = null;
                   }
                   // SS5: eng uzoq borilgan sahifa yig'iladi.
                   setMaxPage(m => Math.max(m, p));

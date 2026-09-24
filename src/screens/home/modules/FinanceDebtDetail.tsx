@@ -21,12 +21,25 @@ import { financeApi } from './financeApi';
 import { fmtCard4 } from '../../../helper/cardBin';
 import { amountToDisplay, amountToRaw, fDate, fMoney, localDateKey, num } from './financeMoney';
 import { DateField } from './financeForm';
-import { MessageIcon, PhoneCallIcon, PhoneIcon, TrashIcon, PlusIcon, HandCoinReturnIcon } from '../redesign/icons';
+import { MessageIcon, PhoneCallIcon, PhoneIcon, TrashIcon, PlusIcon, HandCoinReturnIcon, StorefrontIcon, WarningIcon } from '../redesign/icons';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
 const AMBER = '#f59e0b';
 const BLUE = '#2563eb';
+const ROSE = '#e11d48';
+
+/**
+ * SS-DEV (2026-09-24): QARZDOR shikoyati sabablari — sayt
+ * (`finance/debts/group/_key.vue` complaintReasons) bilan bir xil matn va
+ * backend `SHOP_COMPLAINT_REASONS` kalitlari. Sabab IXTIYORIY: tanlanmasa
+ * izoh majburiy va backend `other` deb saqlaydi.
+ */
+const COMPLAINT_REASONS: { key: string; text: string }[] = [
+  { key: 'not_taken', text: 'Men qarz olmaganman-ku?' },
+  { key: 'fully_paid', text: 'Qarzimni to‘liq qaytargan edim-ku?' },
+  { key: 'partly_paid', text: 'Qarzimni bir qismini qaytarganman-ku?' },
+];
 
 // Qarzni yopish uchun tez-tanlov ulushlari.
 const PAY_PCTS = [
@@ -85,6 +98,12 @@ const FinanceDebtDetail = () => {
   const [incSms, setIncSms] = React.useState(false);
   const [paySms, setPaySms] = React.useState(false); // SS5: to'lov haqida SMS
   const [showSms, setShowSms] = React.useState(false); // SS10: SMS shablonlar modali
+  // SS-DEV (2026-09-24): shikoyat modali (hamkor qaydi / do'kon qarzi bo'yicha).
+  const [showComplaint, setShowComplaint] = React.useState(false);
+  const [complaintReason, setComplaintReason] = React.useState('');
+  const [complaintNote, setComplaintNote] = React.useState('');
+  const [complaintBusy, setComplaintBusy] = React.useState(false);
+  const [complaintSent, setComplaintSent] = React.useState(false);
   // SS2: 'Qarzni qaytarishni talab qilish' — shaxsiy karta rekvizitlari SHART.
   const [payoutCard, setPayoutCard] = React.useState<any>(null);
   const [demanding, setDemanding] = React.useState(false);
@@ -125,6 +144,20 @@ const FinanceDebtDetail = () => {
   const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
   const active = d.status === 'active' && remaining > 0;
   const payments: any[] = d.payments || [];
+  /**
+   * SS-DEV (2026-09-24): do'kon qarzida `phone` yo'q — aloqa raqami
+   * `shop_phone` (do'kon Telegram telefoni yoki egasining telefoni) dan.
+   * SMS/qo'ng'iroq tugmalari shu raqam bilan ishlaydi.
+   */
+  const partyPhone: string = String(d.phone || d.shop_phone || d.owner_phone || '');
+  const shopAddress: string = [d.shop_region, d.shop_district].filter(Boolean).join(', ');
+  /**
+   * SS-DEV (2026-09-24): SHIKOYAT — faqat MEN QARZDOR bo'lgan, qarshi tomon
+   * (hamkor yoki do'kon) yozgan, hali yopilmagan qayd bo'yicha (saytdagi
+   * "Shikoyat qilish" bilan bir xil shart). `can_operate` = men qarz beruvchiman.
+   */
+  const canComplain = isMirror && borrowed && !d.can_operate && d.status !== 'completed' && remaining > 0;
+  const complaintCanSend = !!complaintReason || !!complaintNote.trim();
 
   // SS10: "Amaliyotlar tarixi" — ASL qarz (1-amal) + qo'shimcha qarzlar + to'lovlar.
   // Qo'shimcha qarz markeri: notes 'startsWith __increase__' (ixtiyoriy '|izoh' bilan).
@@ -243,6 +276,36 @@ const FinanceDebtDetail = () => {
     } finally { setDemanding(false); }
   };
 
+  // SS-DEV (2026-09-24): shikoyatni yuborish (sayt `submitComplaint` bilan bir xil).
+  const openComplaint = () => {
+    setComplaintReason('');
+    setComplaintNote('');
+    setComplaintSent(false);
+    setShowComplaint(true);
+  };
+  const submitComplaint = async () => {
+    if (complaintBusy || !complaintCanSend) return;
+    setComplaintBusy(true);
+    try {
+      const body = { reason: complaintReason || 'other', izoh: complaintNote.trim() };
+      const r = d.is_shop_debt
+        ? await financeApi.complainShopDebt(d.id, body)
+        : await financeApi.complainDebt(d.id, body);
+      if (r?.data?.success) {
+        setComplaintSent(true);
+        if (r.data.duplicate) {
+          Toast.show({ type: 'omad', props: { desc: t('Bu shikoyat allaqachon yuborilgan') } });
+        }
+      } else {
+        Toast.show({ type: 'error2', props: { desc: r?.data?.message || t('Xatolik yuz berdi') } });
+      }
+    } catch (e: any) {
+      Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || t('Xatolik yuz berdi') } });
+    } finally {
+      setComplaintBusy(false);
+    }
+  };
+
   const doDelete = async () => {
     try {
       await financeApi.deleteDebt(d.id);
@@ -303,7 +366,8 @@ const FinanceDebtDetail = () => {
   };
   const sendSms = (text?: string) => {
     setShowSms(false);
-    const url = text ? `sms:${d.phone}?body=${encodeURIComponent(text)}` : `sms:${d.phone}`;
+    const to = partyPhone.replace(/\s/g, '');
+    const url = text ? `sms:${to}?body=${encodeURIComponent(text)}` : `sms:${to}`;
     Linking.openURL(url).catch(() => {});
   };
 
@@ -331,16 +395,25 @@ const FinanceDebtDetail = () => {
               </View>
             ) : null}
           </View>
+          {/* SS-DEV (2026-09-24): DO'KON qarzida manzil va telefon endi TEPADA,
+              nom ostida (ilgari pastdagi jadvalda "Do'kon: <nom>" bilan
+              takrorlanardi — nom ikki marta chiqardi). */}
+          {!!shopAddress && !hideParty && d.is_shop_debt && (
+            <View style={styles.phoneRow}>
+              <StorefrontIcon size={rs(15)} color={rd.color.textTertiary} />
+              <Text allowFontScaling={false} style={styles.phoneText} numberOfLines={2}>{shopAddress}</Text>
+            </View>
+          )}
           {/* R21: telefon raqami + SMS/qo'ng'iroq tugmalari (qarz-shartnoma detalidek). */}
-          {!!d.phone && !hideParty && (
+          {!!partyPhone && !hideParty && (
             <View style={styles.phoneRow}>
               <PhoneIcon size={rs(15)} color={rd.color.textTertiary} />
-              <Text allowFontScaling={false} style={styles.phoneText} numberOfLines={1}>{d.phone}</Text>
+              <Text allowFontScaling={false} style={styles.phoneText} numberOfLines={1}>{partyPhone}</Text>
               <View style={styles.phoneActions}>
                 <TouchableOpacity activeOpacity={0.85} onPress={() => setShowSms(true)} style={styles.smsBtn}>
                   <MessageIcon size={rs(15)} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${d.phone}`)} style={styles.callBtn}>
+                <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${partyPhone.replace(/\s/g, '')}`)} style={styles.callBtn}>
                   <PhoneCallIcon size={rs(15)} color="#fff" />
                 </TouchableOpacity>
               </View>
@@ -376,19 +449,8 @@ const FinanceDebtDetail = () => {
           {d.notes ? (
             <Row label={isMirror ? 'Mahsulot yoki izoh' : 'Izoh'} value={d.notes} />
           ) : null}
-          {/* SS6: do'kon qarzida qaysi do'kon ekani va aloqa ma'lumoti. */}
-          {isMirror && d.is_shop_debt && !hideParty ? (
-            <>
-              <Row label={t('Do‘kon')} value={String(d.source_name || '—')} />
-              {!!(d.shop_region || d.shop_district) && (
-                <Row
-                  label={t('Manzil')}
-                  value={[d.shop_region, d.shop_district].filter(Boolean).join(', ')}
-                />
-              )}
-              {!!d.shop_phone && <Row label={t('Do‘kon telefoni')} value={String(d.shop_phone)} />}
-            </>
-          ) : null}
+          {/* SS-DEV (2026-09-24): do'kon nomi/manzili/telefoni bu yerdan OLIB
+              TASHLANDI — ular yuqoridagi sarlavha kartasida (nom ostida). */}
           {/* SS5: qarz QACHON qayd etilgani (sana + vaqt) — tafsilotda kerak. */}
           {!!d.created_at && (
             <Row
@@ -411,15 +473,29 @@ const FinanceDebtDetail = () => {
         {isMirror ? (
           <View style={styles.mirrorNote}>
             <Text allowFontScaling={false} style={styles.mirrorNoteTitle}>
-              {t('👁 Kuzatuv rejimi')}
+              {d.is_shop_debt ? t('👁 Kuzatuv rejimi') : t('🤝 Hamkor qaydi')}
             </Text>
+            {/* SS-DEV (2026-09-24): matnlar SAYT bilan bir xil
+                (`finance/debts/group/_key.vue` — "hamkor qaydi" modali). */}
             <Text allowFontScaling={false} style={styles.mirrorNoteText}>
               {d.is_shop_debt
-                ? t('Bu yozuv do‘kon daftarida yuritiladi. Siz uni shu yerdan kuzatib borasiz — yopish va tahrirlashni do‘kon egasi bajaradi.')
-                : t('Bu yozuvni hamkoringiz o‘z daftarida yuritmoqda. Siz uni shu yerdan kuzatib borasiz — yopish va tahrirlashni hamkoringiz bajaradi.')}
+                ? t('Bu qarz do‘kon tomonidan yuritiladi — faqat ko‘rish. Yopish/o‘zgartirish do‘kon egasining qo‘lida.')
+                : d.can_operate
+                ? t('Bu qarzni «{{name}}» kiritgan — siz qarz beruvchisiz, shuning uchun to‘lov qayd etish, talab qilish va voz kechish sizda.', { name: d.source_name || '' })
+                : t('Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — sizga faqat ko‘rish ochiq.', { name: d.source_name || '' })}
             </Text>
           </View>
         ) : null}
+
+        {/* SS-DEV (2026-09-24): SHIKOYAT QILISH — saytdagi kabi (do'kon qarzi va
+            hamkor qaydi): 3 sabab + ixtiyoriy izoh; qarz bergan tomonga
+            bildirishnoma boradi. */}
+        {canComplain && (
+          <TouchableOpacity activeOpacity={0.85} onPress={openComplaint} style={styles.complainBtn}>
+            <WarningIcon size={rs(17)} color={ROSE} />
+            <Text allowFontScaling={false} style={styles.complainText}>{t('Shikoyat qilish')}</Text>
+          </TouchableOpacity>
+        )}
 
         {/* img4: Amallar — "Yangi qarz" + "Qarzni yopish" (qarz daftaridagidek). */}
         {!isMirror && (
@@ -508,8 +584,10 @@ const FinanceDebtDetail = () => {
           })}
         </View>
 
-        {/* O'chirish — ko'zgu qarzda YO'Q (faqat kiritgan tomon o'chira oladi). */}
-        {!isMirror && (
+        {/* O'chirish — ko'zgu qarzda YO'Q (faqat kiritgan tomon o'chira oladi).
+            SS-DEV (2026-09-24): JARAYONDAGI (faol) qarzda ham YO'Q — faqat
+            tugallangan (yopilgan) qarzni o'chirish mumkin (so'rov bo'yicha). */}
+        {!isMirror && !active && (
         <TouchableOpacity style={styles.delBtn} onPress={() => setShowDel(true)} activeOpacity={0.85}>
           <TrashIcon size={rs(18)} color={RED} />
           <Text allowFontScaling={false} style={styles.delText}>{t('Qarzni o‘chirish')}</Text>
@@ -641,6 +719,79 @@ const FinanceDebtDetail = () => {
         </View>
       </Modal>
 
+      {/* SS-DEV (2026-09-24): SHIKOYAT modali — sayt bilan bir xil oqim. */}
+      <Modal visible={showComplaint} transparent animationType="fade" statusBarTranslucent onRequestClose={() => !complaintBusy && setShowComplaint(false)}>
+        <View style={styles.backdrop}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => !complaintBusy && setShowComplaint(false)} />
+          <View style={styles.confirmCard}>
+            <View style={styles.complainIconWrap}>
+              <WarningIcon size={rs(26)} color="#b91c1c" />
+            </View>
+            <Text allowFontScaling={false} style={[styles.confirmTitle, styles.centerText]}>{t('Qarz bo‘yicha shikoyat')}</Text>
+            <Text allowFontScaling={false} style={[styles.confirmText, styles.centerText]}>
+              «{d.source_name}» — {fMoney(remaining, d.currency)}.
+              {!complaintSent
+                ? ' ' + (d.is_shop_debt
+                    ? t('Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.')
+                    : t('Shikoyat qarz bergan odamga bildirishnoma sifatida yuboriladi.'))
+                : ''}
+            </Text>
+            {!complaintSent ? (
+              <>
+                <Text allowFontScaling={false} style={styles.formLabel}>
+                  {t('Sababni tanlang')} <Text style={styles.formLabelHint}>({t('yoki pastda izoh yozing')})</Text>:
+                </Text>
+                {COMPLAINT_REASONS.map(r => {
+                  const on = complaintReason === r.key;
+                  return (
+                    <TouchableOpacity
+                      key={r.key}
+                      activeOpacity={0.85}
+                      onPress={() => setComplaintReason(on ? '' : r.key)}
+                      style={[styles.reasonBtn, on && styles.reasonBtnOn]}>
+                      <Text allowFontScaling={false} style={[styles.reasonText, on && styles.reasonTextOn]}>{t(r.text)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+                <TextInput
+                  allowFontScaling={false}
+                  value={complaintNote}
+                  onChangeText={v => setComplaintNote(v.slice(0, 500))}
+                  multiline
+                  placeholder={complaintReason ? t('Qo‘shimcha izoh (ixtiyoriy)') : t('Sabab tanlanmasa — izoh yozing (majburiy)')}
+                  placeholderTextColor={rd.color.textTertiary}
+                  style={[styles.modalInput, styles.complainInput]}
+                />
+                <View style={[styles.confirmBtns, { marginTop: rs(14) }]}>
+                  <TouchableOpacity style={styles.cancelBtn} disabled={complaintBusy} onPress={() => setShowComplaint(false)}>
+                    <Text allowFontScaling={false} style={styles.cancelText}>{t('Bekor qilish')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.confirmDel, { backgroundColor: ROSE }, (complaintBusy || !complaintCanSend) && { opacity: 0.6 }]}
+                    disabled={complaintBusy || !complaintCanSend}
+                    onPress={submitComplaint}>
+                    <Text allowFontScaling={false} style={styles.confirmDelText}>{complaintBusy ? '...' : t('Yuborish')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.complainDone}>
+                  <Text allowFontScaling={false} style={styles.complainDoneText}>
+                    {d.is_shop_debt
+                      ? t('Shikoyat do‘kon egasiga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.')
+                      : t('Shikoyat qarz bergan odamga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.')}
+                  </Text>
+                </View>
+                <TouchableOpacity style={[styles.confirmDel, { backgroundColor: GREEN, marginTop: rs(14) }]} onPress={() => setShowComplaint(false)}>
+                  <Text allowFontScaling={false} style={styles.confirmDelText}>Ok</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={showDel} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowDel(false)}>
         <View style={styles.backdrop}>
           <View style={styles.confirmCard}>
@@ -752,6 +903,19 @@ const styles = StyleSheet.create({
   },
   mirrorNoteTitle: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: AMBER, marginBottom: rs(4) },
   mirrorNoteText: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary, lineHeight: rs(18) },
+  // SS-DEV (2026-09-24): shikoyat tugmasi va modali (sayt uslubida — pushti/rose).
+  complainBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(8), height: rs(46), borderRadius: rd.radius.md, backgroundColor: '#fff1f2', borderWidth: 1, borderColor: ROSE + '33', marginTop: rs(10) },
+  complainText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: '#be123c' },
+  complainIconWrap: { alignSelf: 'center', width: rs(52), height: rs(52), borderRadius: rs(26), backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center', marginBottom: rs(10) },
+  reasonBtn: { borderWidth: 1, borderColor: rd.color.border, borderRadius: rd.radius.md, paddingHorizontal: rs(14), paddingVertical: rs(11), marginTop: rs(8), backgroundColor: rd.color.surface },
+  reasonBtnOn: { borderColor: ROSE, backgroundColor: '#fff1f2' },
+  reasonText: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.text },
+  reasonTextOn: { color: '#9f1239' },
+  centerText: { textAlign: 'center' },
+  formLabelHint: { fontFamily: rd.font.regular, color: rd.color.textTertiary },
+  complainInput: { height: rs(76), marginTop: rs(10), paddingTop: rs(10), textAlignVertical: 'top', fontFamily: rd.font.regular, fontSize: rs(13.5) },
+  complainDone: { flexDirection: 'row', gap: rs(8), backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: rd.radius.md, padding: rs(12) },
+  complainDoneText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(13), color: '#166534', lineHeight: rs(19) },
   delBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(8), height: rs(48), borderRadius: rd.radius.md, backgroundColor: RED + '10', marginTop: rs(16) },
   delText: { fontFamily: rd.font.semibold, fontSize: rs(14), color: RED },
 

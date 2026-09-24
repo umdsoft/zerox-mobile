@@ -18,8 +18,6 @@ import { Dimensions, StyleSheet } from 'react-native';
 
 import { style } from '../theme/style';
 import { Statistic } from './Index';
-import MainBottomTab from './MainBottomTab';
-import RdTabBar from './RdTabBar';
 import HomeRedesign from '../screens/home/redesign/HomeRedesign';
 // Qarz shartnomasi / Qarz daftari endi HAQIQIY TAB (avval stack ekrani edi).
 // Sabab: pastki paneldan o'tishda SLAYD animatsiyasi ko'rinardi va Asosiyga
@@ -53,9 +51,11 @@ export const BottomTabNavigator = () => {
        * `order` — pastki menyudagi TARTIBDA bitta oldingi bo'limga qaytadi.
        */
       backBehavior="order"
-      // Panel PASTDA (ko'rinish bottom-tabs bilan bir xil).
+      // SS-DEV (2026-09-24): navigator ichidagi panel YO'Q — pastki menyu
+      // endi App.tsx'dagi yagona GlobalBottomBar (tab/detal almashinuvida
+      // flicker bo'lmasligi uchun). `tabBarPosition` shunchaki joylashuv.
       tabBarPosition="bottom"
-      tabBar={props => <RdTabBar {...props} />}
+      tabBar={() => null}
       screenOptions={{
         // SS8: chapdan-o'ngga surish yoqilgan.
         swipeEnabled: true,

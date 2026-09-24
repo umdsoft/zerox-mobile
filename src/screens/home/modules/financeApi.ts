@@ -93,6 +93,16 @@ export const financeApi = {
   demandRepayment: (id: any) => axios.post(`${base}/debts/${id}/demand`, {}, auth()),
   // SS4 (2026-09-19): kontragent sahifasidan qarzdan voz kechish.
   forgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/forgive`, {}, auth()),
+  // SS-DEV (2026-09-24): QARZDOR shikoyati — qarshi tomon (hamkor yoki do'kon)
+  // noto'g'ri yozgan qarz bo'yicha. Backend `parseComplaintInput`: `reason` —
+  // 'not_taken' | 'fully_paid' | 'partly_paid' | 'other' (ixtiyoriy), `izoh` —
+  // sabab tanlanmasa MAJBURIY (500 belgigacha). Javob: { success, duplicate? }.
+  //   odam-odam: POST /finance/debts/:id/complaint (personal_debts.id)
+  //   do'kon:    POST /finance/debts/shop/:qarzId/complaint ("shop_12" ham qabul qilinadi)
+  complainDebt: (id: any, body: { reason?: string; izoh?: string }) =>
+    axios.post(`${base}/debts/${id}/complaint`, body, auth()),
+  complainShopDebt: (id: any, body: { reason?: string; izoh?: string }) =>
+    axios.post(`${base}/debts/shop/${id}/complaint`, body, auth()),
 
   // ── Qarzdorlar (Debtors reliability) ──
   getDebtors: () => axios.get(`${base}/debtors`, auth()),

@@ -953,6 +953,36 @@ const HomeRedesign = () => {
     url: `${URL}/qarz-daftari/dashboard${homeShopQs}`,
     method: 'GET',
   });
+  /**
+   * 🔴 SS-DEV ILDIZ SABAB (2026-09-24): bosh sahifadagi "Shaxsiy qarz" kartasi
+   * bilan "Shaxsiy qarz" bo'limi summalari FARQ qilardi. Karta `/home/analytics`
+   * (`analytics.debts.*`) dan olardi — u FAQAT foydalanuvchining O'ZI kiritgan
+   * `personal_debts` yozuvlarini qo'shadi. Bo'lim esa `/finance/debts/stats`
+   * dan oladi — unda HAMKOR QAYDLARI (boshqa foydalanuvchi meni qarzdor/qarz
+   * beruvchi deb kiritgan) va DO'KON (qarz daftari) qarzlari ham bor.
+   * Endi ikkala ekran BITTA manba — `/finance/debts/stats` (valyuta bo'yicha).
+   * Stats hali kelmagan bo'lsa analytics'ga (eski manba) qaytiladi.
+   */
+  const debtStats = useFetch({ url: `${URL}/finance/debts/stats`, method: 'GET' });
+  const debtStatsData: any = (debtStats.data as any)?.data || null;
+  const curTotal = (arr: any[] | undefined, cur: string): number =>
+    Array.isArray(arr) ? arr.reduce((s, x) => (x?.currency === cur ? s + Number(x?.total || 0) : s), 0) : 0;
+  // Bo'limda qarz qo'shilgach bosh sahifaga qaytilganda karta ESKIRMASIN:
+  // har fokusda (birinchisidan tashqari) va pull-to-refresh'da jim yangilanadi.
+  const refreshDebtStats = debtStats.onRefresh;
+  const debtStatsFirstFocus = React.useRef(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (debtStatsFirstFocus.current) {
+        debtStatsFirstFocus.current = false;
+        return;
+      }
+      refreshDebtStats({});
+    }, [refreshDebtStats]),
+  );
+  React.useEffect(() => {
+    if (refreshing) refreshDebtStats({});
+  }, [refreshing, refreshDebtStats]);
   const dashFresh: any = (daftariDash.data as any)?.data || daftariDash.data || {};
   // Yangi javob TO'LIQ kelgan bo'lsa keshni yangilaymiz; aks holda (remount'da
   // bo'sh bo'lganda) oldingi keshdan foydalanamiz -> summalar sakramaydi.
@@ -1166,10 +1196,10 @@ const HomeRedesign = () => {
           info="Shaxsiy qarz — bu tanishlaringiz bilan o‘zaro oldi-berdi munosabatlaringiz. Bergan va olgan qarzlaringizni tizimda ro‘yxatdan o‘tkazish orqali moliyaviy holatingizni doimiy kuzatib borasiz."
           debLabel="Berilgan qarz"
           credLabel="Olingan qarz"
-          debUzs={uzsText(numv(analytics?.debts?.lent_uzs))}
-          debUsd={usdText(numv(analytics?.debts?.lent_usd))}
-          credUzs={uzsText(numv(analytics?.debts?.borrowed_uzs))}
-          credUsd={usdText(numv(analytics?.debts?.borrowed_usd))}
+          debUzs={uzsText(debtStatsData ? curTotal(debtStatsData.lent_by_currency, 'UZS') : numv(analytics?.debts?.lent_uzs))}
+          debUsd={usdText(debtStatsData ? curTotal(debtStatsData.lent_by_currency, 'USD') : numv(analytics?.debts?.lent_usd))}
+          credUzs={uzsText(debtStatsData ? curTotal(debtStatsData.borrowed_by_currency, 'UZS') : numv(analytics?.debts?.borrowed_uzs))}
+          credUsd={usdText(debtStatsData ? curTotal(debtStatsData.borrowed_by_currency, 'USD') : numv(analytics?.debts?.borrowed_usd))}
           onPress={() => nav('FinanceDebts')}
         />
       </ScrollView>

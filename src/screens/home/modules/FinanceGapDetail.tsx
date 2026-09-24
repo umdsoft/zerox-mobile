@@ -60,6 +60,9 @@ const GREEN = '#16a34a';
  * shu bois faqat KUN qismi solishtiriladi.
  */
 const isRoundOverdue = (r: any): boolean => {
+  // SS-DEV (2026-09-24): backend `round_expired` bayrog'ini qo'shmoqda — javobda
+  // bo'lsa o'sha ustun (server vaqti bo'yicha), bo'lmasa sanaga qarab.
+  if (typeof r?.round_expired === 'boolean') return r.round_expired;
   const raw = r?.due_date;
   if (!raw) return false;
   const d = new Date(String(raw).replace(' ', 'T'));
@@ -745,10 +748,9 @@ const FinanceGapDetail = () => {
                   SS1 (2026-09-18): tugma MUDDATGA ham qaraydi.
                     • muddat KELMAGAN      → joy bor bo'lsa "Taklif yuborish",
                                              yo'q bo'lsa "To'lov haqida ogohlantirish";
-                    • muddat O'TGAN, to'lov to'liq EMAS → faqat
-                                             "To'lov haqida ogohlantirish"
-                                             (o'tib ketgan uchrashuvga taklif mantiqsiz);
-                    • muddat O'TGAN va hammasi to'langan → HECH NARSA.
+                    • muddat O'TGAN → HECH NARSA (SS-DEV 2026-09-24: ilgari
+                      "To'lov haqida ogohlantirish" qolardi — muddati o'tgan
+                      navbat uchun u ham yuborilmasin, so'rov bo'yicha).
                 */}
                 {(() => {
                   const allPaid =
@@ -756,9 +758,9 @@ const FinanceGapDetail = () => {
                     Number(r.paid_count || 0) >= Number(r.total_count || 0);
                   const overdue = isRoundOverdue(r);
                   const show =
-                    isOpen && canSetVenue(r) && r.status !== 'completed' && !allPaid;
+                    isOpen && canSetVenue(r) && r.status !== 'completed' && !allPaid && !overdue;
                   if (!show) return null;
-                  const asInvite = !overdue && !!r.venue;
+                  const asInvite = !!r.venue;
                   return (
                   <TouchableOpacity
                     style={[styles.inviteBtn, invitingRound === r.id && { opacity: 0.6 }]}
