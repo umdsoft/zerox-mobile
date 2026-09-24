@@ -22,6 +22,7 @@ import axios, { AxiosInstance } from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { forceLogout, isSessionRevokedError } from '../../helper/forceLogout';
+import { getDeviceUserAgent } from '../../helper/userAgent';
 
 const REFRESH_PATH = '/user/refresh-token';
 
@@ -83,6 +84,21 @@ export const refreshAccessToken = (): Promise<string | null> => {
   return refreshPromise;
 };
 
+/**
+ * SS-AUDIT (2026-09-25): 401 SESSION_REVOKED javobi JORIY token bilan yuborilgan
+ * so'rovnikimi? Eski (logout'dan oldingi) so'rovning kech javobi foydalanuvchi
+ * qayta kirgach kelsa, yangi sessiyani o'chirib yubormasin. Token yo'q — allaqachon
+ * chiqilgan.
+ */
+const requestUsesCurrentToken = (error: any): boolean => {
+  const cur = storage.getString('token');
+  if (!cur) return false;
+  const h = error?.config?.headers;
+  const auth = typeof h?.get === 'function' ? h.get('Authorization') : h?.Authorization;
+  if (!auth) return true;
+  return String(auth) === `Bearer ${cur}`;
+};
+
 const isExpiredError = (error: any): boolean => {
   const status = error?.response?.status;
   const msg = error?.response?.data?.message;
@@ -100,7 +116,7 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
       // backend 401 + code:'SESSION_REVOKED'. Refresh urinib o'tirmaymiz (u ham
       // shu sessiyada, baribir rad etiladi) — darhol majburiy chiqamiz.
       if (isSessionRevokedError(error)) {
-        forceLogout('revoked');
+        if (requestUsesCurrentToken(error)) forceLogout('revoked');
         return Promise.reject(error);
       }
 
@@ -114,8 +130,13 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
         original._retry = true;
         const newToken = await refreshAccessToken();
         if (newToken) {
-          original.headers = original.headers || {};
-          original.headers.Authorization = `Bearer ${newToken}`;
+          // SS-AUDIT (2026-09-25): AxiosHeaders bo'lsa `set` — xom yozuv boshqa
+          // registrdagi ('authorization') kalit bilan IKKI header yuborishi mumkin edi.
+          if (original.headers && typeof original.headers.set === 'function') {
+            original.headers.set('Authorization', `Bearer ${newToken}`);
+          } else {
+            original.headers = { ...(original.headers || {}), Authorization: `Bearer ${newToken}` };
+          }
           return instance(original);
         }
       }
@@ -127,5 +148,11 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
 
 // Default global axios instansiyasi — barcha xom `axios.get/post(URL + ...)` chaqiruvlari.
 installAuthRefresh(axios);
+
+// SS-AUDIT (2026-09-25): qurilmaga xos User-Agent — default instansiya orqali
+// ketadigan BARCHA qo'lda `axios.*(URL + ...)` chaqiruvlar (login/refresh ham)
+// qamraladi. Sabab: backend sessiyalarni `user_agent` bo'yicha ajratadi, Android
+// default `okhttp/4.12.0` esa barcha telefonlarda bir xil (qarang helper/userAgent.ts).
+axios.defaults.headers.common['User-Agent'] = getDeviceUserAgent();
 
 export {};

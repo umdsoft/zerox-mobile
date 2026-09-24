@@ -1,8 +1,6 @@
 import {
   ActivityIndicator,
-  Image,
   Modal as RNModal,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -12,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
-import {normalize, style} from '../../theme/style';
 import {rd, rs} from '../../theme/rd';
 import {
   UserIcon,
@@ -24,37 +21,19 @@ import {
   AvatarPersonIcon,
   CheckIcon, MonitorIcon,} from '../home/redesign/icons';
 
-import messaging from '@react-native-firebase/messaging';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {storage} from '../../store/api/token/getToken';
-import ProfileIcon from '../../images/Profile';
-import ContractIcon from '../../images/Contract';
-import SecurityIcon from '../../images/Security';
-import LanguageIcon from '../../images/Language';
-import ExitIcon from '../../images/Exit';
-import Person from '../../images/home/person';
-import Juridic from '../../images/home/juridic';
-import ScreenLayout from '../components/ScreenLayout';
 import RdHeader from '../home/redesign/RdHeader';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   checkUpdate,
-  setEmptyUser,
-  setNotification,
   showModal,
 } from '../../store/reducers/HomeReducer';
-import Famale from '../../images/Famale';
-import MainText from '../components/MainText';
-import {colors} from '../../theme/colors';
-import {fontSize} from '../../theme/font';
 // import {t} from 'i18next';
 import {useTranslation} from 'react-i18next';
-import {URL, PDF_OFERTA_URL} from '../constants';
-import notifee from '@notifee/react-native';
-import {NotificationBadgeModule} from '../../nativemodule/notificationBadge';
-import socketService from '../../helper/socketService';
-import Main from '../home/Main';
+import { PDF_OFERTA_URL } from '../constants';
 import {expire_passport_check} from '../../helper/timeChecker';
+import {forceLogout} from '../../helper/forceLogout';
+import {storage} from '../../store/api/token/getToken';
 
 const UserScreen = () => {
   const route = useRoute();
@@ -101,28 +80,11 @@ const UserScreen = () => {
   //   // dispatch(onListTimePostAction({device_id}));
   // }, []);
 
-  const deleteToken = useCallback(async () => {
-    // await dispatch(setNotification({notification: []}));
-    dispatch(checkUpdate({update: false}));
-    socketService.disconnect();
-    await messaging().deleteToken();
-  }, []);
 
   const isIndividual = user?.data?.type === 2;
   const displayName = isIndividual
     ? `${user?.data?.first_name || ''} ${user?.data?.last_name || ''}`.trim()
     : user?.data?.company || user?.data?.director || '';
-  const displaySub = isIndividual
-    ? user?.data?.middle_name || user?.data?.phone || ''
-    : user?.data?.director || '';
-  const initials = (() => {
-    if (isIndividual) {
-      const a = (user?.data?.first_name || '')[0] || '';
-      const b = (user?.data?.last_name || '')[0] || '';
-      return (a + b).toUpperCase() || 'U';
-    }
-    return ((user?.data?.company || 'Z')[0] || 'Z').toUpperCase();
-  })();
   // Tasdiqlangan foydalanuvchida "Identifikatsiyadan o'tish" FAQAT pasport muddati
   // o'tганда chiqadi (so'rov). 🔴 ROOT: expiry_date bo'sh/null bo'lса
   // `new Date(null)`=1970 (o'tган kun) → expire_passport_check TRUE qaytarib,
@@ -275,17 +237,12 @@ const UserScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <ExitModal
-        hide={hide}
-        setHide={setHide}
-        navigation={navigation}
-        deleteToken={deleteToken}
-      />
+      <ExitModal hide={hide} setHide={setHide} />
     </View>
   );
 };
 
-const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
+const ExitModal = ({hide, setHide}) => {
   const {t} = useTranslation();
   const [loading, setLoading] = useState(false);
   // KRITIK: `dispatch` ExitModal'ning O'Z scope'ida bo'lishi SHART. Ilgari onLogOut
@@ -294,38 +251,20 @@ const ExitModal = ({hide, setHide, navigation, deleteToken}) => {
   // dispatch is not defined" berardi → UserScreen ochilishi bilan CRASH (avatar bosilganda).
   const dispatch = useDispatch();
 
+  // SS-AUDIT (2026-09-25): chiqish endi YAGONA yo'l — helper/forceLogout('user')
+  // (socket uzish, FCM token, badge, MMKV, RESET_STORE, drawer + navigatsiya reset).
+  // Ilgari bu yerda o'sha qadamlarning ikkinchi nusxasi bor edi.
   const onLogOut = useCallback(async () => {
-    // HAR DOIM ishlaydigan yakuniy tozalash — deleteToken muvaffaqiyatli bo'lsa ham,
-    // xato bersa ham. Aks holda logout jim no-op bo'lib, oldingi foydalanuvchi
-    // ma'lumotlari (MMKV + Redux) qolib, keyingi foydalanuvchiga aralashib ketardi.
-    const finishLogout = () => {
-      if (Platform.OS === 'ios') {
-        notifee.setBadgeCount(0).then(() => {});
-      } else {
-        NotificationBadgeModule.setBadgeOnlyNumber(0);
-      }
-      storage.clearAll(); // MMKV (token/PIN/user_id...)
-      dispatch({ type: 'RESET_STORE' }); // Redux BARCHA slice initial holatiga
-      navigation.reset({
-        routes: [{ name: 'SelectLanguageScreen' }],
-        index: 0,
-      });
-      setHide(false);
-      setLoading(false);
-    };
+    setLoading(true);
+    dispatch(checkUpdate({update: false}));
     try {
-      setLoading(true);
-      deleteToken()
-        .then(finishLogout)
-        .catch((error: any) => {
-          console.error('Error deleting token:', error);
-          finishLogout();
-        });
+      await forceLogout('user');
     } catch (error) {
       console.error('Error during logout:', error);
-      finishLogout();
     }
-  }, [deleteToken, dispatch, navigation, setHide]);
+    setHide(false);
+    setLoading(false);
+  }, [dispatch, setHide]);
 
   return (
     <RNModal
@@ -419,11 +358,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(30),
-    color: rd.color.primary,
-  },
   profileMeta: {
     alignItems: 'center',
     marginTop: rs(14),
@@ -434,12 +368,6 @@ const styles = StyleSheet.create({
     fontSize: rs(15.5),
     color: rd.color.text,
     textAlign: 'center',
-  },
-  profileSub: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
-    color: rd.color.textSecondary,
-    marginTop: rs(3),
   },
   // Tasdiq holati belgisi (yashil = tasdiqlangan, sariq = tasdiqlanmagan).
   verifyChip: {
@@ -469,19 +397,6 @@ const styles = StyleSheet.create({
   verifyText: { fontFamily: rd.font.semibold, fontSize: rs(11) },
   verifyTextOk: { color: rd.color.success },
   verifyTextWarn: { color: rd.color.warning },
-  statusChip: {
-    alignSelf: 'flex-start',
-    marginTop: rs(8),
-    backgroundColor: rd.color.warningBg,
-    borderRadius: rd.radius.pill,
-    paddingHorizontal: rs(10),
-    paddingVertical: rs(4),
-  },
-  statusChipText: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(11.5),
-    color: rd.color.warning,
-  },
   ctaButton: {
     backgroundColor: rd.color.primary,
     borderRadius: rd.radius.md,
@@ -541,34 +456,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: rd.color.border,
     marginLeft: rs(14) + rs(40) + rs(12),
-  },
-  btn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '48%',
-    height: normalize(40),
-    backgroundColor: style.blue,
-    borderRadius: 12,
-  },
-  brnCn: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginTop: 20,
-  },
-  titlex: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xx,
-  },
-  modal: {
-    width: '90%',
-    backgroundColor: '#fff',
-    alignSelf: 'center',
-    borderRadius: 12,
-    padding: 10,
-
-    // height: normalize(110),
-    // maxHeight: normalize(110),
   },
   // ── Chiqish (logout) modali — professional, xira backdrop.
   exitBackdrop: {
@@ -657,65 +544,5 @@ const styles = StyleSheet.create({
     fontSize: rs(15),
     color: rd.color.onPrimary,
   },
-  active: {
-    backgroundColor: style.blue,
-    borderRadius: 9,
-    paddingVertical: 9,
-    paddingHorizontal: 8,
-    marginTop: 12,
-  },
-  TouchableOpacity: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 10,
-    marginTop: 5,
-  },
-  optionTx: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 3,
-    color: '#000',
-    marginLeft: 5,
-  },
-  name: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 3,
-    color: '#000',
-  },
-  info: {
-    marginTop: 5,
-    maxWidth: '100%',
-  },
-  title: {
-    fontFamily: style.fontFamilyMedium,
-    fontSize: style.fontSize.xa + 1,
-    color: style.blue,
-  },
-  userImageContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
-  aboutUsContainer: {
-    backgroundColor: '#EAF2FB',
-
-    borderRadius: 15,
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    paddingBottom: 20,
-    marginBottom: 5,
-  },
 });

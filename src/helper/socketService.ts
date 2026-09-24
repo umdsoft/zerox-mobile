@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
 import { onTokenRefreshed } from '../store/api/authInterceptor';
 import { forceLogout } from './forceLogout';
+import { getDeviceUserAgent } from './userAgent';
 import { SOCKET_URL } from '../screens/constants';
 import { Store } from '../store/store/Store';
 import {
@@ -16,53 +17,17 @@ import {
 import i18next from 'i18next';
 import ReturnName from './returnName';
 import { sortText } from '../screens/components/StatisticCard';
-import { settingDate } from '../screens/other/UserDetails';
+import { settingDate } from './index';
 import { getFullName } from '../screens/home/notifications/all/QarzShartnomasiRejectTime';
 
-// TypeScript Interfaces
-interface RegisteredResponse {
-  success: boolean;
-  userId: number;
-  deviceCount: number;
-}
-
-interface SubscribedResponse {
-  success: boolean;
-  room: string;
-}
-
-interface ActiveSessionsResponse {
-  success: boolean;
-  deviceCount: number;
-  timestamp: number;
-}
-
-interface MeResponse {
-  user: UserData;
-  timestamp: number;
-}
-
-interface MeeeResponse {
-  user: UserData;
-}
-
-interface UserData {
-  id: number;
-  balance: number;
-  first_name: string;
-  last_name: string;
-}
-
-interface PongResponse {
-  timestamp: number;
-}
-
+// SS-AUDIT (2026-09-25): ishlatilmagan tiplar (Registered/Subscribed/ActiveSessions/
+// Me/Pong) va tashqi callback maydonlari (onRegistered, onUserDataUpdate, ...)
+// olib tashlandi — ularni hech kim o'rnatmas, handlerlar faqat foydalanuvchi
+// obyekti/balansini console'ga yozardi.
 interface ErrorResponse {
   code: 'INVALID_USER_ID' | 'RATE_LIMIT' | 'UNAUTHORIZED';
   message: string;
 }
-
-type SocketEventCallback<T = any> = (data: T) => void;
 
 class SocketService {
   private socket: Socket | null = null;
@@ -70,19 +35,21 @@ class SocketService {
   private isDisplayingNotification = false;
   private userId: string | null = null;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
-  private deviceCount = 0;
   private tokenRefreshUnsub: (() => void) | null = null;
+  // SS-AUDIT (2026-09-25): updateToken() ichidagi ATAYLAB uzish — 'disconnect'
+  // handler buni logout deb bilib `isInitialized=false` qilmasin. Ilgari har
+  // token-refresh (30 daqiqa)dan keyin shunday bo'lar, keyingi init() esa eski
+  // socketni uzmasdan IKKINCHI socket yaratardi (ikki marta listener/bildirishnoma).
+  private reconnecting = false;
 
-  // Callbacks for external listeners
-  public onRegistered: SocketEventCallback<RegisteredResponse> | null = null;
-  public onUserDataUpdate: SocketEventCallback<MeeeResponse> | null = null;
-  public onActiveSessionsUpdate: SocketEventCallback<ActiveSessionsResponse> | null =
-    null;
-  public onError: SocketEventCallback<ErrorResponse> | null = null;
-  public onConnectionChange: ((connected: boolean) => void) | null = null;
+  // SS-AUDIT (2026-09-25): 'connect'dan keyin qayta ro'yxatdan o'tish — YAGONA
+  // handler (ilgari har updateToken/restart'da yangi once() qo'shilib, oflayn
+  // paytda to'planib qolardi -> N marta 'register').
+  private registerOnConnect = () => {
+    if (this.userId) this.initSubscribeWithId(this.userId);
+  };
 
   async init(id: string): Promise<void> {
-    console.log('Initializing socket with id:', id);
     if (!id) {
       throw new Error('Cannot initialize socket: uidx is required');
     }
@@ -92,9 +59,14 @@ class SocketService {
       throw new Error('Cannot initialize socket: token is missing');
     }
 
-    if (this.isInitialized) {
-      console.warn('Socket already initialized. Call restart() to reconnect.');
+    if (this.isInitialized && this.socket) {
       return;
+    }
+
+    // SS-AUDIT (2026-09-25): eski socket obyekti qolgan bo'lsa — avval TO'LIQ
+    // uzamiz (reconnection:Infinity bilan jonli qolib ketmasin).
+    if (this.socket) {
+      this.teardownSocket();
     }
 
     this.userId = id;
@@ -130,11 +102,14 @@ class SocketService {
       auth: {
         token,
       },
+      // SS-AUDIT (2026-09-25): polling (XHR) so'rovlari ham qurilmaga xos UA
+      // bilan ketsin — HTTP so'rovlar bilan bir xil qurilma identifikatsiyasi.
+      extraHeaders: { 'User-Agent': getDeviceUserAgent() },
     });
 
     this.isInitialized = true;
 
-    // Access token yangilanganда (authInterceptor refresh) socket query'sidagi eski
+    // Access token yangilanganda (authInterceptor refresh) socket auth'idagi eski
     // token endi yaroqsiz — yangi token bilan qayta ulanamiz (realtime uzilmasin).
     if (!this.tokenRefreshUnsub) {
       this.tokenRefreshUnsub = onTokenRefreshed(newToken =>
@@ -142,35 +117,26 @@ class SocketService {
       );
     }
 
-    // Connection events
     this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
-      this.onConnectionChange?.(true);
       this.startPingInterval();
     });
 
-    this.socket.on('connect_error', error => {
-      // console.error('Connection error:', error.message);
-    });
-
-    // Server JWT'ni rad etsa (yaroqsiz/eskirgan token yoki noto'g'ri server) — oldin
-    // bu JIM disconnect edi (realtime nega ishlamasligi ko'rinmasdi). Endi loglaymiz.
+    // Server JWT'ni rad etsa (yaroqsiz/eskirgan token yoki noto'g'ri server).
     this.socket.on('auth_error', (data: { message?: string }) => {
       console.warn('Socket auth_error:', data?.message);
-      this.onConnectionChange?.(false);
     });
 
     this.socket.on('disconnect', reason => {
-      console.log('Socket disconnected:', reason);
-      this.onConnectionChange?.(false);
       this.stopPingInterval();
       if (reason === 'io client disconnect') {
+        // updateToken() ichidagi qayta ulanish — holat saqlanadi.
+        if (this.reconnecting) return;
         // Ataylab uzildi (logout) — qayta ulanmaymiz.
         this.isInitialized = false;
         return;
       }
       // 'io server disconnect' — socket.io buni AVTO qayta ulamaydi (yagona holat).
-      // Server qayta ishga tushsa yoki ulanishni majburан uzsa, socket o'lik qolib,
+      // Server qayta ishga tushsa yoki ulanishni majburan uzsa, socket o'lik qolib,
       // real-time bildirishnomalar kelmasdi. Bir marta qayta ulanishga urinamiz
       // (auth-xato bo'lsa token-refresh oqimi updateToken orqali tuzatadi).
       if (reason === 'io server disconnect') {
@@ -182,48 +148,34 @@ class SocketService {
       }
     });
 
-    // Reconnection events
-    this.socket.io.on('reconnect', (attemptNumber: number) => {
-      // console.log('Reconnected after', attemptNumber, 'attempts');
-      if (this.userId) {
-        this.initSubscribeWithId(this.userId);
-      }
-    });
-
-    this.socket.io.on('reconnect_attempt', (attemptNumber: number) => {
-      // console.log('Reconnecting... Attempt:', attemptNumber);
-    });
-
-    this.socket.io.on('reconnect_error', (error: Error) => {
-      // console.error('Reconnection error:', error.message);
-    });
+    // Avto qayta ulanishdan keyin xonaga qayta ro'yxatdan o'tamiz.
+    this.socket.io.on('reconnect', this.registerOnConnect);
 
     // Server events
     this.setupServerEventListeners();
-
-    // Initialize real-time listener
-    await this.onRealTime();
-    this.onMeChange();
-    await this.reciveNotification();
+    this.onRealTime();
+    this.reciveNotification();
   }
 
-  getId(): string | undefined {
-    return this.socket?.id;
+  /** Socketni barcha listener'lari bilan to'liq uzib, obyektni tashlaydi. */
+  private teardownSocket(): void {
+    if (!this.socket) return;
+    this.stopPingInterval();
+    try {
+      this.socket.io?.off?.('reconnect', this.registerOnConnect);
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+    } catch {}
+    this.socket = null;
   }
 
   on(event: string, cb: (data: any) => void): void {
-    if (!this.socket) {
-      console.warn(`Cannot listen to event ${event}: socket not initialized`);
-      return;
-    }
+    if (!this.socket) return;
     this.socket.on(event, cb);
   }
 
   emit(event: string, data: any): void {
-    if (!this.socket) {
-      console.warn(`Cannot emit event ${event}: socket not initialized`);
-      return;
-    }
+    if (!this.socket) return;
     this.socket.emit(event, data);
   }
 
@@ -231,7 +183,7 @@ class SocketService {
     return this.socket?.connected ? 'Online' : 'Offline';
   }
 
-  // Yangi access token bilan qayta ulanadi (token refresh'dan keyin). Socket query'sidagi
+  // Yangi access token bilan qayta ulanadi (token refresh'dan keyin). Socket auth'idagi
   // token yangilanadi va ulanish qayta tiklanadi — aks holda server eski (yaroqsiz)
   // token bilan auth_error berardi.
   updateToken(newToken: string): void {
@@ -242,37 +194,19 @@ class SocketService {
       opts.auth = { ...(opts.auth || {}), token: newToken };
       (this.socket as any).auth = { ...((this.socket as any).auth || {}), token: newToken };
       if (this.socket.connected) {
-        this.socket.disconnect();
+        // 'disconnect' hodisasi sinxron keladi — bayroq shu oraliqda ko'tarilgan.
+        this.reconnecting = true;
+        try {
+          this.socket.disconnect();
+        } finally {
+          this.reconnecting = false;
+        }
       }
+      this.socket.off('connect', this.registerOnConnect);
+      this.socket.once('connect', this.registerOnConnect);
       this.socket.connect();
-      if (this.userId) {
-        this.socket.once('connect', () => {
-          this.initSubscribeWithId(this.userId!);
-        });
-      }
     } catch (e) {
       console.warn('Socket updateToken failed:', e);
-    }
-  }
-
-  restart(): void {
-    if (!this.socket) {
-      console.warn('Cannot restart: socket not initialized');
-      return;
-    }
-
-    if (this.socket.connected) {
-      console.log('Socket already connected, disconnecting first...');
-      this.socket.disconnect();
-    }
-
-    this.socket.connect();
-
-    // Re-register after connection
-    if (this.userId) {
-      this.socket.once('connect', () => {
-        this.initSubscribeWithId(this.userId!);
-      });
     }
   }
 
@@ -280,62 +214,21 @@ class SocketService {
     return this.socket;
   }
 
-  private async onRealTime(): Promise<void> {
-    console.log('Listening to realTimeChange event');
-    this.on('realTimeChange', data => {
+  private onRealTime(): void {
+    this.on('realTimeChange', () => {
       Store.dispatch(getCreditorAndDebitorData());
-    });
-  }
-  private onMeChange(): void {
-    this.on('meee', (data: MeeeResponse) => {
-      console.log('meChange received:', data);
-      this.onUserDataUpdate?.(data);
     });
   }
 
   private setupServerEventListeners(): void {
     if (!this.socket) return;
 
-    // Initial connection confirmation
-    this.socket.on('socket', (data: string) => {
-      console.log('Socket event received:', data);
-    });
+    // SS-AUDIT (2026-09-25): 'socket'/'registered'/'subscribed'/'active_sessions'/
+    // 'me'/'meee'/'pong' handlerlari olib tashlandi — ular faqat console'ga
+    // (foydalanuvchi id/ism/balans bilan) yozardi, hech qanday holatni o'zgartirmasdi.
 
-    // Registration confirmation
-    this.socket.on('registered', (data: RegisteredResponse) => {
-      console.log('Registered:', data);
-      this.deviceCount = data.deviceCount;
-      this.onRegistered?.(data);
-    });
-
-    // Subscription confirmation
-    this.socket.on('subscribed', (data: SubscribedResponse) => {
-      console.log('Subscribed to room:', data.room);
-    });
-
-    // Active sessions response
-    this.socket.on('active_sessions', (data: ActiveSessionsResponse) => {
-      console.log('Active sessions:', data.deviceCount);
-      this.deviceCount = data.deviceCount;
-      this.onActiveSessionsUpdate?.(data);
-    });
-
-    // User data response
-    this.socket.on('me', (data: MeResponse) => {
-      console.log('Me response:', data);
-      this.onUserDataUpdate?.({ user: data.user });
-    });
-
-    // Pong response
-    this.socket.on('pong', (data: PongResponse) => {
-      console.log('Pong received, server timestamp:', data.timestamp);
-    });
-
-    // Error handling
     this.socket.on('error', (error: ErrorResponse) => {
-      console.error('Socket error:', error.code, error.message);
-      this.onError?.(error);
-      this.handleSocketError(error);
+      console.error('Socket error:', error?.code, error?.message);
     });
 
     // SS-DEV (2026-09-23): "Ulangan qurilmalar" — SHU qurilma sessiyasi boshqa
@@ -343,28 +236,11 @@ class SocketService {
     // family socketiga yuboradi). Darhol majburiy chiqamiz; server socketni
     // o'zi uzadi — qayta ulanmaslik uchun oldindan o'zimiz uzamiz.
     this.socket.on('session_revoked', () => {
-      console.warn('Socket: session_revoked — majburiy logout');
       try {
         this.disconnect();
       } catch {}
       forceLogout('revoked');
     });
-  }
-
-  private handleSocketError(error: ErrorResponse): void {
-    switch (error.code) {
-      case 'INVALID_USER_ID':
-        console.error('Invalid user ID - re-authentication required');
-        break;
-      case 'RATE_LIMIT':
-        console.warn('Rate limit exceeded - reducing request frequency');
-        break;
-      case 'UNAUTHORIZED':
-        console.error('Unauthorized - login required');
-        break;
-      default:
-        console.error('Unknown socket error:', error);
-    }
   }
 
   private startPingInterval(): void {
@@ -383,73 +259,29 @@ class SocketService {
   }
 
   ping(): void {
-    if (!this.socket?.connected) {
-      console.warn('Cannot ping: socket not connected');
-      return;
-    }
+    if (!this.socket?.connected) return;
     this.socket.emit('ping');
   }
 
-  requestUserData(): void {
-    if (!this.socket?.connected || !this.userId) {
-      console.warn(
-        'Cannot request user data: socket not connected or no user ID',
-      );
-      return;
-    }
-    this.socket.emit('me', { id: Number(this.userId) });
-  }
-
-  getActiveSessions(): void {
-    if (!this.socket?.connected || !this.userId) {
-      console.warn(
-        'Cannot get active sessions: socket not connected or no user ID',
-      );
-      return;
-    }
-    this.socket.emit('active_sessions', { userId: Number(this.userId) });
-  }
-
-  subscribe(userId?: string): void {
-    const id = userId || this.userId;
-    if (!this.socket?.connected || !id) {
-      console.warn('Cannot subscribe: socket not connected or no user ID');
-      return;
-    }
-    this.socket.emit('subscribe', { uid: Number(id) });
-  }
-
-  getDeviceCount(): number {
-    return this.deviceCount;
-  }
-
   disconnect(): void {
-    if (this.socket) {
-      this.stopPingInterval();
-      this.socket.disconnect();
-      this.socket = null;
-      this.isInitialized = false;
-      this.userId = null;
-      this.deviceCount = 0;
-      console.log('Socket service disconnected and reset');
+    // SS-AUDIT (2026-09-25): token-refresh obunasi ham bekor qilinadi (ilgari
+    // hech qachon chaqirilmasdi) va socket listener'lari bilan to'liq uziladi.
+    this.teardownSocket();
+    this.isInitialized = false;
+    this.userId = null;
+    if (this.tokenRefreshUnsub) {
+      this.tokenRefreshUnsub();
+      this.tokenRefreshUnsub = null;
     }
   }
 
-  async off(event: string, cb?: (data: any) => void): Promise<void> {
-    if (!this.socket) {
-      console.warn(
-        `Cannot remove listener for event ${event}: socket not initialized`,
-      );
-      return;
-    }
+  off(event: string, cb?: (data: any) => void): void {
+    if (!this.socket) return;
     this.socket.off(event, cb);
   }
 
-  async initSubscribeWithId(id: string) {
-    if (!this.socket) {
-      console.warn(`Cannot subscribe to event ${id}: socket not initialized`);
-      return;
-    }
+  initSubscribeWithId(id: string): void {
+    if (!this.socket) return;
     this.socket.emit('register', { id });
   }
 
@@ -461,11 +293,9 @@ class SocketService {
 
     this.socket.on('recive_notification', async data => {
       if (this.isDisplayingNotification) {
-        console.log('Notification is already being handled. Skipping...');
         return;
       }
       this.isDisplayingNotification = true;
-      // console.log('call reciveNotification');
 
       try {
         if (Store.getState().HomeReducer.appState === 'active') {
@@ -473,7 +303,6 @@ class SocketService {
             Store.getState().HomeReducer.notification.bild.length <
             data.notification.length
           ) {
-            console.log('call reciveNotification');
             try {
               const newNotification = data.notification.filter(
                 (item: any) =>
@@ -539,7 +368,6 @@ class SocketService {
               console.error('Error displaying notification:', error);
             }
           } else {
-            console.log("'Notification already displayed, skipping');");
             Store.dispatch(
               setNotification({ notification: data.notification }),
             );
@@ -563,10 +391,7 @@ class SocketService {
   }
 
   async sendNotification(data: any) {
-    if (!this.socket) {
-      console.warn('Cannot send notification: socket not initialized');
-      return;
-    }
+    if (!this.socket) return;
     this.socket.emit('send_notification', data);
   }
 
@@ -738,7 +563,6 @@ class SocketService {
             qoldiq: sortText(item.residual_amount) + ' ' + item.currency,
           });
         case 3:
-          console.log('creditor and reciver', item);
           return i18next.t('567', {
             name:
               item.dtypes === 2
@@ -765,7 +589,6 @@ class SocketService {
         case 12:
           Store.dispatch(getCreditorDataAndDebitorData());
           Store.dispatch(setChangeEndDate({ end_date: item.end_date }));
-          console.log(item, 'item in return body 12');
           return i18next.t('531', {
             name:
               item.dtypes === 2
@@ -778,7 +601,6 @@ class SocketService {
             end: settingDate(item.end_date),
           });
         case 16:
-          console.log(item, 'item in return body 16');
           Store.dispatch(getCreditorDataAndDebitorData());
           Store.dispatch(setChangeEndDate({ end_date: item.end_date }));
           return i18next.t('531', {
@@ -854,7 +676,6 @@ class SocketService {
               'UZS',
           });
           Store.dispatch(getCreditorDataAndDebitorData());
-          console.log('name2', name2);
           return name2;
         case 13:
           return i18next.t('573', {
@@ -947,7 +768,6 @@ class SocketService {
             qoldiq: sortText(item.residual_amount) + ' ' + item.currency,
           });
         case 3:
-          console.log('debitor and reciver', item);
           return i18next.t('567', {
             name:
               item.ctypes === 2
