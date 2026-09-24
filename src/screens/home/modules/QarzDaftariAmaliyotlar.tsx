@@ -315,9 +315,16 @@ const QarzDaftariAmaliyotlar = () => {
             <View style={styles.statGrid}>
               <View style={styles.statRow}>
                 <StatCard accent={BLUE} label={t('Jami qarz')} uzs={jamiUzs} usd={jamiUsd} />
+                {/* SS-DEV (2026-09-24): qarz daftari (do'kon) kontekstida mijoz
+                    to'lagan summa — "Undirilgan qarz"; faqat 'olish' (biz olgan
+                    qarz) bo'lsa "Qaytarilgan qarz" (QarzDaftariMijoz bilan bir xil). */}
                 <StatCard
                   accent={GREEN}
-                  label={t('Qaytarilgan qarz')}
+                  label={
+                    route.params?.turi === 'olish'
+                      ? t('Qaytarilgan qarz')
+                      : t('Undirilgan qarz')
+                  }
                   uzs={qaytarilganUzs}
                   usd={qaytarilganUsd}
                 />

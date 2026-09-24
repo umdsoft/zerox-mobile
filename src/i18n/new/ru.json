@@ -1532,6 +1532,12 @@
     "Qarzlarini ba’zan kechiktirib qaytargan.": "Иногда возвращал долги с задержкой.",
     "Ehtiyot bo‘ling": "Будьте осторожны",
     "Qarzlarini ko‘pincha kechiktirib qaytargan.": "Часто возвращал долги с задержкой.",
-    "o‘z vaqtida": "вовремя"
+    "o‘z vaqtida": "вовремя",
+    "Undirilgan qarzlar": "Взысканные долги",
+    "Kun tahlili — berilgan va undirilgan qarzlar": "Разбор дня — выданные и взысканные долги",
+    "Hafta tahlili — berilgan va undirilgan qarzlar": "Разбор недели — выданные и взысканные долги",
+    "Bu davrda qarz amaliyoti yo‘q": "За этот период операций по долгам нет",
+    "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Нажмите строку дня или недели — откроется список",
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Не удалось загрузить данные. Попробуйте ещё раз."
   }
 }

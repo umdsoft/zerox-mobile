@@ -22,10 +22,14 @@ import Loading from '../../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
 import { useTranslation } from 'react-i18next';
 const { width, height } = Dimensions.get('screen');
-// SS-DEV (2026-09-24): oferta o'qish darvozasi sozlamalari.
-const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti
+// SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
+const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (1 sahifali hujjat)
+const PER_PAGE_MS = 1500; // har bir KEYINGI sahifa uchun eng kam vaqt: (n-1)*1.5 s
 const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi
-const FALLBACK_MS = 60000; // native hodisalar kelmasa — vaqt-darvozasiga o'tish
+// Hujjat UMUMAN yuklanmasa (onLoadComplete ham, onPageChanged ham kelmasa) —
+// foydalanuvchi abadiy qamalib qolmasin. YUKLANGAN hujjat uchun bu taymer
+// ISHLAMAYDI (pastga qarang).
+const FALLBACK_MS = 60000;
 
 const ContractModal = () => {
   const dispatch = useDispatch();
@@ -33,7 +37,6 @@ const ContractModal = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [check, setCheck] = useState(false);
-  const [page, setPage] = useState(1);
   const { contract, user } = useSelector(state => state.HomeReducer);
   const [allPage, setAllPage] = useState(0);
   // SS5 (2026-09-20): eng uzoq borilgan sahifa — "oxirigacha o'qildi"
@@ -46,39 +49,48 @@ const ContractModal = () => {
   const [reloadKey, setReloadKey] = useState(0);
   // SS-DEV (2026-09-24): hujjat yuklangach eng kam o'qish vaqti o'tdimi.
   const [readTimerDone, setReadTimerDone] = useState(false);
-  // SS-DEV (2026-09-24): sahifa hodisalari umuman kelmasa (native event
-  // yo'qolgan holat) — uzoq kutishdan keyin vaqt-darvozasiga o'tiladi.
+  // SS-DEV (2026-09-24): native hodisalar UMUMAN kelmasa — uzoq kutishdan
+  // keyin vaqt-darvozasiga o'tiladi (faqat YUKLANMAGAN hujjat uchun).
   const [eventsFallback, setEventsFallback] = useState(false);
   const loadedAtRef = useRef<number | null>(null);
+  // Sinxron nusxa — ketma-ket sahifa tekshiruvi (p === maxPage + 1) uchun.
+  const maxPageRef = useRef(1);
   const readTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
-   * SS-DEV (2026-09-24): "Oferta oxirigacha o'qilmaguncha tasdiqlab bo'lmasin"
-   * — darvoza MUSTAHKAMLANDI. Ilgari foydalanuvchi 1-sahifada turib ham
-   * tasdiqlay olardi. Sabablari:
-   *  1) `needRead = allPage > 1 && ...` — `allPage` hali 0 (PDF yuklanmoqda /
-   *     onLoadComplete kelmagan) bo'lsa darvoza UMUMAN o'chiq edi: checkbox
-   *     ham, Tasdiqlash ham ishlardi.
-   *  2) Android'da react-native-pdf yuklangan zahoti `onPageChanged`ni
-   *     noto'g'ri sahifa bilan (defaultPage 0-asosli/1-asosli chalkashligi,
-   *     Yoga o'lchov paytidagi jumpTo) yuborishi mumkin — `maxPage` darhol
-   *     `allPage`ga teng bo'lib, "o'qildi" deb hisoblanardi.
-   *  3) Komponent modal yopilganda unmount bo'lmaydi — `check`/`maxPage`
-   *     oldingi ochilishdan qolib ketardi.
+   * SS-DEV (2026-09-24, 3-tuzatish): "Oferta oxirigacha o'qilmaguncha
+   * tasdiqlab bo'lmasin" — darvoza QAYTA MUSTAHKAMLANDI.
    *
-   * Yangi darvoza (uchala shart ham bajarilishi shart):
-   *  a) hujjat yuklangan (allPage > 0) — yuklanmaguncha bloklanadi;
-   *  b) yuklangandan keyin eng kam MIN_READ_MS o'tgan (1 sahifali hujjat
-   *     uchun ham ishlaydigan "o'qish taymeri");
-   *  c) ko'p sahifali hujjatda OXIRGI sahifaga yetilgan; yuklangandan keyingi
-   *     SETTLE_MS ichidagi sahifa hodisalari (spurious) hisobga olinmaydi.
-   * Har ochilishda holat NOLLANADI (useEffect quyida).
+   * Skrinshotdagi holat (1-sahifa, checkbox belgilangan, Tasdiqlash ko'k)
+   * QANDAY yuzaga kelgan (2-tuzatishdan keyingi kod bo'yicha):
+   *  1) 60 s FALLBACK — modal ochilganda VA yuklanganda 60 s taymer
+   *     boshlanardi; u faqat HAQIQIY sahifa hodisasi kelganda o'chirilardi.
+   *     Foydalanuvchi 1-sahifani 1 daqiqa o'qib tursa (yoki shunchaki ochiq
+   *     qoldirsa) — sahifa o'zgarmagani uchun hodisa yo'q → 60 s da
+   *     `eventsFallback=true` → darvoza JIMGINA ochilar, hint yo'qolar,
+   *     checkbox belgilanar edi. Bu talabga zid: yuklangan hujjat uchun
+   *     vaqt-fallback endi UMUMAN YO'Q.
+   *  2) Android'da (barteksc PDFView) `jumpTo`/havola (link) orqali sahifa
+   *     SAKRAB o'zgarsa `onPageChanged(oxirgi)` bir zumda kelar, `maxPage`
+   *     darhol `allPage` bo'lardi — endi faqat KETMA-KET (p === maxPage+1)
+   *     siljish hisobga olinadi va oxirgi sahifaga yetish yetarli emas:
+   *     yuklangandan keyin kamida (n-1)×1.5 s o'tishi ham shart.
+   *  3) Yoga o'lchov paytidagi (h=0) soxta hodisa — SETTLE_MS oynasi.
+   *
+   * Yangi darvoza (BARCHA shartlar birga):
+   *  a) hujjat yuklangan (allPage > 0, onLoadComplete/onPageChanged kelgan);
+   *  b) yuklangandan keyin kamida max(3 s, (n-1)×1.5 s) o'tgan;
+   *  c) ko'p sahifali hujjatda OXIRGI sahifaga KETMA-KET yetilgan.
+   * Fallback (60 s) FAQAT hujjat umuman yuklanmagan (allPage === 0) holatda.
+   * Har ochilishda holat NOLLANADI (useEffect quyida); `check` darvoza
+   * yopiq bo'lsa hech qachon true bo'lolmaydi (pastdagi effekt).
    */
-  const reachedLast = allPage === 1 || (allPage > 1 && maxPage >= allPage);
+  const reachedLast = allPage > 0 && (allPage === 1 || maxPage >= allPage);
   const readToEnd =
     !pdfErr &&
-    ((allPage > 0 && readTimerDone && reachedLast) || eventsFallback);
+    ((allPage > 0 && readTimerDone && reachedLast) ||
+      (eventsFallback && allPage === 0));
   const needRead = !pdfErr && !readToEnd;
 
   const clearTimers = useCallback(() => {
@@ -95,48 +107,52 @@ const ContractModal = () => {
   const resetGate = useCallback(() => {
     clearTimers();
     loadedAtRef.current = null;
+    maxPageRef.current = 1;
     setCheck(false);
-    setPage(1);
     setMaxPage(1);
     setAllPage(0);
     setReadTimerDone(false);
     setEventsFallback(false);
   }, [clearTimers]);
 
-  // Hujjat yuklandi — o'qish taymerini boshlaymiz.
-  const markLoaded = useCallback(() => {
+  // Hujjat yuklandi — o'qish taymerini boshlaymiz, fallback O'CHIRILADI.
+  const markLoaded = useCallback((numberOfPages: number) => {
     if (loadedAtRef.current) return;
     loadedAtRef.current = Date.now();
-    /**
-     * SS-DEV (2026-09-24, qayta tekshiruv): ilgari yuklanish bilan fallback
-     * taymeri O'CHIRILARDI. Android'da `enablePaging` bilan `onLoadComplete`
-     * kelib, `onPageChanged` UMUMAN kelmasa (ba'zi qurilmalarda kuzatilgan)
-     * ko'p sahifali hujjatda `maxPage` hech qachon `allPage`ga yetmas —
-     * foydalanuvchi ABADIY qamalib qolardi. Endi fallback taymeri YUKLANISHDAN
-     * boshlab qayta sanaladi (FALLBACK_MS) va faqat HAQIQIY sahifa hodisasi
-     * kelganda o'chiriladi (pastda, onPageChanged). Ungacha darvoza bloklangan
-     * bo'lib turadi: Tasdiqlash ham, checkbox ham ishlamaydi.
-     */
-    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-    fallbackTimerRef.current = setTimeout(() => setEventsFallback(true), FALLBACK_MS);
-    readTimerRef.current = setTimeout(() => setReadTimerDone(true), MIN_READ_MS);
+    // SS-DEV (2026-09-24, 3-tuzatish): yuklangan hujjat uchun vaqt-fallback
+    // yo'q — faqat sahifa darvozasi. (Ilgari shu yerda 60 s taymer QAYTA
+    // boshlanardi — skrinshotdagi holatning sababi.)
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    setEventsFallback(false);
+    const n = Math.max(1, Number(numberOfPages) || 1);
+    const minMs = Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS);
+    if (readTimerRef.current) clearTimeout(readTimerRef.current);
+    readTimerRef.current = setTimeout(() => setReadTimerDone(true), minMs);
   }, []);
 
   useEffect(() => {
     if (contract) {
       resetGate();
-      // Native hodisalar (onLoadComplete/onPageChanged) umuman kelmasa
-      // foydalanuvchi abadiy qamalib qolmasin: FALLBACK_MS dan keyin faqat
-      // vaqt-darvozasi qoladi (bu vaqt 8-9 sahifali ofertani o'qishga yetadi).
-      fallbackTimerRef.current = setTimeout(
-        () => setEventsFallback(true),
-        FALLBACK_MS,
-      );
+      // Native hodisalar (onLoadComplete/onPageChanged) UMUMAN kelmasa
+      // foydalanuvchi abadiy qamalib qolmasin. Taymer otganda hujjat
+      // yuklangan bo'lsa — HECH NARSA qilinmaydi (darvoza sahifa asosida).
+      fallbackTimerRef.current = setTimeout(() => {
+        if (!loadedAtRef.current) setEventsFallback(true);
+      }, FALLBACK_MS);
     } else {
       clearTimers();
     }
     return clearTimers;
   }, [contract, reloadKey, resetGate, clearTimers]);
+
+  // Darvoza yopiq bo'lsa rozilik belgisi hech qachon true qolmasin
+  // (masalan qayta yuklash / holat o'zgarishi paytida).
+  useEffect(() => {
+    if (needRead && check) setCheck(false);
+  }, [needRead, check]);
 
   const warnRead = useCallback(() => {
     Toast.show({
@@ -238,7 +254,11 @@ const ContractModal = () => {
               <Pdf
                 key={reloadKey}
                 trustAllCerts={false}
+                // SS-DEV (2026-09-24): sahifa-sahifa VERTIKAL scroll (pageSnap +
+                // pageFling) — onPageChanged har sahifada ketma-ket keladi.
                 enablePaging={true}
+                horizontal={false}
+                page={1}
                 onError={error => {
                   console.warn(error);
                   setPdfErr(true);
@@ -267,11 +287,11 @@ const ContractModal = () => {
                   if (numberOfPages > 0) {
                     setAllPage(numberOfPages);
                   }
-                  // SS-DEV (2026-09-24): o'qish taymeri shu yerdan boshlanadi.
-                  markLoaded();
+                  // SS-DEV (2026-09-24): o'qish taymeri shu yerdan boshlanadi —
+                  // muddati sahifa soniga bog'liq.
+                  markLoaded(numberOfPages);
                 }}
                 onPageChanged={(p, allpage) => {
-                  setPage(p);
                   if (allpage > 0) {
                     setAllPage(allpage);
                   }
@@ -279,7 +299,7 @@ const ContractModal = () => {
                   // (ba'zi qurilmalarda faqat sahifa hodisasi keladi) yuklangan
                   // deb belgilaymiz — aks holda taymer hech qachon boshlanmaydi.
                   if (!loadedAtRef.current) {
-                    markLoaded();
+                    markLoaded(allpage);
                     return;
                   }
                   // Yuklangandan keyingi birinchi SETTLE_MS ichidagi hodisalar —
@@ -287,14 +307,15 @@ const ContractModal = () => {
                   if (Date.now() - loadedAtRef.current < SETTLE_MS) {
                     return;
                   }
-                  // SS-DEV (2026-09-24): HAQIQIY sahifa hodisasi keldi — sahifa
-                  // darvozasi ishlayapti, vaqt-fallback endi kerak emas.
-                  if (fallbackTimerRef.current) {
-                    clearTimeout(fallbackTimerRef.current);
-                    fallbackTimerRef.current = null;
+                  if (p < 1 || (allpage > 0 && p > allpage)) return;
+                  // SS-DEV (2026-09-24, 3-tuzatish): faqat KETMA-KET oldinga
+                  // siljish (p === maxPage + 1) hisoblanadi — havola/jumpTo
+                  // orqali oxirgi sahifaga SAKRASH "o'qildi" degani emas.
+                  // Orqaga qaytish maxPage'ni kamaytirmaydi.
+                  if (p === maxPageRef.current + 1) {
+                    maxPageRef.current = p;
+                    setMaxPage(p);
                   }
-                  // SS5: eng uzoq borilgan sahifa yig'iladi.
-                  setMaxPage(m => Math.max(m, p));
                 }}
                 style={styles.pdf}
               />

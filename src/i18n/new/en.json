@@ -1531,6 +1531,12 @@
     "Qarzlarini ba’zan kechiktirib qaytargan.": "Sometimes repaid debts late.",
     "Ehtiyot bo‘ling": "Be careful",
     "Qarzlarini ko‘pincha kechiktirib qaytargan.": "Often repaid debts late.",
-    "o‘z vaqtida": "on time"
+    "o‘z vaqtida": "on time",
+    "Undirilgan qarzlar": "Collected debts",
+    "Kun tahlili — berilgan va undirilgan qarzlar": "Day breakdown — debts given and collected",
+    "Hafta tahlili — berilgan va undirilgan qarzlar": "Week breakdown — debts given and collected",
+    "Bu davrda qarz amaliyoti yo‘q": "No debt operations in this period",
+    "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Tap the day or week row to open the list",
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Could not load the data. Please try again."
   }
 }
