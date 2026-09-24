@@ -20,7 +20,7 @@ import { storage } from '../../store/api/token/getToken';
 import Loading from '../components/Loading';
 import PersonIcon from '../../images/home/person';
 import JuridicIcon from '../../images/home/juridic';
-import { settingDate } from './UserDetails';
+import { settingDate } from '../../helper';
 import ScreenLayout from '../components/ScreenLayout';
 import ListCardShowDetails from '../components/ListCardShowDetails';
 import Famale from '../../images/Famale';

@@ -165,7 +165,7 @@ const DebtDateLengthAsk = () => {
         return;
       }
     } catch (err) {
-      console.log(err, 'err');
+      console.error(err, 'err');
       setLoading1(false);
       Toast.show({
         autoHide: true,
@@ -182,8 +182,6 @@ const DebtDateLengthAsk = () => {
   }, [getData]);
   // console.log('redddd');
 
-  console.log(info, 'info.created_at');
-  console.log(date, 'date');
   // console.log(plus_day(date), 'plus_day(info?.end_date)');
   // console.log(formatDate(plus_day(date)), 'checkingDate(date)');
 
@@ -400,7 +398,6 @@ export function formatDate(date) {
   if (mm < 10) mm = '0' + mm;
 
   const formattedToday = yyyy + '-' + mm + '-' + dd;
-  console.log(formattedToday, 'formattedToday');
   return formattedToday;
 }
 export function checkingDate(date) {

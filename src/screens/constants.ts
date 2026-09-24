@@ -1,5 +1,6 @@
 import { sortText } from './components/StatisticCard';
-import { settingDate } from './other/UserDetails';
+// SS-AUDIT (2026-09-25): sana formatlagich helper'dan (ekran modulidan emas).
+import { settingDate } from '../helper';
 import { t } from 'i18next';
 
 // ⚙️ YAGONA JOY — REST API va Socket BIR serverdan boshqariladi.
@@ -97,7 +98,6 @@ body {
 
 export const renderHTMLS = (data: any) => {
   const renderText = (type: number) => {
-    console.log(type, 'type');
     switch (type) {
       case 2:
         return t('642');

@@ -27,6 +27,7 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from '../components/ToastConfig';
 import CheckBox from '@react-native-community/checkbox';
 import DatePicker from 'react-native-date-picker';
+import { localDateKey } from '../home/modules/financeMoney';
 // import DatePicker, {
 //   DateTimePickerEvent,
 // } from '@react-native-community/datetimepicker';
@@ -70,7 +71,6 @@ const GiveDebtUser = () => {
   const [usdd, setUsdd] = useState('');
   //type 0 bulsa qarz olmoq
   //type 1 bulsa qarz bermoq
-  console.log(qarzoluvchi, type, 'setData');
   useEffect(() => {
     if (amount.replace(/\s/g, '').length > 0 && checked) {
       setDisabled(false);
@@ -146,18 +146,8 @@ const GiveDebtUser = () => {
   }, []);
 
   useEffect(() => {
-    const lang = storage.getString('lang');
-    console.log(
-      `https://pdf.zerox.uz/free_contract.php?debitor=${
-        type === 0 ? qarzoluvchi?.uid : user?.data?.uid
-      }&creditor=${
-        type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
-        active ? 'UZS' : 'USD'
-      }&day=${formatDateMinus(date)}&lang=${lang}`,
-    );
     getUsd();
-  }, []);
+  }, [getUsd]);
 
   // const toggleModal = useCallback(() => {
   //   navigation.navigate('Contract', {
@@ -298,7 +288,6 @@ const GiveDebtUser = () => {
           },
         );
 
-        console.log(data, 'data');
 
         if (data.msg === 'deb_expiry_date' && data.success === false) {
           Toast.show({
@@ -776,10 +765,11 @@ const GiveDebtUser = () => {
 
 export default GiveDebtUser;
 
+// SS-AUDIT (2026-09-25): ilgari `toISOString().slice(0,10)` — UTC sana. UZ (+05:00)
+// da 00:00–05:00 oralig'ida tanlangan kun BIR KUN OLDINGI sana bo'lib ketardi
+// (end_date/PDF `day` noto'g'ri). Endi LOKAL kalendar kun.
 export function formatDateMinus(date) {
-  const tt = new Date(date);
-
-  return tt.toISOString().slice(0, 10);
+  return localDateKey(new Date(date));
 }
 
 const styles = StyleSheet.create({

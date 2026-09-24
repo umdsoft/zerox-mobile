@@ -184,18 +184,11 @@ const UserDetails = () => {
 };
 
 export default UserDetails;
-export const settingDate = text => {
-  const today = new Date(text);
-
-  const yyyy = today.getFullYear();
-  let mm = today.getMonth() + 1; // Months start at 0!
-  let dd = today.getDate();
-
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
-
-  return dd + '.' + mm + '.' + yyyy;
-};
+// SS-AUDIT (2026-09-25): bu yerdagi nusxa `new Date(text)` bilan "YYYY-MM-DD
+// HH:MM:SS.mmm" ni parse qilolmay "NaN.NaN.NaN" qaytarardi (helper/index.ts'da
+// 24.09 da tuzatilgan parser bor). Endi YAGONA manba — helper.settingDate.
+import { settingDate } from '../../helper';
+export { settingDate };
 export const phoneSort = text => {
   let b = [];
   if (!text) return '';

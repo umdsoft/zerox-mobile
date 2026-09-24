@@ -31,7 +31,6 @@ import { setNotification } from '../../store/reducers/HomeReducer';
 import { t } from 'i18next';
 import { Trans } from 'react-i18next';
 import MainText from '../components/MainText';
-import socketService from '../../helper/socketService';
 import { getCreditorDataAndDebitorData } from '../../store/api/home';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
@@ -66,7 +65,6 @@ const DebtDateLength = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      console.log('datadata', data);
       if (status === 200) {
         setInfo(data.data);
         setLoading(false);
@@ -151,7 +149,7 @@ const DebtDateLength = () => {
         props: { desc: t('Xatolik!') },
       });
     } catch (error) {
-      console.warn(error);
+      console.error(error);
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
@@ -385,20 +383,7 @@ const plus_day = date => {
   let tommorrow = today.setDate(today.getDate() + 1);
   return tommorrow;
 };
-export const checkingDate = text => {
-  const leta = text?.split('.')?.join('-');
-
-  const today = new Date(leta);
-
-  const yyyy = today.getFullYear();
-  let mm = today.getMonth() + 1; // Months start at 0!
-  let dd = today.getDate();
-
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
-
-  return dd + '.' + mm + '.' + yyyy;
-};
+// SS-AUDIT (2026-09-25): ishlatilmagan `checkingDate` (split('.') bilan buzuq parser) olib tashlandi.
 
 export default DebtDateLength;
 
