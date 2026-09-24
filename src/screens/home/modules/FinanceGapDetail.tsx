@@ -226,9 +226,30 @@ const FinanceGapDetail = () => {
       // SS16 (2026-09-14): toast matni oddiy "Yuborildi" — kanal nomi va
       // qabul qiluvchilar SONI foydalanuvchiga kerak emas edi ("Telegram: 2"
       // texnik tafsilot bo'lib, tasdiq xabarini uzaytirardi).
-      Toast.show({ type: 'omad', props: { desc: 'Yuborildi' } });
+      // SS-DEV (2026-09-24): muddati o'tgan davrada bu "to'lov haqida
+      // ogohlantirish" — Boraman/Bora olmayman so'ralmaydi; matn shunga mos.
+      Toast.show({
+        type: 'omad',
+        props: {
+          desc: isRoundOverdue(r)
+            ? t('Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)')
+            : 'Yuborildi',
+        },
+      });
     } catch (e: any) {
-      Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } });
+      /**
+       * SS-DEV (2026-09-24): backend hozircha MUDDATI O'TGAN davra uchun
+       * 400 `{ code: 'round_expired' }` qaytaradi (yuborishni rad etadi).
+       * Backend "muddati o'tgan bo'lsa ham yuboradi, lekin ishtirok
+       * tugmalarisiz" qilib o'zgartirilmoqda — shu paytgacha foydalanuvchiga
+       * tushunarli xabar: nega yuborilmadi. 200 kelsa yuqoridagi "yuborildi".
+       */
+      const code = e?.response?.data?.code;
+      const msg =
+        code === 'round_expired'
+          ? t('Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.')
+          : e?.response?.data?.message || 'Xatolik yuz berdi';
+      Toast.show({ type: 'error2', visibilityTime: 5000, props: { desc: String(msg) } });
     } finally {
       setInvitingRound(null);
     }
@@ -746,11 +767,17 @@ const FinanceGapDetail = () => {
                     Bildirishnomalarga boradi. */}
                 {/*
                   SS1 (2026-09-18): tugma MUDDATGA ham qaraydi.
-                    • muddat KELMAGAN      → joy bor bo'lsa "Taklif yuborish",
-                                             yo'q bo'lsa "To'lov haqida ogohlantirish";
-                    • muddat O'TGAN → HECH NARSA (SS-DEV 2026-09-24: ilgari
-                      "To'lov haqida ogohlantirish" qolardi — muddati o'tgan
-                      navbat uchun u ham yuborilmasin, so'rov bo'yicha).
+                    • muddat KELMAGAN → joy bor bo'lsa "Taklif yuborish",
+                                        yo'q bo'lsa "To'lov haqida ogohlantirish";
+                    • muddat O'TGAN, to'lovlar TO'LIQ EMAS → "To'lov haqida
+                      ogohlantirish" (SS-DEV 2026-09-24, 1-rasm: ilgari muddat
+                      o'tgach tugma umuman yo'qolardi — tashkilotchi 0/1
+                      to'langan davra uchun eslatma yubora olmasdi). Bunda
+                      uchrashuv o'tib ketgan, shu bois xabar "Boraman/Bora
+                      olmayman"siz — faqat to'lov eslatmasi (backend shunga
+                      o'tkazilmoqda; hozircha 400 `round_expired` qaytarsa
+                      `sendInvite` tushunarli xabar ko'rsatadi);
+                    • hammasi to'langan / davra yakunlangan → HECH NARSA.
                 */}
                 {(() => {
                   const allPaid =
@@ -758,9 +785,10 @@ const FinanceGapDetail = () => {
                     Number(r.paid_count || 0) >= Number(r.total_count || 0);
                   const overdue = isRoundOverdue(r);
                   const show =
-                    isOpen && canSetVenue(r) && r.status !== 'completed' && !allPaid && !overdue;
+                    isOpen && canSetVenue(r) && r.status !== 'completed' && !allPaid;
                   if (!show) return null;
-                  const asInvite = !!r.venue;
+                  // Muddat o'tgan bo'lsa joy bo'lsa ham bu endi taklif emas.
+                  const asInvite = !!r.venue && !overdue;
                   return (
                   <TouchableOpacity
                     style={[styles.inviteBtn, invitingRound === r.id && { opacity: 0.6 }]}

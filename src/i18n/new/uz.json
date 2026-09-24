@@ -674,6 +674,14 @@
     "Bu davrda qarz amaliyoti yo‘q": "Bu davrda qarz amaliyoti yo‘q",
     "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi",
     "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
-    "Qayta urinish": "Qayta urinish"
+    "Qayta urinish": "Qayta urinish",
+    "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)": "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)",
+    "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.": "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.",
+    "Qarz allaqachon yopilgan": "Qarz allaqachon yopilgan",
+    "Voz kechish": "Voz kechish",
+    "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.",
+    "Qarzni yopish": "Qarzni yopish",
+    "Yangi qarz": "Yangi qarz",
+    "jami {{amount}}": "jami {{amount}}"
   }
 }

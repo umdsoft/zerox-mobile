@@ -93,6 +93,21 @@ export const financeApi = {
   demandRepayment: (id: any) => axios.post(`${base}/debts/${id}/demand`, {}, auth()),
   // SS4 (2026-09-19): kontragent sahifasidan qarzdan voz kechish.
   forgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/forgive`, {}, auth()),
+  // SS-DEV (2026-09-24): KO'ZGU qarzda MEN QARZ BERUVCHI bo'lsam (`can_operate`,
+  // qarshi tomon "oldim" deb kiritgan) — sayt `group/_key.vue` dagi kabi
+  // yopish / to'lov qayd etish / talab qilish / voz kechish. Yozuv qarshi
+  // tomonniki, shu bois oddiy `/payments`, `/forgive`, `/demand` 404 beradi —
+  // backend `mirror-*` endpointlari telefon mosligini tekshirib ruxsat beradi.
+  //   mirror-payment: `amount` berilmasa — QOLDIQNING HAMMASI (qarzni yopish);
+  //                   javob: { data: payment, remaining_amount }.
+  //   mirror-forgive: status=completed, remaining=0.
+  //   mirror-demand : karta (payout card) shart — 400 `no-card` / `no-phone`.
+  //   mirror-hide   : TUGALLANGAN ko'zgu qarzni faqat MENING ro'yxatimdan olib tashlash.
+  mirrorPayDebt: (id: any, body: { amount?: number; payment_date?: string; notes?: string }) =>
+    axios.post(`${base}/debts/${id}/mirror-payment`, body || {}, auth()),
+  mirrorForgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-forgive`, {}, auth()),
+  mirrorDemandDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-demand`, {}, auth()),
+  mirrorHideDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-hide`, {}, auth()),
   // SS-DEV (2026-09-24): QARZDOR shikoyati — qarshi tomon (hamkor yoki do'kon)
   // noto'g'ri yozgan qarz bo'yicha. Backend `parseComplaintInput`: `reason` —
   // 'not_taken' | 'fully_paid' | 'partly_paid' | 'other' (ixtiyoriy), `izoh` —

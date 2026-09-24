@@ -1508,7 +1508,7 @@
     "🤝 Hamkor qaydi": "🤝 Serik jazıwı",
     "Bu qarz do‘kon tomonidan yuritiladi — faqat ko‘rish. Yopish/o‘zgartirish do‘kon egasining qo‘lida.": "Bul qarızdı dúkan júrgizedi — tek kóriw. Jabıw/ózgertiw dúkan iyesiniń qolında.",
     "Bu qarzni «{{name}}» kiritgan — siz qarz beruvchisiz, shuning uchun to‘lov qayd etish, talab qilish va voz kechish sizda.": "Bul qarızdı «{{name}}» kirgizgen — siz qarız beriwshisiz, sonlıqtan tólemdi belgilew, talap etiw hám bas tartıw sizde.",
-    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — sizga faqat ko‘rish ochiq.": "Bul qarızdı «{{name}}» kirgizgen, sonlıqtan onı tek ol ózgerte aladı — sizge tek kóriw ashıq.",
+    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — siz esa ko‘rishingiz mumkin.": "Bul qarızdı «{{name}}» kirgizgen, sonlıqtan onı tek ol ózgerte aladı — siz bolsa kóre alasız.",
     "Shikoyat qilish": "Shaǵım etiw",
     "Qarz bo‘yicha shikoyat": "Qarız boyınsha shaǵım",
     "Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.": "Shaǵım dúkan iyesine bildiriw sıpatında jiberiledi.",
@@ -1537,6 +1537,12 @@
     "Hafta tahlili — berilgan va undirilgan qarzlar": "Hápte tallawı — berilgen hám óndirilgen qarızlar",
     "Bu davrda qarz amaliyoti yo‘q": "Bul dáwirde qarız ámeliyatı joq",
     "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Kún yamasa hápte qatarın basıń — dizim ashıladı",
-    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Maǵlıwmattı júklep bolmadı. Qaytadan urınıp kóriń."
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Maǵlıwmattı júklep bolmadı. Qaytadan urınıp kóriń.",
+    "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)": "Eskertiw jiberildi (múddet ótken — qatnasıw soralmaydı)",
+    "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.": "Bul dáwirdiń múddeti ótken — server házirshe eskertiw jiberiwge ruxsat bermedi. Tólemdi qolda eslete alasız.",
+    "Qarz allaqachon yopilgan": "Qarız álle qashan jabılǵan",
+    "Voz kechish": "Bas tartıw",
+    "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "«{{name}}» — {{amount}} qarızınan bas tartasız ba? Qarız jabılǵan dep belgilenedi, qaldıq 0 boladı. Bul ámeldi qaytarıp bolmaydı.",
+    "jami {{amount}}": "jámi {{amount}}"
   }
 }

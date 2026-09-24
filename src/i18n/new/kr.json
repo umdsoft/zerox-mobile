@@ -1508,7 +1508,7 @@
     "🤝 Hamkor qaydi": "🤝 Ҳамкор қайди",
     "Bu qarz do‘kon tomonidan yuritiladi — faqat ko‘rish. Yopish/o‘zgartirish do‘kon egasining qo‘lida.": "Бу қарз дўкон томонидан юритилади — фақат кўриш. Ёпиш/ўзгартириш дўкон эгасининг қўлида.",
     "Bu qarzni «{{name}}» kiritgan — siz qarz beruvchisiz, shuning uchun to‘lov qayd etish, talab qilish va voz kechish sizda.": "Бу қарзни «{{name}}» киритган — сиз қарз берувчисиз, шунинг учун тўлов қайд этиш, талаб қилиш ва воз кечиш сизда.",
-    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — sizga faqat ko‘rish ochiq.": "Бу қарзни «{{name}}» киритган, шунинг учун уни фақат у ўзгартира олади — сизга фақат кўриш очиқ.",
+    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — siz esa ko‘rishingiz mumkin.": "Бу қарзни «{{name}}» киритган, шунинг учун уни фақат у ўзгартира олади — сиз эса кўришингиз мумкин.",
     "Shikoyat qilish": "Шикоят қилиш",
     "Qarz bo‘yicha shikoyat": "Қарз бўйича шикоят",
     "Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.": "Шикоят дўкон эгасига билдиришнома сифатида юборилади.",
@@ -1537,6 +1537,12 @@
     "Hafta tahlili — berilgan va undirilgan qarzlar": "Ҳафта таҳлили — берилган ва ундирилган қарзлар",
     "Bu davrda qarz amaliyoti yo‘q": "Бу даврда қарз амалиёти йўқ",
     "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Кун ёки ҳафта қаторини босинг — рўйхат очилади",
-    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Маълумотни юклаб бўлмади. Қайта уриниб кўринг."
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Маълумотни юклаб бўлмади. Қайта уриниб кўринг.",
+    "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)": "Огоҳлантириш юборилди (муддат ўтган — иштирок сўралмайди)",
+    "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.": "Бу давранинг муддати ўтган — сервер ҳозирча огоҳлантириш юборишга рухсат бермади. Тўловни қўлда эслатишингиз мумкин.",
+    "Qarz allaqachon yopilgan": "Қарз аллақачон ёпилган",
+    "Voz kechish": "Воз кечиш",
+    "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "«{{name}}» — {{amount}} қарзидан воз кечасизми? Қарз ёпилган деб белгиланади, қолдиқ 0 бўлади. Бу амални қайтариб бўлмайди.",
+    "jami {{amount}}": "жами {{amount}}"
   }
 }

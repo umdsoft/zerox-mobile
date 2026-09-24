@@ -1509,7 +1509,7 @@
     "🤝 Hamkor qaydi": "🤝 Запись контрагента",
     "Bu qarz do‘kon tomonidan yuritiladi — faqat ko‘rish. Yopish/o‘zgartirish do‘kon egasining qo‘lida.": "Этот долг ведёт магазин — только просмотр. Закрытие/изменение — у владельца магазина.",
     "Bu qarzni «{{name}}» kiritgan — siz qarz beruvchisiz, shuning uchun to‘lov qayd etish, talab qilish va voz kechish sizda.": "Этот долг внёс «{{name}}» — вы кредитор, поэтому отметка оплаты, требование и списание доступны вам.",
-    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — sizga faqat ko‘rish ochiq.": "Этот долг внёс «{{name}}», поэтому изменить его может только он — вам доступен только просмотр.",
+    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — siz esa ko‘rishingiz mumkin.": "Этот долг внёс «{{name}}», поэтому изменить его может только он — вы можете лишь просматривать.",
     "Shikoyat qilish": "Пожаловаться",
     "Qarz bo‘yicha shikoyat": "Жалоба по долгу",
     "Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.": "Жалоба будет отправлена владельцу магазина как уведомление.",
@@ -1538,6 +1538,12 @@
     "Hafta tahlili — berilgan va undirilgan qarzlar": "Разбор недели — выданные и взысканные долги",
     "Bu davrda qarz amaliyoti yo‘q": "За этот период операций по долгам нет",
     "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Нажмите строку дня или недели — откроется список",
-    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Не удалось загрузить данные. Попробуйте ещё раз."
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Не удалось загрузить данные. Попробуйте ещё раз.",
+    "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)": "Напоминание отправлено (срок прошёл — участие не запрашивается)",
+    "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.": "Срок этого круга прошёл — сервер пока не разрешил отправить напоминание. Вы можете напомнить об оплате вручную.",
+    "Qarz allaqachon yopilgan": "Долг уже закрыт",
+    "Voz kechish": "Отказаться",
+    "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "Отказаться от долга «{{name}}» — {{amount}}? Долг будет отмечен как закрытый, остаток станет 0. Это действие нельзя отменить.",
+    "jami {{amount}}": "всего {{amount}}"
   }
 }

@@ -4,7 +4,7 @@
  * muddat, qisman to'lov, status). Filtr tablar + stats + qarz kartalari (qoldiq, paid%,
  * muddat/o'tgan). Kartaga bosilsa -> FinanceDebtDetail; "+ Yangi qarz" -> FinanceDebtAdd.
  *
- * Backend: GET /finance/debts, GET /finance/debts/stats.
+ * Backend: GET /finance/debts?limit=100 (sarlavha kataklari ham shu ro‘yxatdan — SS-DEV 2026-09-24).
  */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
@@ -214,8 +214,16 @@ const initials = (name?: string) =>
     .join('')
     .toUpperCase() || '?';
 
+/**
+ * SS-DEV (2026-09-24): OCHIQ qarz — 'active' YOKI 'overdue' (DB'da ikkala holat
+ * bor; sayt `isActive` bilan bir xil) va qoldiq > 0. 'completed'/'cancelled' —
+ * yopiq: sarlavha yig'indisiga kirmaydi.
+ */
+const isOpenDebt = (d: any) =>
+  (d?.status === 'active' || d?.status === 'overdue') && num(d?.remaining_amount) > 0;
+
 const isOverdue = (d: any) => {
-  if (d?.status !== 'active' || !d?.due_date) return false;
+  if (!isOpenDebt(d) || !d?.due_date) return false;
   const due = new Date(String(d.due_date).slice(0, 10));
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -253,19 +261,27 @@ const FinanceDebts = () => {
   // SS4-2: tanlangan filtrga mos aksent rang (sarlavhadagi "+" tugmasi ham shu rangda).
   const tabAccent = TAB_ACCENT[tab] || rd.color.primary;
 
-  // SS1-3: 'overdue' — bu backend'dagi `type` EMAS (u faqat borrowed/lent ni
-  // biladi), balki muddat bo'yicha filtr. Shu bois server'dan hammasi olinadi
-  // va ro'yxat klientda qisqartiriladi (stats'dagi `overdue_count` bilan
-  // bir xil qoida: aktiv + due_date bugundan oldin).
-  const serverType = tab === 'borrowed' || tab === 'lent' ? tab : '';
+  /**
+   * 🔴 SS-DEV (2026-09-24) ILDIZ SABAB (6-rasm: sarlavhada "Berilgan 2,8 M",
+   * ro'yxat yig'indisi ~4,5 M): sarlavha va ro'yxat IKKI XIL manbadan edi —
+   *   - sarlavha: GET /finance/debts/stats → faqat `status = 'active'` qoldiqlar
+   *     (DB'dagi `overdue` holatli ochiq qarzlar hisobga KIRMAYDI);
+   *   - ro'yxat : GET /finance/debts?type=… → BARCHA holatlar (overdue, hatto
+   *     cancelled) va kartalar qoldiqni ko'rsatadi.
+   * Endi BIR MANBA: qarzlar bir marta (`limit=100`, turlar bo'yicha filtr
+   * klientda) olinadi, sarlavha kataklari (Berilgan / Olingan / Sof balans /
+   * Muddati o'tgan) SHU ro'yxatdan — faqat ochiq (active/overdue, qoldiq > 0)
+   * qarzlar qoldig'i, valyuta bo'yicha alohida — hisoblanadi. Ro'yxat
+   * kartalaridagi summa ham aynan shu qoldiq, shu bois ular doim teng.
+   * (Backend `personalDebtTotals.service.js` da `status='active'` →
+   * `whereIn(['active','overdue'])` tuzatilsa, bosh sahifa ham mos bo'ladi.)
+   */
   const listFetch = useFetch({
-    url: `${URL}/finance/debts${serverType ? `?type=${serverType}` : ''}`,
+    url: `${URL}/finance/debts?limit=100`,
     method: 'GET',
   });
-  const statsFetch = useFetch({ url: `${URL}/finance/debts/stats`, method: 'GET' });
 
   const refreshList = listFetch.onRefresh;
-  const refreshStats = statsFetch.onRefresh;
   const firstFocus = React.useRef(true);
   useFocusEffect(
     React.useCallback(() => {
@@ -274,8 +290,7 @@ const FinanceDebts = () => {
         return;
       }
       refreshList({});
-      refreshStats({});
-    }, [refreshList, refreshStats]),
+    }, [refreshList]),
   );
 
   /**
@@ -290,10 +305,42 @@ const FinanceDebts = () => {
    * Ko'zgu qarzlar FAQAT-O'QISH: ularni qarzdor yopa/tahrirlay olmaydi —
    * qarzni ro'yxatga olgan do'kon (yoki kiritgan foydalanuvchi) boshqaradi.
    */
-  const ownDebts: any[] = (listFetch.data as any)?.data || [];
-  const mirrorDebts: any[] = (listFetch.data as any)?.mirror_debts || [];
-  const debtsRaw: any[] = [...ownDebts, ...mirrorDebts];
-  const debtsFlat: any[] = tab === 'overdue' ? debtsRaw.filter(isOverdue) : debtsRaw;
+  const listData: any = listFetch.data;
+  const debtsRaw: any[] = React.useMemo(() => {
+    const own: any[] = listData?.data || [];
+    const mir: any[] = listData?.mirror_debts || [];
+    return [...own, ...mir];
+  }, [listData]);
+  // Tab filtri KLIENTDA: 'lent' / 'borrowed' — tur bo'yicha; 'overdue' — muddat.
+  const debtsFlat: any[] =
+    tab === 'overdue'
+      ? debtsRaw.filter(isOverdue)
+      : tab === 'lent' || tab === 'borrowed'
+      ? debtsRaw.filter((d) => d.type === tab)
+      : debtsRaw;
+
+  // Sarlavha kataklari — ro'yxat bilan BIR MANBA (yuqoridagi izoh).
+  const totals = React.useMemo(() => {
+    const byCur = new Map<string, { lent: number; borrowed: number }>();
+    let overdue = 0;
+    for (const d of debtsRaw) {
+      if (!isOpenDebt(d)) continue;
+      const cur = d.currency || 'UZS';
+      const rec = byCur.get(cur) || { lent: 0, borrowed: 0 };
+      rec[d.type === 'borrowed' ? 'borrowed' : 'lent'] += num(d.remaining_amount);
+      byCur.set(cur, rec);
+      if (isOverdue(d)) overdue++;
+    }
+    const lentCur: any[] = [];
+    const borrowedCur: any[] = [];
+    const netCur: any[] = [];
+    for (const [currency, r] of byCur) {
+      if (r.lent > 0) lentCur.push({ currency, total: r.lent });
+      if (r.borrowed > 0) borrowedCur.push({ currency, total: r.borrowed });
+      if (Math.abs(r.lent - r.borrowed) > 0.009) netCur.push({ currency, total: r.lent - r.borrowed });
+    }
+    return { lentCur, borrowedCur, netCur, overdue };
+  }, [debtsRaw]);
 
   /**
    * SS2: yassi ro'yxat → KONTRAGENT guruhlari. Har guruhda:
@@ -315,6 +362,10 @@ const FinanceDebts = () => {
           phone: d.phone || null,
           items: [] as any[],
           byCur: new Map<string, number>(), // valyuta -> sof qoldiq
+          // SS-DEV (2026-09-24): OCHIQ qarzlarning DASTLABKI summasi (valyuta
+          // bo'yicha) — kartada qoldiq ostida kichik "jami …" sifatida.
+          openAmtByCur: new Map<string, number>(),
+          openRemByCur: new Map<string, number>(),
           total: 0,
           paid: 0,
           overdue: false,
@@ -328,6 +379,10 @@ const FinanceDebts = () => {
       const amt = num(d.amount);
       const signed = d.type === 'borrowed' ? -rem : rem;
       g.byCur.set(cur, (g.byCur.get(cur) || 0) + signed);
+      if (isOpenDebt(d)) {
+        g.openAmtByCur.set(cur, (g.openAmtByCur.get(cur) || 0) + amt);
+        g.openRemByCur.set(cur, (g.openRemByCur.get(cur) || 0) + rem);
+      }
       g.total += amt;
       g.paid += Math.max(amt - rem, 0);
       if (isOverdue(d)) g.overdue = true;
@@ -335,14 +390,11 @@ const FinanceDebts = () => {
     }
     return [...map.values()];
   }, [debtsFlat]);
-  const st: any = (statsFetch.data as any)?.data || {};
-  const net = num(st?.net_balance);
   // img10: valyuta bo'yicha ALOHIDA (USD + UZS ni qo'shmaymiz).
-  const borrowedCur: any[] = Array.isArray(st?.borrowed_by_currency) ? st.borrowed_by_currency : [];
-  const lentCur: any[] = Array.isArray(st?.lent_by_currency) ? st.lent_by_currency : [];
-  const netCur: any[] = Array.isArray(st?.net_by_currency) ? st.net_by_currency : [];
-  // SS17: 4-statistika katagi — muddati o'tgan aktiv qarzlar soni.
-  const overdueCount = num(st?.overdue_count);
+  const { lentCur, borrowedCur, netCur } = totals;
+  const net = num(netCur.find((x) => x.currency === 'UZS')?.total);
+  // SS17: 4-statistika katagi — muddati o'tgan ochiq qarzlar soni.
+  const overdueCount = totals.overdue;
   // SS14: valyutalar ALOHIDA QATORDA (siqilib mayda ko'rinmasin).
   const debtMoneyList = (arr: any[], scalar: number, signed: boolean): string[] => {
     const list = arr && arr.length ? arr.map((x) => ({ v: num(x.total), c: x.currency })) : [{ v: num(scalar), c: 'UZS' }];
@@ -407,7 +459,7 @@ const FinanceDebts = () => {
               accent={GREEN}
               label={t('Berilgan')}
               color={GREEN}
-              lines={debtMoneyList(lentCur, num(st?.lent_total), false)}
+              lines={debtMoneyList(lentCur, 0, false)}
               active={tab === 'lent'}
               onPress={() => setTab(tab === 'lent' ? 'all' : 'lent')}
             />
@@ -415,7 +467,7 @@ const FinanceDebts = () => {
               accent={RED}
               label={t('Olingan')}
               color={RED}
-              lines={debtMoneyList(borrowedCur, num(st?.borrowed_total), false)}
+              lines={debtMoneyList(borrowedCur, 0, false)}
               active={tab === 'borrowed'}
               onPress={() => setTab(tab === 'borrowed' ? 'all' : 'borrowed')}
             />
@@ -523,6 +575,20 @@ const FinanceDebts = () => {
                         {v < 0 ? '−' : '+'}{fMoney(Math.abs(v), cur)}
                       </Text>
                     ))}
+                    {/* SS-DEV (2026-09-24, 6-band): asosiy summa = QOLDIQ; qisman
+                        to'langan bo'lsa dastlabki summa kichik matnda. */}
+                    {(() => {
+                      const cur = shown.length ? shown[0][0] : null;
+                      if (!cur) return null;
+                      const oa = g.openAmtByCur.get(cur) || 0;
+                      const orm = g.openRemByCur.get(cur) || 0;
+                      if (oa <= orm + 0.009) return null;
+                      return (
+                        <Text allowFontScaling={false} style={styles.due} numberOfLines={1}>
+                          {t('jami {{amount}}', { amount: fMoney(oa, cur) })}
+                        </Text>
+                      );
+                    })()}
                     {g.allDone ? (
                       <View style={[styles.badge, { backgroundColor: GREEN + '18' }]}>
                         <Text style={[styles.badgeText, { color: GREEN }]}>{t('Yopilgan')}</Text>
@@ -583,7 +649,8 @@ export default FinanceDebts;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: rd.color.page },
-  content: { paddingHorizontal: rs(16), paddingTop: rs(10), paddingBottom: rs(20) },
+  // SS-DEV (2026-09-24, 8-band): oraliqlar ixchamlashtirildi.
+  content: { paddingHorizontal: rs(16), paddingTop: rs(8), paddingBottom: rs(20) },
 
   // SS7: tavsiyaviy eslatma
   noteCard: { flexDirection: 'row', gap: rs(10), backgroundColor: AMBER + '10', borderRadius: rd.radius.lg, borderWidth: 1, borderColor: AMBER + '30', padding: rs(12), marginTop: rs(14) },
@@ -604,8 +671,8 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: rs(18),
     overflow: 'hidden',
-    padding: rs(16),
-    marginBottom: rs(12),
+    padding: rs(14),
+    marginBottom: rs(10),
     shadowColor: GRAD_BRAND[1],
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.22,
@@ -644,8 +711,8 @@ const styles = StyleSheet.create({
     borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(13),
-    marginBottom: rs(12),
+    padding: rs(10),
+    marginBottom: rs(10),
   },
   cardLinkIcon: {
     width: rs(38),
@@ -664,7 +731,7 @@ const styles = StyleSheet.create({
   },
 
   // SS17: 2x2 statistika.
-  statGrid: { gap: rs(8), marginBottom: rs(14) },
+  statGrid: { gap: rs(8), marginBottom: rs(10) },
   statRow: { flexDirection: 'row', gap: rs(8) },
   statCard: {
     flex: 1,
@@ -673,20 +740,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: rd.color.border,
     paddingHorizontal: rs(11),
-    paddingTop: rs(12),
-    paddingBottom: rs(11),
+    paddingTop: rs(10),
+    paddingBottom: rs(9),
     overflow: 'hidden',
   },
   statAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: rs(3) },
   statLabel: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary },
   statVal: { fontFamily: rd.font.bold, fontSize: rs(14), lineHeight: rs(18), marginTop: rs(3) },
 
-  // SS4-1: sarlavhadagi "+" tugmasi
-  headerAdd: {
-    width: rs(34), height: rs(34), borderRadius: rs(17),
-    alignItems: 'center', justifyContent: 'center',
-  },
-  tabs: { flexDirection: 'row', gap: rs(8), marginBottom: rs(14) },
+  tabs: { flexDirection: 'row', gap: rs(8), marginBottom: rs(10) },
   tab: {
     flex: 1,
     height: rs(40),

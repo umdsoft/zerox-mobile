@@ -18,8 +18,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Dimensions,
   Linking,
   Modal,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -50,7 +52,9 @@ const RED = '#dc2626';
 const GREEN = '#16a34a';
 const BLUE = '#2f6fed';
 
-const isDone = (d: any) => d?.status === 'completed' || num(d?.remaining_amount) <= 0;
+// SS-DEV (2026-09-24): 'cancelled' ham yopiq; 'overdue' esa OCHIQ (sayt isActive).
+const isDone = (d: any) =>
+  d?.status === 'completed' || d?.status === 'cancelled' || num(d?.remaining_amount) <= 0;
 
 const isOverdue = (d: any): boolean => {
   if (!d?.due_date || isDone(d)) return false;
@@ -254,9 +258,21 @@ const FinanceDebtGroup = () => {
   }, [balance]);
   const netAll = primaryBal.lent - primaryBal.borrowed;
 
-  /** Men amal qila oladigan qarzlar: O'ZIMNIKI (ko'zgu emas) va aktiv. */
+  /**
+   * Men amal qila oladigan (talab / voz kechish) qarzlar: BERILGAN va ochiq.
+   * 🔴 SS-DEV (2026-09-24) ILDIZ SABAB (3-rasm): ro'yxat "to'liq emas" —
+   * faqat O'ZIM kiritganlar kirardi; qarshi tomon "oldim" deb kiritgan
+   * KO'ZGU qarzda men qarz beruvchiman (`can_operate`), saytda u ham
+   * amallarga kiradi (`mirror-demand` / `mirror-forgive`). Endi u ham bor.
+   */
   const actionable = React.useMemo(
-    () => list.filter((d) => !d.is_mirror && !isDone(d) && d.type === 'lent'),
+    () =>
+      list.filter(
+        (d) =>
+          !isDone(d) &&
+          d.type === 'lent' &&
+          (!d.is_mirror || (!!d.can_operate && !d.is_shop_debt)),
+      ),
     [list],
   );
 
@@ -312,11 +328,14 @@ const FinanceDebtGroup = () => {
     if (acting || !pickFor) return;
     setActing(true);
     try {
+      // SS-DEV (2026-09-24): ko'zgu (men qarz beruvchi) — `mirror-*` endpointlar.
       if (pickFor === 'demand') {
-        await financeApi.demandRepayment(d.id);
+        if (d.is_mirror) await financeApi.mirrorDemandDebt(d.id);
+        else await financeApi.demandRepayment(d.id);
         Toast.show({ type: 'omad', props: { desc: t('Qaytarish bo‘yicha SMS yuborildi') } });
       } else {
-        await financeApi.forgiveDebt(d.id);
+        if (d.is_mirror) await financeApi.mirrorForgiveDebt(d.id);
+        else await financeApi.forgiveDebt(d.id);
         setList((prev) =>
           prev.map((x) =>
             x.id === d.id ? { ...x, status: 'completed', remaining_amount: 0 } : x,
@@ -497,8 +516,10 @@ const FinanceDebtGroup = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Sof balans MUSBAT bo'lsa — menga qarzdor: talab/voz kechish. */}
-        {netAll > 0 && actionable.length > 0 && (
+        {/* Talab / voz kechish — BERILGAN ochiq qarz bo'lsa (sayt: har bir
+            qarz alohida; SS-DEV 2026-09-24: ilgari sof balans MUSBAT bo'lishi
+            ham shart edi — olingan qarz kattaroq bo'lsa tugmalar yo'qolardi). */}
+        {actionable.length > 0 && (
           <View style={styles.actRow}>
             {/* SS-DEV (2026-09-24): chegara chizig'i OLIB TASHLANDI — tugmalar
                 "Qarz berish / Qarz olish" kabi TO'LDIRILGAN (amber / qizil). */}
@@ -611,6 +632,7 @@ const FinanceDebtGroup = () => {
         statusBarTranslucent
         onRequestClose={() => setShowSms(false)}>
         <View style={styles.backdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowSms(false)} />
           <View style={styles.editCard}>
             <Text allowFontScaling={false} style={styles.editTitle}>
               {t('Tayyor SMS shablonlari')}
@@ -653,15 +675,19 @@ const FinanceDebtGroup = () => {
         animationType="fade"
         statusBarTranslucent
         onRequestClose={() => setPickFor(null)}>
+        {/* SS-DEV (2026-09-24, 3-rasm): fon bosilganda yopiladi; ro'yxat
+            balandligi EKRANGA qarab (ilgari qat'iy 300 — ko'p qarzda kesilardi,
+            aylantirish borligi ham sezilmasdi). */}
         <View style={styles.backdrop}>
-          <View style={styles.editCard}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => !acting && setPickFor(null)} />
+          <View style={[styles.editCard, styles.pickCard]}>
             <Text allowFontScaling={false} style={styles.editTitle}>
               {pickFor === 'demand' ? t('Qaytarishni talab qilish') : t('Qarzdan voz kechish')}
             </Text>
             <Text allowFontScaling={false} style={styles.pickHint}>
               {t('Amal qaysi qarzga tegishli?')}
             </Text>
-            <ScrollView style={{ maxHeight: rs(300) }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.pickList} showsVerticalScrollIndicator={true}>
               {actionable.map((d, i) => (
                 <TouchableOpacity
                   key={d.id ?? i}
@@ -698,6 +724,7 @@ const FinanceDebtGroup = () => {
         statusBarTranslucent
         onRequestClose={() => setEditOpen(false)}>
         <View style={styles.backdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && setEditOpen(false)} />
           <View style={styles.editCard}>
             <Text allowFontScaling={false} style={styles.editTitle}>{t('Tahrirlash')}</Text>
 
@@ -921,6 +948,9 @@ const styles = StyleSheet.create({
   },
   tplText: { fontFamily: rd.font.regular, fontSize: rs(12.5), color: rd.color.text, lineHeight: rs(18) },
   pickHint: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, marginTop: rs(4) },
+  // SS-DEV (2026-09-24): tanlov ro'yxati ekranning ~55% igacha, karta 85% dan oshmaydi.
+  pickCard: { maxHeight: '85%' },
+  pickList: { maxHeight: Math.round(Dimensions.get('window').height * 0.55) },
   pickAmt: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
   pickMeta: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
 

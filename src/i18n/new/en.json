@@ -1508,7 +1508,7 @@
     "🤝 Hamkor qaydi": "🤝 Counterparty record",
     "Bu qarz do‘kon tomonidan yuritiladi — faqat ko‘rish. Yopish/o‘zgartirish do‘kon egasining qo‘lida.": "This debt is kept by the shop — view only. Closing/editing is up to the shop owner.",
     "Bu qarzni «{{name}}» kiritgan — siz qarz beruvchisiz, shuning uchun to‘lov qayd etish, talab qilish va voz kechish sizda.": "This debt was entered by «{{name}}» — you are the lender, so recording payments, demanding and writing off are available to you.",
-    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — sizga faqat ko‘rish ochiq.": "This debt was entered by «{{name}}», so only they can change it — you have view-only access.",
+    "Bu qarzni «{{name}}» kiritgan, shuning uchun uni faqat u o‘zgartira oladi — siz esa ko‘rishingiz mumkin.": "This debt was entered by «{{name}}», so only they can change it — you can view it.",
     "Shikoyat qilish": "Report an issue",
     "Qarz bo‘yicha shikoyat": "Debt complaint",
     "Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.": "The complaint will be sent to the shop owner as a notification.",
@@ -1537,6 +1537,12 @@
     "Hafta tahlili — berilgan va undirilgan qarzlar": "Week breakdown — debts given and collected",
     "Bu davrda qarz amaliyoti yo‘q": "No debt operations in this period",
     "Kun yoki hafta qatorini bosing — ro‘yxat ochiladi": "Tap the day or week row to open the list",
-    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Could not load the data. Please try again."
+    "Ma’lumotni yuklab bo‘lmadi. Qayta urinib ko‘ring.": "Could not load the data. Please try again.",
+    "Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)": "Reminder sent (deadline passed — attendance is not requested)",
+    "Bu davraning muddati o‘tgan — server hozircha ogohlantirish yuborishga ruxsat bermadi. To‘lovni qo‘lda eslatishingiz mumkin.": "This round's deadline has passed — the server did not allow sending a reminder yet. You can remind about the payment manually.",
+    "Qarz allaqachon yopilgan": "The debt is already closed",
+    "Voz kechish": "Waive",
+    "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "Waive the debt of «{{name}}» — {{amount}}? The debt will be marked as closed, the balance becomes 0. This cannot be undone.",
+    "jami {{amount}}": "total {{amount}}"
   }
 }
