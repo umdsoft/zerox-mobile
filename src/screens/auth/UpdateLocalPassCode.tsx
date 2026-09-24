@@ -95,7 +95,6 @@ const UpdateLocalPassCode = () => {
     if (local_password === undefined) setStep(2);
     else setStep(2);
   }, []);
-  console.log('step', step);
 
   return (
     <View style={styles.container}>

@@ -23,7 +23,6 @@ import { setNotification } from '../../../store/reducers/HomeReducer';
 import { useDispatch, useSelector } from 'react-redux';
 import { t } from 'i18next';
 import { Trans } from 'react-i18next';
-import socketService from '../../../helper/socketService';
 import {
   AnimatedIconCircle,
   FullReturnIcon,
@@ -70,25 +69,6 @@ const DebtTakeFull = () => {
         },
       );
 
-      console.log(
-        {
-          contract: item.id,
-          creditor: item.creditor,
-          debitor: item.debitor,
-          reciver: item.debitor,
-          end_date: item.end_date,
-          old_amount: Number(item.residual_amount),
-          inc: Number(item.residual_amount) + Number(item.inc),
-          ntype: 2,
-          refundable_amount: item.residual_amount,
-          residual_amount: 0,
-          status: 0,
-          type: 2,
-          sender: item.creditor,
-          res: item.debitor,
-        },
-        'bodyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy',
-      );
 
       if (data.msg === 'end' && status === 200) {
         setLoading(false);
@@ -151,7 +131,6 @@ const DebtTakeFull = () => {
     }
   };
 
-  console.log(item, 'item');
   return (
     <ScreenLayout title={t('441')} scroll={false}>
         <View style={styles.content}>

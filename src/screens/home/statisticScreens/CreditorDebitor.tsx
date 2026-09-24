@@ -13,7 +13,6 @@ const CreditorDebitor = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {type, item, report} = route.params || {};
-  console.log(item, 'item in creditor debitor');
 
   // HISOBOT rejimida TUGALLANGAN (status===2) yoki RAD etilган (3/4) kontraktда
   // amal tugmalari (muddat uzaytirishni so'rash / qaytarish) YASHIRILADI — yakunlangan

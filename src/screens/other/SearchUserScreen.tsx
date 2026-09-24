@@ -33,7 +33,6 @@ import { colors } from '../../theme/colors';
 import { settingDate } from '../../helper';
 import { t } from 'i18next';
 import { checkExpire, setNotification } from '../../store/reducers/HomeReducer';
-import socketService from '../../helper/socketService';
 import { expire_passport_check } from '../../helper/timeChecker';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
 import DateModal from '../home/modal/DateModal';
@@ -99,7 +98,6 @@ const SearchUserScreen = () => {
             },
           },
         );
-        console.log(data, 'data from search user');
 
         if (data.success) {
           setError(false);
@@ -366,12 +364,11 @@ const UserInfo = ({ user, navigation, type }) => {
     setResolve(false);
 
     try {
-      const { data, status } = await axios.post(
+      const { status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      console.log(data, 'asdasd');
 
       Toast.show({
         autoHide: true,
@@ -398,7 +395,7 @@ const UserInfo = ({ user, navigation, type }) => {
         }, 2000);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

@@ -35,7 +35,6 @@ const ResetPassCode = () => {
   const navigation = useNavigation();
   const onHandle = useCallback(async () => {
     const phoneNumber = storage.getString('phoneNumber');
-    console.log(phoneNumber);
     if (phoneNumber !== undefined) {
       setLoading(true);
 

@@ -8,12 +8,9 @@ import messaging from '@react-native-firebase/messaging';
 
 import notifee, { EventType } from '@notifee/react-native';
 // Components
-import Header from '../components/Header';
 import { BottomTabNavigator } from '../../navigation/BottomTabBar';
-import { BackGroundIcon } from '../../helper/homeIcon';
 
 // Styles
-import { style } from '../../theme/style';
 
 // Store
 import {
@@ -56,10 +53,6 @@ const Main = () => {
     }
   }, [user?.data?.is_active, user?.data?.is_contract, contract, dispatch, user?.data]);
 
-  const hasUnreadNotifications = useMemo(
-    () => notification?.bild?.length > 0,
-    [notification?.bild?.length],
-  );
 
   const registerFCMToken = useCallback(async () => {
     try {
@@ -91,8 +84,7 @@ const Main = () => {
   }, [registerFCMToken]);
 
   const handleNotificationEvents = useCallback(() => {
-    const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
-      console.warn('Notification received in foreground:', remoteMessage);
+    const unsubscribeOnMessage = messaging().onMessage(async () => {
       dispatch(getNotificationWithPage({ page: 1 }));
       dispatch(getCreditorAndDebitorData());
 
@@ -125,12 +117,8 @@ const Main = () => {
 
     // ✅ Foreground tap handler
     const unsubscribeForeground = notifee.onForegroundEvent(
-      ({ type, detail }) => {
+      ({ type }) => {
         if (type === EventType.PRESS) {
-          console.log(
-            'User tapped notification in foreground:',
-            detail.notification,
-          );
           const isLocked = storage.getBoolean('appLocked');
 
           if (isLocked) {
@@ -260,12 +248,9 @@ const Main = () => {
     if (!userId) return;
     try {
       const defaultLanguage = storage.getString('lang') || 'uz';
-      console.log('Default language:', defaultLanguage);
-      console.log('User ID:', user?.data?.id);
-      const d = await dispatch(
+      await dispatch(
         onPostDefaultLang({ lang: defaultLanguage, id: user?.data?.id }),
       ).unwrap();
-      console.log('Default language set successfully:', d);
     } catch (error) {
       console.error('Error setting default language:', error);
     }
@@ -279,7 +264,6 @@ const Main = () => {
   useEffect(() => {
     if (Platform.OS === 'ios') {
       notifee.setBadgeCount(notification.bild?.length || 0).then(() => {
-        console.log('Badge count set successfully');
       });
     } else {
       NotificationBadgeModule.setBadgeOnlyNumber(
@@ -308,11 +292,6 @@ const Main = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  background: {
-    position: 'absolute',
-    height: style.height / 3,
-    width: '100%',
   },
 });
 

@@ -1,7 +1,5 @@
 import { FlatList, RefreshControl, StyleSheet, View, Text } from 'react-native';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { BackGroundIcon } from '../../helper/homeIcon';
-import { style } from '../../theme/style';
 import { useNavigation } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBar from '../../navigation/TopTabBar';
@@ -27,7 +25,6 @@ import { storage } from '../../store/api/token/getToken';
 import { URL } from '../constants';
 import QarzShartnomasiRuxsatSorash from './notifications/all/QarzShartnomasiRuxsatSorash';
 import QarzniQaytarishRadQilinganligi from './notifications/all/QarzniQaytarishRadQilinganligi';
-import OtherHeader from '../components/OtherHeader';
 import RdHeader from './redesign/RdHeader';
 import { BellIcon, NewsIcon } from './redesign/icons';
 import { rd, rs } from '../../theme/rd';
@@ -39,22 +36,18 @@ import {
   getCreditorDataAndDebitorData,
   getNotificationWithPage,
   HomeApi,
-  onGetNews,
 } from '../../store/api/home';
 import NewUser from './notifications/all/NewUser';
 import RecoveryPassword from './notifications/all/RecoveryPassword';
 import QarzniMuddatUzaytirishQabul from './notifications/all/QarzniMuddatUzaytirishQabul';
 import MalumotniKorishgaRadEtildi from './notifications/all/MalumotniKorishgaRadEtildi';
 import MalumotniKorishgaRuxsatBerildi from './notifications/all/MalumotniKorishgaRuxsatBerildi';
-import MainText from '../components/MainText';
-import { fontSize } from '../../theme/font';
 
 import { t } from 'i18next';
 import socketService from '../../helper/socketService';
 
 import Eslatma from './notifications/all/Eslatma';
 import Animated, {
-  LinearTransition,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -319,7 +312,6 @@ const Bildrishnoma = () => {
         obj.sender =
           user?.data?.id === item.debitor ? item.creditor : item.debitor;
         obj.res = user?.data?.id;
-        console.log('creditor', obj);
       } else {
         obj.act = item.act;
         obj.contract = item.contract;
@@ -327,7 +319,6 @@ const Bildrishnoma = () => {
         obj.debitor = item.debitor;
         obj.reciver = item.debitor;
         obj.stype = status;
-        console.log('debitor', obj);
       }
 
       try {
@@ -371,14 +362,16 @@ const Bildrishnoma = () => {
           type: 'error2',
           visibilityTime: 3000,
         });
-        console.log('error', JSON.stringify(error, null, 2));
+        // SS-AUDIT (2026-09-25): to'liq axios xatosi (config.headers.Authorization —
+        // token!) logga yozilmasin, faqat xabar.
+        console.error('notification ask error:', error?.message);
       }
     };
 
     try {
       await onAsk();
     } catch (error) {
-      console.log('error', error);
+      console.error('notification ask error:', (error as any)?.message);
       Toast.show({
         autoHide: true,
         position: 'bottom',
@@ -913,82 +906,5 @@ const styles = StyleSheet.create({
     backgroundColor: rd.color.page,
     flex: 1,
   },
-  emptyListContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  pdfView: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.29,
-    shadowRadius: 4.65,
-    elevation: 7,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  userName: {
-    fontSize: style.fontSize.x,
-    color: style.textColor,
-    fontFamily: style.fontFamilyBold,
-    padding: 80,
-    alignSelf: 'center',
-  },
-  download: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: style.StatusbarColor,
-    padding: 10,
-    width: style.width / 3,
-    flexDirection: 'row',
-  },
-  downloadText: {
-    color: style.textColor,
-    fontSize: style.fontSize.small,
-    fontFamily: style.fontFamilyMedium,
-  },
-  main: {
-    width: '90%',
-    alignSelf: 'center',
-    flex: 1,
-    paddingBottom: 10,
-    marginTop: 20,
-  },
-  aboutUsContainer: {
-    backgroundColor: '#fff',
 
-    borderRadius: 15,
-    flex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-    padding: 10,
-    zIndex: 1,
-  },
-
-  title: {
-    fontSize: style.fontSize.xs,
-    color: style.textColor,
-    fontFamily: style.fontFamilyMedium,
-    alignSelf: 'center',
-    textAlign: 'center',
-  },
-  headers: {
-    height: style.height / 3,
-    position: 'absolute',
-    width: style.width,
-  },
 });

@@ -113,7 +113,6 @@ const QrCode = () => {
           await RNBlobUtil.fs.cp(filePath!, destPath);
         }
 
-        console.log('File saved at:', filePath);
 
         await FileViewer.open(file.filePath!);
 
@@ -138,7 +137,6 @@ const QrCode = () => {
         // if (permission['ios.permission.PHOTO_LIBRARY'] === RESULTS.GRANTED) {
         viewShootRef.current.capture().then(uri => {
           generateQR(uri);
-          console.log('Captured image URI:', uri);
         });
         // } else {
         //   Toast.show({
@@ -154,7 +152,6 @@ const QrCode = () => {
 
       viewShootRef.current.capture().then(uri => {
         generateQR(uri);
-        console.log('Captured image URI:', uri);
       });
       // } else {
       //   Toast.show({
@@ -260,17 +257,15 @@ const QrCode = () => {
               title: 'Share QR Code',
               type: 'application/pdf',
             })
-              .then(res => {
-                console.log('Share is good', res);
-              })
+              .then(() => {})
               .catch(async error => {
                 await RNBlobUtil.fs.unlink(destPath);
-                console.log('Share is bad', error);
+                console.error('Share is bad', error);
               });
             await RNBlobUtil.fs.unlink(destPath);
           })
           .catch(error => {
-            console.log('RNHTMLtoPDF', error.message);
+            console.error('RNHTMLtoPDF', error.message);
           });
       });
     });

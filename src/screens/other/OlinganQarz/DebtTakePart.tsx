@@ -84,7 +84,6 @@ const DebtTakePart = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(data, 'data in debt take part');
 
       if (data.msg === 'end' && status === 200) {
         Toast.show({
@@ -189,7 +188,7 @@ const DebtTakePart = () => {
     try {
       dispatch(onGetContract({ id: id }));
     } catch (error) {
-      console.warn(error, 'error in debt take part');
+      console.error(error, 'error in debt take part');
     }
   };
 

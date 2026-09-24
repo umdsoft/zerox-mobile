@@ -10,7 +10,6 @@ import NotificationShell from '../../../components/NotificationShell';
 
 const PulMablagOtkazilganligiHaqida = ({ item, okay, navigation }) => {
   const { user } = useSelector(state => state.HomeReducer);
-  console.log('item', item);
   const onOkay = async () => {
     okay(item.id);
   };

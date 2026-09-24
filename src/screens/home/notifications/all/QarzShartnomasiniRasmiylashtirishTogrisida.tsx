@@ -59,10 +59,6 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
     };
 
     if (item.debitor === item.reciver) {
-      console.log(
-        JSON.stringify(item, null, 2),
-        'creditorga ketadigan notification',
-      );
       // firebase ga api orqali creditorga notification getadi
       return (
         <NotificationShell
@@ -121,10 +117,6 @@ const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
       );
     }
     if (item.creditor === item.reciver) {
-      console.log(
-        JSON.stringify(item, null, 2),
-        'debitorga ketadigan notification',
-      );
       // firebase ga api orqali debitorga notification getadi
 
       return (

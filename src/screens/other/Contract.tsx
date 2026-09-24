@@ -27,10 +27,8 @@ const Contract = () => {
   const { url, title } = useRoute().params;
   const user = useSelector(state => state.HomeReducer.user);
 
-  const downloadProgress = res => {
-    const progress = (res.bytesWritten / res.contentLength) * 100;
-    console.log(`Progress: ${progress.toFixed(2)}%`);
-  };
+  // SS-AUDIT (2026-09-25): progress faqat console'ga yozilardi — endi no-op.
+  const downloadProgress = () => {};
 
   const onDownload = async () => {
     Toast.show({

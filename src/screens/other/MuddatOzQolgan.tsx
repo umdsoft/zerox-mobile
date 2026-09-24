@@ -11,7 +11,6 @@ const MuddatOzQolgan = () => {
   const route = useRoute();
   const {t} = useTranslation();
   const {creditor, debitor, type} = route.params;
-  console.log(type, 'type');
   return (
     <ScreenLayout title={type === 'debitor' ? t('168') : t('171')} scroll={false}>
       <View style={styles.cardViewContainer}>

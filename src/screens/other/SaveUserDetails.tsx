@@ -56,15 +56,12 @@ const UserInfo = () => {
     setCheck(false);
     setReject(false);
     setResolve(false);
-    console.log('obj', obj);
     try {
-      const { data, status } = await axios.post(
+      const { status } = await axios.post(
         URL + '/notification/reqquest',
         obj,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      console.log('data', data);
-      console.log('status', status);
       Toast.show({
         autoHide: true,
         position: 'bottom',
@@ -83,7 +80,7 @@ const UserInfo = () => {
         }, 3000);
       }
     } catch (error) {
-      console.warn(error);
+      console.error(error);
     }
   }, []);
 

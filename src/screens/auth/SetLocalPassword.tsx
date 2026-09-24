@@ -12,7 +12,6 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalize, style } from '../../theme/style';
 
-import SetCode from '../../images/SetCode';
 import {
   DrawerActions,
   StackActions,
@@ -166,7 +165,7 @@ const SetLocalPassword = () => {
         }
       }
     } catch (error) {
-      console.log('Error', error);
+      console.error('Error', error);
     }
   }, [navigation, restoreAfterUnlock]);
 

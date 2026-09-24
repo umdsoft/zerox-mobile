@@ -19,7 +19,6 @@ import RdHeader from '../../home/redesign/RdHeader';
 import {t} from 'i18next';
 import {textInputPlace} from '../../../helper/index';
 
-import socketService from '../../../helper/socketService';
 import {getMe} from '../../../store/api/home';
 import PaymeIcon from '../../../images/Payme';
 import {URL} from '../../constants';
@@ -96,10 +95,8 @@ const Pay = () => {
   useEffect(() => {
     let appState = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
-        console.log('App has come to the foreground!');
         fetchData();
       } else {
-        console.log('App has come to the background!');
         setIsLoading(false);
       }
     });
@@ -141,7 +138,6 @@ const Pay = () => {
       appState.remove();
     };
   }, [isLoading, navigation, user.data.balance]);
-  console.log(isLoading, 'isLoading');
 
   if (isLoading) {
     return <Loading />;

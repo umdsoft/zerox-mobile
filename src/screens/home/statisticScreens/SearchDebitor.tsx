@@ -242,7 +242,7 @@ const SearchDebitor = () => {
         })
         .catch(err => {
           if (axios.isCancel(err)) return;
-          console.log(err, 'error search');
+          console.error(err, 'error search');
         });
     }, 400);
   };
@@ -400,7 +400,7 @@ const SearchDebitor = () => {
       // Excel/Sheets ilovasida ochishga urinamiz (bo'lmasa — jimgina o'tkazamiz).
       FileViewer.open(cachePath, {showOpenWithDialog: true}).catch(() => {});
     } catch (e) {
-      console.log('excel export error', e);
+      console.error('excel export error', e);
     }
   };
 

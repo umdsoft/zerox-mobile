@@ -52,7 +52,6 @@ const DownloadStatistic = () => {
             ?.join('_')}${setNameByLang(lang!)}`,
         )
           .then(() => {
-            console.log('File copied to cache');
           })
           .catch(err => {
             console.error('Error copying file:', err);
@@ -73,7 +72,7 @@ const DownloadStatistic = () => {
         }
       })
       .catch(err => {
-        console.warn('Share error:', err);
+        console.error('Share error:', err);
         // Toast.show({
         //   autoHide: true,
         //   visibilityTime: 3000,
@@ -111,7 +110,6 @@ const DownloadStatistic = () => {
       // Delete the existing file if overwrite is true
       if (fileExists) {
         await ReactNativeBlobUtil.fs.unlink(filePath);
-        console.log(`Existing file deleted: ${filePath}`);
       }
 
       // Configure and fetch the file
@@ -148,7 +146,6 @@ const DownloadStatistic = () => {
             : await forAndroid();
         });
 
-      console.log('File successfully opened');
     } catch (error) {
       console.error('Download or open file error:', error);
 

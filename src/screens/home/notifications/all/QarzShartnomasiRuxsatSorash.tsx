@@ -48,7 +48,6 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
           type: 'omad',
           visibilityTime: 3000,
         });
-        console.log('item', item);
         dispatch(filter_notification(item?.id));
         // socketService.sendNotification({
         //   id: user.data.id === item.debitor ? item.creditor : item.debitor,

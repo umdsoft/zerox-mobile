@@ -35,8 +35,6 @@ const Statistic = () => {
     return <Loading />;
   }
 
-  console.log(debitor.data, 'debitor.data');
-  console.log(creditor.data, 'creditor.data');
 
   return (
     <View style={styles.container}>
@@ -82,7 +80,6 @@ const RenderInfo = ({ datax, navigation, title, type }) => {
   const { t } = useTranslation();
 
   const renderPie = useMemo(() => {
-    console.log(datax?.data, 'datax?.data?.chart');
     const isEmpty =
       datax?.data?.chart?.rad === 0 && datax?.data?.chart?.tugallangan === 0;
     return (

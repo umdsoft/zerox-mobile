@@ -68,7 +68,6 @@ const SendMoneyHistory = () => {
     modalRef?.open(true, item, type);
   }, []);
   const closeModal = useCallback(() => {
-    console.log('close');
   }, []);
 
   return (
@@ -105,7 +104,6 @@ const ListStatistic = ({ item, index, type, openModal }) => {
   const la = useTranslation();
 
   const mainInfo = (userType: any) => {
-    console.log(userType, 'userType');
     switch (userType) {
       case 3:
         return (
@@ -225,7 +223,6 @@ const Enter = ({ openModal, closeModal }) => {
     return <Loading />;
   }
 
-  console.log(data.data?.length, 'data.data');
   return (
     <View style={[styles.container]}>
       <FlatList
@@ -262,7 +259,6 @@ const Exit = ({ openModal, closeModal }) => {
   if (loading) {
     return <Loading />;
   }
-  console.log(JSON.stringify(data.data, null, 2), 'data.data');
   return (
     <View style={styles.container}>
       <FlatList
@@ -660,7 +656,6 @@ const ShowDetailsModal = ({ getRef }) => {
         );
       }
 
-      console.log('File saved as:', filePath);
 
       // Open file
       await FileViewer.open(`file://${filePath}`);

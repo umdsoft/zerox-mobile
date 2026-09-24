@@ -44,7 +44,6 @@ const HistoryDebt = () => {
         headers: { Authorization: 'Bearer ' + token },
         signal,
       });
-      console.log('data', data);
 
       if (status === 200) {
         setData(data?.data);

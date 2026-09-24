@@ -22,7 +22,6 @@ import { textInputPlace } from '../../helper/index';
 import { setNotification } from '../../store/reducers/HomeReducer';
 import { useDispatch } from 'react-redux';
 import { t } from 'i18next';
-import socketService from '../../helper/socketService';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
 import { goHomeSmooth } from '../../helper/finishAction';
 import { rd, rs } from '../../theme/rd';
@@ -139,7 +138,7 @@ const SendMoney = () => {
       }
     } catch (error) {
       setLoading(false);
-      console.warn(error.message, 'eror');
+      console.error(error.message, 'eror');
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
@@ -185,7 +184,7 @@ const SendMoney = () => {
         // setClient(t('825'));
       }
     } catch (error) {
-      console.warn(error.message, 'eror');
+      console.error(error.message, 'eror');
       setClient({
         first_name: '',
         last_name: '',

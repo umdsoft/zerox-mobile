@@ -103,7 +103,7 @@ export const checkPhoneTime = async (): Promise<boolean> => {
     }
     return isTimeValid;
   } catch (error) {
-    console.log('Error checking time:', JSON.stringify(error));
+    console.error('Error checking time:', JSON.stringify(error));
     Toast.show({
       autoHide: true,
       visibilityTime: 3000,

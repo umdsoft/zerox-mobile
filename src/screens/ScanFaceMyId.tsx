@@ -207,7 +207,6 @@ const ScanFaceMyId = () => {
         if (response.data.success) {
           setLoading(true);
           dispatch(getMe()).then(val => {
-            console.log(val, 'value');
             if (val?.payload?.user?.data?.is_contract === 1) {
               setLoading(false);
               navigation.navigate('BottomTabNavigator');
@@ -292,7 +291,7 @@ const ScanFaceMyId = () => {
             await Indentificator(data);
           },
           onError: err => {
-            console.log('myid error', err);
+            console.error('myid error', err);
             Toast.show({
               autoHide: true,
               visibilityTime: 3000,
@@ -315,12 +314,11 @@ const ScanFaceMyId = () => {
                 desc: t('Xatolik!'),
               },
             });
-            console.warn('user exited');
           },
         });
       } catch (error) {
         Alert.alert('Response catch myid', JSON.stringify(error));
-        console.log(error, 'face error');
+        console.error(error, 'face error');
       }
     }
   }, [Indentificator, getSession, i18n.language, start]);

@@ -73,7 +73,7 @@ const HomeApi = createAsyncThunk(
         };
       }
     } catch (error: any) {
-      console.log({ 'Notification-Error-1': error.message });
+      console.error({ 'Notification-Error-1': error.message });
       // error.response network-error'da undefined (ikkilamchi crash) → guard;
       // + return (oldin return yo'q edi → reject hech qachon ishlamasdi).
       return rejectWithValue(
@@ -118,7 +118,7 @@ const getCreditorAndDebitorData = createAsyncThunk(
         },
       };
     } catch (error) {
-      console.log({ 'Notification-Error-11': error.message });
+      console.error({ 'Notification-Error-11': error.message });
     }
   },
 );
@@ -140,7 +140,7 @@ const getMe = createAsyncThunk('getme', async state => {
       user: data,
     };
   } catch (error) {
-    console.log({ 'Notification-Error-2': error.message });
+    console.error({ 'Notification-Error-2': error.message });
   }
 });
 
@@ -160,7 +160,7 @@ const getNotifications = createAsyncThunk('notification', async state => {
       pagination: data.pagination,
     };
   } catch (error) {
-    console.log({ 'Notification-Error-3': error.message });
+    console.error({ 'Notification-Error-3': error.message });
   }
 });
 
@@ -179,7 +179,7 @@ const getVersionAction = createAsyncThunk('getVersion', async state => {
       error: null,
     };
   } catch (error) {
-    console.log({ 'Notification-Error-4': error.message });
+    console.error({ 'Notification-Error-4': error.message });
     throw error;
   }
 });
@@ -201,7 +201,7 @@ const postDeviceIdAction = createAsyncThunk('postDeviceId', async state => {
       };
     }
   } catch (error) {
-    console.log({ 'Notification-Error-5': error.message });
+    console.error({ 'Notification-Error-5': error.message });
     throw error;
   }
 });
@@ -224,7 +224,7 @@ const updateDeviceStatusAction = createAsyncThunk(
         },
       );
     } catch (error) {
-      console.log({ 'Notification-Error-6': error.message });
+      console.error({ 'Notification-Error-6': error.message });
       throw error;
     }
   },
@@ -251,7 +251,7 @@ const closeActiveDeviceAction = createAsyncThunk(
         };
       }
     } catch (error) {
-      console.log({ 'Notification-Error-7': error.message });
+      console.error({ 'Notification-Error-7': error.message });
       throw error;
     }
   },
@@ -274,7 +274,7 @@ const getDevicesAction = createAsyncThunk('getDevicesAction', async () => {
       };
     }
   } catch (error) {
-    console.log({ 'Notification-Error-8': error.message });
+    console.error({ 'Notification-Error-8': error.message });
     throw error;
   }
 });
@@ -298,7 +298,7 @@ const onListTimePostAction = createAsyncThunk(
         success: true,
       };
     } catch (error) {
-      console.log({ 'Notification-Error-9': error.message });
+      console.error({ 'Notification-Error-9': error.message });
       throw error;
     }
   },
@@ -326,7 +326,7 @@ const onDeleteDevices = createAsyncThunk('onDeleteDevices', async state => {
       };
     }
   } catch (error) {
-    console.log({ 'Notification-Error-10': error.message });
+    console.error({ 'Notification-Error-10': error.message });
     throw error;
   }
 });
@@ -355,7 +355,7 @@ const getCreditorDataAndDebitorData = createAsyncThunk(
         },
       };
     } catch (error) {
-      console.log({ 'Notification-Error-11': error.message });
+      console.error({ 'Notification-Error-11': error.message });
       throw error;
     }
   },
@@ -385,7 +385,7 @@ const getNotificationWithPage = createAsyncThunk(
         notification: data,
       };
     } catch (error) {
-      console.log({ 'Notification-Error-3': error.message });
+      console.error({ 'Notification-Error-3': error.message });
     }
   },
 );
@@ -409,7 +409,7 @@ const onPostDefaultLang = createAsyncThunk(
         data: data,
       };
     } catch (error) {
-      console.log({ 'Notification-Error-12': error.message });
+      console.error({ 'Notification-Error-12': error.message });
       throw error;
     }
   },
@@ -424,13 +424,12 @@ const onGetNews = createAsyncThunk('onGetNews', async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('onGetNewsssss', data);
 
     return {
       news: data.data,
     };
   } catch (error) {
-    console.log({ 'Notification-Error-13': error.message });
+    console.error({ 'Notification-Error-13': error.message });
     throw error;
   }
 });
@@ -438,7 +437,6 @@ const onGetNews = createAsyncThunk('onGetNews', async () => {
 const onGetContract = createAsyncThunk('onGetContract', async ({ id }) => {
   const token = storage.getString('token');
   try {
-    console.log(id, 'id in on get contract');
     const { data } = await axios.get(URL + `/contract/by/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -448,7 +446,7 @@ const onGetContract = createAsyncThunk('onGetContract', async ({ id }) => {
       contract: data,
     };
   } catch (error) {
-    console.log({ 'Notification-Error-14': error.message });
+    console.error({ 'Notification-Error-14': error.message });
     throw error;
   }
 });

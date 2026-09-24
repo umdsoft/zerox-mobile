@@ -67,7 +67,6 @@ const QrScan = () => {
             },
           })
           .then(res => {
-            console.log('responseeeee', res.data);
             if (res.data.success === true) {
               if (res.data.data.uid === user.data.uid) {
                 Toast.show({
@@ -94,7 +93,7 @@ const QrScan = () => {
             }
           })
           .catch(err => {
-            console.warn(err);
+            console.error(err);
           });
       }
     },

@@ -99,7 +99,6 @@ const ChangePhoneNumberSmsCheck = () => {
           },
         },
       );
-      console.log(data);
 
       if (data.success && data.msg === 'success') {
         setLoading(false);
@@ -149,7 +148,7 @@ const ChangePhoneNumberSmsCheck = () => {
       setLoading(false);
     } catch (error) {
       setCode('');
-      console.log(error);
+      console.error(error);
       setLoading(false);
     }
   }, [code, dispatch, i18n.language, navigation, phone, user?.data?.phone]);
@@ -206,7 +205,6 @@ const ChangePhoneNumberSmsCheck = () => {
           },
         },
       );
-      console.log('Resend SMS data:', data);
       if (data.success) {
         Toast.show({
           autoHide: true,
@@ -250,12 +248,10 @@ const ChangePhoneNumberSmsCheck = () => {
   }, [startTimer]);
 
   useEffect(() => {
+    // SS-AUDIT (2026-09-25): SMS-retriever app hash faqat diagnostika uchun edi — logga yozilmaydi.
     getHash()
-      .then(hash => {
-        console.log('hash', hash);
-        // use this hash in the message.
-      })
-      .catch(console.log);
+      .then(() => {})
+      .catch(() => {});
 
     startOtpListener(message => {
       const otp = message.match(/\b\d{5}\b/);

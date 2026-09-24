@@ -216,9 +216,8 @@ const ContractModal = () => {
           props: { desc: "Amalga oxshirib bo'lmadi " },
         });
       }
-    } else {
-      console.log('red');
     }
+    // SS-AUDIT (2026-09-25): bo'sh `else { console.log('red') }` olib tashlandi.
   }, [check, dispatch, t]);
 
   return (
@@ -260,7 +259,7 @@ const ContractModal = () => {
                 horizontal={false}
                 page={1}
                 onError={error => {
-                  console.warn(error);
+                  console.error(error);
                   setPdfErr(true);
                 }}
                 renderActivityIndicator={() => (

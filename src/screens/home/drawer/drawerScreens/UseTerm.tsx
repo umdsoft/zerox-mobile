@@ -44,7 +44,6 @@ const UseTerm = () => {
       // Delete the existing file if overwrite is true
       if (fileExists) {
         await ReactNativeBlobUtil.fs.unlink(filePath);
-        console.log(`Existing file deleted: ${filePath}`);
       }
       setDownloadLoading(true);
       const res = await ReactNativeBlobUtil.config({
@@ -94,7 +93,7 @@ const UseTerm = () => {
         },
       });
       setDownloadLoading(false);
-      console.log(e);
+      console.error(e);
     }
   };
 
@@ -148,10 +147,7 @@ const UseTerm = () => {
               setLoading(false);
             }}
             onError={error => {
-              console.log(error.message);
-            }}
-            onPressLink={uri => {
-              console.log(`Link pressed: ${uri}`);
+              console.error(error.message);
             }}
             style={styles.pdf}
           />

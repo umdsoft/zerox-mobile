@@ -8,7 +8,6 @@ const requestUserPermission = async () => {
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
   if (enabled) {
-    console.log('Authorization status:', authStatus);
   }
 };
 
@@ -23,7 +22,6 @@ const getFcmTokenFromLocalStorage = async () => {
       console.error(error);
     }
   } else {
-    console.log('token found', fcmtoken);
   }
 };
 const getFcmToken = async () => {

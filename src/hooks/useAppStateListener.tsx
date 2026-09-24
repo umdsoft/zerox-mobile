@@ -15,7 +15,6 @@ export default function useAppStateListener() {
   const handleAppStateChange = useCallback(
     (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        console.log('App has come to the foreground!');
         dispatch(setAppState({appState: 'active'}));
 
         const lastTime = storage.getNumber('lastBackgroundTime');
@@ -24,7 +23,6 @@ export default function useAppStateListener() {
         if (lastTime && token) {
           const diff = Date.now() - lastTime;
           if (diff >= LOCK_TIMEOUT) {
-            console.log('More than 30 seconds in background, lock the app');
             storage.set('appLocked', true);
 
             // J (so'rov): qulflashdan OLDIN joriy navigatsiya holatini saqlaymiz —
@@ -52,7 +50,6 @@ export default function useAppStateListener() {
           }
         }
       } else if (nextAppState === 'inactive' || nextAppState === 'background') {
-        console.log('App has gone to the background!');
         dispatch(setAppState({appState: 'background'}));
         storage.set('lastBackgroundTime', Date.now());
       }

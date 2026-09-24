@@ -60,7 +60,7 @@ const createFmtTokenAction = createAsyncThunk(
   async state => {
     const token = storage.getString('token');
     try {
-      const {data} = await axios.put(
+      await axios.put(
         URL + '/user/fmt-token',
         {
           fmt_token: state.fmt_token,
@@ -72,7 +72,6 @@ const createFmtTokenAction = createAsyncThunk(
           },
         },
       );
-      console.log(data, 'dasasdasd');
     } catch (error) {
       throw error;
     }

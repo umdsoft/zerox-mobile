@@ -12,7 +12,6 @@ const Dalol = () => {
   const { type, data, date, sum } = route.params;
   const { t, i18n } = useTranslation();
 
-  console.log(route.params, 'route.params');
 
   return (
     <View style={styles.container}>
@@ -29,14 +28,8 @@ const Dalol = () => {
               sum,
             ),
           }}
-          onLoadComplete={(numberOfPages, filePath) => {
-            console.log(`number of pages: ${numberOfPages}`);
-          }}
-          onPageChanged={(page, numberOfPages) => {
-            console.log(`current page: ${page}`);
-          }}
           onError={error => {
-            console.log(error, 'error');
+            console.error(error, 'error');
           }}
           style={styles.pdf}
         />

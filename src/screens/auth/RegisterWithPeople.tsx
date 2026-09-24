@@ -188,7 +188,7 @@ const RegisterWithPeople = () => {
         }
       }
     } catch (e) {
-      console.warn(e, 'asdsa');
+      console.error(e, 'asdsa');
       setLoading(false);
       setError(true);
     }

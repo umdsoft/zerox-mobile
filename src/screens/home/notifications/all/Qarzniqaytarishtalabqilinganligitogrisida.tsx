@@ -53,14 +53,13 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
         // });
       }
     } catch (error) {
-      console.log('Error in notification ok:', error);
+      console.error('Error in notification ok:', error);
     }
   }, []);
 
   const dispatch = useDispatch();
 
   if (item.creditor === item.reciver) {
-    console.log('item', item);
     return (
       <NotificationShell
         title={t('522') as string}

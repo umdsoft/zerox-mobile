@@ -24,7 +24,6 @@ import {setNotification} from '../../../store/reducers/HomeReducer';
 import {t} from 'i18next';
 import {Trans} from 'react-i18next';
 import {HomeApi} from '../../../store/api/home';
-import socketService from '../../../helper/socketService';
 
 const CharityDebt = () => {
   const {item} = useRoute().params;
