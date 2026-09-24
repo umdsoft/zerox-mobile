@@ -5,6 +5,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { formatPhone9 } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -95,8 +96,8 @@ const FinanceDebtAdd = () => {
     setPhone(d.slice(0, 9));
   };
   // R20: ko'rsatishда "90 123 45 67" (2-3-2-2).
-  const formatPhone = (d: string) =>
-    [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
+  // SS-AUDIT (2026-09-25): helper/phone.formatPhone9 (yagona manba).
+  const formatPhone = formatPhone9;
 
   // SS2: kontaktdan tanlash — ism va telefon BIRGA to'ldiriladi (foydalanuvchi
   // raqamni qo'lda ko'chirmasin; xato kiritish ham yo'qoladi).

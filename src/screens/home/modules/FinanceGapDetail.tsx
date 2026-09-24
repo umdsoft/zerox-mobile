@@ -21,26 +21,18 @@ import { cardDigits, fmtCard4 } from '../../../helper/cardBin';
 import RNBlobUtil from 'react-native-blob-util';
 import Share from 'react-native-share';
 import { storage } from '../../../store/api/token/getToken';
-import { amountToDisplay, amountToRaw, fDate, fMoney, num } from './financeMoney';
+import { amountToDisplay, amountToRaw, fDate, fMoney, localDateKey, num, parseLocalDate } from './financeMoney';
+import { formatPhone9, phoneDigits9 } from '../../../helper/phone';
 import { DateField } from './financeForm';
 import { PlusIcon, TrashIcon, ChevronRight, LocationIcon, CopyIcon, PencilIcon, CloseIcon } from '../redesign/icons';
 import MapPicker from './MapPicker';
 
 const TEAL = '#0d9488';
 
-// SS6: "YYYY-MM-DD" -> Date (LOKAL yarim tun). `new Date('2026-04-15')` UTC deb
-// talqin qilinadi va +5 mintaqada kun SURILIB ketardi — shu sabab qo‘lda quramiz.
-const ymdToDate = (s?: string | null): Date | null => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
-  if (!m) return null;
-  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-};
-// Date -> "YYYY-MM-DD" (lokal; toISOString UTC'ga surardi).
-const dateToYmd = (d?: Date | null): string | null => {
-  if (!d) return null;
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-};
+// SS-AUDIT (2026-09-25): financeMoney.parseLocalDate / localDateKey bilan bir xil
+// edi (lokal kun, UTC surilishsiz) — nusxalar olib tashlandi.
+const ymdToDate = (s?: string | null): Date | null => parseLocalDate(s);
+const dateToYmd = (d?: Date | null): string | null => (d ? localDateKey(d) : null);
 
 // Lokatsiya havolasidan (yoki "lat,lng") koordinatani ajratish.
 const parseLatLng = (loc?: string): { lat: number; lng: number } | null => {
@@ -176,10 +168,11 @@ const FinanceGapDetail = () => {
     Linking.openURL(url).catch(() => {});
   };
   // SS3: plastik karta raqamini nusxalash (probellarsiz)
-  const copyCard = (num?: string) => {
-    const t = String(num || '').replace(/\s/g, '');
-    if (!t) return;
-    try { Clipboard.setString(t); Toast.show({ type: 'omad', props: { desc: 'Karta raqami nusxalandi' } }); } catch (_) {}
+  // SS-AUDIT (2026-09-25): parametr `num` importni, lokal `t` i18next'ni soya qilardi.
+  const copyCard = (cardNo?: string) => {
+    const digits = String(cardNo || '').replace(/\s/g, '');
+    if (!digits) return;
+    try { Clipboard.setString(digits); Toast.show({ type: 'omad', props: { desc: t('Karta raqami nusxalandi') } }); } catch (_) {}
   };
   const saveVenue = async () => {
     if (savingVenue || !venueForm) return;
@@ -286,13 +279,8 @@ const FinanceGapDetail = () => {
    * to'liq "+998XXXXXXXXX" yuboriladi (backend baribir oxirgi 9 raqamni
    * normallashtiradi, lekin to'liq format bilan yuborish aniqroq).
    */
-  const formatPhone9 = (d: string) =>
-    [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
-  const onAddPhoneChange = (txt: string) => {
-    let digits = String(txt).replace(/\D/g, '');
-    if (digits.startsWith('998')) digits = digits.slice(3);
-    setAddPhone(digits.slice(0, 9));
-  };
+  // SS-AUDIT (2026-09-25): formatPhone9 / phoneDigits9 — helper/phone (yagona manba).
+  const onAddPhoneChange = (txt: string) => setAddPhone(phoneDigits9(txt));
 
   /**
    * SS3 (2026-09-15): "To'landi" yanglishib bosilsa — 24 SOAT ichida qaytarish.
@@ -395,7 +383,7 @@ const FinanceGapDetail = () => {
       setDelMember(null);
       refresh({});
       Toast.show({ type: 'omad', props: { desc: 'A‘zo o‘chirildi' } });
-    } catch (e) { Toast.show({ type: 'error2', props: { desc: 'Xatolik' } }); }
+    } catch (e: any) { Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } }); }
     finally { setBusy(false); }
   };
   const start = async () => {
@@ -421,13 +409,17 @@ const FinanceGapDetail = () => {
     } catch (e) { Toast.show({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } }); }
     finally { setBusy(false); }
   };
+  // SS-AUDIT (2026-09-25): busy-guard — ikki marta bosishda ikkita DELETE ketmasin.
   const doDelete = async () => {
+    if (busy) return;
+    setBusy(true);
     try {
       await financeApi.deleteGap(id);
       setShowDel(false);
       Toast.show({ type: 'omad', props: { desc: 'O‘chirildi' } });
       navigation.goBack();
-    } catch (e) { Toast.show({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } }); }
+    } catch (e: any) { Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } }); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -619,7 +611,7 @@ const FinanceGapDetail = () => {
                   style={styles.phoneInput}
                 />
               </View>
-              <TextInput allowFontScaling={false} value={addAmount} onChangeText={t => setAddAmount(amountToDisplay(t))} placeholder={t('Summa')} placeholderTextColor={rd.color.textTertiary} keyboardType="numeric" style={styles.addInput} />
+              <TextInput allowFontScaling={false} value={addAmount} onChangeText={v => setAddAmount(amountToDisplay(v))} placeholder={t('Summa')} placeholderTextColor={rd.color.textTertiary} keyboardType="numeric" style={styles.addInput} />
               <TouchableOpacity style={styles.addMemberBtn} onPress={addMember} disabled={busy} activeOpacity={0.85}>
                 <PlusIcon size={rs(16)} color={TEAL} />
                 <Text allowFontScaling={false} style={styles.addMemberText}>{t('A‘zo qo‘shish')}</Text>
@@ -897,7 +889,7 @@ const FinanceGapDetail = () => {
             <TextInput
               allowFontScaling={false}
               value={settings?.name}
-              onChangeText={t => setSettings((f: any) => ({ ...f, name: t }))}
+              onChangeText={v => setSettings((f: any) => ({ ...f, name: v }))}
               placeholder={t('Gap nomi')}
               placeholderTextColor={rd.color.textTertiary}
               style={styles.venueInput}
@@ -928,7 +920,7 @@ const FinanceGapDetail = () => {
                 <TextInput
                   allowFontScaling={false}
                   value={String(settings?.day_of_month ?? '')}
-                  onChangeText={t => setSettings((f: any) => ({ ...f, day_of_month: t.replace(/\D/g, '').slice(0, 2) }))}
+                  onChangeText={v => setSettings((f: any) => ({ ...f, day_of_month: v.replace(/\D/g, '').slice(0, 2) }))}
                   keyboardType="number-pad"
                   placeholder="1"
                   placeholderTextColor={rd.color.textTertiary}
@@ -1034,7 +1026,7 @@ const FinanceGapDetail = () => {
             <Text allowFontScaling={false} style={styles.confirmText}>"{g.name}" gapini o‘chirasizmi?</Text>
             <View style={styles.confirmBtns}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowDel(false)}><Text style={styles.cancelText}>{t('Bekor')}</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.confirmDel, { backgroundColor: RED }]} onPress={doDelete}><Text style={styles.confirmDelText}>{t('O‘chirish')}</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.confirmDel, { backgroundColor: RED }, busy && { opacity: 0.6 }]} disabled={busy} onPress={doDelete}><Text style={styles.confirmDelText}>{t('O‘chirish')}</Text></TouchableOpacity>
             </View>
           </View>
         </View>
@@ -1053,7 +1045,7 @@ const FinanceGapDetail = () => {
                   <TextInput
                     allowFontScaling={false}
                     value={venueForm?.card_number}
-                    onChangeText={t => setVenueForm((f: any) => ({ ...f, card_number: t.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim() }))}
+                    onChangeText={v => setVenueForm((f: any) => ({ ...f, card_number: v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim() }))}
                     placeholder="8600 1234 5678 9012"
                     placeholderTextColor={rd.color.textTertiary}
                     keyboardType="number-pad"
@@ -1067,7 +1059,7 @@ const FinanceGapDetail = () => {
                 <TextInput
                   allowFontScaling={false}
                   value={venueForm?.card_holder}
-                  onChangeText={t => setVenueForm((f: any) => ({ ...f, card_holder: t }))}
+                  onChangeText={v => setVenueForm((f: any) => ({ ...f, card_holder: v }))}
                   placeholder={t('Masalan: Abdullayev Abdulla')}
                   placeholderTextColor={rd.color.textTertiary}
                   style={styles.venueInput}
@@ -1081,7 +1073,7 @@ const FinanceGapDetail = () => {
                 <TextInput
                   allowFontScaling={false}
                   value={venueForm?.venue}
-                  onChangeText={t => setVenueForm((f: any) => ({ ...f, venue: t }))}
+                  onChangeText={v => setVenueForm((f: any) => ({ ...f, venue: v }))}
                   placeholder={t('Masalan: Chilonzor, 5-kvartal, kafe')}
                   placeholderTextColor={rd.color.textTertiary}
                   style={styles.venueInput}
@@ -1261,7 +1253,6 @@ const styles = StyleSheet.create({
   venueText: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.text },
   venueActions: { flexDirection: 'row', gap: rs(14), marginTop: rs(6), marginLeft: rs(21) },
   venueLink: { fontFamily: rd.font.bold, fontSize: rs(12), color: TEAL },
-  venueEdit: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary },
   // SS11: plastik karta tugmasi (alohida oyna ochadi)
   cardAddBtn: {
     marginTop: rs(8),

@@ -6,6 +6,7 @@
  */
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { phoneDigits9 } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -29,13 +30,8 @@ const memberColor = (i: number) => MEMBER_COLORS[i % MEMBER_COLORS.length];
 const initials = (name?: string) =>
   String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 
-// +998 formatlash
-const fmtPhone = (raw: string) => {
-  let d = raw.replace(/\D/g, '');
-  if (d.startsWith('998')) d = d.slice(3);
-  d = d.slice(0, 9);
-  return d;
-};
+// SS-AUDIT (2026-09-25): helper/phone.phoneDigits9 (yagona manba).
+const fmtPhone = phoneDigits9;
 
 const FinanceFamily = () => {
   const { t } = useTranslation();

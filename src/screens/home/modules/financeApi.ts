@@ -108,6 +108,12 @@ export const financeApi = {
   mirrorForgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-forgive`, {}, auth()),
   mirrorDemandDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-demand`, {}, auth()),
   mirrorHideDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-hide`, {}, auth()),
+  // SS-AUDIT (2026-09-25): "ko'zgu bo'lsa mirror-*, aks holda oddiy" tarmoqlanishi
+  // 4 joyda (FinanceDebtDetail demand/forgive, FinanceDebtGroup runAction) takrorlanardi.
+  demandDebtAny: (id: any, mirror: boolean) =>
+    mirror ? financeApi.mirrorDemandDebt(id) : financeApi.demandRepayment(id),
+  forgiveDebtAny: (id: any, mirror: boolean) =>
+    mirror ? financeApi.mirrorForgiveDebt(id) : financeApi.forgiveDebt(id),
   // SS-DEV (2026-09-24): QARZDOR shikoyati — qarshi tomon (hamkor yoki do'kon)
   // noto'g'ri yozgan qarz bo'yicha. Backend `parseComplaintInput`: `reason` —
   // 'not_taken' | 'fully_paid' | 'partly_paid' | 'other' (ixtiyoriy), `izoh` —

@@ -120,6 +120,27 @@ export const parseLocalDate = (s?: string | null): Date | null => {
   return p ? new Date(p.y, p.mo - 1, p.d) : null;
 };
 
+/**
+ * SS-AUDIT (2026-09-25): SHAXSIY QARZ holati — YAGONA manba. Ilgari uch ekranda
+ * uch xil predikat bor edi (FinanceDebts `isOpenDebt`, FinanceDebtGroup
+ * `isDone`, FinanceDebtDetail `active`) va muddat `String(due_date).slice(0,10)`
+ * bilan UTC bo'yicha kesilib, +05:00 da BIR KUN OLDIN "muddati o'tgan"
+ * ko'rsatardi. DB holatlari: active | overdue (ochiq), completed | cancelled
+ * (yopiq) — sayt `isActive` bilan bir xil.
+ */
+export const isDebtOpen = (d: any): boolean =>
+  (d?.status === 'active' || d?.status === 'overdue') && num(d?.remaining_amount) > 0;
+
+/** Ochiq qarz, muddati (LOKAL kun bo'yicha) bugundan oldin. */
+export const isDebtOverdue = (d: any): boolean => {
+  if (!isDebtOpen(d) || !d?.due_date) return false;
+  const due = parseLocalDate(String(d.due_date));
+  if (!due) return false;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return due.getTime() < today.getTime();
+};
+
 export const dateKeyOf = (s?: string): string => {
   const p = dateParts(s);
   if (!p) return '';

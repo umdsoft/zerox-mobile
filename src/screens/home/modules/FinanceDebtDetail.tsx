@@ -34,7 +34,7 @@ import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { fmtCard4 } from '../../../helper/cardBin';
-import { amountToDisplay, amountToRaw, fDate, fMoney, localDateKey, num } from './financeMoney';
+import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOpen, localDateKey, num } from './financeMoney';
 import { DateField } from './financeForm';
 import { MessageIcon, PhoneCallIcon, PhoneIcon, TrashIcon, PlusIcon, HandCoinReturnIcon, StorefrontIcon, WarningIcon } from '../redesign/icons';
 
@@ -112,6 +112,7 @@ const FinanceDebtDetail = () => {
   const [incVal, setIncVal] = React.useState(''); // SS17: qo'shimcha qarz
   const [increasing, setIncreasing] = React.useState(false);
   const [showDel, setShowDel] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false); // SS-AUDIT (2026-09-25)
   // SS-DEV (2026-09-24): "Qarzdan voz kechish" tasdiq modali (saytdagi ConfirmModal).
   const [showForgive, setShowForgive] = React.useState(false);
   const [forgiving, setForgiving] = React.useState(false);
@@ -182,7 +183,8 @@ const FinanceDebtDetail = () => {
    * bilan tenglashtirildi: 'active' YOKI 'overdue' = ochiq qarz;
    * amallar — o'zimniki yoki ko'zguda `can_operate` bo'lsa.
    */
-  const active = (d.status === 'active' || d.status === 'overdue') && remaining > 0;
+  // SS-AUDIT (2026-09-25): financeMoney.isDebtOpen — ro'yxat/guruh bilan bir predikat.
+  const active = isDebtOpen(d);
   // Men bu qarz bo'yicha AMAL qila olamanmi (yopish / talab / voz kechish).
   const canOperate = !isMirror || (!!d.can_operate && !d.is_shop_debt);
   const payments: any[] = d.payments || [];
@@ -200,6 +202,18 @@ const FinanceDebtDetail = () => {
    */
   const canComplain = isMirror && borrowed && !d.can_operate && d.status !== 'completed' && remaining > 0;
   const complaintCanSend = !!complaintReason || !!complaintNote.trim();
+  // SS-AUDIT (2026-09-25): do'kon/odam tarmoqlanishi 3 joyda takrorlanardi — bitta obyekt.
+  const complaintTarget = d.is_shop_debt
+    ? {
+        send: (body: { reason?: string; izoh?: string }) => financeApi.complainShopDebt(d.id, body),
+        hint: t('Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.'),
+        done: t('Shikoyat do‘kon egasiga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.'),
+      }
+    : {
+        send: (body: { reason?: string; izoh?: string }) => financeApi.complainDebt(d.id, body),
+        hint: t('Shikoyat qarz bergan odamga bildirishnoma sifatida yuboriladi.'),
+        done: t('Shikoyat qarz bergan odamga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.'),
+      };
 
   // SS10: "Amaliyotlar tarixi" — ASL qarz (1-amal) + qo'shimcha qarzlar + to'lovlar.
   // Qo'shimcha qarz markeri: notes 'startsWith __increase__' (ixtiyoriy '|izoh' bilan).
@@ -210,9 +224,10 @@ const FinanceDebtDetail = () => {
   // SS10: amaliyotlar ENG YANGISI TEPADA (kamayish tartibi). Ilgari asl qarz tepada,
   // yangi amallar pastda edi — foydalanuvchi oxirgi harakatni ko'rish uchun pastga
   // aylantirishi kerak bo'lardi. Asl qarz endi eng PASTDA (eng eski).
+  // SS-AUDIT (2026-09-25): lokal o'zgaruvchi `t` i18next `t`ni soya qilardi.
   const opTime = (o: any) => {
-    const t = new Date(o?.date || 0).getTime();
-    return isNaN(t) ? 0 : t;
+    const ts = new Date(o?.date || 0).getTime();
+    return isNaN(ts) ? 0 : ts;
   };
   const ops: any[] = [
     { kind: 'original', date: d.start_date, amount: originalAmount, note: '' },
@@ -248,10 +263,16 @@ const FinanceDebtDetail = () => {
         const r = await financeApi.mirrorPayDebt(d.id, { amount: v, payment_date: payDate });
         const newRem = Math.max(0, num(r?.data?.remaining_amount ?? remaining - v));
         const pay = r?.data?.data || { id: `tmp_${Date.now()}`, amount: v, payment_date: payDate, notes: '' };
-        patchMirror({
-          remaining_amount: newRem,
-          status: newRem <= 0 ? 'completed' : d.status,
-          payments: [...payments, pay],
+        // SS-AUDIT (2026-09-25): `payments` render paytidagi eskirgan nusxa edi —
+        // funksional yangilanish, oradagi to'lov yo'qolmasin.
+        setMirrorLocal((prev: any) => {
+          const base = prev || mirror;
+          return {
+            ...base,
+            remaining_amount: newRem,
+            status: newRem <= 0 ? 'completed' : base?.status,
+            payments: [...(base?.payments || []), pay],
+          };
         });
       } else {
         await financeApi.addDebtPayment(d.id, {
@@ -283,13 +304,9 @@ const FinanceDebtDetail = () => {
     if (forgiving) return;
     try {
       setForgiving(true);
-      if (isMirror) {
-        await financeApi.mirrorForgiveDebt(d.id);
-        patchMirror({ status: 'completed', remaining_amount: 0 });
-      } else {
-        await financeApi.forgiveDebt(d.id);
-        refresh({});
-      }
+      await financeApi.forgiveDebtAny(d.id, isMirror);
+      if (isMirror) patchMirror({ status: 'completed', remaining_amount: 0 });
+      else refresh({});
       setShowForgive(false);
       Toast.show({ type: 'omad', props: { desc: t('Qarzdan voz kechildi') } });
     } catch (e: any) {
@@ -350,8 +367,7 @@ const FinanceDebtDetail = () => {
       setDemanding(true);
       // SS-DEV (2026-09-24): ko'zguda (men qarz beruvchi) — `mirror-demand`:
       // SMS qarzdorning (kiritgan foydalanuvchining) telefoniga boradi.
-      if (isMirror) await financeApi.mirrorDemandDebt(d.id);
-      else await financeApi.demandRepayment(d.id);
+      await financeApi.demandDebtAny(d.id, isMirror);
       Toast.show({ type: 'omad', props: { desc: 'Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.' } });
     } catch (e: any) {
       const code = e?.response?.data?.code;
@@ -375,9 +391,7 @@ const FinanceDebtDetail = () => {
     setComplaintBusy(true);
     try {
       const body = { reason: complaintReason || 'other', izoh: complaintNote.trim() };
-      const r = d.is_shop_debt
-        ? await financeApi.complainShopDebt(d.id, body)
-        : await financeApi.complainDebt(d.id, body);
+      const r = await complaintTarget.send(body);
       if (r?.data?.success) {
         setComplaintSent(true);
         if (r.data.duplicate) {
@@ -393,14 +407,19 @@ const FinanceDebtDetail = () => {
     }
   };
 
+  // SS-AUDIT (2026-09-25): ikki marta bosishda ikkita DELETE ketmasin (busy-guard).
   const doDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
     try {
       await financeApi.deleteDebt(d.id);
       setShowDel(false);
       Toast.show({ type: 'omad', props: { desc: 'O‘chirildi' } });
       navigation.goBack();
-    } catch (e) {
-      Toast.show({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } });
+    } catch (e: any) {
+      Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -500,7 +519,7 @@ const FinanceDebtDetail = () => {
                 <TouchableOpacity activeOpacity={0.85} onPress={() => setShowSms(true)} style={styles.smsBtn}>
                   <MessageIcon size={rs(15)} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${partyPhone.replace(/\s/g, '')}`)} style={styles.callBtn}>
+                <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${partyPhone.replace(/\s/g, '')}`).catch(() => {})} style={styles.callBtn}>
                   <PhoneCallIcon size={rs(15)} color="#fff" />
                 </TouchableOpacity>
               </View>
@@ -651,7 +670,7 @@ const FinanceDebtDetail = () => {
         {/* SS10: Amaliyotlar tarixi — ASL qarz (1-amal) + qo'shimcha qarz + to'lov ALOHIDA. */}
         <View style={styles.histCard}>
           <Text allowFontScaling={false} style={styles.histTitle}>{t('Amaliyotlar tarixi')}</Text>
-          {ops.map((op, i) => {
+          {ops.map((op) => {
             /**
              * SS11 (2026-09-14): ilgari BERILGAN qarzda "Qarz berildi" ham,
              * "Qaytarildi" ham YASHIL chiqardi — ikki qarama-qarshi amal bir xil
@@ -674,7 +693,7 @@ const FinanceDebtDetail = () => {
               // SS1: "To'lov" -> "Qaytarildi" (qarz qaytarilganini aniqroq bildiradi).
               : t('Qaytarildi');
             return (
-              <View key={op.id ?? `op${i}`} style={styles.histRow}>
+              <View key={op.id ?? `${op.kind}-${op._idx}`} style={styles.histRow}>
                 <View style={styles.histLeft}>
                   <View style={[styles.histDot, { backgroundColor: opColor + '18' }]}>
                     <Text style={[styles.histDotText, { color: opColor }]}>{opSym}</Text>
@@ -719,7 +738,7 @@ const FinanceDebtDetail = () => {
               <TextInput
                 allowFontScaling={false}
                 value={incVal}
-                onChangeText={t => setIncVal(amountToDisplay(t))}
+                onChangeText={v => setIncVal(amountToDisplay(v))}
                 keyboardType="numeric"
                 placeholder={t('Qo‘shimcha summa')}
                 placeholderTextColor={rd.color.textTertiary}
@@ -777,7 +796,7 @@ const FinanceDebtDetail = () => {
             <TextInput
               allowFontScaling={false}
               value={payVal}
-              onChangeText={t => setPayVal(amountToDisplay(t))}
+              onChangeText={v => setPayVal(amountToDisplay(v))}
               keyboardType="numeric"
               placeholder={`Summa (${d.currency})`}
               placeholderTextColor={rd.color.textTertiary}
@@ -841,7 +860,10 @@ const FinanceDebtDetail = () => {
           tugmalar birinchi bosishda ishlaydi) + "Tayyor" tugmasi klaviaturani
           yopadi + fon bosilganda avval klaviatura, so'ng modal yopiladi. */}
       <Modal visible={showComplaint} transparent animationType="fade" statusBarTranslucent onRequestClose={() => !complaintBusy && setShowComplaint(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        {/* SS-AUDIT (2026-09-25): Android'da `behavior="height"` statusBarTranslucent
+            modal ichida ikki marta qisqartirar/ishlamas edi — Android'da behavior
+            berilmaydi (adjustResize o'zi ishlaydi), iOS'da 'padding'. */}
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.backdrop}>
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -863,11 +885,7 @@ const FinanceDebtDetail = () => {
             <Text allowFontScaling={false} style={[styles.confirmTitle, styles.centerText]}>{t('Qarz bo‘yicha shikoyat')}</Text>
             <Text allowFontScaling={false} style={[styles.confirmText, styles.centerText]}>
               «{d.source_name}» — {fMoney(remaining, d.currency)}.
-              {!complaintSent
-                ? ' ' + (d.is_shop_debt
-                    ? t('Shikoyat do‘kon egasiga bildirishnoma sifatida yuboriladi.')
-                    : t('Shikoyat qarz bergan odamga bildirishnoma sifatida yuboriladi.'))
-                : ''}
+              {!complaintSent ? ' ' + complaintTarget.hint : ''}
             </Text>
             {!complaintSent ? (
               <>
@@ -914,9 +932,7 @@ const FinanceDebtDetail = () => {
               <>
                 <View style={styles.complainDone}>
                   <Text allowFontScaling={false} style={styles.complainDoneText}>
-                    {d.is_shop_debt
-                      ? t('Shikoyat do‘kon egasiga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.')
-                      : t('Shikoyat qarz bergan odamga yuborildi. U qarzni tekshirib, siz bilan bog‘lanadi.')}
+                    {complaintTarget.done}
                   </Text>
                 </View>
                 <TouchableOpacity style={[styles.confirmDel, { backgroundColor: GREEN, marginTop: rs(14) }]} onPress={() => setShowComplaint(false)}>
@@ -967,7 +983,7 @@ const FinanceDebtDetail = () => {
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowDel(false)}>
                 <Text allowFontScaling={false} style={styles.cancelText}>{t('Bekor qilish')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.confirmDel, { backgroundColor: RED }]} onPress={doDelete}>
+              <TouchableOpacity style={[styles.confirmDel, { backgroundColor: RED }, deleting && { opacity: 0.6 }]} disabled={deleting} onPress={doDelete}>
                 <Text allowFontScaling={false} style={styles.confirmDelText}>{t('O‘chirish')}</Text>
               </TouchableOpacity>
             </View>
@@ -996,7 +1012,6 @@ const styles = StyleSheet.create({
   headMeta: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginTop: rs(8), flexWrap: 'wrap' },
   dirBadge: { borderRadius: rd.radius.pill, paddingHorizontal: rs(10), paddingVertical: rs(3) },
   dirBadgeText: { fontFamily: rd.font.semibold, fontSize: rs(11.5) },
-  headSrc: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textTertiary },
   // R21: telefon + SMS/call
   phoneRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginTop: rs(12) },
   phoneText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(13.5), color: rd.color.textSecondary },

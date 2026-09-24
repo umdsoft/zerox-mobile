@@ -9,6 +9,7 @@
  */
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { fmtPhoneUz } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -33,12 +34,8 @@ const BLUE = '#2f6fed';
 const fmtCard = (raw: string) =>
   String(raw || '').replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
 
-const fmtPhone = (raw: string) => {
-  let d = String(raw || '').replace(/\D/g, '');
-  if (d.startsWith('998')) d = d.slice(3);
-  d = d.slice(0, 9);
-  return [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
-};
+// SS-AUDIT (2026-09-25): helper/phone.fmtPhoneUz (yagona manba).
+const fmtPhone = fmtPhoneUz;
 
 const FinancePayoutCard = () => {
   const { t } = useTranslation();

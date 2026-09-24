@@ -15,6 +15,7 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import React from 'react';
+import { formatPhone9 } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -101,10 +102,8 @@ const QarzDaftariMijozYangi = () => {
   // matni ko'rsatilmaydi, faqat tugma nofaol turadi.
   const canSave = !!fish.trim() && phone.length === 9;
   // Ko'rsatishда bo'shliqли format: "93 752 44 11" (2-3-2-2). Stateда faqat raqam.
-  const formatPhone = (d: string) =>
-    [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)]
-      .filter(Boolean)
-      .join(' ');
+  // SS-AUDIT (2026-09-25): helper/phone.formatPhone9 (yagona manba).
+  const formatPhone = formatPhone9;
 
   const handleSubmit = async () => {
     if (submitting) return;

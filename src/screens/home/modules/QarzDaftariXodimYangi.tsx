@@ -15,6 +15,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { formatPhone9, phoneDigits9 } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import {
   Animated,
@@ -40,15 +41,9 @@ import { isContactPickerAvailable, pickContact } from '../../../nativemodule/con
 
 const BLUE = '#2f6fed';
 
-// Telefonni "+998" dan keyingi 9 raqamga keltiradi.
-const parsePhone9 = (raw?: string) => {
-  let d = String(raw || '').replace(/\D/g, '');
-  if (d.startsWith('998')) d = d.slice(3);
-  return d.slice(0, 9);
-};
-// Ko'rsatish formati: "93 752 44 11"
-const formatPhone = (d: string) =>
-  [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
+// SS-AUDIT (2026-09-25): helper/phone (yagona manba).
+const parsePhone9 = phoneDigits9;
+const formatPhone = formatPhone9;
 
 const QarzDaftariXodimYangi = () => {
   const navigation = useNavigation<any>();

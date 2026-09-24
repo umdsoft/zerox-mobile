@@ -32,7 +32,6 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { rd, rs } from '../../../theme/rd';
-import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import {
   CheckCircleIcon,
@@ -46,21 +45,21 @@ import {
   WarningIcon,
 } from '../redesign/icons';
 import { financeApi } from './financeApi';
-import { fDate, fMoney, num } from './financeMoney';
+import { fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num, parseLocalDate } from './financeMoney';
+import { fmtPhoneUzFull as fmtPhone } from '../../../helper/phone';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
 const BLUE = '#2f6fed';
 
-// SS-DEV (2026-09-24): 'cancelled' ham yopiq; 'overdue' esa OCHIQ (sayt isActive).
-const isDone = (d: any) =>
-  d?.status === 'completed' || d?.status === 'cancelled' || num(d?.remaining_amount) <= 0;
-
-const isOverdue = (d: any): boolean => {
-  if (!d?.due_date || isDone(d)) return false;
-  const t = new Date(String(d.due_date).slice(0, 10)).getTime();
-  return !isNaN(t) && t < Date.now();
-};
+// SS-AUDIT (2026-09-25): FinanceDebts/FinanceDebtDetail bilan YAGONA predikat
+// (financeMoney). DB holatlari active|overdue (ochiq) / completed|cancelled (yopiq)
+// bo'lgani uchun `isDone === !isDebtOpen`. Muddat LOKAL kun bo'yicha (ilgari
+// `.slice(0,10)` UTC — +05:00 da bir kun oldin "muddati o'tgan" chiqardi).
+const isDone = (d: any) => !isDebtOpen(d);
+const isOverdue = isDebtOverdue;
+// Sana satridan LOKAL kun timestamp (yo'q/buzuq bo'lsa NaN).
+const dayTs = (s: any): number => parseLocalDate(String(s || ''))?.getTime() ?? NaN;
 
 type Reliability = { level: 'none' | 'reliable' | 'medium' | 'risky'; total: number; on_time: number; late: number };
 
@@ -91,12 +90,12 @@ const computeReliability = (debts: any[]): Reliability => {
         if (!isNaN(t) && t > lastPay) lastPay = t;
       }
       if (d.due_date && lastPay) {
-        if (lastPay <= new Date(String(d.due_date).slice(0, 10)).getTime() + DAY) onTime++;
+        if (lastPay <= dayTs(d.due_date) + DAY) onTime++;
         else late++;
       } else {
         onTime++;
       }
-    } else if (d?.status === 'active' && d?.due_date && new Date(String(d.due_date).slice(0, 10)).getTime() < Date.now()) {
+    } else if (d?.status === 'active' && d?.due_date && dayTs(d.due_date) < Date.now()) {
       late++;
     }
   }
@@ -117,13 +116,7 @@ const REL_TEXT: Record<Reliability['level'], { title: string; desc: string; colo
   risky: { title: 'Ehtiyot bo‘ling', desc: 'Qarzlarini ko‘pincha kechiktirib qaytargan.', color: '#b91c1c', bg: '#fef2f2' },
 };
 
-/** +998 dan keyingi 9 raqam -> "90 123 45 67". */
-const fmtPhone = (raw?: string): string => {
-  const d = String(raw || '').replace(/\D/g, '');
-  const c = d.length > 9 ? d.slice(-9) : d;
-  if (c.length !== 9) return String(raw || '');
-  return `+998 ${c.slice(0, 2)} ${c.slice(2, 5)} ${c.slice(5, 7)} ${c.slice(7)}`;
-};
+// SS-AUDIT (2026-09-25): fmtPhone -> helper/phone.fmtPhoneUzFull (yagona manba).
 
 const FinanceDebtGroup = () => {
   const navigation = useNavigation<any>();
@@ -233,10 +226,21 @@ const FinanceDebtGroup = () => {
     setSaving(true);
     try {
       const body = { source_name: nm, phone: phoneEdit ? `+998${phoneEdit}` : null };
-      await Promise.all(ownItems.map((d) => financeApi.updateDebt(d.id, body)));
-      setList((prev) =>
-        prev.map((d) => (d.is_mirror ? d : { ...d, source_name: nm, phone: body.phone })),
+      // SS-AUDIT (2026-09-25): Promise.all o'rniga allSettled — 5 tadan 3-si
+      // yiqilsa serverda o'zgarganlar mahalliy ro'yxatda ham yangilanadi
+      // (ilgari hech biri yangilanmay, qayta urinishda qayta yozilardi).
+      const results = await Promise.allSettled(
+        ownItems.map((d) => financeApi.updateDebt(d.id, body)),
       );
+      const okIds = new Set(
+        ownItems.filter((_, i) => results[i].status === 'fulfilled').map((d) => d.id),
+      );
+      setList((prev) =>
+        prev.map((d) => (okIds.has(d.id) ? { ...d, source_name: nm, phone: body.phone } : d)),
+      );
+      if (okIds.size !== ownItems.length) {
+        throw new Error('partial');
+      }
       setEditOpen(false);
       Toast.show({ type: 'omad', props: { desc: t('Saqlandi') } });
     } catch (e) {
@@ -246,7 +250,9 @@ const FinanceDebtGroup = () => {
     }
   };
 
-  const call = () => phone && Linking.openURL(`tel:${String(phone).replace(/\s/g, '')}`);
+  // SS-AUDIT (2026-09-25): .catch — dialer yo'q qurilmada unhandled rejection bo'lmasin.
+  const call = () =>
+    phone && Linking.openURL(`tel:${String(phone).replace(/\s/g, '')}`).catch(() => {});
 
   /** Asosiy valyuta (UZS ustun) va uning sof balansi. */
   const [primaryCur, primaryBal] = React.useMemo(() => {
@@ -280,10 +286,11 @@ const FinanceDebtGroup = () => {
   const nearestDue = React.useMemo(() => {
     const ds = list
       .filter((d) => d.type === 'borrowed' && !isDone(d) && d.due_date)
-      .map((d) => new Date(String(d.due_date).slice(0, 10)).getTime())
+      .map((d) => dayTs(d.due_date))
       .filter((x) => !isNaN(x))
       .sort((a, b) => a - b);
-    return ds.length ? fDate(new Date(ds[0]).toISOString().slice(0, 10)) : '';
+    // SS-AUDIT (2026-09-25): lokal kun (ilgari toISOString UTC — bir kun surilardi).
+    return ds.length ? fDate(localDateKey(new Date(ds[0]))) : '';
   }, [list]);
 
   /**
@@ -330,12 +337,10 @@ const FinanceDebtGroup = () => {
     try {
       // SS-DEV (2026-09-24): ko'zgu (men qarz beruvchi) — `mirror-*` endpointlar.
       if (pickFor === 'demand') {
-        if (d.is_mirror) await financeApi.mirrorDemandDebt(d.id);
-        else await financeApi.demandRepayment(d.id);
+        await financeApi.demandDebtAny(d.id, !!d.is_mirror);
         Toast.show({ type: 'omad', props: { desc: t('Qaytarish bo‘yicha SMS yuborildi') } });
       } else {
-        if (d.is_mirror) await financeApi.mirrorForgiveDebt(d.id);
-        else await financeApi.forgiveDebt(d.id);
+        await financeApi.forgiveDebtAny(d.id, !!d.is_mirror);
         setList((prev) =>
           prev.map((x) =>
             x.id === d.id ? { ...x, status: 'completed', remaining_amount: 0 } : x,
@@ -370,7 +375,9 @@ const FinanceDebtGroup = () => {
       initialPhone: phone || '',
     });
 
-  if (saving) return <Loading />;
+  // SS-AUDIT (2026-09-25): `if (saving) return <Loading/>` olib tashlandi — saqlash
+  // paytida BUTUN ekran (sarlavha, kartalar, modal) yo'qolib spinner chiqardi;
+  // endi modal ochiq qoladi, "Saqlash" tugmasi nofaol bo'ladi.
 
   const Ico = isShop ? StorefrontIcon : UserIcon;
 
@@ -761,10 +768,11 @@ const FinanceDebtGroup = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.editBtn, { backgroundColor: BLUE }]}
+                style={[styles.editBtn, { backgroundColor: BLUE }, saving && { opacity: 0.6 }]}
+                disabled={saving}
                 onPress={saveEdit}>
                 <Text allowFontScaling={false} style={[styles.editBtnText, { color: '#fff' }]}>
-                  {t('Saqlash')}
+                  {saving ? '...' : t('Saqlash')}
                 </Text>
               </TouchableOpacity>
             </View>

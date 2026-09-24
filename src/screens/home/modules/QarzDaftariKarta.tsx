@@ -12,6 +12,7 @@
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
+import { fmtPhoneUz } from '../../../helper/phone';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -50,14 +51,8 @@ const fmtCard = (raw: string) => {
   const d = String(raw || '').replace(/\D/g, '').slice(0, 16);
   return d.replace(/(.{4})/g, '$1 ').trim();
 };
-// +998 90 123 45 67
-const fmtPhone = (raw: string) => {
-  let d = String(raw || '').replace(/\D/g, '');
-  if (d.startsWith('998')) d = d.slice(3);
-  d = d.slice(0, 9);
-  const p = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean);
-  return p.join(' ');
-};
+// SS-AUDIT (2026-09-25): helper/phone.fmtPhoneUz (yagona manba).
+const fmtPhone = fmtPhoneUz;
 
 const QarzDaftariKarta = () => {
   const navigation = useNavigation<any>();

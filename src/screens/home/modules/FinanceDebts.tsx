@@ -16,7 +16,8 @@ import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import RdTopBar from '../redesign/RdTopBar';
-import { fDate, fMoney, fShort, num } from './financeMoney';
+import { fDate, fMoney, fShort, isDebtOpen, isDebtOverdue, localDateKey, num } from './financeMoney';
+import { phoneLast9 } from '../../../helper/phone';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import {
   ArrowDownLeft,
@@ -24,7 +25,6 @@ import {
   ChevronRight,
   IdCardIcon,
   InfoIcon,
-  PlusIcon,
   StorefrontIcon,
   UserIcon,
 } from '../redesign/icons';
@@ -35,11 +35,8 @@ const AMBER = '#f59e0b';
 
 // SS8: eslatma yopilgan KUN (MMKV) — "Qarz daftari" dagi bilan bir xil naqsh.
 const DEBT_NOTE_KEY = 'fin_debt_note_hidden_day';
-const todayKey = () => {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-};
+// SS-AUDIT (2026-09-25): financeMoney.localDateKey bilan bir xil edi — nusxa olib tashlandi.
+const todayKey = () => localDateKey(new Date());
 
 const TABS = [
   // SS4 (2026-09-17): yorliqlar EKRANDA t() orqali tarjima qilinadi —
@@ -59,18 +56,7 @@ const TAB_ACCENT: Record<string, string> = {
   lent: GREEN,
 };
 
-const SOURCE_LABEL: Record<string, string> = {
-  bank: 'Bank',
-  family: 'Oila',
-  friend: 'Do‘st',
-  other: 'Boshqa',
-};
-const SOURCE_EMOJI: Record<string, string> = {
-  bank: '🏦',
-  family: '👨‍👩‍👧',
-  friend: '🤝',
-  other: '📌',
-};
+// SS-AUDIT (2026-09-25): ishlatilmagan SOURCE_LABEL / SOURCE_EMOJI olib tashlandi.
 
 // Brend gradienti — "Qarz daftari" hero'si bilan AYNAN bir xil (SS17: ikki bo'lim
 // bir xil ko'rinishda bo'lsin degan so'rov).
@@ -193,10 +179,8 @@ const StatCard = ({
  * yozilishi mumkin), telefon bo'lmasa — normallashtirilgan ism.
  * Do'kon qarzida esa do'kon NOMI.
  */
-const phoneKey = (p?: string): string => {
-  const d = String(p || '').replace(/\D/g, '');
-  return d.length >= 9 ? d.slice(-9) : '';
-};
+// SS-AUDIT (2026-09-25): helper/phone.phoneLast9 (yagona manba).
+const phoneKey = (p?: string): string => phoneLast9(p);
 
 const groupKeyOf = (d: any): string => {
   if (d?.is_shop_debt) return `shop:${String(d.source_name || '').trim().toLowerCase()}`;
@@ -205,30 +189,15 @@ const groupKeyOf = (d: any): string => {
   return `nm:${String(d?.source_name || '').trim().toLowerCase()}`;
 };
 
-const initials = (name?: string) =>
-  String(name || '?')
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase() || '?';
-
 /**
  * SS-DEV (2026-09-24): OCHIQ qarz — 'active' YOKI 'overdue' (DB'da ikkala holat
  * bor; sayt `isActive` bilan bir xil) va qoldiq > 0. 'completed'/'cancelled' —
  * yopiq: sarlavha yig'indisiga kirmaydi.
  */
-const isOpenDebt = (d: any) =>
-  (d?.status === 'active' || d?.status === 'overdue') && num(d?.remaining_amount) > 0;
-
-const isOverdue = (d: any) => {
-  if (!isOpenDebt(d) || !d?.due_date) return false;
-  const due = new Date(String(d.due_date).slice(0, 10));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return due.getTime() < today.getTime();
-};
+// SS-AUDIT (2026-09-25): predikatlar financeMoney'ga ko'chdi (3 ekranda bir xil).
+// Muddat endi LOKAL kun bo'yicha (ilgari `.slice(0,10)` UTC — bir kun oldin).
+const isOpenDebt = isDebtOpen;
+const isOverdue = isDebtOverdue;
 
 const FinanceDebts = () => {
   const { t } = useTranslation();
@@ -258,8 +227,6 @@ const FinanceDebts = () => {
     } catch (_) {}
     setNoteHidden(true);
   };
-  // SS4-2: tanlangan filtrga mos aksent rang (sarlavhadagi "+" tugmasi ham shu rangda).
-  const tabAccent = TAB_ACCENT[tab] || rd.color.primary;
 
   /**
    * 🔴 SS-DEV (2026-09-24) ILDIZ SABAB (6-rasm: sarlavhada "Berilgan 2,8 M",
@@ -312,12 +279,17 @@ const FinanceDebts = () => {
     return [...own, ...mir];
   }, [listData]);
   // Tab filtri KLIENTDA: 'lent' / 'borrowed' — tur bo'yicha; 'overdue' — muddat.
-  const debtsFlat: any[] =
-    tab === 'overdue'
-      ? debtsRaw.filter(isOverdue)
-      : tab === 'lent' || tab === 'borrowed'
-      ? debtsRaw.filter((d) => d.type === tab)
-      : debtsRaw;
+  // SS-AUDIT (2026-09-25): useMemo — aks holda har renderda yangi massiv va
+  // pastdagi `groups` memo (Map qurish) bekorga qayta hisoblanardi.
+  const debtsFlat: any[] = React.useMemo(
+    () =>
+      tab === 'overdue'
+        ? debtsRaw.filter(isOverdue)
+        : tab === 'lent' || tab === 'borrowed'
+        ? debtsRaw.filter((d) => d.type === tab)
+        : debtsRaw,
+    [debtsRaw, tab],
+  );
 
   // Sarlavha kataklari — ro'yxat bilan BIR MANBA (yuqoridagi izoh).
   const totals = React.useMemo(() => {
@@ -757,7 +729,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tabOn: { backgroundColor: rd.color.primary },
   tabText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.textSecondary },
   tabTextOn: { color: '#fff' },
 
@@ -774,7 +745,6 @@ const styles = StyleSheet.create({
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
   avatar: { width: rs(44), height: rs(44), borderRadius: rs(22), alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: rd.font.bold, fontSize: rs(15) },
   name: { fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
   sub: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textTertiary, marginTop: rs(2) },
   amt: { fontFamily: rd.font.bold, fontSize: rs(14.5) },

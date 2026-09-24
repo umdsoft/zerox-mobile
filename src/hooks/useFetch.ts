@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import axios from 'axios';
 import {storage} from '../store/api/token/getToken';
 
@@ -39,6 +39,10 @@ export const useFetch = ({url, method}) => {
     [method, url],
   );
   useEffect(() => {
+    // SS-AUDIT (2026-09-25): bo'sh URL (masalan FinanceDebtDetail ko'zgu qarzda
+    // `url: ''`) — so'rov YUBORILMAYDI. Ilgari har mount/fokusda axios({url:''})
+    // ketib rad etilar va `error=true` qolib ketardi.
+    if (!url) return;
     // C-008: url/method o'zgarganda (har harfda) OLDINGI so'rovni bekor qilamiz —
     // eski (sekin) javob yangisining ustiga yozib qo'ymasin (race) + keraksiz yuk yo'q.
     const controller = new AbortController();

@@ -16,27 +16,15 @@ import { Clipboard, Linking, StyleSheet, Text, TouchableOpacity, View } from 're
 import Toast from 'react-native-toast-message';
 import { rd, rs } from '../../../../theme/rd';
 import { financeApi } from '../../modules/financeApi';
-import { fMoney } from '../../modules/financeMoney';
+import { fDate, fMoney } from '../../modules/financeMoney';
+import { fmtCard4 } from '../../../../helper/cardBin';
 import { CopyIcon, LocationIcon, UsersIcon } from '../../redesign/icons';
 
 const TEAL = '#0d9488';
 
-/**
- * SS5 (2026-09-15): karta raqami bazaga qanday kiritilgan bo'lsa shundayligicha
- * chiqarilardi — natijada "8600 000 0 00 00 0 000" kabi tartibsiz bo'linish
- * ko'rinardi. Endi FAQAT raqamlar olinib, qat'iy 4 talab qayta guruhlanadi.
- */
-const fmtCard4 = (raw?: string): string =>
-  String(raw || '')
-    .replace(/\D/g, '')
-    .replace(/(.{4})/g, '$1 ')
-    .trim();
-
-/** SS5: "2026-09-15" -> "15.09.2026". */
-const fmtDateDots = (raw?: string): string => {
-  const m = String(raw || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[3]}.${m[2]}.${m[1]}` : String(raw || '');
-};
+// SS-AUDIT (2026-09-25): fmtCard4 -> helper/cardBin, fmtDateDots -> financeMoney.fDate
+// (aynan bir xil nusxalar olib tashlandi).
+const fmtDateDots = (raw?: string): string => fDate(raw);
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 
@@ -70,7 +58,11 @@ const GapTaklif = ({ item, okay, navigation }: any) => {
 
   React.useEffect(() => {
     let alive = true;
-    if (!roundId) return;
+    // SS-AUDIT (2026-09-25): gap_round_id yo'q — karta abadiy "Yuklanmoqda..."da qolmasin.
+    if (!roundId) {
+      setLoadErr('gone');
+      return;
+    }
     financeApi
       .getGapInvite(roundId)
       .then(r => {
@@ -280,7 +272,7 @@ const GapTaklif = ({ item, okay, navigation }: any) => {
 
       <View style={styles.footer}>
         <Text allowFontScaling={false} style={styles.date}>
-          {item?.created} {item?.time}
+          {[item?.created, item?.time].filter(Boolean).join(' ')}
         </Text>
         <TouchableOpacity activeOpacity={0.8} onPress={() => okay?.(item?.id)} style={styles.okBtn}>
           <Text allowFontScaling={false} style={styles.okText}>Ok</Text>
