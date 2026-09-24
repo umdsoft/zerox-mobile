@@ -2,6 +2,7 @@ import axios from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { installAuthRefresh } from './authInterceptor';
+import { getDeviceUserAgent } from '../../helper/userAgent';
 
 /**
  * Markaziy API klient.
@@ -22,6 +23,8 @@ import { installAuthRefresh } from './authInterceptor';
 const apiClient = axios.create({
   baseURL: URL,
   timeout: 20000,
+  // SS-AUDIT (2026-09-25): qurilmaga xos User-Agent (backend sessiya ajratish).
+  headers: { 'User-Agent': getDeviceUserAgent() },
 });
 
 // Har so'rovga auth tokenni qo'shamiz (call-site'larda qo'lda yozish shart emas)

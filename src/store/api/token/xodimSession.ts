@@ -22,6 +22,7 @@
  */
 import { storage } from './getToken';
 import { URL } from '../../../screens/constants';
+import { getDeviceUserAgent } from '../../../helper/userAgent';
 
 const K_TOKEN = 'token';
 const K_OWNER_PREV = 'owner_prev_token';
@@ -62,6 +63,8 @@ export async function enterXodimSession(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        // SS-AUDIT (2026-09-25): xom fetch axios default'larini olmaydi — UA qo'lda.
+        'User-Agent': getDeviceUserAgent(),
       },
       body: JSON.stringify({ faoliyat_id: faoliyatId }),
     });
