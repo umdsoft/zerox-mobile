@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal } from 'react-native-paper';
 import { rd, rs } from '../../../theme/rd';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,6 +22,10 @@ import Loading from '../../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
 import { useTranslation } from 'react-i18next';
 const { width, height } = Dimensions.get('screen');
+// SS-DEV (2026-09-24): oferta o'qish darvozasi sozlamalari.
+const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti
+const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi
+const FALLBACK_MS = 60000; // native hodisalar kelmasa — vaqt-darvozasiga o'tish
 
 const ContractModal = () => {
   const dispatch = useDispatch();
@@ -40,14 +44,91 @@ const ContractModal = () => {
   // (dismissable=false). Xato bo'lsa xabar + "Qayta urinish" ko'rsatiladi.
   const [pdfErr, setPdfErr] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // SS-DEV (2026-09-24): hujjat yuklangach eng kam o'qish vaqti o'tdimi.
+  const [readTimerDone, setReadTimerDone] = useState(false);
+  // SS-DEV (2026-09-24): sahifa hodisalari umuman kelmasa (native event
+  // yo'qolgan holat) — uzoq kutishdan keyin vaqt-darvozasiga o'tiladi.
+  const [eventsFallback, setEventsFallback] = useState(false);
+  const loadedAtRef = useRef<number | null>(null);
+  const readTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
-   * SS5: oxirigacha o'qilganmi?
-   * Darvoza FAQAT ko'p sahifali hujjatda ishlaydi — `allPage` 0 yoki 1
-   * bo'lsa tekshirib bo'lmaydi va bloklash foydalanuvchini qamab qo'yardi.
+   * SS-DEV (2026-09-24): "Oferta oxirigacha o'qilmaguncha tasdiqlab bo'lmasin"
+   * — darvoza MUSTAHKAMLANDI. Ilgari foydalanuvchi 1-sahifada turib ham
+   * tasdiqlay olardi. Sabablari:
+   *  1) `needRead = allPage > 1 && ...` — `allPage` hali 0 (PDF yuklanmoqda /
+   *     onLoadComplete kelmagan) bo'lsa darvoza UMUMAN o'chiq edi: checkbox
+   *     ham, Tasdiqlash ham ishlardi.
+   *  2) Android'da react-native-pdf yuklangan zahoti `onPageChanged`ni
+   *     noto'g'ri sahifa bilan (defaultPage 0-asosli/1-asosli chalkashligi,
+   *     Yoga o'lchov paytidagi jumpTo) yuborishi mumkin — `maxPage` darhol
+   *     `allPage`ga teng bo'lib, "o'qildi" deb hisoblanardi.
+   *  3) Komponent modal yopilganda unmount bo'lmaydi — `check`/`maxPage`
+   *     oldingi ochilishdan qolib ketardi.
+   *
+   * Yangi darvoza (uchala shart ham bajarilishi shart):
+   *  a) hujjat yuklangan (allPage > 0) — yuklanmaguncha bloklanadi;
+   *  b) yuklangandan keyin eng kam MIN_READ_MS o'tgan (1 sahifali hujjat
+   *     uchun ham ishlaydigan "o'qish taymeri");
+   *  c) ko'p sahifali hujjatda OXIRGI sahifaga yetilgan; yuklangandan keyingi
+   *     SETTLE_MS ichidagi sahifa hodisalari (spurious) hisobga olinmaydi.
+   * Har ochilishda holat NOLLANADI (useEffect quyida).
    */
-  const readToEnd = allPage > 0 && maxPage >= allPage;
-  const needRead = !pdfErr && allPage > 1 && !readToEnd;
+  const reachedLast = allPage === 1 || (allPage > 1 && maxPage >= allPage);
+  const readToEnd =
+    !pdfErr &&
+    ((allPage > 0 && readTimerDone && reachedLast) || eventsFallback);
+  const needRead = !pdfErr && !readToEnd;
+
+  const clearTimers = useCallback(() => {
+    if (readTimerRef.current) {
+      clearTimeout(readTimerRef.current);
+      readTimerRef.current = null;
+    }
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+  }, []);
+
+  const resetGate = useCallback(() => {
+    clearTimers();
+    loadedAtRef.current = null;
+    setCheck(false);
+    setPage(1);
+    setMaxPage(1);
+    setAllPage(0);
+    setReadTimerDone(false);
+    setEventsFallback(false);
+  }, [clearTimers]);
+
+  // Hujjat yuklandi — o'qish taymerini boshlaymiz.
+  const markLoaded = useCallback(() => {
+    if (loadedAtRef.current) return;
+    loadedAtRef.current = Date.now();
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    readTimerRef.current = setTimeout(() => setReadTimerDone(true), MIN_READ_MS);
+  }, []);
+
+  useEffect(() => {
+    if (contract) {
+      resetGate();
+      // Native hodisalar (onLoadComplete/onPageChanged) umuman kelmasa
+      // foydalanuvchi abadiy qamalib qolmasin: FALLBACK_MS dan keyin faqat
+      // vaqt-darvozasi qoladi (bu vaqt 8-9 sahifali ofertani o'qishga yetadi).
+      fallbackTimerRef.current = setTimeout(
+        () => setEventsFallback(true),
+        FALLBACK_MS,
+      );
+    } else {
+      clearTimers();
+    }
+    return clearTimers;
+  }, [contract, reloadKey, resetGate, clearTimers]);
 
   const warnRead = useCallback(() => {
     Toast.show({
@@ -134,9 +215,8 @@ const ContractModal = () => {
                   activeOpacity={0.85}
                   onPress={() => {
                     setPdfErr(false);
-                    setPage(1);
-                    setAllPage(0);
-                    setCheck(false);
+                    // SS-DEV (2026-09-24): reloadKey o'zgarishi useEffect orqali
+                    // darvozani to'liq nollaydi.
                     setReloadKey(k => k + 1);
                   }}
                   style={styles.retryBtn}
@@ -179,14 +259,28 @@ const ContractModal = () => {
                   if (numberOfPages > 0) {
                     setAllPage(numberOfPages);
                   }
+                  // SS-DEV (2026-09-24): o'qish taymeri shu yerdan boshlanadi.
+                  markLoaded();
                 }}
                 onPageChanged={(p, allpage) => {
                   setPage(p);
-                  // SS5: eng uzoq borilgan sahifa yig'iladi.
-                  setMaxPage(m => Math.max(m, p));
                   if (allpage > 0) {
                     setAllPage(allpage);
                   }
+                  // SS-DEV (2026-09-24): onLoadComplete kelmagan bo'lsa ham
+                  // (ba'zi qurilmalarda faqat sahifa hodisasi keladi) yuklangan
+                  // deb belgilaymiz — aks holda taymer hech qachon boshlanmaydi.
+                  if (!loadedAtRef.current) {
+                    markLoaded();
+                    return;
+                  }
+                  // Yuklangandan keyingi birinchi SETTLE_MS ichidagi hodisalar —
+                  // Android'dagi soxta "oxirgi sahifa" hodisasi; hisobga olinmaydi.
+                  if (Date.now() - loadedAtRef.current < SETTLE_MS) {
+                    return;
+                  }
+                  // SS5: eng uzoq borilgan sahifa yig'iladi.
+                  setMaxPage(m => Math.max(m, p));
                 }}
                 style={styles.pdf}
               />
@@ -232,7 +326,9 @@ const ContractModal = () => {
                   sababsiz to'siq bo'lib ko'rinardi. */}
               {needRead && (
                 <Text style={styles.readHint} allowFontScaling={false}>
-                  {`${t('Oxirigacha o‘qing')}: ${Math.min(maxPage, allPage)} / ${allPage}`}
+                  {allPage > 1
+                    ? `${t('Oxirigacha o‘qing')}: ${Math.min(maxPage, allPage)} / ${allPage}`
+                    : t('Oxirigacha o‘qing')}
                 </Text>
               )}
               {/* SS5: tugma BOSILADI (disabled emas) — aks holda sababini
@@ -249,11 +345,12 @@ const ContractModal = () => {
                 style={[
                   styles.btn,
                   {
-                    backgroundColor: check
-                      ? rd.color.primary
-                      : rd.color.textTertiary,
+                    backgroundColor:
+                      check && !needRead
+                        ? rd.color.primary
+                        : rd.color.textTertiary,
                   },
-                  check ? styles.btnActiveShadow : null,
+                  check && !needRead ? styles.btnActiveShadow : null,
                 ]}
               >
                 <Text style={styles.btnText} allowFontScaling={false}>

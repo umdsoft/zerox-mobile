@@ -17,6 +17,17 @@ import {
   WalletIcon,
 } from '../../home/redesign/icons';
 import { checkDate, settingDate } from '../../../helper';
+
+/**
+ * SS-DEV (2026-09-24): "Qarzni qaytarish sanasi" — NaN.NaN.NaN chiqmasin.
+ * Ro'yxat `end_date`ni OXIRGI dalolatnomadan oladi; "qaytarishni talab qilish"
+ * (acts type=7) undan keyin `end_date`ni "YYYY-MM-DD HH:MM:SS.mmm" ko'rinishida
+ * qoldiradi — endi `checkDate` uni to'g'ri o'qiydi. Qiymat umuman bo'lmasa/buzuq
+ * bo'lsa shartnomaning o'z sanasi (`sana` = c.end_date) ko'rsatiladi, u ham
+ * bo'lmasa "—".
+ */
+const returnDate = (item: any): string =>
+  checkDate(item?.end_date) || settingDate(item?.sana) || '—';
 import { t } from 'i18next';
 
 /**
@@ -183,7 +194,7 @@ const CreditorDetail = ({ item }: any) => {
         <IconRow
           Icon={ClockIcon}
           label={t('396')}
-          value={settingDate(item?.end_date)}
+          value={returnDate(item)}
           divider
         />
         {item?.vos_summa == null && item?.status == null ? null : (
@@ -235,7 +246,7 @@ const DebitorDetail = ({ item, isHave }: any) => {
           />
         )}
         <IconRow Icon={CalendarIcon} label={t('303')} value={settingDate(item?.created_at)} divider />
-        <IconRow Icon={ClockIcon} label={t('396')} value={checkDate(item?.end_date)} divider />
+        <IconRow Icon={ClockIcon} label={t('396')} value={returnDate(item)} divider />
         {item?.vos_summa == null ? null : (
           <IconRow Icon={CloseIcon} label={t('333')} value={`${item?.vos_summa}`} divider />
         )}

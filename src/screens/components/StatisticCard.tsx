@@ -5,6 +5,7 @@ import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign/icons';
+import { parseApiDate } from '../../helper';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -35,7 +36,10 @@ type DueMeta = {
   diff: number;
 };
 export const getDueMeta = (endDate: any): DueMeta => {
-  const d = new Date(endDate);
+  // SS-DEV (2026-09-24): "YYYY-MM-DD HH:MM:SS.mmm" (talab dalolatnomasidan
+  // keyingi end_date) Hermes'da `new Date` bilan parse bo'lmasdi -> mustahkam parser.
+  const parsed = parseApiDate(endDate);
+  const d = parsed ? new Date(parsed.getTime()) : new Date(NaN);
   if (!endDate || isNaN(d.getTime())) {
     return {
       cat: 'active',

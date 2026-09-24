@@ -27,7 +27,7 @@ import Toast from 'react-native-toast-message';
 import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { sortMoneyText } from '../../components/StatisticCard';
+import { sortMoneyText, sortText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDownLeft,
@@ -419,7 +419,7 @@ const QarzDaftariAmaliyot = () => {
                   <Text allowFontScaling={false} style={[styles.schHeadText, { flex: 1 }]}>
                     {t('To‘lov sanasi')}
                   </Text>
-                  <Text allowFontScaling={false} style={[styles.schHeadText, styles.schColAmt]}>
+                  <Text allowFontScaling={false} style={[styles.schHeadText, styles.schColAmt, styles.schHeadAmt]}>
                     {t('Summa')}
                   </Text>
                 </View>
@@ -470,7 +470,7 @@ const QarzDaftariAmaliyot = () => {
                                 belgisiga o'xshab, to'lanmagan oylar ham "to'landi" deb
                                 o'qilardi. Endi AMAL nomi + konturli ko'rinish. */}
                             <Text allowFontScaling={false} style={styles.schPayText}>
-                              {t('To‘lov kiritish')}
+                              {t('To‘lovni kiritish')}
                             </Text>
                           </TouchableOpacity>
                         )}
@@ -492,15 +492,19 @@ const QarzDaftariAmaliyot = () => {
           onRequestClose={() => setPayRow(null)}>
           <View style={styles.payBackdrop}>
             <View style={styles.payCard}>
+              {/* SS-DEV (2026-09-24): 4-band — oyna sarlavhasi "To'lovni kiritish". */}
               <Text allowFontScaling={false} style={styles.payTitle}>
-                {t('To‘lovni belgilash')}
+                {t('To‘lovni kiritish')}
               </Text>
               <Text allowFontScaling={false} style={styles.payHint}>
                 {t('Grafikdagidan ko‘p to‘lansa, ortiqchasi keyingi to‘lovlardan chegiriladi.')}
               </Text>
+              {/* SS-DEV (2026-09-24): 4-band — summa ming birlik bilan ajratib
+                  ko'rsatiladi (1 000, 10 000, 100 000). State'da faqat raqamlar
+                  (`payVal`), ko'rinishda `sortText` bilan probel qo'yiladi. */}
               <TextInput
                 allowFontScaling={false}
-                value={payVal}
+                value={payVal ? String(sortText(payVal)) : ''}
                 onChangeText={v => setPayVal(v.replace(/[^0-9]/g, ''))}
                 keyboardType="number-pad"
                 style={styles.payInput}
@@ -645,7 +649,10 @@ const styles = StyleSheet.create({
     fontSize: rs(10.5),
     color: rd.color.textTertiary,
   },
-  schColAmt: { width: rs(132), alignItems: 'flex-end' },
+  schHeadAmt: { textAlign: 'left' },
+  // SS-DEV (2026-09-24): 3-band — "Summa" sarlavhasi va summalar ustun ichida
+  // CHAPDAN tekis (ilgari sarlavha o'rtada, summalar o'ng chekkada edi).
+  schColAmt: { width: rs(132), alignItems: 'flex-start' },
   schBadge: {
     alignSelf: 'flex-start',
     borderRadius: rd.radius.pill,
@@ -708,7 +715,7 @@ const styles = StyleSheet.create({
   payBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13) },
   schDate: { fontFamily: rd.font.semibold, fontSize: rs(12), color: rd.color.text },
   schStatus: { fontFamily: rd.font.medium, fontSize: rs(10.5), marginTop: rs(1) },
-  schAmount: { fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.text, maxWidth: rs(130) },
+  schAmount: { fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.text, maxWidth: rs(130), textAlign: 'left' },
 
   actRow: { flexDirection: 'row', gap: rs(10), marginTop: rs(4) },
   actBtn: {

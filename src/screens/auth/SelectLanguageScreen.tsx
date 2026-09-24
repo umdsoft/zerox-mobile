@@ -38,8 +38,9 @@ const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (
 // ExtraFlags `size` propi bilan ishlaydi (Uzbekistan/Russia svg'lari esa 25px
 // intrinsik o'lchamda). flagBox (rs(32)) ichida bir xil ko'rinishi uchun yangi
 // bayroqlarni ham rs(25) o'lchamda o'raymiz — map'dagi `<Flag />` o'zgarmaydi.
-const KarakalpakFlagIcon = () => <KarakalpakFlag size={rs(25)} />;
-const UkFlagIcon = () => <UkFlag size={rs(25)} />;
+// SS-DEV (2026-09-24): flagBox rs(28) ga kichraytirildi — bayroqlar ham mos.
+const KarakalpakFlagIcon = () => <KarakalpakFlag size={rs(22)} />;
+const UkFlagIcon = () => <UkFlag size={rs(22)} />;
 
 const SelectLanguageScreen = () => {
   const [lang, setLang] = useState(2);
@@ -152,7 +153,7 @@ const SelectLanguageScreen = () => {
                 <View
                   style={[styles.radio, selected && styles.radioSelected]}
                 >
-                  {selected && <CheckIcon size={rs(14)} color={rd.color.onPrimary} />}
+                  {selected && <CheckIcon size={rs(12)} color={rd.color.onPrimary} />}
                 </View>
               </TouchableOpacity>
             );
@@ -192,27 +193,29 @@ const styles = StyleSheet.create({
   hero: { marginBottom: rs(20) },
   // Sarlavha va tagidagi matn KICHRAYTIRILDI (talab bo'yicha) — bu bir vaqtda
   // illyustratsiya uchun vertikal joy ham bo'shatadi.
+  // SS-DEV (2026-09-24): "Yangi mobil xatolar" 2-band — sarlavha, tagidagi matn
+  // va til kartalaridagi shriftlar yana kichraytirildi (hali ham juda katta edi).
   title: {
     fontFamily: rd.font.bold,
-    fontSize: rs(19),
+    fontSize: rs(16),
     color: rd.color.text,
     textAlign: 'center',
     marginTop: rs(14),
   },
   subtitle: {
     fontFamily: rd.font.regular,
-    fontSize: rs(12),
+    fontSize: rs(11),
     color: rd.color.textSecondary,
     textAlign: 'center',
     marginTop: rs(6),
     // Matn va til kartalari orasida nafas. Busiz kartalar (elevation bilan)
     // matn ustiga chiqib ketardi — emulyatorda aynan shu ko'rindi.
-    marginBottom: rs(24),
-    lineHeight: rs(17.5),
+    marginBottom: rs(20),
+    lineHeight: rs(16),
     paddingHorizontal: rs(16),
   },
 
-  list: { gap: rs(12) },
+  list: { gap: rs(10) },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -221,8 +224,8 @@ const styles = StyleSheet.create({
     borderRadius: rd.radius.lg,
     borderWidth: 1.5,
     borderColor: rd.color.border,
-    paddingHorizontal: rs(16),
-    height: rs(64),
+    paddingHorizontal: rs(14),
+    height: rs(54),
   },
   cardSelected: {
     borderColor: rd.color.primary,
@@ -230,23 +233,23 @@ const styles = StyleSheet.create({
   },
   cardLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
   flagBox: {
-    width: rs(32),
-    height: rs(32),
-    borderRadius: rs(16),
+    width: rs(28),
+    height: rs(28),
+    borderRadius: rs(14),
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   langLabel: {
     fontFamily: rd.font.medium,
-    fontSize: rs(15),
+    fontSize: rs(13),
     color: rd.color.text,
   },
   langLabelSelected: { fontFamily: rd.font.semibold, color: rd.color.text },
   radio: {
-    width: rs(24),
-    height: rs(24),
-    borderRadius: rs(12),
+    width: rs(22),
+    height: rs(22),
+    borderRadius: rs(11),
     borderWidth: 2,
     borderColor: rd.color.border,
     alignItems: 'center',

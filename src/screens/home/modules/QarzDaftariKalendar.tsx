@@ -9,7 +9,10 @@
  *
  * Ko'rinish AYNAN "Shaxsiy moliya" kalendariga mos (FinanceCalendarCard) —
  * uslublar undan olingan, faqat mazmun boshqa:
- *   yashil = BERILGAN qarz,  ko'k = UNDIRILGAN (qaytarilgan).
+ *   SS-DEV (2026-09-24): QIZIL = BERILGAN qarz (pul chiqdi),
+ *   YASHIL = UNDIRILGAN (qaytdi). Ilgari teskari (berilgan yashil, undirilgan
+ *   ko'k) edi — "Yangi mobil xatolar" 6-band bo'yicha almashtirildi: legend,
+ *   kun katakchalari, jami kartalar va hisobot summalari — hammasi mos.
  *
  * Ma'lumot: GET /qarz-daftari/kalendar?year=&month=&valyuta=
  * (yangi endpoint — ilgari kunlik kesim umuman mavjud emas edi).
@@ -28,8 +31,12 @@ import { fMoney } from './financeMoney';
 import { ChevronLeft, ChevronRight } from '../redesign/icons';
 
 const GREEN = '#16a34a';
-const BLUE = '#2f6fed';
+const RED = '#dc2626';
 const CYAN = '#0891b2';
+// SS-DEV (2026-09-24): semantik ranglar — berilgan (chiqim) qizil, undirilgan (kirim) yashil.
+const BER_COLOR = RED;
+const UND_COLOR = GREEN;
+const BER_RGB = '220,38,38';
 const MONTHS = [
   'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
   'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
@@ -139,10 +146,10 @@ const QarzDaftariKalendar = () => {
     <View style={styles.repRow}>
       <Text allowFontScaling={false} style={styles.repLabel}>{label}</Text>
       <View style={styles.repVals}>
-        <Text allowFontScaling={false} style={[styles.repVal, { color: GREEN }]} numberOfLines={1}>
+        <Text allowFontScaling={false} style={[styles.repVal, { color: BER_COLOR }]} numberOfLines={1}>
           +{fMoney(ber)}
         </Text>
-        <Text allowFontScaling={false} style={[styles.repVal, { color: BLUE }]} numberOfLines={1}>
+        <Text allowFontScaling={false} style={[styles.repVal, { color: UND_COLOR }]} numberOfLines={1}>
           {fMoney(und)}
         </Text>
       </View>
@@ -188,7 +195,7 @@ const QarzDaftariKalendar = () => {
           <Text allowFontScaling={false} style={styles.sumLabel}>{t('Berilgan qarz')}</Text>
           <Text
             allowFontScaling={false}
-            style={[styles.sumValueSm, { color: GREEN }]}
+            style={[styles.sumValueSm, { color: BER_COLOR }]}
             numberOfLines={1}
             adjustsFontSizeToFit>
             {fMoney(totBer)}
@@ -198,7 +205,7 @@ const QarzDaftariKalendar = () => {
           <Text allowFontScaling={false} style={styles.sumLabel}>{t('Undirilgan qarz')}</Text>
           <Text
             allowFontScaling={false}
-            style={[styles.sumValueSm, { color: BLUE }]}
+            style={[styles.sumValueSm, { color: UND_COLOR }]}
             numberOfLines={1}
             adjustsFontSizeToFit>
             {fMoney(totUnd)}
@@ -228,7 +235,7 @@ const QarzDaftariKalendar = () => {
                 style={[
                   styles.calCell,
                   styles.calDay,
-                  ber > 0 && { backgroundColor: `rgba(22,163,74,${intensity})` },
+                  ber > 0 && { backgroundColor: `rgba(${BER_RGB},${intensity})` },
                   on && styles.calDayOn,
                 ]}>
                 <Text
@@ -237,16 +244,16 @@ const QarzDaftariKalendar = () => {
                   {day}
                 </Text>
                 {und > 0 && (
-                  <View style={[styles.calDot, { backgroundColor: on ? '#fff' : BLUE }]} />
+                  <View style={[styles.calDot, { backgroundColor: on ? '#fff' : UND_COLOR }]} />
                 )}
               </TouchableOpacity>
             );
           })}
         </View>
         <View style={styles.legendRow}>
-          <View style={[styles.legendDot, { backgroundColor: GREEN }]} />
+          <View style={[styles.legendDot, { backgroundColor: BER_COLOR }]} />
           <Text allowFontScaling={false} style={styles.legendText}>{t('Berilgan')}</Text>
-          <View style={[styles.legendDot, { backgroundColor: BLUE, marginLeft: rs(14) }]} />
+          <View style={[styles.legendDot, { backgroundColor: UND_COLOR, marginLeft: rs(14) }]} />
           <Text allowFontScaling={false} style={styles.legendText}>{t('Undirilgan')}</Text>
         </View>
       </View>

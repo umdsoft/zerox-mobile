@@ -1487,6 +1487,7 @@
     "Bu shartnoma yopilgan — qaytarishni talab qilib bo‘lmaydi.": "This contract is closed — repayment cannot be demanded.",
     "Server xatosi. Birozdan so‘ng qayta urinib ko‘ring.": "Server error. Please try again shortly.",
     "To‘lov kiritish": "Enter payment",
+    "To‘lovni kiritish": "Enter payment",
     "Sessiya boshqa qurilmadan tugatildi. Iltimos, qayta kiring.": "Your session was ended from another device. Please sign in again.",
     "Sessiya muddati tugadi. Iltimos, qayta kiring.": "Your session has expired. Please sign in again.",
     "Shartnoma topilmadi.": "Contract not found.",
