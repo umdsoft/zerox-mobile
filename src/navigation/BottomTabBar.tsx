@@ -14,10 +14,6 @@ import React from 'react';
  */
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useTranslation } from 'react-i18next';
-import { Dimensions, StyleSheet } from 'react-native';
-
-import { style } from '../theme/style';
-import { Statistic } from './Index';
 import HomeRedesign from '../screens/home/redesign/HomeRedesign';
 // Qarz shartnomasi / Qarz daftari endi HAQIQIY TAB (avval stack ekrani edi).
 // Sabab: pastki paneldan o'tishda SLAYD animatsiyasi ko'rinardi va Asosiyga
@@ -33,8 +29,6 @@ import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
 // ichidagi karta edi). Tab sifatida ochilganda `tab:true` params orqali
 // RdHeader'da orqaga tugmasi yashiriladi (tab — top-level ekran).
 import FinanceDebts from '../screens/home/modules/FinanceDebts';
-let width = Dimensions.get('window').width;
-let indicatorWidth = width / 5;
 const BottomTabStack = createMaterialTopTabNavigator();
 export const BottomTabNavigator = () => {
   const { t } = useTranslation();
@@ -118,54 +112,5 @@ export const BottomTabNavigator = () => {
     </BottomTabStack.Navigator>
   );
 };
-const styles = StyleSheet.create({
-  text: focused => {
-    return {
-      fontSize: style.fontSize.xa,
-      fontFamily: style.fontFamilyMedium,
-      color: focused ? style.blue : 'gray',
-    };
-  },
-  indicator: {
-    width: indicatorWidth / 2,
-    left: indicatorWidth / 4 - 2,
-    backgroundColor: style.blue,
-    height: 2,
-    borderRadius: 50,
-  },
-});
-// function getWidth(index) {
-//   switch (index) {
-//     case 1:
-//       return indicatorWidth;
-//     case 2:
-//       return indicatorWidth * 2;
-//     case 3:
-//       return indicatorWidth * 3;
-//     default:
-//       return 0;
-//   }
-// }
-
-// function animate(size, animateValue) {
-//   return {
-//     tabPress: e => {
-//       animateValue.value = withTiming(size, {
-//         duration: 300,
-//         easing: Easing.linear,
-//       });
-//     },
-//     swipeStart: e => {
-//       animateValue.value = withTiming(size, {
-//         duration: 300,
-//         easing: Easing.linear,
-//       });
-//     },
-//     swipeEnd: e => {
-//       animateValue.value = withTiming(size, {
-//         duration: 300,
-//         easing: Easing.linear,
-//       });
-//     },
-//   };
-// }
+// SS-AUDIT (2026-09-25): navigator ichida panel yo'q (`tabBar={() => null}`) —
+// ishlatilmagan `styles` (text/indicator) va eski commentlangan animate/getWidth bloklari olib tashlandi.

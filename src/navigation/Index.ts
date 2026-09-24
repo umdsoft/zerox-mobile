@@ -24,8 +24,6 @@ import CheckSmsPassword from '../screens/auth/CheckSmsPassword';
 import Agree from '../screens/auth/Agree';
 import SetLocalPassword from '../screens/auth/SetLocalPassword';
 import CreateSecretWord from '../screens/auth/CreateSecretWord';
-import TakeDebt from '../screens/home/TakeDebt';
-import GiveDebt from '../screens/home/GiveDebt';
 import DebtEntry from '../screens/home/DebtEntry';
 import Statistic from '../screens/home/Statistic';
 
@@ -46,7 +44,6 @@ import CreatePassword from '../screens/auth/CreatePassword';
 import ChangeEmail from '../screens/auth/ChangeEmail';
 import ChangePhoneNumber from '../screens/auth/ChangePhoneNumber';
 import Notification from '../screens/home/Notification';
-import DebtLengthen from '../screens/other/DebtLengthen';
 import Debitor from '../screens/home/statisticScreens/Debitor';
 import UserMoneyResult from '../screens/other/UserMoneyResult';
 import PayScreen from '../screens/other/PayScreen';
@@ -112,7 +109,6 @@ export {
   GiveIcon,
   StatisticIcon,
   Notification,
-  DebtLengthen,
   Support,
   AboutMe,
   AboutUs,
@@ -125,7 +121,6 @@ export {
   SearchDebitor,
   ScanFaceMyId,
   SearchJuridicUser,
-  GiveDebt,
   DebtEntry,
   GiveDebtUser,
   UserMoneyResult,
@@ -152,5 +147,4 @@ export {
   DownloadStatistic,
   CreditorDebitor,
   Statistic,
-  TakeDebt,
 };

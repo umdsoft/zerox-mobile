@@ -27,38 +27,29 @@ import Toast from 'react-native-toast-message';
 import { HomeApi, getNotificationWithPage } from '../../../store/api/home';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { compactMoney, compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
+import { compactMoney, fmtUZS, fmtUSD } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
-import { DEBT_NAV, debtNav } from './debtNav';
+import { DEBT_NAV } from './debtNav';
 // Rasmiy "ZeroX" wordmark (logotipning matn qismi) — header uchun.
 import ZeroXWordmark from '../../../images/TextAndLogo';
 import { useFetch } from '../../../hooks/useFetch';
 // SS13: bosh sahifa summalari TANLANGAN do'konga bo'ysunadi.
 import { ownShopQuery, useQarzShop } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
-import Donut from './Donut';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  BarChartIcon,
   BellIcon,
   BulbIcon,
   InfoIcon,
   ChevronRight,
-  ClockIcon,
   CoinIcon,
   ContractIcon,
-  GridIcon,
-  HelpIcon,
   IconProps,
   LedgerIcon,
   MenuIcon,
-  PlusIcon,
-  SearchIcon,
-  TransferIcon,
   UserIcon,
-  WarningIcon,
 } from './icons';
 
 type Nav = (route: string, params?: object) => void;
@@ -73,21 +64,6 @@ const GRAD = {
   rose: ['#fb7185', '#e11d48'] as const, // debitor (men qarzdor)
 };
 
-const actions: {
-  key: string;
-  label: string;
-  Icon: (p: IconProps) => JSX.Element;
-  route: string;
-  params?: object;
-  tint: string;
-  color: string;
-}[] = [
-  // type: 1 = qarz berish (TakeDebt tab), 0 = qarz olish (GiveDebt tab) — eski oqim bilan bir xil.
-  { key: 'give', label: 'Qarz berish', Icon: PlusIcon, route: 'SearchUserScreen', params: { type: 1 }, tint: '#e7effd', color: '#2f6fed' },
-  { key: 'take', label: 'Qarz olish', Icon: ArrowDownLeft, route: 'SearchUserScreen', params: { type: 0 }, tint: '#e7f7ef', color: '#16a34a' },
-  { key: 'search', label: 'Qidiruv', Icon: SearchIcon, route: 'SearchUserScreen', params: { type: 1 }, tint: '#efe9fd', color: '#7c5cff' },
-  { key: 'qr', label: 'QR kod', Icon: GridIcon, route: 'QrCode', tint: '#fbefd9', color: '#e0890b' },
-];
 const contracts = {
   total: '30',
   segments: [
@@ -194,188 +170,17 @@ const Header = ({
   </View>
 );
 
-const Stat = ({ Icon, label, value }: { Icon: (p: IconProps) => JSX.Element; label: string; value: string }) => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.stat}>
-      <CircleIcon size={rs(34)} bg={rd.color.onPrimaryChip}>
-        <Icon size={rs(20)} color={rd.color.onPrimary} />
-      </CircleIcon>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.statLabel}>{t(label)}</Text>
-        <Text style={styles.statValue}>{value}</Text>
-      </View>
-    </View>
-  );
-};
 
 type BalanceData = { total: string; trend: string; owedToMe: string; iOwe: string };
-const BalanceCard = ({ data }: { data: BalanceData }) => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.balanceCard}>
-      <GradientBg />
-      <View style={styles.balanceTop}>
-        <Text style={styles.balanceTitle}>{t('Umumiy qarz holati')}</Text>
-        <View style={styles.trendChip}>
-          <Text style={styles.trendText}>{t(data.trend)}</Text>
-        </View>
-      </View>
-      <Text style={styles.balanceTotal} numberOfLines={1} adjustsFontSizeToFit>
-        {data.total}
-      </Text>
-      <View style={styles.balanceDivider} />
-      <View style={styles.statsRow}>
-        <Stat Icon={ArrowUpRight} label="Menga qarzdor" value={data.owedToMe} />
-        <Stat Icon={ArrowDownLeft} label="Men qarzdor" value={data.iOwe} />
-      </View>
-    </View>
-  );
-};
 
-const QuickActions = ({ nav }: { nav: Nav }) => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.actionsRow}>
-      {actions.map(({ key, label, Icon, route, params, tint, color }) => (
-        <TouchableOpacity key={key} activeOpacity={0.85} style={styles.actionCard} onPress={() => nav(route, params)}>
-          <CircleIcon size={rs(46)} bg={tint}>
-            <Icon size={rs(24)} color={color} />
-          </CircleIcon>
-          <Text style={styles.actionLabel}>{t(label)}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
 
 // Qarzdorlik ro'yxatlariga navigatsiya paramlari endi `./debtNav` faylida —
 // QarzShartnomasi kartalari ham aynan shu ro'yxatga o'tadi (bitta manba).
 
-// Qarzdorlik kartasi (kreditor / debitor) — JONLI GRADIENT (fintech), UZS + USD.
-const DebtCard = ({
-  positive,
-  gradId,
-  colors,
-  label,
-  amountUzs,
-  amountUsd,
-  count,
-  onPress,
-}: {
-  positive: boolean;
-  gradId: string;
-  colors: readonly string[];
-  label: string;
-  amountUzs: string;
-  amountUsd?: string;
-  count: number;
-  onPress: () => void;
-}) => {
-  const { t } = useTranslation();
-  return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={[styles.debtCard, { shadowColor: colors[1] }]}
-      onPress={onPress}
-    >
-      <Grad id={gradId} colors={colors} />
-      <View style={styles.debtTop}>
-        <View style={styles.debtIconWrap}>
-          {positive ? (
-            <ArrowUpRight size={rs(18)} color={rd.color.onPrimary} />
-          ) : (
-            <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
-          )}
-        </View>
-        <ChevronRight size={rs(18)} color="rgba(255,255,255,0.9)" />
-      </View>
-      <Text style={styles.debtLabel}>{t(label)}</Text>
-      <Text style={styles.debtAmount} numberOfLines={1} adjustsFontSizeToFit>
-        {amountUzs}
-      </Text>
-      {amountUsd ? (
-        <View style={styles.debtUsdChip}>
-          <CoinIcon size={rs(14)} color={rd.color.onPrimary} />
-          <Text style={styles.debtUsd}>{amountUsd}</Text>
-        </View>
-      ) : null}
-      <Text style={styles.debtCount}>{t('{{count}} ta shartnoma', { count })}</Text>
-    </TouchableOpacity>
-  );
-};
 
 type ContractsData = { total: string; segments: { label: string; count: string; color: string; value: number }[] };
-const ContractsCard = ({ data }: { data: ContractsData }) => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.card}>
-      <View style={styles.contractsRow}>
-        <Donut segments={data.segments} size={rs(96)} centerValue={data.total} centerLabel={t('shartnoma')} />
-        <View style={styles.legend}>
-          <Text style={styles.cardTitle}>{t('Shartnomalar holati')}</Text>
-          {data.segments.map(seg => (
-            <View key={seg.label} style={styles.legendRow}>
-              <View style={[styles.dot, { backgroundColor: seg.color }]} />
-              <Text style={styles.legendLabel}>{t(seg.label)}</Text>
-              <Text style={styles.legendCount}>{seg.count}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-};
 
-const WarningBanner = ({ count, onPress }: { count: number; onPress: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <TouchableOpacity activeOpacity={0.9} style={styles.warning} onPress={onPress}>
-      <CircleIcon size={rs(34)} bg={rd.color.surface}>
-        <ClockIcon size={rs(22)} color={rd.color.warning} />
-      </CircleIcon>
-      <Text style={styles.warningText}>{t('{{count}} ta qarz muddati yaqinlashmoqda', { count })}</Text>
-      <ChevronRight size={rs(18)} color={rd.color.warning} />
-    </TouchableOpacity>
-  );
-};
 
-const RecentOperations = ({ ops }: { ops: RecentOp[] }) => {
-  const { t } = useTranslation();
-  return (
-  <View style={styles.opsCard}>
-    {ops.length === 0 && (
-      <View style={styles.opsEmpty}>
-        <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
-          <ClockIcon size={rs(22)} color={rd.color.textTertiary} />
-        </CircleIcon>
-        <Text style={styles.opsEmptyText}>{t('Hozircha amaliyotlar yo‘q')}</Text>
-      </View>
-    )}
-    {ops.map((op, i) => (
-      <View key={op.id}>
-        {i > 0 && <View style={styles.opDivider} />}
-        <View style={styles.opRow}>
-          <CircleIcon size={rs(40)} bg={op.positive ? rd.color.successBg : rd.color.errorBg}>
-            {op.positive ? (
-              <ArrowUpRight size={rs(22)} color={rd.color.success} />
-            ) : (
-              <ArrowDownLeft size={rs(22)} color={rd.color.error} />
-            )}
-          </CircleIcon>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.opName}>{op.name}</Text>
-            <Text style={styles.opSub}>{op.sub}</Text>
-          </View>
-          <Text style={[styles.opAmount, { color: op.positive ? rd.color.success : rd.color.error }]}>
-            {op.amount}
-          </Text>
-        </View>
-      </View>
-    ))}
-  </View>
-  );
-};
 
 // ---------- Web-uslub komponentlari (veb dashboard bilan bir xil) ----------
 
@@ -613,43 +418,6 @@ const ModuleWithSubs = ({
   );
 };
 
-// Modul kartasi — bosiladigan (onPress bo'lsa) yoki "Tez kunda" (onPress yo'q).
-const ModuleSoon = ({
-  Icon,
-  title,
-  onPress,
-}: {
-  Icon: (p: IconProps) => JSX.Element;
-  title: string;
-  onPress?: () => void;
-}) => {
-  const { t } = useTranslation();
-  const soon = !onPress;
-  const inner = (
-    <View style={styles.moduleHead}>
-      <CircleIcon size={rs(38)} bg={soon ? rd.color.surfaceAlt : rd.color.primaryTint}>
-        <Icon size={rs(20)} color={soon ? rd.color.textTertiary : rd.color.primary} />
-      </CircleIcon>
-      <Text style={[styles.moduleTitle, soon && { color: rd.color.textTertiary }]}>
-        {t(title)}
-      </Text>
-      {soon ? (
-        <View style={styles.soonBadge}>
-          <Text style={styles.soonText}>{t('Tez kunda')}</Text>
-        </View>
-      ) : (
-        <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-      )}
-    </View>
-  );
-  return soon ? (
-    <View style={[styles.moduleCard, styles.moduleSoonCard]}>{inner}</View>
-  ) : (
-    <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
-      {inner}
-    </TouchableOpacity>
-  );
-};
 
 // ---------- Ekran ----------
 // Valyuta-aware jamlash: USD summalar `usd` kursi bilan UZS'ga aylantiriladi
@@ -729,93 +497,8 @@ const buildRecentOps = (bild?: any[], myId?: number): RecentOp[] =>
     };
   });
 
-// ── OGOHLANTIRISHLAR (web bilan bir xil). Manba: analytics.alerts[] — har biri
-// { type:'danger'|'warning'|'info', code, count? }. Kod → sarlavha xaritasi
-// (web lang/uz.js bilan mos). Ilgari bu bo'lim so'nggi qarz amaliyotlarini
-// ("Bunyodbek Boltayev +130 000") ko'rsatardi; endi web'dagidek ALERT-lar.
-const ALERT_TITLE: Record<string, string> = {
-  expiring_debitor: 'Muddati oz qolgan debitor shartnomalar',
-  expiring_creditor: 'Muddati oz qolgan kreditor shartnomalar',
-  expired_debitor: 'Muddati o‘tgan debitor shartnomalar',
-  expired_creditor: 'Muddati o‘tgan kreditor shartnomalar',
-  overdue_debts: 'Muddati o‘tgan shaxsiy qarzlar',
-  budget_exceeded: 'Oylik byudjet oshib ketdi!',
-  budget_warning: 'Byudjet chegarasiga yaqinlashmoqda',
-  upcoming_payments: 'Yaqinlashayotgan qarz to‘lovlari',
-};
 
-// Alert "Ko'rish" → mobil ekran (web getAlertLink'ga ekvivalent).
-const goAlert = (nav: any, code: string) => {
-  switch (code) {
-    case 'expired_debitor':
-      return nav('SearchDebitor', debtNav('debitor', 'overdue', 'Muddati o‘tgan qarzlar'));
-    case 'expired_creditor':
-      return nav('SearchDebitor', debtNav('creditor', 'overdue', 'Muddati o‘tgan qarzlar'));
-    case 'expiring_debitor':
-      return nav('SearchDebitor', debtNav('debitor', 'near', 'Muddati yaqin qarzlar'));
-    case 'expiring_creditor':
-      return nav('SearchDebitor', debtNav('creditor', 'near', 'Muddati yaqin qarzlar'));
-    // byudjet / shaxsiy qarzlar / to'lovlar — Shaxsiy moliya TAB'iga (Statistic).
-    // SS6: ilgari standalone 'ShaxsiyMoliya' ekraniga o'tardi → RdTabBar + GlobalBottomBar
-    // IKKALASI chiqib IKKI pastki menyu bo'lardi. Endi to'g'ridan-to'g'ri tabga (bitta bar).
-    default:
-      return nav('BottomTabNavigator', { screen: 'Statistic' });
-  }
-};
 
-const HomeAlerts = ({ alerts, nav }: { alerts?: any[]; nav: any }) => {
-  const { t } = useTranslation();
-  const list = (alerts || []).filter((a: any) => ALERT_TITLE[a?.code]);
-  if (list.length === 0) {
-    return (
-      <View style={styles.alertEmpty}>
-        <BellIcon size={rs(20)} color={rd.color.textTertiary} />
-        <Text style={styles.alertEmptyText}>{t('Ogohlantirishlar mavjud emas')}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={{ gap: rs(10) }}>
-      {list.map((a: any, i: number) => {
-        const color =
-          a.type === 'danger'
-            ? rd.color.error
-            : a.type === 'warning'
-            ? rd.color.warning
-            : rd.color.primary;
-        const bg =
-          a.type === 'danger'
-            ? rd.color.errorBg
-            : a.type === 'warning'
-            ? rd.color.warningBg
-            : rd.color.primaryTint;
-        return (
-          <TouchableOpacity
-            key={i}
-            activeOpacity={0.7}
-            onPress={() => goAlert(nav, a.code)}
-            style={[styles.alertRow, { backgroundColor: bg }]}
-          >
-            <View style={styles.alertIcon}>
-              <WarningIcon size={rs(16)} color={color} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.alertTitle} numberOfLines={2}>
-                {t(ALERT_TITLE[a.code])}
-              </Text>
-              {a.count ? (
-                <Text style={styles.alertSub}>
-                  {a.count} {t('ta')}
-                </Text>
-              ) : null}
-            </View>
-            <Text style={[styles.alertView, { color }]}>{t('Ko‘rish')}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-};
 
 const HomeRedesign = () => {
   const { t } = useTranslation();
@@ -1232,14 +915,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandWord: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(20),
-    color: rd.color.text,
-    letterSpacing: 0.2,
-  },
-  // Logotipdagi kabi oxirgi harf brend qizilida.
-  brandWordAccent: { color: rd.color.error },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   iconBtn: {
     width: rs(40),
@@ -1324,14 +999,6 @@ const styles = StyleSheet.create({
     marginTop: rs(3),
   },
 
-  // Blok sarlavhasi
-  blockTitle: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(15),
-    color: rd.color.text,
-    marginTop: rs(4),
-    marginBottom: rs(-4),
-  },
 
   // Asosiy ko'rsatkichlar
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(12) },
@@ -1479,8 +1146,6 @@ const styles = StyleSheet.create({
   },
   actionLabel: { fontFamily: rd.font.medium, fontSize: rs(11), color: rd.color.textSecondary },
 
-  // Qarzdorlik kartalari — JONLI GRADIENT (fintech)
-  debtRow: { flexDirection: 'row', gap: rs(12) },
   debtCard: {
     flex: 1,
     borderRadius: rs(22),
@@ -1562,10 +1227,6 @@ const styles = StyleSheet.create({
   },
   warningText: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.text },
 
-  // Section header
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
-  sectionLink: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.primary },
 
   // Ogohlantirishlar (alert-lar)
   alertRow: {
@@ -1615,20 +1276,4 @@ const styles = StyleSheet.create({
   opsEmpty: { alignItems: 'center', gap: rs(8), paddingVertical: rs(22) },
   opsEmptyText: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.textTertiary },
 
-  // Bottom tab (past chetга mahkam)
-  bottomWrap: { paddingHorizontal: rs(12), paddingTop: rs(8), paddingBottom: rs(8), backgroundColor: rd.color.page },
-  tabBar: {
-    height: rs(64),
-    paddingHorizontal: rs(8),
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    borderRadius: rs(22),
-  },
-  tabItem: { flex: 1, alignItems: 'center', gap: rs(4), paddingBottom: rs(2) },
-  tabLabel: { fontFamily: rd.font.medium, fontSize: rs(11), color: rd.color.textTertiary },
-  tabLabelActive: { fontFamily: rd.font.semibold, color: rd.color.primary },
-  tabDot: { width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: 'transparent' },
 });

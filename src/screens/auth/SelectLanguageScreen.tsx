@@ -17,7 +17,6 @@ import {
   AuthHero,
   AuthPrimaryButton,
   AuthReveal,
-  authStyles,
 } from './authKit';
 
 const CheckIcon = ({ size = 14, color = rd.color.onPrimary }) => (

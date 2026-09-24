@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './src/i18n/index';
-import { LogBox, StyleSheet, View, Linking, Keyboard, AppState } from 'react-native';
+import { StyleSheet, View, Linking, Keyboard, AppState } from 'react-native';
 import 'react-native-gesture-handler';
 import { useDispatch } from 'react-redux';
 import type { NavigationProp } from '@react-navigation/native';
@@ -8,8 +8,6 @@ import type { NavigationProp } from '@react-navigation/native';
 import Navigation from './src/navigation/Navigation';
 import GlobalBottomBar from './src/navigation/GlobalBottomBar';
 import { navigationRef } from './src/navigation/NavigationRef';
-import { style } from './src/theme/style';
-import { colors } from './src/theme';
 import { useNetInfo } from '@react-native-community/netinfo';
 import './src/store/api/token/getToken';
 import './src/store/api/authInterceptor'; // 401 token-expired -> avto refresh
@@ -23,7 +21,6 @@ import { toastConfig } from './src/screens/components/ToastConfig';
 import ContractModal from './src/screens/home/modal/ContractModal';
 import NoInternet from './src/screens/home/modal/NoInternet';
 import { checkingInternet } from './src/store/reducers/HomeReducer';
-import UpdateModal from './src/screens/home/modal/UpdateModal';
 import { getMe } from './src/store/api/home';
 import useAppStateListener from './src/hooks/useAppStateListener';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
@@ -33,13 +30,12 @@ import { URL } from './src/screens/constants';
 import { logError } from './src/log';
 import {
   APP_LOADING_TIMEOUT,
-  LOG_BOX_IGNORE_MESSAGES,
   DEEP_LINK_PATHS,
   STORAGE_KEYS,
 } from './src/constants';
 
 const isTablet = DeviceInfo.isTablet();
-LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
+// SS-AUDIT (2026-09-25): LogBox sozlamasi faqat index.js'da (bu yerda takror edi).
 
 // Global pastki menyu KO'RSATILMAYDIGAN ekranlar:
 //  - asosiy tablar (o'zining RdTabBar'i bor) — Home/TakeDebt/GiveDebt/Statistic
@@ -52,8 +48,7 @@ LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
 // kechikib), bar ~1 s yo'qolib qayta chiqardi (flicker). Endi bar hech qachon
 // almashmaydi — faqat faol bo'lim rangi o'zgaradi.
 const HIDE_BOTTOM_BAR = new Set<string>([
-  'TakeDebt',
-  'GiveDebt',
+  // SS-AUDIT (2026-09-25): 'TakeDebt'/'GiveDebt' — eski 4-tab ekranlari, endi ro'yxatda yo'q.
   'SelectLanguageScreen',
   'LoginWithPhone',
   'SetLocalPassword',
@@ -85,10 +80,6 @@ const HIDE_BOTTOM_BAR = new Set<string>([
   'QrScan',
   'QrCode',
 ]);
-
-// 2026-09-23: global JS error handler endi FAQAT index.js'da (bitta joy, RN default
-// handler'iga zanjirlangan). Bu yerdagi nusxa index.js tomonidan baribir ustidan
-// yozilardi va `crashlytics().crash()` (test-crash API) ni chaqirardi.
 
 /**
  * Checks and updates app version in storage
@@ -274,6 +265,7 @@ const App: React.FC = () => {
           ilgari OQ edi — sahifa fonи (#f5f7fb) bilan tab bar ostida OQ
           "bo'shliq" bo'lib ko'rinardi. Endi sahifa rangida. */}
       <View
+        pointerEvents="none"
         style={{
           position: 'absolute',
           bottom: 0,
@@ -303,10 +295,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  ImageBackground: {
-    width: style.width,
-    height: style.height,
   },
   // Telefonda hech narsa o'zgarmaydi — butun kenglik.
   phoneFrame: { flex: 1 },

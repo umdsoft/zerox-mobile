@@ -74,7 +74,6 @@ import {
   ShowContract,
 } from './Index';
 
-import { style } from '../theme/style';
 
 import { TransitionPresets } from '@react-navigation/stack';
 
@@ -91,8 +90,6 @@ import NewsScreen from '../screens/other/NewsScreen';
 import UpdatePasswordWithJshir from '../screens/auth/UpdatePasswordWithJshir';
 import ChangePassportData from '../screens/ChangePassportData';
 import RecoverySmsReset from '../screens/auth/RecoverySmsReset';
-import QarzShartnomasi from '../screens/home/modules/QarzShartnomasi';
-import QarzDaftari from '../screens/home/modules/QarzDaftari';
 import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
 import FinanceExpenseAdd from '../screens/home/modules/FinanceExpenseAdd';
 import FinanceReceiptScan from '../screens/home/modules/FinanceReceiptScan';
@@ -336,7 +333,6 @@ const AllNavigators = [
 ];
 const StackNavigator = () => {
   const is = storage.getString('k2');
-  console.log(is, 'is');
 
   return (
     <Stack.Navigator

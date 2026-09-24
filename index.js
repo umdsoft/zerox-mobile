@@ -21,18 +21,14 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Appearance, AppRegistry, LogBox} from 'react-native';
 import crashlytics from '@react-native-firebase/crashlytics';
 import {logDebug, logError} from './src/log';
-import {
-  LOG_BOX_IGNORE_MESSAGES,
-  UPDATE_NOTIFICATION_MESSAGES,
-  isUpdateNotification,
-  SCREENS,
-} from './src/constants';
+import {isUpdateNotification, SCREENS} from './src/constants';
 
-LogBox.ignoreLogs([...LOG_BOX_IGNORE_MESSAGES]);
+// SS-AUDIT (2026-09-25): ignoreAllLogs() barcha LogBox ogohlantirishlarini yopadi —
+// oldingi ignoreLogs([...]) qatori ortiqcha edi.
 LogBox.ignoreAllLogs();
 Appearance.setColorScheme('light');
 
-crashlytics().log('App mounted successfully');
+crashlytics().log('JS bundle loaded');
 
 /**
  * Global error handler for logging errors to Crashlytics.
@@ -91,8 +87,10 @@ notifee.onBackgroundEvent(async ({type, detail}) => {
     logDebug('Notification clicked', detail.notification);
     Store.dispatch(getNotificationWithPage({page: 1}));
     
-    const notificationData = detail.notification.data;
-    if (isUpdateNotification(notificationData)) {
+    // SS-AUDIT (2026-09-25): isUpdateNotification MATN (body) kutadi — ilgari `data`
+    // obyekti uzatilib, har doim false qaytar edi.
+    const notificationBody = detail.notification.body;
+    if (isUpdateNotification(notificationBody)) {
       logDebug('Update notification clicked');
     } else {
       navigate(SCREENS.NOTIFICATION);
