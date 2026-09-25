@@ -15,7 +15,9 @@ import {useTranslation} from 'react-i18next';
 
 const ShareDevices = () => {
   const {t} = useTranslation();
-  const {user, devices} = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektorlar.
+  const user = useSelector((state: any) => state.HomeReducer.user);
+  const devices = useSelector((state: any) => state.HomeReducer.devices);
   const [data, setData] = useState([]);
   const [currect, setCurrent] = useState({});
   const dispatch = useDispatch();

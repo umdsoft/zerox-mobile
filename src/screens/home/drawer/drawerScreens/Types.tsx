@@ -103,7 +103,8 @@ const PLAN_AMOUNT: Record<string, number> = { start: 99000, premium: 199000 };
 const Types = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
-  const { user } = useSelector((state: any) => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector((state: any) => state.HomeReducer.user);
 
   // Mobil hisob balansi — REAL (/user/me). Redux'dagi qiymat zaxira sifatida.
   const me = useFetch({ method: 'GET', url: URL + '/user/me' });

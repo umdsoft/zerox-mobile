@@ -57,7 +57,8 @@ const GiveDebtUser = () => {
   const dispatch = useDispatch();
   const theme = useColorScheme();
   const { qarzoluvchi, type } = useRoute().params;
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const [checked, setChecked] = useState(false);
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(true);

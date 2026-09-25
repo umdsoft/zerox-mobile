@@ -92,7 +92,8 @@ const LanguageHero = ({ Flag }: { Flag: any }) => {
 const Language = () => {
   const { i18n } = useTranslation();
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const onChangeLanguage = useCallback(
     async text => {
       i18n.changeLanguage(text);

@@ -52,7 +52,8 @@ const SearchUserScreen = () => {
   // Default type: 1 (qarz berish tarmog'i).
   const { type = 1 } = (useRoute().params as { type?: number }) || {};
   const theme = useColorScheme();
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [error, setError] = useState(false);

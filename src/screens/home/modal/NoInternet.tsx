@@ -7,7 +7,8 @@ import { WifiOffIcon } from '../redesign/icons';
 
 const NoInternet = ({ onChangeIntenet }) => {
   const { t } = useTranslation();
-  const { internet } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const internet = useSelector(state => state.HomeReducer.internet);
 
   // To'liq ekran overlay (react-native-paper Modal o'rniga — u kontentni markazlab
   // kichkina ko'rsatib, ikonkani kesib qo'yardi). internet=true bo'lganda ko'rinadi.

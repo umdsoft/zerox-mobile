@@ -18,7 +18,8 @@ import { rd, rs } from '../../../../theme/rd';
 const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
   ({ item, okay, navigation, onSuccess, onReject }) => {
     const dispatch = useDispatch();
-    const { user, usd: usds } = useSelector(state => state.HomeReducer);
+    const user = useSelector((state: any) => state.HomeReducer.user); // SS-PERF (2026-09-25): aniq selektor
+    const usds = useSelector((state: any) => state.HomeReducer.usd);
     const checkingSum = sum => {
       let usd = usds;
       let cur_amount;

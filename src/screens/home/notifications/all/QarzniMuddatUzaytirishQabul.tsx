@@ -13,7 +13,8 @@ import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
 const QarzniMuddatUzaytirishQabul = ({ item, okay, navigation }) => {
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const onOkay = async () => {
     okay(item.id);
   };

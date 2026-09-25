@@ -16,7 +16,8 @@ const QarzShartnomasiningQabulQilinganligiTogrisida = ({
   okay,
   navigation,
 }) => {
-  const { user, usd: usds } = useSelector(state => state.HomeReducer);
+  const user = useSelector((state: any) => state.HomeReducer.user); // SS-PERF (2026-09-25): aniq selektor
+    const usds = useSelector((state: any) => state.HomeReducer.usd);
 
   const onOkay = () => okay(item.id);
 

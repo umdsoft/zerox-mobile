@@ -43,7 +43,8 @@ const DebtDateLengthAsk = () => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const [info, setInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);

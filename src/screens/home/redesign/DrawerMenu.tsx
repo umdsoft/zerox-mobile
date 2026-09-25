@@ -117,7 +117,8 @@ const DrawerMenu = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch();
-  const { user } = useSelector((state: any) => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector((state: any) => state.HomeReducer.user);
   const data = user?.data;
 
   // fullName / phone olib tashlandi — sarlavhada endi foydalanuvchi ismi emas,

@@ -13,7 +13,8 @@ const FaceIdModal = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const {t} = useTranslation();
-  const {isActive} = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const isActive = useSelector(state => state.HomeReducer.isActive);
 
   const onClose = useCallback(() => {
     dispatch(showModal({show: false}));

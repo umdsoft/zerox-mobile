@@ -22,7 +22,8 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
 
   const resoleShow = useCallback(async () => {
     const token = storage.getString('token');

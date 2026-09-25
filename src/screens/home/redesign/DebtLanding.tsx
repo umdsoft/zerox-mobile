@@ -197,7 +197,8 @@ type Props = {
 
 const DebtLanding = ({ type, title, subtitle }: Props) => {
   const navigation = useNavigation<any>();
-  const { user } = useSelector((state: any) => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector((state: any) => state.HomeReducer.user);
   const dispatch = useDispatch();
   const { t } = useTranslation();
 

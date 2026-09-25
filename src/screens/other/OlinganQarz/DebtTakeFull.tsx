@@ -35,7 +35,8 @@ const DebtTakeFull = () => {
   const navigation = useNavigation();
   const { item } = useRoute().params;
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector(state => state.HomeReducer.user);
   const [checked, setChecked] = useState(false);
   // Yuklanish holati — "Tasdiqlash" bosilганда darhol spinner (ilgari hech qanday
   // vizual javob yo'q edi -> tugma "muzlaган"дек ko'rinardi, sekin his qilinardi).

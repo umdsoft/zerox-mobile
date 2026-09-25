@@ -16,7 +16,8 @@ import { ShieldIcon } from '../redesign/icons';
 
 const UpdateModal = () => {
   const { t } = useTranslation();
-  const { update } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const update = useSelector(state => state.HomeReducer.update);
   const onClose = useCallback(async () => {
     Linking.openURL(
       Platform.OS === 'ios'

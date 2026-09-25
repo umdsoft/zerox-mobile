@@ -4,7 +4,8 @@ import { useSelector } from 'react-redux';
 import { rd, rs } from '../theme/rd';
 
 const TopTabBar = ({ state, descriptors, navigation }) => {
-  const { notification } = useSelector(reduxState => reduxState.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const notification = useSelector(reduxState => reduxState.HomeReducer.notification);
 
   return (
     <View style={styles.wrap}>

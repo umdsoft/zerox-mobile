@@ -4,7 +4,8 @@ import {style} from '../theme/style';
 import {useSelector} from 'react-redux';
 import MainText from '../screens/components/MainText';
 const TopTabBarSendMoney = ({state, descriptors, navigation}) => {
-  const {notification} = useSelector(reduxState => reduxState.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const notification = useSelector(reduxState => reduxState.HomeReducer.notification);
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {

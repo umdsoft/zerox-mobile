@@ -421,7 +421,8 @@ const REPORT_NAV = {
 const QarzShartnomasi = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  const { user } = useSelector((s: any) => s.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+  const user = useSelector((s: any) => s.HomeReducer.user);
   const name = user?.data?.first_name || t('foydalanuvchi');
 
   const debitor = useFetch({ url: `${URL}/home/my?type=debitor`, method: 'GET' });

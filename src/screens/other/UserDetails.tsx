@@ -62,7 +62,9 @@ const InfoRow = ({ label, value, divider, right }: any) => (
 const UserDetails = () => {
   const navigation = useNavigation();
 
-  const { user } = useSelector((state: any) => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+
+  const user = useSelector((state: any) => state.HomeReducer.user);
   const d = user?.data || {};
   const isPerson = d?.type === 2;
 

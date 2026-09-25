@@ -96,7 +96,9 @@ const ChangePhoneNumber = () => {
   const [loading, setLoading] = useState(false);
   const { i18n } = useTranslation();
 
-  const { user } = useSelector(state => state.HomeReducer);
+  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
+
+  const user = useSelector(state => state.HomeReducer.user);
 
   const onPress = useCallback(async () => {
     const token = storage.getString('token');
