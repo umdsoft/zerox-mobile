@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
+import { LIST_PERF_PROPS } from '../../helper/listPerf';
 import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
@@ -23,6 +24,7 @@ const isFemaleName = (name?: string) => {
 
 // Qatorlar orasidagi yengil ajratgich (har render'da yangi komponent yaratilmaydi).
 const StatisticSeparator = () => <View style={styles.separator} />;
+const keyExtractor = (item: any, index: number) => item?.id?.toString() ?? index.toString();
 
 // Muddat metasi: end_date'дан kategoriya (overdue/near/active) + yorliq + rang.
 // SearchDebitor filtr/saralashда, StatisticCard qator subtitle'ida ishlatiladi.
@@ -79,6 +81,83 @@ const reportStatusMeta = (status: any) => {
   return { label: 'Jarayonda', color: rd.color.primary, bg: rd.color.primaryTint };
 };
 
+const renderName = (name?: string) => {
+  const n = name || '';
+  if (n.includes('O‘G‘LI')) {
+    return n
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .replace('O‘g‘li', 'o‘g‘li');
+  }
+  return n
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// SS-PERF (2026-09-25): shartnoma qatori — memo'langan, modul darajasida.
+type RowProps = {
+  item: any;
+  isDebitor: boolean;
+  report?: boolean;
+  dirBg: string;
+  dirColor: string;
+  onPress: (item: any) => void;
+};
+const StatisticRow = memo(({ item, isDebitor, report, dirBg, dirColor, onPress }: RowProps) => {
+  const rawName = isDebitor ? item?.creditor_name : item?.debitor_name;
+  const name = renderName(rawName);
+  const female = isFemaleName(rawName);
+  const due = getDueMeta(item?.end_date);
+  // Hisobotда — status badge (Tugallangan/Rad); faol ro'yxatда — muddat badge.
+  const badge = report ? reportStatusMeta(item?.status) : due;
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => onPress(item)}
+      style={[styles.row, !report && due.cat === 'overdue' && styles.rowOverdue]}
+    >
+      {/* FISH bosh harfi O'RNIGA — jinsga mos odam avatari (erkak/ayol). */}
+      <View style={[styles.avatar, { backgroundColor: dirBg }]}>
+        {female ? (
+          <WomanIcon size={rs(22)} color={dirColor} />
+        ) : (
+          <ManIcon size={rs(22)} color={dirColor} />
+        )}
+      </View>
+
+      <View style={styles.rowMid}>
+        <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
+        <View style={styles.dueRow}>
+          {due.date ? (
+            <>
+              <ClockIcon size={rs(12)} color={rd.color.textTertiary} />
+              <Text allowFontScaling={false} style={styles.dueDate}>
+                {due.date}
+              </Text>
+            </>
+          ) : null}
+          <View style={[styles.dueBadge, { backgroundColor: badge.bg }]}>
+            <Text allowFontScaling={false} style={[styles.dueBadgeText, { color: badge.color }]}>
+              {badge.label}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <Text allowFontScaling={false} style={[styles.amount, { color: dirColor }]} numberOfLines={1}>
+        {/* Faol ro'yxatda QOLDIQ (residual) ko'rsatiladi — qarz qaytarilsa kamayadi
+            (so'rov bo'yicha). HISOBOTда (report) esa shartnoma summasi (amount). */}
+        {sortText(report ? item?.amount : item?.residual_amount ?? item?.amount)}{' '}
+        {item?.currency}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
 const StatisticCard = ({
   title,
   type,
@@ -117,98 +196,35 @@ const StatisticCard = ({
     }
   };
 
-  const renderName = (name: string) => {
-    if (name.includes('O‘G‘LI') || name.includes('O‘G‘LI')) {
-      // 'O‘G‘LI' should be o‘g‘li---> QuramBoyev Jamshid Rashid o‘g‘li
-      return name
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ')
-        .replace('O‘g‘li', 'o‘g‘li');
-    }
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-  };
-
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const ListRender = ({ item, index }) => {
-    const name = renderName(
-      isDebitor ? item?.creditor_name : item?.debitor_name,
-    );
-    const female = isFemaleName(
-      isDebitor ? item?.creditor_name : item?.debitor_name,
-    );
-    const due = getDueMeta(item?.end_date);
-    // Hisobotда — status badge (Tugallangan/Rad); faol ro'yxatда — muddat badge.
-    const badge = report ? reportStatusMeta(item?.status) : due;
-    return (
-      <TouchableOpacity
-        key={index}
-        activeOpacity={0.7}
-        onPress={() => {
-          if (isDebitor) {
-            navigation.navigate('Debitor', {
-              type: type,
-              item,
-              status: 2,
-              person,
-              isHave,
-              report, // HISOBOT rejimi — tugallangan/rad kontraktда amal tugmalari yashiriladi
-            });
-          } else {
-            navigation.navigate('CreditorDebitor', {
-              type: type,
-              item,
-              status: 2,
-              person,
-              isHave,
-              report, // HISOBOT rejimi — tugallangan/rad kontraktда amal tugmalari yashiriladi
-            });
-          }
-        }}
-        style={[styles.row, !report && due.cat === 'overdue' && styles.rowOverdue]}
-      >
-        {/* FISH bosh harfi O'RNIGA — jinsga mos odam avatari (erkak/ayol). */}
-        <View style={[styles.avatar, { backgroundColor: dirBg }]}>
-          {female ? (
-            <WomanIcon size={rs(22)} color={dirColor} />
-          ) : (
-            <ManIcon size={rs(22)} color={dirColor} />
-          )}
-        </View>
-
-        <View style={styles.rowMid}>
-          <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <View style={styles.dueRow}>
-            {due.date ? (
-              <>
-                <ClockIcon size={rs(12)} color={rd.color.textTertiary} />
-                <Text allowFontScaling={false} style={styles.dueDate}>
-                  {due.date}
-                </Text>
-              </>
-            ) : null}
-            <View style={[styles.dueBadge, { backgroundColor: badge.bg }]}>
-              <Text allowFontScaling={false} style={[styles.dueBadgeText, { color: badge.color }]}>
-                {badge.label}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <Text allowFontScaling={false} style={[styles.amount, { color: dirColor }]} numberOfLines={1}>
-          {/* Faol ro'yxatda QOLDIQ (residual) ko'rsatiladi — qarz qaytarilsa kamayadi
-              (so'rov bo'yicha). HISOBOTда (report) esa shartnoma summasi (amount). */}
-          {sortText(report ? item?.amount : item?.residual_amount ?? item?.amount)}{' '}
-          {item?.currency}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+  // SS-PERF (2026-09-25): qator komponenti modul darajasida (React.memo) —
+  // ilgari har renderda YANGI komponent tipi yaratilib, barcha qatorlar
+  // qayta mount bo'lardi (1000 tagacha shartnoma). Endi faqat o'zgargan qator.
+  const openItem = useCallback(
+    (item: any) => {
+      navigation.navigate(isDebitor ? 'Debitor' : 'CreditorDebitor', {
+        type: type,
+        item,
+        status: 2,
+        person,
+        isHave,
+        report, // HISOBOT rejimi — tugallangan/rad kontraktда amal tugmalari yashiriladi
+      });
+    },
+    [navigation, isDebitor, type, person, isHave, report],
+  );
+  const renderItem = useCallback(
+    ({ item }) => (
+      <StatisticRow
+        item={item}
+        isDebitor={isDebitor}
+        report={report}
+        dirBg={dirBg}
+        dirColor={dirColor}
+        onPress={openItem}
+      />
+    ),
+    [isDebitor, report, dirBg, dirColor, openItem],
+  );
 
   return (
     <View style={styles.container}>
@@ -230,8 +246,9 @@ const StatisticCard = ({
             </Text>
           </View>
         )}
-        keyExtractor={(item, index) => item?.id?.toString() ?? index.toString()}
-        renderItem={({ item, index }) => <ListRender item={item} index={index} />}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        {...LIST_PERF_PROPS}
       />
     </View>
   );

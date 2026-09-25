@@ -101,7 +101,8 @@ const QarzDaftariMijozlar = () => {
     setNoteHidden(true);
   };
 
-  const list: any[] = (data as any)?.data || [];
+  // SS-PERF (2026-09-25): barqaror massiv identifikatori (useMemo bog'liqligi uchun).
+  const list: any[] = React.useMemo(() => (data as any)?.data || [], [data]);
   const accent = turi === 'olish' ? GREEN : BLUE;
   const title = turi === 'olish' ? t('Qarzga olish') : t('Qarzga berish');
 
@@ -117,14 +118,19 @@ const QarzDaftariMijozlar = () => {
   const totalUndirilganUzs = list.reduce((s, c) => s + Number(c?.undirilgan_uzs || 0), 0);
   const totalUndirilganUsd = list.reduce((s, c) => s + Number(c?.undirilgan_usd || 0), 0);
 
-  const filtered = list.filter(c => {
-    if (!search.trim()) return true;
-    const s = search.toLowerCase();
-    return (
-      String(c?.fish || '').toLowerCase().includes(s) ||
-      String(c?.telefon || '').includes(s)
-    );
-  });
+  // SS-PERF (2026-09-25): useMemo — har renderda yangi massiv FlatList'ni qayta chizmasin.
+  const filtered = React.useMemo(
+    () =>
+      list.filter(c => {
+        if (!search.trim()) return true;
+        const s = search.toLowerCase();
+        return (
+          String(c?.fish || '').toLowerCase().includes(s) ||
+          String(c?.telefon || '').includes(s)
+        );
+      }),
+    [list, search],
+  );
 
   // "Yangi mijoz" -> mijoz qo'shish formasi (SS5). Ilgari faqat "Tez kunda" toast
   // ko'rsatardi; endi haqiqiy sahifa ochiladi. Saqlangach ro'yxatga qaytadi va

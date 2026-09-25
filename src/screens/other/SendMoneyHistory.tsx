@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { LIST_PERF_PROPS } from '../../helper/listPerf';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import RdHeader from '../home/redesign/RdHeader';
 import { ArrowDownLeft, ArrowUpRight } from '../home/redesign/icons';
@@ -100,7 +101,10 @@ const SendMoneyHistory = () => {
     </View>
   );
 };
-const ListStatistic = ({ item, index, type, openModal }) => {
+// SS-PERF (2026-09-25): barqaror kalit (ilgari `Math.round(Math.random)` = NaN edi).
+const keyExtractor = (item: any, index: number) => item?.id?.toString() ?? String(index);
+// SS-PERF (2026-09-25): qator memo'landi (ro'yxat qayta renderida o'zgarmagan qator chizilmaydi).
+const ListStatistic = React.memo(({ item, index, type, openModal }: any) => {
   const la = useTranslation();
 
   const mainInfo = (userType: any) => {
@@ -211,7 +215,7 @@ const ListStatistic = ({ item, index, type, openModal }) => {
       </Text>
     </TouchableOpacity>
   );
-};
+});
 
 const Enter = ({ openModal, closeModal }) => {
   const { data, error, loading } = useFetch({
@@ -228,9 +232,8 @@ const Enter = ({ openModal, closeModal }) => {
       <FlatList
         contentContainerStyle={styles.flat}
         data={data.data}
-        keyExtractor={({ id }) =>
-          `${Math.round(Math.random) * 10000}` + id?.toString()
-        }
+        keyExtractor={keyExtractor}
+        {...LIST_PERF_PROPS}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text allowFontScaling={false} style={styles.emptyText}>
@@ -264,7 +267,8 @@ const Exit = ({ openModal, closeModal }) => {
       <FlatList
         data={data.data}
         contentContainerStyle={styles.flat}
-        keyExtractor={({ id }) => id?.toString()}
+        keyExtractor={keyExtractor}
+        {...LIST_PERF_PROPS}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text allowFontScaling={false} style={styles.emptyText}>

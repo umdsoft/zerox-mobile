@@ -141,11 +141,16 @@ const QarzDaftariQarzlar = () => {
     return Array.from(map.values()).sort((a, b) => b.lastDate - a.lastDate);
   }, [scopedRows]);
 
-  const filtered = groups.filter(g => {
-    if (!search.trim()) return true;
-    const s = search.toLowerCase();
-    return g.fish.toLowerCase().includes(s) || g.telefon.includes(s);
-  });
+  // SS-PERF (2026-09-25): useMemo — har renderda yangi massiv FlatList'ni qayta chizmasin.
+  const filtered = React.useMemo(
+    () =>
+      groups.filter(g => {
+        if (!search.trim()) return true;
+        const s = search.toLowerCase();
+        return g.fish.toLowerCase().includes(s) || g.telefon.includes(s);
+      }),
+    [groups, search],
+  );
 
   // Statistikalar.
   const totalQoldiqUzs = groups.reduce((s, g) => s + g.qoldiqUzs, 0);

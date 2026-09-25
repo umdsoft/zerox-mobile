@@ -6,6 +6,7 @@ import {
   Text,
   FlatList,
 } from 'react-native';
+import { LIST_PERF_PROPS } from '../../helper/listPerf';
 import React, { useEffect, useState } from 'react';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -99,7 +100,9 @@ const HistoryDebt = () => {
         <FlatList
           style={styles.list}
           data={search.length === 0 ? data : searchdata}
-          keyExtractor={(item, index) => index.toString()}
+          // SS-PERF (2026-09-25): barqaror kalit (qidiruvda qatorlar qayta ishlatiladi).
+          keyExtractor={(item: any, index) => item?.id?.toString() ?? item?.uid?.toString() ?? index.toString()}
+          {...LIST_PERF_PROPS}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => {
             const name =

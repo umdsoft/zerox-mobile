@@ -1,5 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet, View, Text } from 'react-native';
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { LIST_PERF_PROPS } from '../../helper/listPerf';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBar from '../../navigation/TopTabBar';
@@ -192,7 +193,6 @@ const Bildrishnoma = () => {
   const listRef = useRef(null);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch<any>();
-  const id = useId();
   const { user, pagination } = useSelector(state => state?.HomeReducer);
 
   const [uzayloadinLoading, setUzayloadinLoading] = useState(false);
@@ -617,7 +617,6 @@ const Bildrishnoma = () => {
         return (
           <QarzShartnomasiniRasmiylashtirishTogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
             onSuccess={onSuccess}
@@ -628,7 +627,6 @@ const Bildrishnoma = () => {
         return (
           <QarzToliqQaytarilganli
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
             onToliqQaytgan={onToliqQaytgan}
@@ -640,7 +638,6 @@ const Bildrishnoma = () => {
           <Qarzdanvozkechilganligitogrisida
             item={item}
             okay={okay}
-            key={id}
             navigation={navigation}
           />
         );
@@ -648,7 +645,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzqismanqaytarilganli
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
             onToliqQaytgan={onToliqQaytgan}
@@ -658,7 +654,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzmuddatiniuzaytirishsoralganligitogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
             onQarzMuddatUzaytirish={onQarzMuddatUzaytirish}
@@ -669,7 +664,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzniqaytarishtalabqilinganligitogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
           />
@@ -680,7 +674,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzmuddatiuzaytirilganligitogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
           />
@@ -689,7 +682,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzmuddatiuzaytirilganligitogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
           />
@@ -698,7 +690,6 @@ const Bildrishnoma = () => {
         return (
           <Qarzniqaytarishqabulqilinmaganligitogrisida
             item={item}
-            key={id}
             okay={okay}
             navigation={navigation}
           />
@@ -709,7 +700,6 @@ const Bildrishnoma = () => {
             item={item}
             navigation={navigation}
             okay={okay}
-            key={id}
           />
         );
       case 10:
@@ -718,14 +708,12 @@ const Bildrishnoma = () => {
             item={item}
             navigation={navigation}
             okay={okay}
-            key={id}
           />
         );
       case 7:
         return (
           <QarzShartnomasiningRadQilinganligiTogrisida
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -734,7 +722,6 @@ const Bildrishnoma = () => {
         return (
           <QarzShartnomasiningQabulQilinganligiTogrisida
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -743,7 +730,6 @@ const Bildrishnoma = () => {
         return (
           <QarzMuddatiniUzaytirishRadEtilganligiTogrisida
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -752,7 +738,6 @@ const Bildrishnoma = () => {
         return (
           <QarzniQaytarishQabulQilinganligiTogrisida
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -762,7 +747,6 @@ const Bildrishnoma = () => {
         return (
           <QarzniQaytarishRadQilinganligi
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -771,7 +755,6 @@ const Bildrishnoma = () => {
         return (
           <QarzShartnomasiRejectTime
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -780,7 +763,6 @@ const Bildrishnoma = () => {
         return (
           <PulMablagOtkazilganligi
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -789,20 +771,18 @@ const Bildrishnoma = () => {
         return (
           <PulMablagOtkazilganligiHaqida
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
         );
       case 25:
         return (
-          <NewUser item={item} key={id} navigation={navigation} okay={okay} />
+          <NewUser item={item} navigation={navigation} okay={okay} />
         );
       case 26:
         return (
           <RecoveryPassword
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -811,7 +791,6 @@ const Bildrishnoma = () => {
         return (
           <QarzniMuddatUzaytirishQabul
             item={item}
-            key={id}
             navigation={navigation}
             okay={okay}
           />
@@ -823,7 +802,6 @@ const Bildrishnoma = () => {
             item={item}
             navigation={navigation}
             okay={okay}
-            key={id}
           />
         );
       case 31:
@@ -832,7 +810,6 @@ const Bildrishnoma = () => {
             item={item}
             navigation={navigation}
             okay={okay}
-            key={id}
           />
         );
       case 30:
@@ -841,24 +818,23 @@ const Bildrishnoma = () => {
             item={item}
             navigation={navigation}
             okay={okay}
-            key={id}
           />
         );
       case 32:
         return (
-          <Eslatma item={item} navigation={navigation} okay={okay} key={id} />
+          <Eslatma item={item} navigation={navigation} okay={okay} />
         );
 
       case 35:
-        return <ExpirePassport item={item} okay={okay} key={id} />;
+        return <ExpirePassport item={item} okay={okay} />;
       // SS8: Gap uchrashuviga taklif — lokatsiya, borish/bormaslik, karta, summa.
       case 40:
-        return <GapTaklif item={item} okay={okay} navigation={navigation} key={id} />;
+        return <GapTaklif item={item} okay={okay} navigation={navigation} />;
       // SS20: Shaxsiy moliya — 3 kun daromad/xarajat kiritilmadi.
       case 41:
-        return <MoliyaEslatma item={item} okay={okay} navigation={navigation} key={id} />;
+        return <MoliyaEslatma item={item} okay={okay} navigation={navigation} />;
       default:
-        return <Text key={id}>{t('Xatolik sodir bo‘ldi')}</Text>;
+        return <Text>{t('Xatolik sodir bo‘ldi')}</Text>;
     }
   };
 
@@ -880,6 +856,10 @@ const Bildrishnoma = () => {
         ListEmptyComponent={EmptyListComponent}
         data={notificationData?.bild}
         onEndReachedThreshold={0.5}
+        // SS-PERF (2026-09-25): 500 tagacha bildirishnoma — virtualizatsiya oynasi
+        // cheklandi (ilgari default: 21 ekran oynasi, 50 ta boshlang'ich).
+        {...LIST_PERF_PROPS}
+        initialNumToRender={8}
         // renderItem={renderItems}
         renderItem={({ item, index }) => renderItems(item, index)}
       />
