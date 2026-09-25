@@ -10,9 +10,10 @@
  * Ma'lumot bildirishnomalar ro'yxatida yo'q (u faqat gap_round_id beradi) —
  * shu bois kartaning o'zi `GET /finance/gap/invite/:roundId` bilan yuklaydi.
  */
+import { safeOpenURL } from '@helper/safeOpenURL';
 import React from 'react';
 import { t } from 'i18next';
-import { Clipboard, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Clipboard, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { rd, rs } from '../../../../theme/rd';
 import { financeApi } from '../../modules/financeApi';
@@ -87,8 +88,8 @@ const GapTaklif = ({ item, okay, navigation }: any) => {
   const openLocation = () => {
     const loc = info?.location;
     if (!loc) return;
-    const url = /^https?:\/\//i.test(loc) ? loc : `https://maps.google.com/?q=${encodeURIComponent(loc)}`;
-    Linking.openURL(url).catch(() => {});
+    const url = /^https:\/\//i.test(loc) ? loc : `https://maps.google.com/?q=${encodeURIComponent(loc)}`;
+    safeOpenURL(url); // SS-SEC (2026-09-25): faqat https/tel/sms/tg
   };
 
   const copyCard = () => {

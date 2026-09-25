@@ -66,11 +66,25 @@ export function initSecureStorage(): Promise<void> {
   return initPromise;
 }
 
+// SS-SEC (2026-09-25): Keychain o'qishi vaqtinchalik xato bersa (masalan qurilma
+// qayta yoqilgach fon FCM handler'i birinchi qulf ochilishidan oldin ishga tushsa)
+// bir marta qisqa kutib qayta urinamiz — shifrlangan faylni kalitsiz ochmaslik uchun.
+async function readKeychainKeyWithRetry() {
+  try {
+    return await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+  } catch (firstErr) {
+    await new Promise<void>(r => setTimeout(r, 300));
+    try {
+      return await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+    } catch {
+      throw firstErr;
+    }
+  }
+}
+
 async function doInitSecureStorage(): Promise<void> {
   try {
-    const existing = await Keychain.getGenericPassword({
-      service: KEYCHAIN_SERVICE,
-    });
+    const existing = await readKeychainKeyWithRetry();
     const wasEncrypted = prefsStorage.getBoolean(SECURE_FLAG) === true;
 
     // 1) Kalit BOR → shifrlangan store'ni kalit bilan ochamiz (odatiy yo'l).
@@ -119,14 +133,20 @@ async function doInitSecureStorage(): Promise<void> {
     prefsStorage.set(SECURE_FLAG, true);
     storage = legacy;
   } catch (err) {
-    // Keychain mavjud emas (rebuild'dan oldin) yoki xato → ilovani bricklamaslik uchun
-    // shifrlanmagan fallback. Flag o'rnatilmaydi (rebuild'dan keyin shifrlanadi).
     if (__DEV__) {
-      console.warn(
-        'Secure storage init failed; using unencrypted fallback:',
-        err,
-      );
+      console.warn('Secure storage init failed; using degraded fallback:', err);
     }
+    // SS-SEC (2026-09-25): store ALLAQACHON shifrlangan bo'lsa, uni kalitsiz
+    // OCHMAYMIZ — MMKV shifrlangan faylni "buzilgan" deb tozalab yuborishi
+    // (token/PIN yo'qolishi) mumkin edi. Vaqtinchalik ALOHIDA bo'sh instansiya
+    // bilan davom etamiz (ilova bricklanmaydi, hech narsa ochiq yozilmaydi);
+    // keyingi ishga tushishda Keychain tiklansa asl shifrlangan data o'qiladi.
+    if (prefsStorage.getBoolean(SECURE_FLAG) === true) {
+      storage = new MMKV({ id: 'storage-degraded' });
+      return;
+    }
+    // Hali hech qachon shifrlanmagan (Keychain mavjud emas, masalan native
+    // rebuild'dan oldin) → eski shifrlanmagan store; flag o'rnatilmaydi.
     storage = new MMKV({ id: 'storage' });
   }
 }

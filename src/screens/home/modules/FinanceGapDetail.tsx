@@ -5,10 +5,11 @@
  * qilish (tashkilotchi yoki qabul qiluvchi). O'chirish (tashkilotchi).
  * Backend: GET /finance/gap/:id, POST members, DELETE members, POST shuffle, POST payments/:pid/pay, DELETE.
  */
+import { safeOpenURL } from '@helper/safeOpenURL';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clipboard, Linking, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Clipboard, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
 import { URL } from '../../constants';
@@ -164,8 +165,8 @@ const FinanceGapDetail = () => {
     setVenueForm({ mode: 'card', roundId: r.id, venue: r.venue || '', location: r.location || '', card_number: r.card_number || '', card_holder: r.card_holder || '' });
   const openLocation = (loc?: string) => {
     if (!loc) return;
-    const url = /^https?:\/\//i.test(loc) ? loc : `https://maps.google.com/?q=${encodeURIComponent(loc)}`;
-    Linking.openURL(url).catch(() => {});
+    const url = /^https:\/\//i.test(loc) ? loc : `https://maps.google.com/?q=${encodeURIComponent(loc)}`;
+    safeOpenURL(url); // SS-SEC (2026-09-25): faqat https/tel/sms/tg
   };
   // SS3: plastik karta raqamini nusxalash (probellarsiz)
   // SS-AUDIT (2026-09-25): parametr `num` importni, lokal `t` i18next'ni soya qilardi.

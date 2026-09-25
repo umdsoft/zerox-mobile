@@ -14,6 +14,7 @@
  * ⚠️ Qo'shimcha API so'rovi YO'Q: qarzlar chaqiruvchi ekranda allaqachon
  * yuklangan va `route.params.items` orqali uzatiladi.
  */
+import { safeOpenURL } from '@helper/safeOpenURL';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -327,7 +328,7 @@ const FinanceDebtGroup = () => {
     if (!phone) return;
     const to = String(phone).replace(/\s/g, '');
     const url = text ? `sms:${to}?body=${encodeURIComponent(text)}` : `sms:${to}`;
-    Linking.openURL(url).catch(() => {});
+    safeOpenURL(url); // SS-SEC (2026-09-25): faqat https/tel/sms/tg
   };
 
   /** Tanlangan qarz bo'yicha talab/voz kechish. */
