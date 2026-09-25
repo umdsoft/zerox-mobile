@@ -1,3 +1,5 @@
+// SS-PERF (2026-09-25): og'ir ekranlar (MyID, QR, PDF, grafik) bu yerdan olib
+// tashlandi — Navigation.tsx'da lazyScreen(require) bilan kech yuklanadi.
 import SendMoney from '../screens/other/SendMoney';
 import DebtDateLength from '../screens/other/DebtDateLength';
 import DebtDateLengthAsk from '../screens/other/DebtDateLengthAsk';
@@ -12,8 +14,6 @@ import DebtTakeSelect from '../screens/other/OlinganQarz/DebtTakeSelect';
 import DebtTakeFull from '../screens/other/OlinganQarz/DebtTakeFull';
 import DebtTakePart from '../screens/other/OlinganQarz/DebtTakePart';
 
-import Indentifikatsiya from '../screens/auth/Indentifikatsiya';
-import FingerScanner from '../screens/FingerScanner';
 import SelectLanguageScreen from '../screens/auth/SelectLanguageScreen';
 import SelectJuridical from '../screens/auth/SelectJuridical';
 import LoginWithPhone from '../screens/auth/LoginWithPhone';
@@ -28,7 +28,6 @@ import DebtEntry from '../screens/home/DebtEntry';
 import Statistic from '../screens/home/Statistic';
 
 import AboutUs from '../screens/other/AboutUs';
-import QrCode from '../screens/home/drawer/drawerScreens/QrCode';
 import ShareDevices from '../screens/home/drawer/drawerScreens/ShareDevices';
 import UseTerm from '../screens/home/drawer/drawerScreens/UseTerm';
 import AboutMe from '../screens/home/drawer/drawerScreens/AboutMe';
@@ -37,7 +36,6 @@ import ActiveDevices from '../screens/home/drawer/drawerScreens/ActiveDevices';
 
 import SearchDebitor from '../screens/home/statisticScreens/SearchDebitor';
 import CreditorDebitor from '../screens/home/statisticScreens/CreditorDebitor';
-import DownloadStatistic from '../screens/home/statisticScreens/DownloadStatistic';
 import UserScreen from '../screens/other/UserScreen';
 import RegisterWithPeople from '../screens/auth/RegisterWithPeople';
 import CreatePassword from '../screens/auth/CreatePassword';
@@ -51,23 +49,18 @@ import SearchUserScreen from '../screens/other/SearchUserScreen';
 import HistoryDebt from '../screens/other/HistoryDebt';
 import UserInformationOfDebt from '../screens/other/UserInformationOfDebt';
 import GiveDebtUser from '../screens/other/GiveDebtUser';
-import ScanFaceMyId from '../screens/ScanFaceMyId';
 import SearchJuridicUser from '../screens/other/SearchJuridicUser';
 import MuddatOzQolgan from '../screens/other/MuddatOzQolgan';
 import Language from '../screens/other/Language';
 import Security from '../screens/other/Security';
 import UserDetails from '../screens/other/UserDetails';
-import Contract from '../screens/other/Contract';
 import ChangePhoneNumberSmsCheck from '../screens/auth/ChangePhoneNumberSmsCheck';
 import UserInfo from '../screens/other/SaveUserDetails';
 import StatisticDebitor from '../screens/components/List/StatisticDebitor';
 import StatisticCreditor from '../screens/components/List/StatisticCreditor';
-import SendMoneyHistory from '../screens/other/SendMoneyHistory';
-import QrScan from '../screens/other/QrScan';
 import ShowUserDetails from '../screens/other/ShowUserDetails';
 import Main from '../screens/home/Main';
 import Pay from '../screens/other/Pay/Click';
-import Dalol from '../screens/home/modal/Dalol';
 import HomeIcon from '../images/HomeIcon';
 import StatisticIcon from '../images/StatisticIcon';
 import GiveIcon from '../images/GiveIcon';
@@ -80,22 +73,16 @@ export {
   ChangeLocalPassword,
   StatisticDebitor,
   StatisticCreditor,
-  SendMoneyHistory,
   UserInfo,
-  QrScan,
   ShowUserDetails,
   Main,
-  Dalol,
   Pay,
   Language,
   Security,
-  Contract,
   UserDetails,
   TakeIcon,
   MuddatOzQolgan,
-  FingerScanner,
   PartDebtBack,
-  Indentifikatsiya,
   DebtTakeSelect,
   DebtDateLength,
   DebtDateLengthAsk,
@@ -113,13 +100,11 @@ export {
   AboutMe,
   AboutUs,
   UseTerm,
-  QrCode,
   ShareDevices,
   ActiveDevices,
   SelectJuridical,
   SelectLanguageScreen,
   SearchDebitor,
-  ScanFaceMyId,
   SearchJuridicUser,
   DebtEntry,
   GiveDebtUser,
@@ -144,7 +129,6 @@ export {
   NewPasswordEnter,
   Register,
   Debitor,
-  DownloadStatistic,
   CreditorDebitor,
   Statistic,
 };

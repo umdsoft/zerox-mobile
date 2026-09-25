@@ -25,19 +25,15 @@ import {
   DebtTakePart,
   DebtTakeSelect,
   DebtEntry,
-  DownloadStatistic,
-  FingerScanner,
   FullDebtBack,
   FullDebtSelect,
   GiveDebtUser,
   HistoryDebt,
-  Indentifikatsiya,
   LoginWithPhone,
   NewPasswordEnter,
   Notification,
   PartDebtBack,
   PayScreen,
-  QrCode,
   RecoveryPassword,
   Register,
   RegisterWithPeople,
@@ -55,44 +51,38 @@ import {
   UserMoneyResult,
   UserScreen,
   MuddatOzQolgan,
-  Contract,
   Language,
   Security,
   UserDetails,
   ChangePhoneNumberSmsCheck,
-  Dalol,
   Main,
   Pay,
-  QrScan,
-  SendMoneyHistory,
   ShowUserDetails,
   StatisticCreditor,
   StatisticDebitor,
   UserInfo,
   ChangeLocalPassword,
-  ScanFaceMyId,
   ShowContract,
 } from './Index';
 
 
 import { TransitionPresets } from '@react-navigation/stack';
+// SS-PERF (2026-09-25): og'ir/kam ishlatiladigan ekranlar (MyID, kamera/QR, PDF,
+// grafik, WebView) birinchi ochilishda yuklanadi — startup'da baholanmaydi.
+import { lazyScreen } from './lazyScreen';
 
 import { storage } from '../store/api/token/getToken';
 import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
-import MyIdScreen from '../screens/auth/RecoveryPassword/MyIdScreen';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
 import Types from '../screens/home/drawer/drawerScreens/Types';
 import SmsHistory from '../screens/home/drawer/drawerScreens/SmsHistory';
 import ResetPassCode from '../screens/other/ResetPassCode';
 import UpdateLocalPassCode from '../screens/auth/UpdateLocalPassCode';
-import NewsScreen from '../screens/other/NewsScreen';
 
 import UpdatePasswordWithJshir from '../screens/auth/UpdatePasswordWithJshir';
-import ChangePassportData from '../screens/ChangePassportData';
 import RecoverySmsReset from '../screens/auth/RecoverySmsReset';
 import ShaxsiyMoliya from '../screens/home/modules/ShaxsiyMoliya';
 import FinanceExpenseAdd from '../screens/home/modules/FinanceExpenseAdd';
-import FinanceReceiptScan from '../screens/home/modules/FinanceReceiptScan';
 import FinanceExpenseList from '../screens/home/modules/FinanceExpenseList';
 import FinanceIncomeAdd from '../screens/home/modules/FinanceIncomeAdd';
 import FinanceIncomeList from '../screens/home/modules/FinanceIncomeList';
@@ -193,7 +183,7 @@ const DrawerNavigator = () => {
 
 const AllNavigators = [
   { name: 'SelectLanguageScreen', component: SelectLanguageScreen },
-  { name: 'ChangePassportData', component: ChangePassportData },
+  { name: 'ChangePassportData', component: lazyScreen(() => require('../screens/ChangePassportData')) },
   { name: 'UpdatePasswordWithJshir', component: UpdatePasswordWithJshir },
   { name: 'SelectJuridical', component: SelectJuridical },
   { name: 'LoginWithPhone', component: LoginWithPhone },
@@ -206,14 +196,14 @@ const AllNavigators = [
   { name: 'CreateSecretWord', component: CreateSecretWord },
   { name: 'BottomTabNavigator', component: Main },
   { name: 'AboutUs', component: AboutUs },
-  { name: 'QrCode', component: QrCode },
+  { name: 'QrCode', component: lazyScreen(() => require('../screens/home/drawer/drawerScreens/QrCode')) },
   { name: 'ShareDevices', component: ShareDevices },
   { name: 'ActiveDevices', component: ActiveDevices },
   { name: 'AboutMe', component: AboutMe },
   { name: 'Support', component: Support },
   { name: 'SearchDebitor', component: SearchDebitor },
   { name: 'CreditorDebitor', component: CreditorDebitor },
-  { name: 'DownloadStatistic', component: DownloadStatistic },
+  { name: 'DownloadStatistic', component: lazyScreen(() => require('../screens/home/statisticScreens/DownloadStatistic')) },
   { name: 'UserScreen', component: UserScreen },
   { name: 'RegisterWithPeople', component: RegisterWithPeople },
   { name: 'CreatePassword', component: CreatePassword },
@@ -257,32 +247,32 @@ const AllNavigators = [
   { name: 'DebtTakeSelect', component: DebtTakeSelect },
   { name: 'DebtTakeFull', component: DebtTakeFull },
   { name: 'DebtTakePart', component: DebtTakePart },
-  { name: 'Indentifikatsiya', component: Indentifikatsiya },
-  { name: 'FingerScanner', component: FingerScanner },
+  { name: 'Indentifikatsiya', component: lazyScreen(() => require('../screens/auth/Indentifikatsiya')) },
+  { name: 'FingerScanner', component: lazyScreen(() => require('../screens/FingerScanner')) },
   { name: 'ChangePasswordRetry', component: ChangePasswordRetry },
-  { name: 'ScanFaceMyId', component: ScanFaceMyId },
+  { name: 'ScanFaceMyId', component: lazyScreen(() => require('../screens/ScanFaceMyId')) },
   { name: 'UseTerm', component: UseTerm },
   { name: 'MuddatOzQolgan', component: MuddatOzQolgan },
   { name: 'Pay', component: Pay },
-  { name: 'Dalol', component: Dalol },
+  { name: 'Dalol', component: lazyScreen(() => require('../screens/home/modal/Dalol')) },
   { name: 'ShowUserDetails', component: ShowUserDetails },
-  { name: 'QrScan', component: QrScan },
+  { name: 'QrScan', component: lazyScreen(() => require('../screens/other/QrScan')) },
   { name: 'UserDetails', component: UserDetails },
   { name: 'Language', component: Language },
-  { name: 'Contract', component: Contract },
+  { name: 'Contract', component: lazyScreen(() => require('../screens/other/Contract')) },
   { name: 'Security', component: Security },
   { name: 'UserInfo', component: UserInfo },
   { name: 'StatisticDebitor', component: StatisticDebitor },
   { name: 'StatisticCreditor', component: StatisticCreditor },
-  { name: 'SendMoneyHistory', component: SendMoneyHistory },
+  { name: 'SendMoneyHistory', component: lazyScreen(() => require('../screens/other/SendMoneyHistory')) },
   { name: 'ChangePhoneNumberSmsCheck', component: ChangePhoneNumberSmsCheck },
   { name: 'ChangeLocalPassword', component: ChangeLocalPassword },
   { name: 'EnterJsh', component: EnterJsh },
-  { name: 'MyIdScreen', component: MyIdScreen },
+  { name: 'MyIdScreen', component: lazyScreen(() => require('../screens/auth/RecoveryPassword/MyIdScreen')) },
   { name: 'UpdatePassword', component: UpdatePassword },
   { name: 'Types', component: Types },
   { name: 'SmsHistory', component: SmsHistory },
-  { name: 'NewsScreen', component: NewsScreen },
+  { name: 'NewsScreen', component: lazyScreen(() => require('../screens/other/NewsScreen')) },
   {
     name: 'ResetPassCode',
     component: ResetPassCode,
@@ -293,7 +283,7 @@ const AllNavigators = [
   // (stack'da) qayta ro'yxatga olinmaydi (aks holda ikki nusxa bo'lardi).
   { name: 'ShaxsiyMoliya', component: ShaxsiyMoliya },
   { name: 'FinanceExpenseAdd', component: FinanceExpenseAdd },
-  { name: 'FinanceReceiptScan', component: FinanceReceiptScan },
+  { name: 'FinanceReceiptScan', component: lazyScreen(() => require('../screens/home/modules/FinanceReceiptScan')) },
   { name: 'FinanceExpenseList', component: FinanceExpenseList },
   { name: 'FinanceIncomeAdd', component: FinanceIncomeAdd },
   { name: 'FinanceIncomeList', component: FinanceIncomeList },
