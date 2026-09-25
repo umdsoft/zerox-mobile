@@ -1,8 +1,10 @@
 import {Platform, Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {normalize} from '../../theme/style';
 import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+// SS-SEC (2026-09-25): PIN hash (pin.ts); terilayotgan raqamlar MMKV'ga yozilmaydi.
+import {setPin, verifyPin} from '../../store/api/token/pin';
 import {storage} from '../../store/api/token/getToken';
 import {t} from 'i18next';
 
@@ -16,12 +18,12 @@ const UpdateLocalPassCode = () => {
   const [password, setPassword] = useState('');
   const [step, setStep] = useState(2);
   const navigation = useNavigation();
+  // Yangi PIN (2-qadam) — faqat xotirada (ilgari MMKV'ga `key1/key2` ochiq yozilardi).
+  const newPinRef = useRef('');
 
   const onSetCode = val => {
     if (password.length <= 3) {
-      storage.set('key2', password + val);
       setPassword(password + val);
-      const local_password = storage.getString('k2');
       if ((password + val).length === 4) {
         // if (step === 1) {
         //   if (local_password !== password + val) {
@@ -36,7 +38,7 @@ const UpdateLocalPassCode = () => {
         //     });
         //   }
         // }
-        if (local_password === password + val && step === 1) {
+        if (step === 1 && verifyPin(password + val)) {
           setPassword('');
           setStep(2);
         }
@@ -44,14 +46,12 @@ const UpdateLocalPassCode = () => {
         if (step === 2) {
           setStep(3);
           setPassword('');
-          storage.set('key1', password + val);
+          newPinRef.current = password + val;
         }
         if (step === 3) {
-          let a = storage.getString('key1');
-          let b = storage.getString('key2');
-
-          if (Number(a) === Number(b)) {
-            storage.set('k2', password + val);
+          if (newPinRef.current === password + val) {
+            setPin(password + val);
+            newPinRef.current = '';
             storage.delete('time');
             Toast.show({
               type: 'omad',
@@ -91,9 +91,8 @@ const UpdateLocalPassCode = () => {
     setPassword(password.slice(0, -1));
   };
   useEffect(() => {
-    const local_password = storage.getString('k2');
-    if (local_password === undefined) setStep(2);
-    else setStep(2);
+    // Tiklash oqimi: joriy PIN so'ralmaydi (SMS/parol orqali tasdiqlangan) — 2-qadam.
+    setStep(2);
   }, []);
 
   return (

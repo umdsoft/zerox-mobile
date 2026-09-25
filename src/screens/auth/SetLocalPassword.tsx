@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { normalize, style } from '../../theme/style';
 
 import {
@@ -22,6 +22,8 @@ import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
 import { storage } from '../../store/api/token/getToken';
+// SS-SEC (2026-09-25): PIN ochiq matnda emas — salt+SHA-256 (pin.ts).
+import { hasPin, setPin, verifyPin } from '../../store/api/token/pin';
 import MainText from '../components/MainText';
 import { fontSize } from '../../theme/font';
 import { t } from 'i18next';
@@ -60,15 +62,10 @@ const SetLocalPassword = () => {
   const [supportScan, setSupportScan] = useState(false);
   const [password, setPassword] = useState('');
   const [step, setStep] = useState(1);
-  const [isLocal] = useState(() => {
-    const pass = storage.getString('k2');
-
-    if (pass === undefined) {
-      return true;
-    } else {
-      return false;
-    }
-  });
+  // SS-SEC (2026-09-25): PIN bor-yo'qligi hash (yoki eski ochiq k2) orqali.
+  const [isLocal] = useState(() => !hasPin());
+  // Birinchi qadamda terilgan PIN — faqat xotirada (ilgari MMKV'ga `k1` ochiq yozilardi).
+  const firstPinRef = useRef('');
   const [count, setCount] = useState(3);
   // Biometrik OPT-IN — native Alert o'rniga CHIROYLI maxsus modal.
   const [bioModal, setBioModal] = useState<{
@@ -205,7 +202,7 @@ const SetLocalPassword = () => {
         setPassword(password + val);
         if ((password + val).length === 4) {
           setStep(2);
-          storage.set('k1', password + val);
+          firstPinRef.current = password + val;
           setPassword('');
           return;
         }
@@ -215,10 +212,11 @@ const SetLocalPassword = () => {
         setPassword(password + val);
 
         if ((password + val).length === 4) {
-          const k1 = storage.getString('k1');
+          const k1 = firstPinRef.current;
           if (password + val === k1) {
             const token = storage.getString('token');
-            storage.set('k2', password + val);
+            setPin(password + val);
+            firstPinRef.current = '';
             storage.delete('isLoginScreen');
             storage.set('appLocked', false);
             const goNext = () => {
@@ -242,7 +240,7 @@ const SetLocalPassword = () => {
           } else {
             setStep(1);
             setPassword('');
-            storage.delete('k1');
+            firstPinRef.current = '';
             Toast.show({
               type: 'error2',
               position: 'top',
@@ -261,9 +259,9 @@ const SetLocalPassword = () => {
     } else {
       setPassword(password + val);
       if ((password + val).length === 4) {
-        const k2 = storage.getString('k2');
-
-        if (password + val === k2) {
+        // SS-SEC (2026-09-25): hash solishtirish; eski ochiq k2 bo'lsa shu yerda
+        // birinchi muvaffaqiyatli kirishda hash'ga migratsiya qilinadi.
+        if (verifyPin(password + val)) {
           // askForBiometric();
           storage.delete('isLoginScreen');
           storage.set('appLocked', false);
@@ -307,7 +305,7 @@ const SetLocalPassword = () => {
   };
 
   // const onSupportScan = async () => {
-  //   const local_password = storage.getString('k2');
+  //   const local_password = hasPin();
   //   const {available} = await rnBiometrics.isSensorAvailable();
   //   if (available && local_password !== undefined && touch === true) {
   //     setSupportScan(true);

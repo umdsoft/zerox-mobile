@@ -71,7 +71,8 @@ import { TransitionPresets } from '@react-navigation/stack';
 // grafik, WebView) birinchi ochilishda yuklanadi — startup'da baholanmaydi.
 import { lazyScreen } from './lazyScreen';
 
-import { storage } from '../store/api/token/getToken';
+// SS-SEC (2026-09-25): PIN mavjudligi hash orqali (ochiq `k2` o'qilmaydi).
+import { hasPin } from '../store/api/token/pin';
 import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
 import Types from '../screens/home/drawer/drawerScreens/Types';
@@ -322,7 +323,7 @@ const AllNavigators = [
   { name: 'QarzDaftariAmaliyot', component: QarzDaftariAmaliyot },
 ];
 const StackNavigator = () => {
-  const is = storage.getString('k2');
+  const is = hasPin() ? 'set' : undefined;
 
   return (
     <Stack.Navigator

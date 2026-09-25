@@ -1,10 +1,11 @@
 import {Platform, Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {normalize} from '../../theme/style';
 import {rd, rs} from '../../theme/rd';
 import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import {storage} from '../../store/api/token/getToken';
+// SS-SEC (2026-09-25): PIN hash (pin.ts); terilayotgan raqamlar MMKV'ga yozilmaydi.
+import {hasPin, setPin, verifyPin} from '../../store/api/token/pin';
 import RdHeader from '../home/redesign/RdHeader';
 import {ShieldIcon, BackspaceIcon} from '../home/redesign/icons';
 import {t} from 'i18next';
@@ -15,6 +16,8 @@ const ChangeLocalPassword = () => {
   const [password, setPassword] = useState('');
   const [step, setStep] = useState(1);
   const navigation = useNavigation();
+  // Yangi PIN (2-qadam) — faqat xotirada (ilgari MMKV'ga `key1/key2` ochiq yozilardi).
+  const newPinRef = useRef('');
 
   const onFingerScan = async () => {
     try {
@@ -41,12 +44,11 @@ const ChangeLocalPassword = () => {
 
   const onSetCode = val => {
     if (password.length <= 3) {
-      storage.set('key2', password + val);
       setPassword(password + val);
-      const local_password = storage.getString('k2');
       if ((password + val).length === 4) {
+        const currentOk = step === 1 ? verifyPin(password + val) : false;
         if (step === 1) {
-          if (local_password !== password + val) {
+          if (!currentOk) {
             setPassword('');
             Toast.show({
               type: 'error2',
@@ -58,7 +60,7 @@ const ChangeLocalPassword = () => {
             });
           }
         }
-        if (local_password === password + val && step === 1) {
+        if (currentOk && step === 1) {
           setPassword('');
           setStep(2);
         }
@@ -66,14 +68,12 @@ const ChangeLocalPassword = () => {
         if (step === 2) {
           setStep(3);
           setPassword('');
-          storage.set('key1', password + val);
+          newPinRef.current = password + val;
         }
         if (step === 3) {
-          let a = storage.getString('key1');
-          let b = storage.getString('key2');
-
-          if (Number(a) === Number(b)) {
-            storage.set('k2', password + val);
+          if (newPinRef.current === password + val) {
+            setPin(password + val);
+            newPinRef.current = '';
             Toast.show({
               type: 'omad',
               position: 'top',
@@ -108,12 +108,7 @@ const ChangeLocalPassword = () => {
     setPassword(password.slice(0, -1));
   };
   useEffect(() => {
-    const local_password = storage.getString('k2');
-    if (local_password === undefined) {
-      setStep(2);
-    } else {
-      setStep(1);
-    }
+    setStep(hasPin() ? 1 : 2);
   }, []);
 
   return (
