@@ -82,7 +82,10 @@ class SocketService {
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      // SS-PERF (2026-09-25): eksponensial backoff shifti 10s gacha + tasodifiylik
+      // (ko'p qurilma bir vaqtda qayta ulanib serverni "gurillatmasin").
+      reconnectionDelayMax: 10000,
+      randomizationFactor: 0.5,
       // SS-DEV (2026-09-23): tartib POLLING -> websocket (upgrade). Ilgari
       // 'websocket' birinchi edi; tb/app.zerox.uz oldidagi nginx->apache proksi
       // WebSocket handshake'ni o'tkazmaydi (web mijoz shu sabab polling'da

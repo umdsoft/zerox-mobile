@@ -61,6 +61,11 @@ export const forceLogout = (reason: ForceLogoutReason = 'revoked'): Promise<void
     try {
       storage.clearAll();
     } catch {}
+    // SS-PERF (2026-09-25): useFetch keshini tozalaymiz — keyingi foydalanuvchi
+    // oldingi akkaunt javoblarini (30s kesh) ko'rmasin.
+    try {
+      require('../hooks/useFetch').clearFetchCache?.();
+    } catch {}
     // 3) Redux
     try {
       const { Store } = require('../store/store/Store');

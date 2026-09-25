@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
-import { installAuthRefresh } from './authInterceptor';
+import { installAuthRefresh, installGetRetry } from './authInterceptor';
 import { getDeviceUserAgent } from '../../helper/userAgent';
 
 /**
@@ -22,7 +22,7 @@ import { getDeviceUserAgent } from '../../helper/userAgent';
  */
 const apiClient = axios.create({
   baseURL: URL,
-  timeout: 20000,
+  timeout: 15000, // SS-PERF (2026-09-25): 20s -> 15s (default axios bilan bir xil)
   // SS-AUDIT (2026-09-25): qurilmaga xos User-Agent (backend sessiya ajratish).
   headers: { 'User-Agent': getDeviceUserAgent() },
 });
@@ -38,5 +38,7 @@ apiClient.interceptors.request.use(config => {
 
 // Token eskirganda avtomatik yangilash (refresh) + so'rovni qayta yuborish.
 installAuthRefresh(apiClient);
+// SS-PERF (2026-09-25): GET so'rovlar tarmoq xatosi/timeout/5xx'da 1 marta qayta uriniladi.
+installGetRetry(apiClient);
 
 export default apiClient;

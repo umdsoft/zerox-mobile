@@ -146,8 +146,41 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
   );
 };
 
+/**
+ * SS-PERF (2026-09-25): GET so'rovlar uchun BIR MARTA qayta urinish (backoff 600ms).
+ * Faqat idempotent GET; faqat tarmoq xatosi/timeout (javob yo'q) yoki 502/503/504.
+ * Bekor qilingan (AbortController) so'rov qayta yuborilmaydi. POST/PUT/DELETE — yo'q
+ * (takror amal xavfi).
+ */
+const RETRY_STATUSES = new Set([502, 503, 504]);
+const RETRY_DELAY_MS = 600;
+const isRetriableGet = (error: any): boolean => {
+  const cfg = error?.config;
+  if (!cfg || cfg._netRetried) return false;
+  if (String(cfg.method || 'get').toLowerCase() !== 'get') return false;
+  if (axios.isCancel(error) || cfg.signal?.aborted) return false;
+  const status = error?.response?.status;
+  if (status === undefined) return true; // Network Error / ECONNABORTED (timeout)
+  return RETRY_STATUSES.has(status);
+};
+export const installGetRetry = (instance: AxiosInstance): void => {
+  instance.interceptors.response.use(
+    response => response,
+    async error => {
+      if (!isRetriableGet(error)) return Promise.reject(error);
+      error.config._netRetried = true;
+      await new Promise<void>(r => setTimeout(r, RETRY_DELAY_MS));
+      return instance(error.config);
+    },
+  );
+};
+
 // Default global axios instansiyasi — barcha xom `axios.get/post(URL + ...)` chaqiruvlari.
 installAuthRefresh(axios);
+installGetRetry(axios);
+// SS-PERF (2026-09-25): xom axios chaqiruvlari ham osilib qolmasin (ilgari timeout yo'q
+// edi — sekin tarmoqda spinner cheksiz aylanardi). Fayl yuklash joyida alohida uzunroq.
+axios.defaults.timeout = 15000;
 
 // SS-AUDIT (2026-09-25): qurilmaga xos User-Agent — default instansiya orqali
 // ketadigan BARCHA qo'lda `axios.*(URL + ...)` chaqiruvlar (login/refresh ham)

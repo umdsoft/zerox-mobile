@@ -504,10 +504,18 @@ const HomeRedesign = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch();
-  const { user: storeUser, home, notification, loading, usd, analytics } =
-    useSelector((s: any) => s.HomeReducer);
+  // SS-PERF (2026-09-25): butun HomeReducer o'rniga aniq maydonlar — slice'ning
+  // boshqa qismlari (appState, pagination, devices...) o'zgarganda bosh sahifa
+  // qayta render bo'lmaydi.
+  const storeUser = useSelector((s: any) => s.HomeReducer.user);
+  const home = useSelector((s: any) => s.HomeReducer.home);
+  const notification = useSelector((s: any) => s.HomeReducer.notification);
+  const loading = useSelector((s: any) => s.HomeReducer.loading);
+  const usd = useSelector((s: any) => s.HomeReducer.usd);
+  const analytics = useSelector((s: any) => s.HomeReducer.analytics);
   const myId = storeUser?.data?.id;
   const [refreshing, setRefreshing] = React.useState(false);
+  const notifFirstFocus = React.useRef(true);
 
   // Login qilinganmi (token bor)? Login qilingan foydalanuvchiga HECH QACHON demo
   // ko'rsatmaymiz — faqat real API ma'lumoti (bo'sh bo'lsa nol/bo'sh holat).
@@ -571,7 +579,13 @@ const HomeRedesign = () => {
       };
       ensureSocketAlive();
       // Jim catch-up — faqat bildirishnoma ro'yxati (home kartalari loading flash bermaydi).
-      dispatch(getNotificationWithPage({ page: 1 }) as any);
+      // SS-PERF (2026-09-25): BIRINCHI fokus mount bilan bir vaqtda keladi — o'sha
+      // paytda HomeApi allaqachon /notification/me ni yuklayapti (dublikat so'rov edi).
+      if (notifFirstFocus.current) {
+        notifFirstFocus.current = false;
+      } else {
+        dispatch(getNotificationWithPage({ page: 1 }) as any);
+      }
       const iv = setInterval(ensureSocketAlive, 20000);
       return () => clearInterval(iv);
     }, [myId, dispatch]),
