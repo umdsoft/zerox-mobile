@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SS-PERF (2026-09-25): shrinkResources uchun keep ro'yxati. Nomi bo'yicha
+     (reflection/getIdentifier) ishlatiladigan resurslar: notifee smallIcon
+     'ic_launcher', push-notification rang/ikonka meta-data, splash/launcher. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_launcher*,@mipmap/ic_launcher*,@color/white,@xml/*,@raw/*,@drawable/rn_edit_text_material,@style/*" />

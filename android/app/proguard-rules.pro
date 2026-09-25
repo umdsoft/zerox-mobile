@@ -104,3 +104,83 @@
 
 # Eslatma: aksariyat RN kutubxonalari o'z `consumer-proguard-rules.pro` bilan keladi
 # (R8 ularni avtomatik qo'llaydi). Yuqoridagilar — qo'shimcha xavfsizlik qatlami.
+
+# =====================================================================
+# SS-SEC/SS-PERF (2026-09-25): qo'shimcha konservativ keep-rule'lar.
+# Kutubxonalarning ko'pchiligi consumer-rules bilan keladi; quyidagilar
+# reflection/JNI/annotation orqali ishlaydigan modullar uchun xavfsizlik qatlami.
+# =====================================================================
+
+# ---- Nitro Modules (react-native-mmkv 3.x, nitro-myid) — JNI/HybridObject ----
+-keep class com.margelo.nitro.** { *; }
+-keep class com.mrousavy.mmkv.** { *; }
+-dontwarn com.mrousavy.**
+
+# ---- react-native-keychain / biometrics (Android Keystore, BiometricPrompt) ----
+-keep class com.oblador.keychain.** { *; }
+-keep class com.rnbiometrics.** { *; }
+-keep class androidx.biometric.** { *; }
+-dontwarn com.oblador.keychain.**
+
+# ---- notifee / react-native-push-notification (bildirishnoma, reflection) ----
+-keep class io.invertase.notifee.** { *; }
+-keep class app.notifee.core.** { *; }
+-keep class com.dieam.reactnativepushnotification.** { *; }
+-dontwarn io.invertase.**
+-dontwarn app.notifee.**
+
+# ---- react-native-device-info ----
+-keep class com.learnium.RNDeviceInfo.** { *; }
+
+# ---- react-native-capture-protection (FLAG_SECURE) ----
+-keep class com.captureprotection.** { *; }
+
+# ---- react-native-otp-verify (SMS Retriever) ----
+-keep class com.faizal.OtpVerify.** { *; }
+-keep class com.google.android.gms.auth.api.phone.** { *; }
+-dontwarn com.google.android.gms.**
+
+# ---- react-native-svg ----
+-keep class com.horcrux.svg.** { *; }
+
+# ---- react-native-vision-camera (QR/chek skaner) ----
+-keep class com.mrousavy.camera.** { *; }
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**
+
+# ---- react-native-pdf / blob-util / fs / share / file-viewer ----
+-keep class org.wonday.pdf.** { *; }
+-keep class com.github.barteksc.pdfviewer.** { *; }
+-keep class com.shockwave.** { *; }
+-keep class com.ReactNativeBlobUtil.** { *; }
+-keep class com.rnfs.** { *; }
+-keep class cl.json.** { *; }
+-keep class com.vinzscam.reactnativefileviewer.** { *; }
+-dontwarn com.shockwave.**
+
+# ---- Skia / Reanimated worklets / Lottie / Pager / Permissions / NetInfo ----
+-keep class com.shopify.reactnative.skia.** { *; }
+-keep class com.swmansion.worklets.** { *; }
+-keep class com.airbnb.lottie.** { *; }
+-keep class com.reactnativepagerview.** { *; }
+-keep class com.zoontek.rnpermissions.** { *; }
+-keep class com.reactnativecommunity.netinfo.** { *; }
+
+# ---- react-native-webview (JS interface, allaqachon yuqorida) / background-timer ----
+-keep class com.reactnativecommunity.webview.** { *; }
+-keep class com.ocetnik.timer.** { *; }
+
+# ---- Ilova native modullari (BiometricModule, NotificationBadgeModule) ----
+-keep class com.zeroxuz.** { *; }
+
+# ---- Kotlin metadata (Kotlin reflection/serialization ishlatadigan SDK'lar uchun) ----
+-keep class kotlin.Metadata { *; }
+-dontwarn kotlin.**
+-dontwarn kotlinx.**
+
+# ---- Loglarni olib tashlash (release'da android.util.Log chaqiruvlari) ----
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}

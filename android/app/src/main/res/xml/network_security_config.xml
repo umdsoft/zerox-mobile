@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SS-SEC (2026-09-25): RELEASE — faqat HTTPS (cleartext butunlay taqiqlanadi).
+     Debug varianti: src/debug/res/xml/network_security_config.xml (Metro uchun
+     localhost/10.0.2.2 cleartext ruxsat). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

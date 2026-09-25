@@ -139,7 +139,13 @@ android {
             // Integrity/liveness aynan shu imzo bilan o'tadi.
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // SS-PERF (2026-09-25): ishlatilmagan resurslarni olib tashlash (APK kichrayadi).
+            // Nomi bo'yicha (reflection) ishlatiladigan resurslar res/raw/keep.xml da saqlanadi.
+            // Muammo bo'lsa (masalan bildirishnoma ikonkasi yo'qolsa) shu qatorni false qiling.
+            shrinkResources enableProguardInReleaseBuilds
+            // SS-PERF (2026-09-25): proguard-android-optimize — kodni ham optimallashtiradi
+            // (inlining/dead-code); RN/Hermes bilan mos (keep-rule'lar proguard-rules.pro da).
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }
