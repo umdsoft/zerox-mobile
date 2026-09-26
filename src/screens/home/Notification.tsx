@@ -1,7 +1,7 @@
 import { FlatList, RefreshControl, StyleSheet, View, Text } from 'react-native';
 import { LIST_PERF_PROPS } from '../../helper/listPerf';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import TopTabBar from '../../navigation/TopTabBar';
 import NewsNotificationCard from '../components/NewsNotification';
@@ -61,6 +61,12 @@ import ExpirePassport from './notifications/all/Expire_Passport';
 import GapTaklif from './notifications/all/GapTaklif';
 // SS20: Shaxsiy moliya faolsizlik eslatmasi (3 kun kiritilmadi).
 import MoliyaEslatma from './notifications/all/MoliyaEslatma';
+// SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
+// ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
+import Shikoyat from './notifications/all/Shikoyat';
+// SS-DEV (2026-09-26): noma'lum tur / render xatosi uchun umumiy karta + ErrorBoundary.
+import NotifFallback, { NotifItemBoundary } from './notifications/all/NotifFallback';
+import apiClient from '../../store/api/apiClient';
 
 type ObjType = {
   act: string;
@@ -247,6 +253,35 @@ const Bildrishnoma = () => {
       socketService.off('recive_notification', onLive);
     };
   }, [silentRefresh]);
+
+  /**
+   * SS-DEV (2026-09-26): talab dalolatnomasi (type 17) bilan TANISHUV — sayt
+   * (`pages/notification/index.vue` `_ackDemandActs`) bilan bir xil xulq. Qarz oluvchi
+   * bildirishnomalar ekranini OCHGANDA (fokusda; polling/socket yangilanishida emas)
+   * `act && !act_ack_at` bo'lsa `POST /contract/act/{act}/ack` → backend `acts.ack_at`
+   * yozadi (PDF'da "tanishdi" vaqti). Idempotent; 403 `not-creditor` (boshqa tomon) va
+   * 4xx — jim; tarmoq/5xx xatosida keyingi fokusda qayta uriniladi.
+   */
+  const isFocused = useIsFocused();
+  const ackedActsRef = useRef<Set<string>>(new Set());
+  const bild = notificationData?.bild;
+  const myId = user?.data?.id;
+  useEffect(() => {
+    if (!isFocused || !myId || !Array.isArray(bild)) return;
+    bild.forEach((n: any) => {
+      if (!n || Number(n.type) !== 17 || !n.act || n.act_ack_at) return;
+      if (n.reciver != null && Number(n.reciver) !== Number(myId)) return;
+      const key = String(n.act);
+      if (ackedActsRef.current.has(key)) return;
+      ackedActsRef.current.add(key);
+      apiClient
+        .post(`/contract/act/${encodeURIComponent(key)}/ack`, {})
+        .catch((e: any) => {
+          const st = e?.response?.status;
+          if (!st || st >= 500) ackedActsRef.current.delete(key);
+        });
+    });
+  }, [isFocused, bild, myId]);
 
   // Notoficationni o'chirish
   const okay = useCallback(
@@ -611,7 +646,8 @@ const Bildrishnoma = () => {
   // ushlab qolardi (stale). Inline chaqiriladi (memoized prop emas), shuning uchun plain
   // funksiya: har render'da yangi (to'g'ri) handler/user bilan ishlaydi.
   const renderItems = (item, index) => {
-    switch (item?.type) {
+    // SS-DEV (2026-09-26): `type` satr bo'lib kelsa ham ("17") mos shablon tanlanadi.
+    switch (Number(item?.type)) {
       //buldi bi batafsil qoldi
       case 0:
         return (
@@ -833,10 +869,28 @@ const Bildrishnoma = () => {
       // SS20: Shaxsiy moliya — 3 kun daromad/xarajat kiritilmadi.
       case 41:
         return <MoliyaEslatma item={item} okay={okay} navigation={navigation} />;
+      // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
+      case 42:
+      case 43:
+        return <Shikoyat item={item} okay={okay} navigation={navigation} />;
       default:
-        return <Text>{t('Xatolik sodir bo‘ldi')}</Text>;
+        // SS-DEV (2026-09-26): ilgari `<Text>Xatolik sodir bo'ldi</Text>` — backend yangi
+        // tur yuborsa foydalanuvchi karta o'rniga xato matnini ko'rardi va uni yopa olmasdi.
+        // Endi umumiy karta (sarlavha/matn/sana + Ok).
+        if (__DEV__) {
+          console.error('notification: unknown type', item?.type, 'id', item?.id);
+        }
+        return <NotifFallback item={item} okay={okay} />;
     }
   };
+
+  // SS-DEV (2026-09-26): har bir qator ErrorBoundary ichida — bitta karta render'da
+  // yiqilsa (null maydon va h.k.) faqat o'sha qator fallback bo'ladi, ro'yxat/ekran emas.
+  const renderRow = ({ item, index }: { item: any; index: number }) => (
+    <NotifItemBoundary item={item} okay={okay}>
+      {renderItems(item, index)}
+    </NotifItemBoundary>
+  );
 
   const EmptyListComponent = () => (
     <RdEmpty text={t('Bildirishnomalar mavjud emas')} />
@@ -861,7 +915,7 @@ const Bildrishnoma = () => {
         {...LIST_PERF_PROPS}
         initialNumToRender={8}
         // renderItem={renderItems}
-        renderItem={({ item, index }) => renderItems(item, index)}
+        renderItem={renderRow}
       />
     </View>
   );

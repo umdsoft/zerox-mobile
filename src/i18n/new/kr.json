@@ -1545,6 +1545,12 @@
     "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "«{{name}}» — {{amount}} қарзидан воз кечасизми? Қарз ёпилган деб белгиланади, қолдиқ 0 бўлади. Бу амални қайтариб бўлмайди.",
     "jami {{amount}}": "жами {{amount}}",
     "1 000": "1 000",
-    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Валюта курси вақтинча мавжуд эмас. Бироздан сўнг қайта уриниб кўринг"
+    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Валюта курси вақтинча мавжуд эмас. Бироздан сўнг қайта уриниб кўринг",
+    "Shaxsiy qarz bo‘yicha shikoyat": "Шахсий қарз бўйича шикоят",
+    "do‘kondagi qarzi bo‘yicha": "дўкондаги қарзи бўйича",
+    "siz yozgan qarz bo‘yicha": "сиз ёзган қарз бўйича",
+    "Qarzga o‘tish": "Қарзга ўтиш",
+    "Boshqa sabab (izohga qarang)": "Бошқа сабаб (изоҳга қаранг)",
+    "Bu bildirishnomani ko‘rsatib bo‘lmadi. Iltimos, ilovani yangilang yoki saytdan tekshiring.": "Бу билдиришномани кўрсатиб бўлмади. Илтимос, иловани янгиланг ёки сайтдан текширинг."
   }
 }

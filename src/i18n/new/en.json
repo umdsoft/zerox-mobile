@@ -1545,6 +1545,12 @@
     "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "Waive the debt of «{{name}}» — {{amount}}? The debt will be marked as closed, the balance becomes 0. This cannot be undone.",
     "jami {{amount}}": "total {{amount}}",
     "1 000": "1 000",
-    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Exchange rate is temporarily unavailable. Please try again later"
+    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Exchange rate is temporarily unavailable. Please try again later",
+    "Shaxsiy qarz bo‘yicha shikoyat": "Complaint about a personal debt",
+    "do‘kondagi qarzi bo‘yicha": "regarding the debt at the shop",
+    "siz yozgan qarz bo‘yicha": "regarding the debt you recorded",
+    "Qarzga o‘tish": "Go to the debt",
+    "Boshqa sabab (izohga qarang)": "Other reason (see comment)",
+    "Bu bildirishnomani ko‘rsatib bo‘lmadi. Iltimos, ilovani yangilang yoki saytdan tekshiring.": "This notification could not be displayed. Please update the app or check it on the website."
   }
 }

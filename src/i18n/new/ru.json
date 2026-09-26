@@ -1546,6 +1546,12 @@
     "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "Отказаться от долга «{{name}}» — {{amount}}? Долг будет отмечен как закрытый, остаток станет 0. Это действие нельзя отменить.",
     "jami {{amount}}": "всего {{amount}}",
     "1 000": "1 000",
-    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Курс валюты временно недоступен. Попробуйте ещё раз чуть позже"
+    "Valyuta kursi vaqtincha mavjud emas. Birozdan so‘ng qayta urinib ko‘ring": "Курс валюты временно недоступен. Попробуйте ещё раз чуть позже",
+    "Shaxsiy qarz bo‘yicha shikoyat": "Жалоба по личному долгу",
+    "do‘kondagi qarzi bo‘yicha": "по долгу в магазине",
+    "siz yozgan qarz bo‘yicha": "по записанному вами долгу",
+    "Qarzga o‘tish": "Перейти к долгу",
+    "Boshqa sabab (izohga qarang)": "Другая причина (см. комментарий)",
+    "Bu bildirishnomani ko‘rsatib bo‘lmadi. Iltimos, ilovani yangilang yoki saytdan tekshiring.": "Не удалось отобразить это уведомление. Пожалуйста, обновите приложение или проверьте на сайте."
   }
 }

@@ -682,6 +682,18 @@
     "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.": "«{{name}}» — {{amount}} qarzidan voz kechasizmi? Qarz yopilgan deb belgilanadi, qoldiq 0 bo‘ladi. Bu amalni qaytarib bo‘lmaydi.",
     "Qarzni yopish": "Qarzni yopish",
     "Yangi qarz": "Yangi qarz",
-    "jami {{amount}}": "jami {{amount}}"
+    "jami {{amount}}": "jami {{amount}}",
+    "Qarz bo‘yicha shikoyat": "Qarz bo‘yicha shikoyat",
+    "Shaxsiy qarz bo‘yicha shikoyat": "Shaxsiy qarz bo‘yicha shikoyat",
+    "do‘kondagi qarzi bo‘yicha": "do‘kondagi qarzi bo‘yicha",
+    "siz yozgan qarz bo‘yicha": "siz yozgan qarz bo‘yicha",
+    "Qarzga o‘tish": "Qarzga o‘tish",
+    "Boshqa sabab (izohga qarang)": "Boshqa sabab (izohga qarang)",
+    "Men qarz olmaganman-ku?": "Men qarz olmaganman-ku?",
+    "Qarzimni to‘liq qaytargan edim-ku?": "Qarzimni to‘liq qaytargan edim-ku?",
+    "Qarzimni bir qismini qaytarganman-ku?": "Qarzimni bir qismini qaytarganman-ku?",
+    "Bu bildirishnomani ko‘rsatib bo‘lmadi. Iltimos, ilovani yangilang yoki saytdan tekshiring.": "Bu bildirishnomani ko‘rsatib bo‘lmadi. Iltimos, ilovani yangilang yoki saytdan tekshiring.",
+    "Do‘kon": "Do‘kon",
+    "Qoldiq": "Qoldiq"
   }
 }
