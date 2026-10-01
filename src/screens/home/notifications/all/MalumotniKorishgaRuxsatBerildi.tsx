@@ -16,13 +16,19 @@ import NotificationShell, {
 } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 import { style } from '../../../../theme/style';
+import { useOfertaGuard } from '../../../../hooks/useOfertaGuard';
 
 const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
   const dispatch = useDispatch();
+  // SS-DEV (2026-09-29): bu qarz berish oqimining davomi (UserInformationOfDebt →
+  // GiveDebtUser) — ommaviy oferta shart.
+  const guardOferta = useOfertaGuard();
 
-  const SeeNotification = async () => {
+  const SeeNotification = () => guardOferta(() => { openCandidate(); });
+
+  const openCandidate = async () => {
     const data = await axios.get(URL + `/user/candidate/${item.ctok}`, {
       headers: {
         Authorization: `Bearer ${storage.getString('token')}`,

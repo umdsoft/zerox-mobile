@@ -15,12 +15,15 @@ import NotificationShell, {
 } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 import { style } from '../../../../theme/style';
+import { useOfertaGuard } from '../../../../hooks/useOfertaGuard';
 
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
   okay,
   navigation,
 }) => {
+  // SS-DEV (2026-09-29): "Qarzni qaytarish" — shartnoma amali, ommaviy oferta shart.
+  const guardOferta = useOfertaGuard();
   const onOkay = async () => {
     okay(item.id);
   };
@@ -41,9 +44,11 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
         },
       );
 
-      navigation.navigate('DebtTakeSelect', {
-        item: { id: item.contract },
-      });
+      guardOferta(() =>
+        navigation.navigate('DebtTakeSelect', {
+          item: { id: item.contract },
+        }),
+      );
       if (info?.status === 200) {
         // socketService.emit('notification', {userId: user?.data?.id});
         // socketService.on('notification', data => {
@@ -55,7 +60,7 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
     } catch (error) {
       console.error('Error in notification ok:', error);
     }
-  }, []);
+  }, [guardOferta]);
 
   const dispatch = useDispatch();
 
@@ -119,9 +124,11 @@ const Qarzniqaytarishtalabqilinganligitogrisida = ({
             <NotifButton
               label="Qarzni qaytarish"
               onPress={() => {
-                navigation.navigate('DebtTakeSelect', {
-                  item: { id: item.contract },
-                });
+                guardOferta(() =>
+                  navigation.navigate('DebtTakeSelect', {
+                    item: { id: item.contract },
+                  }),
+                );
               }}
             />
             <NotifButton label="Ok" variant="ghost" onPress={onOkay} />

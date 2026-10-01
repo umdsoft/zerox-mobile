@@ -43,6 +43,7 @@ import RecoveryPassword from './notifications/all/RecoveryPassword';
 import QarzniMuddatUzaytirishQabul from './notifications/all/QarzniMuddatUzaytirishQabul';
 import MalumotniKorishgaRadEtildi from './notifications/all/MalumotniKorishgaRadEtildi';
 import MalumotniKorishgaRuxsatBerildi from './notifications/all/MalumotniKorishgaRuxsatBerildi';
+import { useOfertaGuard } from '../../hooks/useOfertaGuard';
 
 import { t } from 'i18next';
 import socketService from '../../helper/socketService';
@@ -642,6 +643,25 @@ const Bildrishnoma = () => {
     }
   };
 
+  /**
+   * SS-DEV (2026-09-29, 29.09 doc2 3-rasm): bildirishnomadagi QARZ SHARTNOMASI
+   * amallari (shartnomani TASDIQLASH, qaytarishni qabul qilish, muddat
+   * uzaytirish) — ommaviy oferta shart. Tasdiqlanmagan bo'lsa oferta oynasi
+   * ochiladi, tasdiqlangach amal davom etadi. Rad etish / "Ok" — ochiq
+   * (backend `requireOfertaWhen(stype===1)` bilan bir xil qoida).
+   */
+  const guardOferta = useOfertaGuard();
+  const onSuccessG = (item: any, status: any, type: any) =>
+    String(status) === '1'
+      ? guardOferta(() => { onSuccess(item, status, type); })
+      : onSuccess(item, status, type);
+  const onToliqQaytganG = (item: any, status: any) =>
+    guardOferta(() => { onToliqQaytgan(item, status); });
+  const onQismanQaytarilganG = (item: any, status: any) =>
+    guardOferta(() => { onQismanQaytarilgan(item, status); });
+  const onQarzMuddatUzaytirishG = (item: any, status: any) =>
+    guardOferta(() => { onQarzMuddatUzaytirish(item, status); });
+
   // C-020: avval useCallback([]) edi — render-1 dagi okay/onSuccess/onReject/user ni
   // ushlab qolardi (stale). Inline chaqiriladi (memoized prop emas), shuning uchun plain
   // funksiya: har render'da yangi (to'g'ri) handler/user bilan ishlaydi.
@@ -655,7 +675,7 @@ const Bildrishnoma = () => {
             item={item}
             okay={okay}
             navigation={navigation}
-            onSuccess={onSuccess}
+            onSuccess={onSuccessG}
             onReject={onReject}
           />
         );
@@ -665,8 +685,8 @@ const Bildrishnoma = () => {
             item={item}
             okay={okay}
             navigation={navigation}
-            onToliqQaytgan={onToliqQaytgan}
-            onQismanQaytarilgan={onQismanQaytarilgan}
+            onToliqQaytgan={onToliqQaytganG}
+            onQismanQaytarilgan={onQismanQaytarilganG}
           />
         );
       case 4:
@@ -683,7 +703,7 @@ const Bildrishnoma = () => {
             item={item}
             okay={okay}
             navigation={navigation}
-            onToliqQaytgan={onToliqQaytgan}
+            onToliqQaytgan={onToliqQaytganG}
           />
         );
       case 3:
@@ -692,7 +712,7 @@ const Bildrishnoma = () => {
             item={item}
             okay={okay}
             navigation={navigation}
-            onQarzMuddatUzaytirish={onQarzMuddatUzaytirish}
+            onQarzMuddatUzaytirish={onQarzMuddatUzaytirishG}
             reject={onReject}
           />
         );

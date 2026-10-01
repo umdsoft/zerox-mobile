@@ -13,7 +13,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Linking,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -30,10 +29,15 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
+import { creationParams } from './qarzAmaliyot';
+import { showTalabError } from './qarzTalab';
+import { buildQarzSmsTemplates } from './qarzSmsTemplates';
+import SmsTemplateSheet from '../../components/SmsTemplateSheet';
 import {
   ArrowUpRight,
   CalendarIcon,
   CheckCircleIcon,
+  ChevronRight,
   ClockIcon,
   MessageIcon,
   PencilIcon,
@@ -80,6 +84,17 @@ const fmtDate = (s?: string): string => {
   return `${dd}.${mm}.${yy}`;
 };
 
+// Qaytarish muddati BUGUNDAN oldin qolganmi (faqat sana bo'yicha, vaqtsiz).
+const isOverdue = (s?: string): boolean => {
+  if (!s) return false;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime() < today.getTime();
+};
+
 // ---------- Kichik komponentlar ----------
 const CircleIcon = ({
   size,
@@ -103,6 +118,56 @@ const CircleIcon = ({
     {children}
   </View>
 );
+
+/**
+ * 2026-09-28: "Aktiv qarzlar" ro'yxatining bitta qatori.
+ * Berilgan sana · summa+valyuta · qoldiq · qaytarish muddati (+ bo'lib to'lash
+ * tegi). Bosilganda qarz tafsiloti (QarzDaftariQarz) ochiladi.
+ */
+type ActiveQarzRowProps = {
+  q: any;
+  accent: string;
+  onPress: () => void;
+  t: (k: string, o?: any) => string;
+};
+const ActiveQarzRow = ({ q, accent, onPress, t }: ActiveQarzRowProps) => {
+  const valyuta = q?.valyuta || 'UZS';
+  const due = q?.qaytarish_sanasi ? String(q.qaytarish_sanasi) : '';
+  const overdue = isOverdue(due);
+  return (
+    <TouchableOpacity activeOpacity={0.8} style={styles.aqRow} onPress={onPress}>
+      <View style={[styles.aqBar, { backgroundColor: overdue ? RED : accent }]} />
+      <View style={styles.aqBody}>
+        <View style={styles.aqTop}>
+          <Text style={styles.aqAmount} numberOfLines={1}>
+            {`${sortMoneyText(q?.miqdor) || 0} ${valyuta}`}
+          </Text>
+          {!!q?.bolib_tolash && (
+            <View style={styles.aqChip}>
+              <Text allowFontScaling={false} style={styles.aqChipText}>
+                {t('Muddatli to‘lov')}
+              </Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.aqQoldiq} numberOfLines={1}>
+          {`${t('Qoldiq')}: ${sortMoneyText(q?.qoldiq) || 0} ${valyuta}`}
+        </Text>
+        <View style={styles.aqMetaRow}>
+          <CalendarIcon size={rs(13)} color={rd.color.textTertiary} />
+          <Text style={styles.aqMeta} numberOfLines={1}>
+            {fmtDate(q?.berilgan_sana || q?.created_at) || '—'}
+          </Text>
+          <ClockIcon size={rs(13)} color={overdue ? RED : rd.color.textTertiary} />
+          <Text style={[styles.aqMeta, overdue && styles.aqOverdue]} numberOfLines={1}>
+            {fmtDate(due) || '—'}
+          </Text>
+        </View>
+      </View>
+      <ChevronRight size={rs(16)} color={rd.color.textTertiary} />
+    </TouchableOpacity>
+  );
+};
 
 // ---------- Ekran ----------
 /**
@@ -182,6 +247,8 @@ const QarzDaftariMijoz = () => {
   const mijoz: any = d?.mijoz || {};
   const stats: any = d?.stats || {};
   const qarzlar: any[] = d?.qarzlar || [];
+  // 28.09 (3-band): aktiv qarz bosilganda uning "Qarz berildi" amaliyoti ochiladi.
+  const tranzaksiyalar: any[] = d?.tranzaksiyalar || [];
 
   const fish = titleCase(mijoz?.fish || fishParam);
   const telefon = mijoz?.telefon || '';
@@ -289,35 +356,18 @@ const QarzDaftariMijoz = () => {
     .slice()
     .sort((a, b) => qarzRegTime(b) - qarzRegTime(a))[0];
 
-  // SS8-5 / SS8-6: sana kartalari va "Kvitansiya" uchun ENG OXIRGI qarz.
-  // Avval eng oxirgi AKTIV qarz (amal tugmalari ham shunga ishlaydi), aktivi
-  // bo'lmasa — umuman eng oxirgi qarz (yopilganlar tarixi ham ko'rinsin).
-  const lastQarz =
-    lastActiveQarz ||
-    visibleQarzlar.slice().sort((a, b) => qarzRegTime(b) - qarzRegTime(a))[0];
-
   /**
-   * SS19-2 (2026-09-15): "Qaytarish sanasi" kartasida CHIZIQCHA chiqmasligi
-   * kerak — sana DOIM ko'rsatilsin (muddati o'tgan bo'lsa ham).
+   * 2026-09-28: "Berilgan sana" / "Qaytarish sanasi" KARTALARI sahifadan olib
+   * tashlandi (so'rov). Sanalar BAZADA (qarz_daftari.berilgan_sana /
+   * qaytarish_sanasi) o'zgarishsiz saqlanadi — SMS eslatma, kalendar, bo'lib
+   * to'lash va boshqa funksiyalar ularni o'zi o'qiydi. Bu yerda faqat
+   * ko'rsatish uchun hisoblangan "oxirgi qarz sanasi" endi kerak emas.
    *
-   * Oxirgi rasmiylashtirilgan qarzda muddat bo'lmasligi mumkin (masalan bo'lib
-   * to'lash yoki muddat kiritilmagan). Bunday holda aktiv qarzlar ichidan ENG
-   * KECH muddatni olamiz — jami qoldiq aynan o'shanda yopilishi kerak.
+   * Uning o'rniga — "Aktiv qarzlar" RO'YXATI: har bir aktiv qarz o'z sanalari
+   * bilan (SS-A4 tartibi: xronologik, eskisi oldin). Sayt bilan bir xil qoida:
+   * faqat `status === 'aktiv'`.
    */
-  const dueFallback = visibleQarzlar
-    .filter(q => q?.status === 'aktiv' && q?.qaytarish_sanasi)
-    .map(q => String(q.qaytarish_sanasi))
-    .sort()
-    .pop();
-  const aggregateDue =
-    (lastQarz?.qaytarish_sanasi && String(lastQarz.qaytarish_sanasi)) ||
-    dueFallback ||
-    (visibleQarzlar
-      .filter(q => q?.qaytarish_sanasi)
-      .map(q => String(q.qaytarish_sanasi))
-      .sort()
-      .pop() ||
-      '');
+  const aktivQarzlar = visibleQarzlar.filter(isOpenQarz);
 
   /**
    * SS8-7: "Qaytarishni talab qilish" — eng oxirgi aktiv qarz bo'yicha mijozga
@@ -340,16 +390,13 @@ const QarzDaftariMijoz = () => {
         props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') },
       });
     } catch (error: any) {
-      const code = error?.response?.data?.code;
-      const msg =
-        code === 'no-sms-package'
-          ? t('SMS paket yetarli emas')
-          : code === 'sms-failed'
-          ? t('SMS yuborilmadi')
-          : code === 'no-phone'
-          ? t('Mijoz telefoni yo‘q')
-          : t('Xatolik yuz berdi');
-      Toast.show({ type: 'error2', props: { desc: msg } });
+      // 29.09 (3-band): aniq sabab (karta yo'q → karta ekrani, SMS rad etildi, ...).
+      showTalabError(error, {
+        t,
+        navigation,
+        faoliyatId: mijoz?.savdo_faoliyat_id,
+        faoliyatNomi: dokonNomi,
+      });
     } finally {
       setTalabLoading(false);
     }
@@ -371,22 +418,39 @@ const QarzDaftariMijoz = () => {
     });
   };
 
-  // SMS ikonkasi — foydalanuvchining TELEFON SMS ilovasini TAYYOR matn bilan ochadi
-  // (zerox tizimi orqali EMAS, egasining o'z raqamidan yuboriladi). Matn: do'kon nomi
-  // + qoldiq qarz summasi (UZS/USD). Android: `sms:<raqam>?body=<matn>`.
-  const buildSmsUrl = (phone: string) => {
+  /**
+   * SMS ikonkasi — foydalanuvchining TELEFON SMS ilovasi (zerox tizimi orqali EMAS,
+   * egasining o'z raqamidan yuboriladi).
+   *
+   * SS-DEV (2026-09-29, 29.09 hujjat 3-band): ILDIZ — ikonka `Linking.openURL`
+   * bilan SMS ilovasini DARHOL bitta qat'iy matn bilan ochardi. Endi avval
+   * holatga mos TAYYOR SHABLONLAR oynasi (SmsTemplateSheet) chiqadi; SMS ilovasi
+   * faqat shablon tanlangandan keyin ochiladi.
+   */
+  const [showSms, setShowSms] = React.useState(false);
+  // Ro'yxat faqat oyna ochiq bo'lganda tuziladi (arzon, sof funksiya).
+  const buildSmsTemplates = (): string[] => {
     const parts: string[] = [];
     if (qoldiqUzs > 0) parts.push(`${sortMoneyText(qoldiqUzs)} UZS`);
     if (qoldiqUsd > 0) parts.push(`${sortMoneyText(qoldiqUsd)} USD`);
-    const summa = parts.join(` ${t('va')} `) || '0 UZS';
-    const dokon = dokonNomi || t('do‘konimiz');
-    const body = t(
-      'Sizning {{dokon}}dan {{summa}} qarzingiz mavjud. Ushbu qarzni bugun qaytarishingiz talab qilinadi.',
-      { dokon, summa },
-    );
-    const sep = Platform.OS === 'ios' ? '&' : '?';
-    return `sms:${phone}${sep}body=${encodeURIComponent(body)}`;
+    // Eng dolzarb sana: muddati o'tganlarning ENG ESKISI, bo'lmasa eng yaqin kelgusi.
+    const dues = aktivQarzlar
+      .map(q => String(q?.qaytarish_sanasi || ''))
+      .filter(s => !!fmtDate(s))
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    const overdueDue = dues.find(s => isOverdue(s));
+    const due = overdueDue || dues[0] || '';
+    return buildQarzSmsTemplates(t, {
+      turi,
+      ism: fish,
+      dokon: dokonNomi,
+      summa: parts.join(` ${t('va')} `),
+      sana: fmtDate(due),
+      overdue: !!overdueDue,
+      partlyPaid: (undirilganUzs > 0 || undirilganUsd > 0) && parts.length > 0,
+    });
   };
+  const smsTemplates = showSms ? buildSmsTemplates() : [];
 
   if (loading) return <Loading />;
 
@@ -450,7 +514,9 @@ const QarzDaftariMijoz = () => {
               <View style={styles.phoneActions}>
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => Linking.openURL(buildSmsUrl(telefon))}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('SMS yuborish')}
+                  onPress={() => setShowSms(true)}
                   style={styles.smsBtn}>
                   <MessageIcon size={rs(16)} color={rd.color.onPrimary} />
                 </TouchableOpacity>
@@ -477,29 +543,9 @@ const QarzDaftariMijoz = () => {
           )}
         </View>
 
-        {/* Mijoz bo'yicha amaliyotlar tarixiga o'tish —
-            kartasi bilan summa kartalari ORASIDA, ALOHIDA card sifatida.
-            Ilgari bular faqat bitta qarz sahifasida bor edi; mijoz darajasida
-            ham kerak, chunki amaliyotlar tarixi MIJOZ bo'yicha ochiladi. */}
-        {/* SS19-1 (2026-09-15): ikki tugma endi BIR-BIRIDAN AJRALGAN alohida
-            kartalar (ilgari bitta karta ichida nozik chiziq bilan bo'lingan edi
-            va bitta tugmadek ko'rinardi). */}
-        {/* SS9-2 (2026-09-17): "Kvitansiya" bu sahifadan OLIB TASHLANDI — u
-            endi HAR BIR AMALIYOT ichida (Amaliyotlar tarixi → amaliyot
-            tafsiloti). Sabab: bu yerdagi kvitansiya faqat OXIRGI qarz bo'yicha
-            edi va qaysi amaliyotga tegishli ekani noaniq qolardi.
-            Qolgan yagona karta kengaytirildi — sahifaning asosiy o'tish nuqtasi. */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={[styles.historyCard, { borderColor: BLUE + '40' }]}
-          onPress={() =>
-            navigation.navigate('QarzDaftariAmaliyotlar', { mijoz_id: mijoz?.id ?? id, turi })
-          }>
-          <TransferIcon size={rs(20)} color={BLUE} />
-          <Text style={[styles.historyText, { color: BLUE }]} numberOfLines={1}>
-            {t('Amaliyotlar tarixi')}
-          </Text>
-        </TouchableOpacity>
+        {/* SS9-2 (2026-09-17): "Kvitansiya" bu sahifadan OLIB TASHLANGAN — u
+            HAR BIR AMALIYOT ichida (Amaliyotlar tarixi → amaliyot tafsiloti).
+            "Amaliyotlar tarixi" kartasi 2026-09-28 dan summa kartalari TAGIDA. */}
 
         {/* SS8-3 / SS8-4: "Jami qarz" -> "Qoldiq qarz" (qoldiqdagi UZS+USD),
             "Aktiv qarzlar" (son) -> "Undirilgan qarz" — ya'ni mijoz HAQIQATDA
@@ -540,35 +586,21 @@ const QarzDaftariMijoz = () => {
           </View>
         </View>
 
-        {/* SS8-6: summa kartalari tagida — oxirgi qarzning BERILGAN va
-            QAYTARISH sanalari. Aynan oxirgi qarz olinadi: umumiy qaytarish
-            muddati ham (SMS eslatmasi kabi) oxirgi berilgan qarz bo'yicha
-            belgilanadi, ya'ni ekran va SMS bir xil sanani ko'rsatadi. */}
-        <View style={styles.sumGrid}>
-          <View style={styles.dateCard}>
-            <CalendarIcon size={rs(16)} color={rd.color.textTertiary} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.dateLabel} numberOfLines={1}>{t('Berilgan sana')}</Text>
-              {/* SS1-3: sana qiymati SUMMALAR bilan bir xil o'lchamda. */}
-              <Text
-                style={[styles.dateValue, { fontSize: rs(sumValueSize) }]}
-                numberOfLines={1}>
-                {fmtDate(lastQarz?.berilgan_sana) || '—'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.dateCard}>
-            <ClockIcon size={rs(16)} color={rd.color.textTertiary} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.dateLabel} numberOfLines={1}>{t('Qaytarish sanasi')}</Text>
-              <Text
-                style={[styles.dateValue, { fontSize: rs(sumValueSize) }]}
-                numberOfLines={1}>
-                {fmtDate(aggregateDue) || '—'}
-              </Text>
-            </View>
-          </View>
-        </View>
+        {/* 2026-09-28: "Berilgan sana"/"Qaytarish sanasi" kartalari OLIB
+            TASHLANDI (sanalar bazada saqlanadi — yuqoridagi izohga qarang).
+            "Amaliyotlar tarixi" endi summa kartalari TAGIDA va ixchamroq
+            (to'liq kenglikda emas, pastroq). */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.historyCard, { borderColor: BLUE + '40' }]}
+          onPress={() =>
+            navigation.navigate('QarzDaftariAmaliyotlar', { mijoz_id: mijoz?.id ?? id, turi })
+          }>
+          <TransferIcon size={rs(18)} color={BLUE} />
+          <Text style={[styles.historyText, { color: BLUE }]} numberOfLines={1}>
+            {t('Amaliyotlar tarixi')}
+          </Text>
+        </TouchableOpacity>
 
         {/* Amal tugmalari — kartalar TAGIDA (so'rov). "Yangi qarz" doim; "Qarzni
             yopish" faqat aktiv qarz bo'lganda (eng oxirgi aktiv qarzga qo'llanadi). */}
@@ -640,11 +672,43 @@ const QarzDaftariMijoz = () => {
           </View>
         )}
 
-        {/* SS8-8: "Qarzlar" sarlavhasi va uning ostidagi qarzlar RO'YXATI OLIB
-            TASHLANDI — aynan shu ma'lumot "Amaliyotlar tarixi" sahifasida
-            (yuqoridagi tugma) to'liqroq ko'rinishda mavjud edi. */}
+        {/* SS8-8: to'liq "Qarzlar" ro'yxati olib tashlangan (u "Amaliyotlar
+            tarixi"da). 2026-09-28: uning o'rniga FAQAT AKTIV qarzlar ro'yxati —
+            har biri bosilganda "Qarz berildi" AMALIYOT tafsiloti ochiladi
+            (28.09 hujjati, 3-band; ilgari "Qarz tafsiloti" ochilardi). */}
+        <View style={styles.aqSection}>
+          <Text style={styles.aqTitle}>
+            {`${t('Aktiv qarzlar')} (${aktivQarzlar.length})`}
+          </Text>
+          {aktivQarzlar.length === 0 ? (
+            <Text style={styles.aqEmpty}>{t('Aktiv qarzlar yo‘q')}</Text>
+          ) : (
+            aktivQarzlar.map(q => (
+              <ActiveQarzRow
+                key={String(q?.id)}
+                q={q}
+                accent={accent}
+                t={t}
+                onPress={() =>
+                  navigation.navigate('QarzDaftariAmaliyot', {
+                    ...creationParams(q, tranzaksiyalar),
+                    mijoz,
+                  })
+                }
+              />
+            ))
+          )}
+        </View>
 
       </ScrollView>
+
+      {/* SS-DEV (2026-09-29): SMS ikonkasi → avval tayyor shablonlar oynasi. */}
+      <SmsTemplateSheet
+        visible={showSms}
+        onClose={() => setShowSms(false)}
+        phone={telefon}
+        templates={smsTemplates}
+      />
     </View>
   );
 };
@@ -683,7 +747,10 @@ const styles = StyleSheet.create({
     borderRadius: rs(14),
     borderWidth: 1.5,
     // SS6 (2026-09-18): karta va matn BIROZ kichraytirildi (so'rov).
-    paddingVertical: rs(12),
+    // 2026-09-28: yana ixchamroq — to'liq kenglik emas (yon chekinish) va
+    // pastroq balandlik.
+    marginHorizontal: rs(28),
+    paddingVertical: rs(9),
     paddingHorizontal: rs(12),
   },
   historyText: { fontFamily: rd.font.bold, fontSize: rs(13) },
@@ -704,27 +771,6 @@ const styles = StyleSheet.create({
   },
   linkBtnOff: { opacity: 0.45 },
   linkText: { fontFamily: rd.font.semibold, fontSize: rs(11.5) },
-
-  // SS8-6: "Berilgan sana" / "Qaytarish sanasi" kartalari.
-  dateCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: rs(9),
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(14),
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(11),
-  },
-  dateLabel: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary },
-  dateValue: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(13),
-    color: rd.color.text,
-    marginTop: rs(2),
-  },
 
   // SS8-7: "Qaytarishni talab qilish" / "Qarzdan voz kechish" plitkalari
   // (QarzDaftariQarz dagi bilan bir xil ko'rinish — bir xil amal, bir xil uslub).
@@ -853,4 +899,56 @@ const styles = StyleSheet.create({
     color: rd.color.onPrimary,
   },
 
+  // 2026-09-28: "Aktiv qarzlar" ro'yxati.
+  aqSection: { gap: rs(8) },
+  aqTitle: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
+  aqEmpty: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.textTertiary,
+    textAlign: 'center',
+    paddingVertical: rs(14),
+  },
+  aqRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(10),
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(14),
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    paddingVertical: rs(11),
+    paddingRight: rs(12),
+    paddingLeft: rs(14),
+    overflow: 'hidden',
+  },
+  aqBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: rs(4) },
+  aqBody: { flex: 1, gap: rs(3) },
+  aqTop: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  aqAmount: {
+    flexShrink: 1,
+    fontFamily: rd.font.bold,
+    fontSize: rs(14),
+    color: rd.color.text,
+  },
+  aqChip: {
+    paddingHorizontal: rs(7),
+    paddingVertical: rs(2),
+    borderRadius: rd.radius.pill,
+    backgroundColor: rd.color.warningBg,
+  },
+  aqChipText: { fontFamily: rd.font.semibold, fontSize: rs(10), color: rd.color.warning },
+  aqQoldiq: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12),
+    color: rd.color.textSecondary,
+  },
+  aqMetaRow: { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
+  aqMeta: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(11.5),
+    color: rd.color.textTertiary,
+    marginRight: rs(8),
+  },
+  aqOverdue: { color: RED },
 });

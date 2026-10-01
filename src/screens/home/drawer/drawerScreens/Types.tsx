@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { useFetch } from '../../../../hooks/useFetch';
+import SubscriptionStatusCard from './SubscriptionStatusCard';
 import apiClient from '../../../../store/api/apiClient';
 import { groupDigits } from '../../../../helper/money';
 import RdHeader from '../../redesign/RdHeader';
@@ -37,55 +38,68 @@ const VIOLET = '#6d5ae6';
 const VIOLET_TINT = '#efe9fd';
 
 // ── Qarz daftari obuna tariflari (saytdagi tariflar sahifasi bilan bir xil). ──
+// 01.10 (mobil hujjat, 2-band): "N SMS kiritilgan" endi badge tagida emas — imkoniyatlar
+// ro'yxatining BIRINCHI qatori. "Ro'yxatga olish SMS (tizim)" ma'nosiz edi — aslida qarz
+// qayd etilganda tizim qarzdorga avtomatik SMS yuboradi; matn shunga moslab yozildi.
 const DAFTARI_TARIFFS = [
   {
     key: 'free',
+    name: 'Free',
     badge: 'FREE',
     price: '0',
-    sms: '100 SMS kiritilgan',
     accent: rd.color.textTertiary,
     tint: rd.color.surfaceAlt,
     current: true,
     features: [
+      { label: '100 SMS kiritilgan', on: true },
       { label: 'Qarz qo‘shish', on: true },
       { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Ro‘yxatga olish SMS (tizim)', on: true },
+      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
       { label: 'Avtomatik SMS eslatma', on: false },
       { label: 'Qo‘lda SMS yuborish', on: false },
       { label: 'SMS tarixi va statistika', on: false },
+      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: false },
     ],
   },
   {
     key: 'start',
-    badge: 'OMMABOP',
+    name: 'Start',
+    // 30.09 (mobil, 4-band): tarif nomi — START ("Ommabop" nomli tarif yo'q); ko'pchilik
+    // tanlaydigan tarif ekani alohida "Ommabop" belgisi bilan ko'rsatiladi (popular).
+    badge: 'START',
+    popular: true,
     price: '99 000',
-    sms: '500 SMS kiritilgan',
     accent: rd.color.primary,
     tint: rd.color.primaryTint,
     highlight: true,
     features: [
+      { label: '500 SMS kiritilgan', on: true },
       { label: 'Qarz qo‘shish', on: true },
       { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Ro‘yxatga olish SMS (tizim)', on: true },
+      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
       { label: 'Avtomatik SMS eslatma', on: true },
       { label: 'Qo‘lda SMS yuborish', on: true },
       { label: 'SMS tarixi va statistika', on: true },
+      // 29.09: SMS xabarlar ro'yxati — FAQAT Premium (backend sms_list, sayt tariflari bilan bir xil).
+      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: false },
     ],
   },
   {
     key: 'premium',
+    name: 'Premium',
     badge: 'PREMIUM',
     price: '199 000',
-    sms: '1 100 SMS kiritilgan',
     accent: VIOLET,
     tint: VIOLET_TINT,
     features: [
+      { label: '1 100 SMS kiritilgan', on: true },
       { label: 'Qarz qo‘shish', on: true },
       { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Ro‘yxatga olish SMS (tizim)', on: true },
+      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
       { label: 'Avtomatik SMS eslatma', on: true },
       { label: 'Qo‘lda SMS yuborish', on: true },
       { label: 'SMS tarixi va statistika', on: true },
+      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: true },
     ],
   },
 ];
@@ -115,6 +129,8 @@ const Types = () => {
   const subRes = useFetch({ method: 'GET', url: URL + '/finance/subscription/' });
   const currentPlan: string =
     (subRes.data as any)?.data?.subscription?.plan || 'free';
+  // 29.09: joriy tarif muddati (ulangan/tugash sanasi, qolgan kun) va yaqinda tugagan tarif.
+  const subData: any = (subRes.data as any)?.data || {};
 
   // Sotib olish jarayoni — bosilgan tugma kaliti (ikki marta bosishdan himoya + spinner).
   const [busy, setBusy] = React.useState<string | null>(null);
@@ -249,6 +265,16 @@ const Types = () => {
           </TouchableOpacity>
         </View>
 
+        {/* ══ 29.09: joriy tarif muddati — ulangan va tugash sanasi, ogohlantirish ══ */}
+        <SubscriptionStatusCard
+          sub={subData.subscription}
+          previous={subData.previous}
+          busy={!!busy}
+          onRenew={plan =>
+            purchasePlan(plan, DAFTARI_TARIFFS.find(x => x.key === plan)?.name || plan)
+          }
+        />
+
         {/* ══ Qarz daftari tariflari (obuna) ══ */}
         <View style={styles.sectionHead}>
           <View style={styles.headIcon}>
@@ -272,12 +298,22 @@ const Types = () => {
               tar.highlight && { borderColor: tar.accent, borderWidth: 1.5 },
             ]}>
             <View style={styles.tariffTop}>
-              <View style={[styles.badge, { backgroundColor: tar.tint }]}>
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.badgeText, { color: tar.accent }]}>
-                  {tar.badge}
-                </Text>
+              <View style={styles.badgeRow}>
+                <View style={[styles.badge, { backgroundColor: tar.tint }]}>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.badgeText, { color: tar.accent }]}>
+                    {tar.badge}
+                  </Text>
+                </View>
+                {tar.popular ? (
+                  <View style={styles.popularPill}>
+                    <StarIcon size={rs(11)} color="#f5a623" />
+                    <Text allowFontScaling={false} style={styles.popularText}>
+                      {t('Ommabop')}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
               <View style={styles.priceWrap}>
                 <Text allowFontScaling={false} style={styles.tariffPrice}>
@@ -288,9 +324,6 @@ const Types = () => {
                 </Text>
               </View>
             </View>
-            <Text allowFontScaling={false} style={styles.tariffSms}>
-              {t(tar.sms)}
-            </Text>
 
             <View style={styles.features}>
               {tar.features.map((f, i) => (
@@ -334,7 +367,7 @@ const Types = () => {
               <TouchableOpacity
                 activeOpacity={0.85}
                 disabled={!!busy}
-                onPress={() => purchasePlan(tar.key, tar.badge)}
+                onPress={() => purchasePlan(tar.key, tar.name)}
                 style={[
                   styles.joinBtn,
                   { backgroundColor: tar.accent },
@@ -849,6 +882,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6), flexShrink: 1 },
+  popularPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(3),
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(3),
+    backgroundColor: '#fff7e6',
+    borderWidth: 1,
+    borderColor: '#fde3b0',
+  },
+  popularText: { fontFamily: rd.font.semibold, fontSize: rs(10.5), color: '#b7791f' },
   badge: {
     borderRadius: rd.radius.pill,
     paddingHorizontal: rs(12),
@@ -870,12 +916,6 @@ const styles = StyleSheet.create({
     fontSize: rs(12),
     color: rd.color.textTertiary,
     marginLeft: rs(4),
-  },
-  tariffSms: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(12.5),
-    color: rd.color.textSecondary,
-    marginTop: rs(4),
   },
   features: {
     marginTop: rs(14),

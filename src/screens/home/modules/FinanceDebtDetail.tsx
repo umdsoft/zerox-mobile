@@ -394,10 +394,11 @@ const FinanceDebtDetail = () => {
       const body = { reason: complaintReason || 'other', izoh: complaintNote.trim() };
       const r = await complaintTarget.send(body);
       if (r?.data?.success) {
+        // SS-DEV (2026-09-29, 29.09 hujjat 2-band): «Bu shikoyat allaqachon yuborilgan»
+        // OLIB TASHLANDI — har yuborish backendda YANGI shikoyat (dublikat bloki yo'q).
+        // Eski server `duplicate` qaytarsa ham foydalanuvchiga bir xil natija ko'rinadi.
         setComplaintSent(true);
-        if (r.data.duplicate) {
-          Toast.show({ type: 'omad', props: { desc: t('Bu shikoyat allaqachon yuborilgan') } });
-        }
+        Toast.show({ type: 'omad', props: { desc: t('Shikoyat yuborildi') } });
       } else {
         Toast.show({ type: 'error2', props: { desc: r?.data?.message || t('Xatolik yuz berdi') } });
       }

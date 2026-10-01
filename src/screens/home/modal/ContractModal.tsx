@@ -21,6 +21,12 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import Loading from '../../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft } from '../redesign/icons';
+import {
+  clearPendingOfertaAction,
+  runPendingOfertaAction,
+  setOfertaOpener,
+} from '../../../helper/ofertaGate';
 const { width, height } = Dimensions.get('screen');
 // SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
 const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (1 sahifali hujjat)
@@ -28,8 +34,10 @@ const PER_PAGE_MS = 1500; // har bir KEYINGI sahifa uchun eng kam vaqt: (n-1)*1.
 const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi
 // Hujjat UMUMAN yuklanmasa (onLoadComplete ham, onPageChanged ham kelmasa) —
 // foydalanuvchi abadiy qamalib qolmasin. YUKLANGAN hujjat uchun bu taymer
-// ISHLAMAYDI (pastga qarang).
+// ISHLAMAYDI (pastga qarang). 27.09 (1-band): taymer endi darvozani OCHMAYDI —
+// avval PDF bir marta avtomatik qayta yuklanadi, keyin xato + "Qayta urinish".
 const FALLBACK_MS = 60000;
+const MAX_AUTO_RELOADS = 1;
 
 const ContractModal = () => {
   const dispatch = useDispatch();
@@ -49,9 +57,11 @@ const ContractModal = () => {
   const [reloadKey, setReloadKey] = useState(0);
   // SS-DEV (2026-09-24): hujjat yuklangach eng kam o'qish vaqti o'tdimi.
   const [readTimerDone, setReadTimerDone] = useState(false);
-  // SS-DEV (2026-09-24): native hodisalar UMUMAN kelmasa — uzoq kutishdan
-  // keyin vaqt-darvozasiga o'tiladi (faqat YUKLANMAGAN hujjat uchun).
-  const [eventsFallback, setEventsFallback] = useState(false);
+  // 27.09 (1-band): ilgari native hodisalar 60 s kelmasa `eventsFallback`
+  // darvozani VAQT bo'yicha ochib yuborardi — foydalanuvchi 1-sahifada turib
+  // tasdiqlay olardi (skrinshotdagi holat: hint yo'q, checkbox belgilangan).
+  // Endi vaqtning o'zi HECH QACHON darvozani ochmaydi (pastda armNoEventTimer).
+  const autoReloadsRef = useRef(0);
   const loadedAtRef = useRef<number | null>(null);
   // Sinxron nusxa — ketma-ket sahifa tekshiruvi (p === maxPage + 1) uchun.
   const maxPageRef = useRef(1);
@@ -82,15 +92,13 @@ const ContractModal = () => {
    *  a) hujjat yuklangan (allPage > 0, onLoadComplete/onPageChanged kelgan);
    *  b) yuklangandan keyin kamida max(3 s, (n-1)×1.5 s) o'tgan;
    *  c) ko'p sahifali hujjatda OXIRGI sahifaga KETMA-KET yetilgan.
-   * Fallback (60 s) FAQAT hujjat umuman yuklanmagan (allPage === 0) holatda.
+   * 27.09 (1-band): VAQT-fallback olib tashlandi — hujjat hodisalari kelmasa
+   * darvoza ochilmaydi; PDF avtomatik qayta yuklanadi, so'ng xato oynasi.
    * Har ochilishda holat NOLLANADI (useEffect quyida); `check` darvoza
    * yopiq bo'lsa hech qachon true bo'lolmaydi (pastdagi effekt).
    */
   const reachedLast = allPage > 0 && (allPage === 1 || maxPage >= allPage);
-  const readToEnd =
-    !pdfErr &&
-    ((allPage > 0 && readTimerDone && reachedLast) ||
-      (eventsFallback && allPage === 0));
+  const readToEnd = !pdfErr && allPage > 0 && readTimerDone && reachedLast;
   const needRead = !pdfErr && !readToEnd;
 
   const clearTimers = useCallback(() => {
@@ -112,41 +120,84 @@ const ContractModal = () => {
     setMaxPage(1);
     setAllPage(0);
     setReadTimerDone(false);
-    setEventsFallback(false);
   }, [clearTimers]);
+
+  /**
+   * 27.09 (1-band): "hodisa yo'q" kuzatuvchisi. FALLBACK_MS davomida na yuklash
+   * progressi, na onLoadComplete/onPageChanged kelmasa — darvoza OCHILMAYDI:
+   * avval PDF avtomatik qayta yuklanadi (MAX_AUTO_RELOADS), yana kelmasa xato
+   * oynasi ("Qayta urinish") ko'rsatiladi. Yuklab olish progressi kelib tursa
+   * taymer qayta boshlanadi (sekin internetda ham noto'g'ri xato chiqmaydi).
+   */
+  const armNoEventTimer = useCallback(() => {
+    if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+    fallbackTimerRef.current = setTimeout(() => {
+      fallbackTimerRef.current = null;
+      if (loadedAtRef.current) return;
+      if (autoReloadsRef.current < MAX_AUTO_RELOADS) {
+        autoReloadsRef.current += 1;
+        setReloadKey(k => k + 1);
+        return;
+      }
+      setPdfErr(true);
+    }, FALLBACK_MS);
+  }, []);
 
   // Hujjat yuklandi — o'qish taymerini boshlaymiz, fallback O'CHIRILADI.
   const markLoaded = useCallback((numberOfPages: number) => {
     if (loadedAtRef.current) return;
     loadedAtRef.current = Date.now();
     // SS-DEV (2026-09-24, 3-tuzatish): yuklangan hujjat uchun vaqt-fallback
-    // yo'q — faqat sahifa darvozasi. (Ilgari shu yerda 60 s taymer QAYTA
-    // boshlanardi — skrinshotdagi holatning sababi.)
+    // yo'q — faqat sahifa darvozasi.
     if (fallbackTimerRef.current) {
       clearTimeout(fallbackTimerRef.current);
       fallbackTimerRef.current = null;
     }
-    setEventsFallback(false);
     const n = Math.max(1, Number(numberOfPages) || 1);
     const minMs = Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS);
     if (readTimerRef.current) clearTimeout(readTimerRef.current);
     readTimerRef.current = setTimeout(() => setReadTimerDone(true), minMs);
   }, []);
 
+  /**
+   * SS-DEV (2026-09-29, 29.09 doc2 3-rasm): oyna endi bosh sahifada MAJBURAN
+   * ochilmaydi — faqat "Qarz shartnomasi" AMALIDA (helper/ofertaGate.ts:
+   * guardOferta / backend 403 OFERTA_REQUIRED). Ochuvchi shu yerda ro'yxatdan
+   * o'tadi (ofertaGate Redux store'ni import qilmaydi).
+   */
+  useEffect(() => {
+    setOfertaOpener(() => dispatch(contractModalShow({ show: true })));
+    return () => setOfertaOpener(null);
+  }, [dispatch]);
+
+  /**
+   * Foydalanuvchi ofertani tasdiqlashni ISTAMASA — oynani yopadi va ilovaning
+   * qolgan bo'limlaridan foydalanishda davom etadi; eslab qolingan shartnoma
+   * amali bekor qilinadi (keyingi urinishda oyna yana ochiladi).
+   */
+  const onDecline = useCallback(() => {
+    if (loading) return;
+    clearPendingOfertaAction();
+    dispatch(contractModalShow({ show: false }));
+  }, [dispatch, loading]);
+
+  // Modal ochilganda avtomatik qayta yuklash hisoblagichi nollanadi.
+  useEffect(() => {
+    if (contract) autoReloadsRef.current = 0;
+  }, [contract]);
+
   useEffect(() => {
     if (contract) {
       resetGate();
-      // Native hodisalar (onLoadComplete/onPageChanged) UMUMAN kelmasa
-      // foydalanuvchi abadiy qamalib qolmasin. Taymer otganda hujjat
-      // yuklangan bo'lsa — HECH NARSA qilinmaydi (darvoza sahifa asosida).
-      fallbackTimerRef.current = setTimeout(() => {
-        if (!loadedAtRef.current) setEventsFallback(true);
-      }, FALLBACK_MS);
+      // Native hodisalar (onLoadComplete/onPageChanged) UMUMAN kelmasa —
+      // qayta yuklash / xato oynasi (darvoza OCHILMAYDI). Taymer otganda
+      // hujjat yuklangan bo'lsa — HECH NARSA qilinmaydi.
+      armNoEventTimer();
     } else {
       clearTimers();
     }
     return clearTimers;
-  }, [contract, reloadKey, resetGate, clearTimers]);
+  }, [contract, reloadKey, resetGate, clearTimers, armNoEventTimer]);
 
   // Darvoza yopiq bo'lsa rozilik belgisi hech qachon true qolmasin
   // (masalan qayta yuklash / holat o'zgarishi paytida).
@@ -154,19 +205,26 @@ const ContractModal = () => {
     if (needRead && check) setCheck(false);
   }, [needRead, check]);
 
-  const warnRead = useCallback(() => {
+  // 27.09 (1-band): ogohlantirish TEPADA — pastda "Tasdiqlash" tugmasini
+  // yopib qo'ymaydi (talab: "yuqorida yoki pastda").
+  const warn = useCallback((desc: string) => {
     Toast.show({
       autoHide: true,
       visibilityTime: 3500,
-      position: 'bottom',
+      position: 'top',
       type: 'error2',
-      props: {
-        desc: t(
-          'Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.',
-        ),
-      },
+      props: { desc },
     });
-  }, [t]);
+  }, []);
+  // 01.10 (mobil hujjat, 4-band): oferta oxirigacha o'qilmay turib "tanishdim" belgisini
+  // qo'ymoqchi bo'lsa — aynan shu matn (5 tilda).
+  const warnRead = useCallback(() => {
+    warn(t('Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.'));
+  }, [t, warn]);
+  // O'qib bo'lingan, lekin "tanishdim" belgilanmagan holda "Tasdiqlash" bosildi.
+  const warnCheck = useCallback(() => {
+    warn(t('Iltimos, ommaviy oferta bilan tanishganingizni belgilang.'));
+  }, [t, warn]);
 
   const onClose = useCallback(async () => {
     // Tugma FAQAT `check` (rozilik belgilangan)да yoqiladi. Ilgari bu yerda ham
@@ -189,6 +247,9 @@ const ContractModal = () => {
           // Main.tsx re-trigger effekti (is_contract hali 0) modalni QAYTA ochadi (flicker/loop).
           await dispatch(getMe());
           dispatch(contractModalShow({ show: false }));
+          // SS-DEV (2026-09-29): oferta so'ralgan shartnoma amali (masalan "Qarz
+          // berish") tasdiqlangach AVTOMATIK davom etadi — oyna yopilgandan keyin.
+          setTimeout(runPendingOfertaAction, 350);
         }
 
         if (data.success === false && data.msg === 'is_contract_true') {
@@ -203,6 +264,7 @@ const ContractModal = () => {
           });
           await dispatch(getMe());
           dispatch(contractModalShow({ show: false }));
+          setTimeout(runPendingOfertaAction, 350);
         }
 
         setLoading(false);
@@ -221,8 +283,33 @@ const ContractModal = () => {
   }, [check, dispatch, t]);
 
   return (
-    <Modal visible={contract} dismissable={false}>
+    <Modal
+      visible={contract}
+      dismissable={false}
+      // SS-DEV (2026-09-29): Android "orqaga" — oynani yopadi (majburiy emas).
+      dismissableBackButton
+      onDismiss={onDecline}>
       <View style={styles.main}>
+        {/* SS-DEV (2026-09-29): oferta endi majburiy emas (faqat Qarz shartnomasi
+            amallari uchun shart). 01.10 (mobil hujjat, 4-band): chiqish — ilovadagi
+            barcha ekranlar kabi chap tomondagi "ORQAGA" tugmasi (RdHeader uslubi);
+            Android'ning tizim "orqaga" tugmasi ham oynani yopadi (dismissableBackButton). */}
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onDecline}
+            disabled={loading}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={t('21')}
+            style={styles.backBtn}>
+            <ChevronLeft size={rs(22)} color={rd.color.onPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.topTitle} allowFontScaling={false} numberOfLines={1}>
+            {t('Ommaviy oferta')}
+          </Text>
+          <View style={styles.topSide} />
+        </View>
         {loading ? (
           <Loading />
         ) : (
@@ -275,6 +362,11 @@ const ContractModal = () => {
                     storage.getString('lang') || 'uz'
                   }&download=0`,
                   method: 'GET',
+                }}
+                // 27.09 (1-band): yuklab olish davom etayotgan bo'lsa "hodisa
+                // yo'q" taymeri qayta boshlanadi (sekin internet ≠ xato).
+                onLoadProgress={() => {
+                  if (!loadedAtRef.current) armNoEventTimer();
                 }}
                 onLoadComplete={(numberOfPages: number) => {
                   setLoading(false);
@@ -369,8 +461,12 @@ const ContractModal = () => {
                   tushuntiruvchi ogohlantirish umuman chiqmasdi. */}
               <TouchableOpacity
                 onPress={() => {
-                  if (needRead || !check) {
+                  if (needRead) {
                     warnRead();
+                    return;
+                  }
+                  if (!check) {
+                    warnCheck();
                     return;
                   }
                   onClose();
@@ -410,6 +506,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(16),
     paddingTop: rs(8),
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: rs(4),
+    paddingBottom: rs(8),
+  },
+  topTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: rd.font.bold,
+    fontSize: rs(16),
+    color: rd.color.text,
+  },
+  // RdHeader bilan bir xil: to'ldirilgan ko'k doira + oq chevron.
+  backBtn: {
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Sarlavha markazda tursin — chapdagi tugma bilan teng o'ng bo'shliq.
+  topSide: { width: rs(40) },
   // So'rov SS5: Pdf uchun aniq o'lcham — ilgari `styles.pdf` UNDEFINED edi,
   // shu bois PDF 0-balandlikда ("ko'rinmayapti") render bo'lishi mumkin edi.
   pdf: {

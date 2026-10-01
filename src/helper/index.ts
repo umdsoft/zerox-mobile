@@ -131,6 +131,23 @@ const fmtDDMMYYYY = (d: Date): string => {
 };
 
 /**
+ * Sana + SOAT "DD.MM.YYYY HH:MM" — O'zbekiston vaqti (UTC+5), qurilma
+ * mintaqasidan qat'i nazar. Noto'g'ri/bo'sh qiymatda ''.
+ * 27.09: SmsHistory ichidagi lokal `dateTime` shu yerga ko'chirildi (SmsManager
+ * ham ishlatadi — DRY). Xulq o'zgarmagan.
+ */
+export const fmtDateTimeUz = (text: unknown): string => {
+  if (!text) return '';
+  const d = new Date(text as string);
+  if (isNaN(d.getTime())) return '';
+  const z = new Date(d.getTime() + 5 * 3600 * 1000);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(z.getUTCDate())}.${p(z.getUTCMonth() + 1)}.${z.getUTCFullYear()} ${p(
+    z.getUTCHours(),
+  )}:${p(z.getUTCMinutes())}`;
+};
+
+/**
  * Converts a date string from one format to DD.MM.YYYY format
  * @param text - Date string to convert
  * @returns Formatted date string in DD.MM.YYYY format ('' if invalid)

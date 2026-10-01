@@ -32,6 +32,7 @@ import {
   AuthReveal,
   authStyles,
 } from './authKit';
+import PrivacyConsentNote from './PrivacyConsentNote';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -263,6 +264,9 @@ const RegisterWithPeople = () => {
                 }}
                 style={styles.enterButton}
               />
+              {/* SS-DEV (2026-09-29, 29.09 doc2 4-rasm): ro'yxatdan o'tishda
+                  maxfiylik siyosatini qabul qilish izohi + havola. */}
+              {type === 1 && <PrivacyConsentNote />}
             </View>
             </AuthReveal>
 

@@ -22,7 +22,7 @@ import {
 } from '../../store/api/home';
 import { createFmtTokenAction } from '../../store/api/user';
 import { storage } from '../../store/api/token/getToken';
-import { setUsd, contractModalShow } from '../../store/reducers/HomeReducer';
+import { setUsd } from '../../store/reducers/HomeReducer';
 
 // Helpers
 
@@ -31,27 +31,21 @@ import { fetchUSDExchangeRate } from '../../helper/getUsdExchange';
 import { NotificationBadgeModule } from '../../nativemodule/notificationBadge';
 
 const Main = () => {
-  const { user, notification, contract } = useSelector(
+  const { user, notification } = useSelector(
     state => state.HomeReducer,
   );
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
-  // So'rov: ommaviy oferta TASDIQLASH. Ilgari oferta modali FAQAT MyID
-  // identifikatsiyasi vaqtida chiqardi (ScanFaceMyId). Agar foydalanuvchi o'sha
-  // paytda tasdiqlay olmasa (masalan PDF yuklanmagan bo'lsa) — qayta ko'rsatishning
-  // yo'li yo'q edi. Endi: identifikatsiyadan o'tgan (is_active===1) lekin ofertani
-  // tasdiqlamagan (is_contract!==1) foydalanuvchiga bosh sahifada modal QAYTA
-  // ochiladi. Tasdiqlagach getMe() is_contract=1 qiladi → boshqa chiqmaydi (loop yo'q).
-  // Xodim: backend is_contract=1 qaytaradi → bu shart bajarilmaydi.
-  useEffect(() => {
-    const u = user?.data;
-    if (!u || u.is_xodim) return;
-    if (Number(u.is_active) === 1 && Number(u.is_contract) !== 1 && !contract) {
-      dispatch(contractModalShow({ show: true }));
-    }
-  }, [user?.data?.is_active, user?.data?.is_contract, contract, dispatch, user?.data]);
+  /**
+   * SS-DEV (2026-09-29, 29.09 doc2 3-rasm): bosh sahifadagi MAJBURIY oferta oynasi
+   * OLIB TASHLANDI. ILDIZ: bu effekt `is_contract !== 1` foydalanuvchiga
+   * ContractModal'ni (dismissable=false) har safar ochardi — ofertani tasdiqlashni
+   * istamagan foydalanuvchi ilovaning HECH BIR bo'limidan foydalana olmasdi.
+   * Endi oferta faqat "Qarz shartnomasi" AMALIDA so'raladi (helper/ofertaGate.ts:
+   * guardOferta + backend 403 OFERTA_REQUIRED interceptor); qolgan bo'limlar ochiq.
+   */
 
 
   const registerFCMToken = useCallback(async () => {

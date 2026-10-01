@@ -28,6 +28,7 @@ import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
+import { showTalabError } from './qarzTalab';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -64,20 +65,6 @@ const titleCase = (s?: string) =>
     .filter(Boolean)
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ') || 'Noma’lum';
-
-// POST xatolik kodini o'qib mos xabar qaytaramiz.
-const talabErrorText = (code?: string): string => {
-  switch (code) {
-    case 'no-sms-package':
-      return 'SMS paket yetarli emas';
-    case 'sms-failed':
-      return 'SMS yuborilmadi';
-    case 'no-phone':
-      return 'Mijoz telefoni yo‘q';
-    default:
-      return 'Xatolik yuz berdi';
-  }
-};
 
 // ---------- Kichik komponentlar ----------
 const CircleIcon = ({
@@ -230,8 +217,13 @@ const QarzDaftariQarz = () => {
         props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') },
       });
     } catch (error: any) {
-      const code = error?.response?.data?.code;
-      Toast.show({ type: 'error2', props: { desc: t(talabErrorText(code)) } });
+      // 29.09 (3-band): aniq sabab (karta yo'q → karta ekrani, SMS rad etildi, ...).
+      showTalabError(error, {
+        t,
+        navigation,
+        faoliyatId: qarz?.savdo_faoliyat_id,
+        faoliyatNomi: dokonNomi,
+      });
     } finally {
       setTalabLoading(false);
     }

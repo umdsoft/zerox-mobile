@@ -77,6 +77,7 @@ import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
 import Types from '../screens/home/drawer/drawerScreens/Types';
 import SmsHistory from '../screens/home/drawer/drawerScreens/SmsHistory';
+import SmsManager from '../screens/home/drawer/drawerScreens/SmsManager';
 import ResetPassCode from '../screens/other/ResetPassCode';
 import UpdateLocalPassCode from '../screens/auth/UpdateLocalPassCode';
 
@@ -101,6 +102,8 @@ import FinanceDebtAdd from '../screens/home/modules/FinanceDebtAdd';
 import FinanceDebtDetail from '../screens/home/modules/FinanceDebtDetail';
 // SS2 (2026-09-18): kontragent guruhidagi qarzlar ro'yxati.
 import FinanceDebtGroup from '../screens/home/modules/FinanceDebtGroup';
+// SS-DEV (2026-09-29): Shaxsiy qarz — kartadan ochiladigan ro'yxat sahifasi (kind bo'yicha).
+import FinanceDebtList from '../screens/home/modules/FinanceDebtList';
 import FinanceDebtors from '../screens/home/modules/FinanceDebtors';
 import FinanceFamily from '../screens/home/modules/FinanceFamily';
 import FinanceFamilyOverview from '../screens/home/modules/FinanceFamilyOverview';
@@ -273,6 +276,8 @@ const AllNavigators = [
   { name: 'UpdatePassword', component: UpdatePassword },
   { name: 'Types', component: Types },
   { name: 'SmsHistory', component: SmsHistory },
+  // 27.09: Tariflar → "Batafsil" (SMS boshqaruvi, saytdagidek).
+  { name: 'SmsManager', component: SmsManager },
   { name: 'NewsScreen', component: lazyScreen(() => require('../screens/other/NewsScreen')) },
   {
     name: 'ResetPassCode',
@@ -299,6 +304,7 @@ const AllNavigators = [
   { name: 'FinanceDebtAdd', component: FinanceDebtAdd },
   { name: 'FinanceDebtDetail', component: FinanceDebtDetail },
   { name: 'FinanceDebtGroup', component: FinanceDebtGroup },
+  { name: 'FinanceDebtList', component: FinanceDebtList },
   { name: 'FinanceDebtors', component: FinanceDebtors },
   { name: 'FinanceFamily', component: FinanceFamily },
   { name: 'FinanceFamilyOverview', component: FinanceFamilyOverview },

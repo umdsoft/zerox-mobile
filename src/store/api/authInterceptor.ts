@@ -23,6 +23,11 @@ import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { forceLogout, isSessionRevokedError } from '../../helper/forceLogout';
 import { getDeviceUserAgent } from '../../helper/userAgent';
+import {
+  installOfertaToastGuard,
+  isOfertaRequiredError,
+  notifyOfertaRequired,
+} from '../../helper/ofertaGate';
 
 const REFRESH_PATH = '/user/refresh-token';
 
@@ -175,9 +180,31 @@ export const installGetRetry = (instance: AxiosInstance): void => {
   );
 };
 
+/**
+ * SS-DEV (2026-09-29): backend qarz shartnomasi AMALLARINI ofertasiz rad etadi
+ * (403 `code: 'OFERTA_REQUIRED'`). Qaysi ekrandan kelganidan qat'i nazar oferta
+ * tasdiqlash oynasi ochiladi (bosh sahifadagi majburiy oyna o'rniga). Xato
+ * chaqiruvchiga baribir qaytadi — ekran o'z holatini (spinner va h.k.) tiklaydi.
+ */
+export const installOfertaRequired = (instance: AxiosInstance): void => {
+  instance.interceptors.response.use(
+    response => response,
+    error => {
+      if (isOfertaRequiredError(error)) {
+        // Chaqiruvchi ekran bu xatoni ajrata olsin (masalan spinner'ni jim tiklash).
+        if (error) error.ofertaRequired = true;
+        notifyOfertaRequired();
+      }
+      return Promise.reject(error);
+    },
+  );
+};
+
 // Default global axios instansiyasi — barcha xom `axios.get/post(URL + ...)` chaqiruvlari.
 installAuthRefresh(axios);
 installGetRetry(axios);
+installOfertaRequired(axios);
+installOfertaToastGuard();
 // SS-PERF (2026-09-25): xom axios chaqiruvlari ham osilib qolmasin (ilgari timeout yo'q
 // edi — sekin tarmoqda spinner cheksiz aylanardi). Fayl yuklash joyida alohida uzunroq.
 axios.defaults.timeout = 15000;

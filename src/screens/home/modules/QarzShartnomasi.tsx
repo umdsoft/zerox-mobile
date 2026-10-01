@@ -40,9 +40,10 @@ import {
   BarChartIcon,
   ChevronRight,
   ClockIcon,
-  IconProps,
 } from '../redesign/icons';
+import DebtSummaryCard from '../redesign/DebtSummaryCard';
 import { debtNav, DebtRole, DebtTab } from '../redesign/debtNav';
+import { useOfertaGuard } from '../../../hooks/useOfertaGuard';
 
 // Pie/gradient ranglari (literal hex faqat shu yerda ruxsat etilgan).
 const C_JARAYON = '#2f6fed'; // jarayonda — ko'k
@@ -225,50 +226,10 @@ const DebtStatsCard = ({
 };
 
 // ---------- Qarzdorlik kartasi (chegara rangli) ----------
-const DebtCard = ({
-  accent,
-  Icon,
-  label,
-  badge,
-  badgeBg,
-  badgeColor,
-  lines,
-  amountColor,
-  onPress,
-}: {
-  accent: string;
-  Icon: (p: IconProps) => React.ReactElement;
-  label: string;
-  badge: string;
-  badgeBg: string;
-  badgeColor: string;
-  lines: string[];
-  amountColor: string;
-  onPress?: () => void;
-}) => (
-  // View -> TouchableOpacity: karta bosilganda tegishli qarzlar ro'yxati ochiladi.
-  // onPress berilmasa disabled — bosilmaydigan karta sifatida ishlaydi (regressiyasiz).
-  <TouchableOpacity
-    activeOpacity={0.85}
-    disabled={!onPress}
-    onPress={onPress}
-    style={[styles.debtCard, { borderColor: accent }]}
-  >
-    <View style={styles.debtHead}>
-      <View style={[styles.debtIcon, { backgroundColor: badgeBg }]}>
-        <Icon size={rs(18)} color={accent} />
-      </View>
-      <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-        <Text style={[styles.badgeText, { color: badgeColor }]}>{badge}</Text>
-      </View>
-    </View>
-    <Text style={styles.debtLabel}>{label}</Text>
-    <Text style={[styles.debtAmount, { color: amountColor }]} numberOfLines={1} adjustsFontSizeToFit>
-      {lines[0]}
-    </Text>
-    {lines[1] ? <Text style={styles.debtAmountUsd}>{lines[1]}</Text> : null}
-    {/* Pastki-o'ng strelka OLIB TASHLANDI (so'rov SS4.4). */}
-  </TouchableOpacity>
+// SS-DEV (2026-09-29): umumiy komponentga chiqarildi (Shaxsiy qarz ham ishlatadi).
+// 30.09 (6-band): tashqi ko'rinish Qarz daftari kartalari uslubida (ichki ma'lumot o'zgarmagan).
+const DebtCard = (p: React.ComponentProps<typeof DebtSummaryCard>) => (
+  <DebtSummaryCard {...p} variant="stripe" />
 );
 
 // ---------- Muddati oz qolgan (segment-toggle + jadval) ----------
@@ -425,6 +386,10 @@ const QarzShartnomasi = () => {
   const user = useSelector((s: any) => s.HomeReducer.user);
   const name = user?.data?.first_name || t('foydalanuvchi');
 
+  // SS-DEV (2026-09-29): "Qarz berish"/"Qarz olish" — ommaviy oferta shart
+  // (tasdiqlanmagan bo'lsa oferta oynasi, tasdiqlangach amal davom etadi).
+  const guardOferta = useOfertaGuard();
+
   const debitor = useFetch({ url: `${URL}/home/my?type=debitor`, method: 'GET' });
   const creditor = useFetch({ url: `${URL}/home/my?type=creditor`, method: 'GET' });
 
@@ -489,7 +454,7 @@ const QarzShartnomasi = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.heroBtn, styles.heroBtnLight]}
-              onPress={() => navigation.navigate('DebtEntry', { type: 1 })}
+              onPress={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 1 }))}
             >
               <ArrowUpRight size={rs(18)} color={rd.color.primary} />
               <Text style={[styles.heroBtnText, { color: rd.color.primary }]}>{t('Qarz berish')}</Text>
@@ -497,7 +462,7 @@ const QarzShartnomasi = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.heroBtn, { backgroundColor: rd.color.success }]}
-              onPress={() => navigation.navigate('DebtEntry', { type: 0 })}
+              onPress={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 0 }))}
             >
               <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
               <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>{t('Qarz olish')}</Text>
@@ -706,47 +671,6 @@ const styles = StyleSheet.create({
   // o'z qarz-turi TAGIDA (bir ustunда). JSX tartibi: Berilgan, Olingan,
   // Muddati-ber, Muddati-ol -> qator-wrap shu grid'ni beradi.
   debtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(12) },
-  debtCard: {
-    width: '47%',
-    flexGrow: 1,
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(16),
-    borderWidth: 1.5,
-    paddingHorizontal: rs(14),
-    paddingVertical: rs(14),
-  },
-  // Bosiladigan karta ishorasi. `position: absolute` — kontent oqimiga ta'sir
-  // qilmaydi, shuning uchun kichik ekranlarda ham matnni siqib qo'ymaydi.
-  debtGo: {
-    position: 'absolute',
-    right: rs(9),
-    bottom: rs(9),
-    opacity: 0.65,
-  },
-  debtHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  debtIcon: {
-    width: rs(32),
-    height: rs(32),
-    borderRadius: rs(16),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badge: { borderRadius: rd.radius.pill, paddingHorizontal: rs(8), paddingVertical: rs(3) },
-  badgeText: { fontFamily: rd.font.semibold, fontSize: rs(9.5) },
-  debtLabel: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(12.5),
-    color: rd.color.textSecondary,
-    marginTop: rs(12),
-  },
-  debtAmount: { fontFamily: rd.font.bold, fontSize: rs(13), marginTop: rs(4) },
-  debtAmountUsd: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(12.5),
-    color: rd.color.textTertiary,
-    marginTop: rs(2),
-  },
-
   // Muddati oz qolgan
   nearCard: {
     backgroundColor: rd.color.surface,

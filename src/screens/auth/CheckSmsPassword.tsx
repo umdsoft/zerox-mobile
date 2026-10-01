@@ -34,6 +34,7 @@ import { normalize } from '../../theme/style';
 import { secToMin } from '../other/SaveUserDetails';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft } from '../home/redesign/icons';
+import PrivacyConsentNote from './PrivacyConsentNote';
 
 // TASDIQLASH KODI ikonasi — qalqon + belgi (kod tasdiqlandi/xavfsiz). Suhbat
 // pufakchasi o'rniga (so'rov bo'yicha — "tasdiqlash kodini kiritishni" ifodalaydi).
@@ -389,6 +390,9 @@ const CheckSmsPassword = () => {
               {t('45')}
             </Text>
           </TouchableOpacity>
+          {/* SS-DEV (2026-09-29, 29.09 doc2 4-rasm): kodni kiritish bilan
+              foydalanuvchi maxfiylik siyosatini qabul qiladi. */}
+          <PrivacyConsentNote />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

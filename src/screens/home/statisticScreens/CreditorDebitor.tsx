@@ -8,11 +8,14 @@ import Dollar from '../../../images/givedebt';
 import AskTime from '../../../images/AskTime';
 import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
+import {useOfertaGuard} from '../../../hooks/useOfertaGuard';
 
 const CreditorDebitor = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {type, item, report} = route.params || {};
+  // SS-DEV (2026-09-29): olingan qarz AMALLARI — ommaviy oferta shart (ko'rish ochiq).
+  const guardOferta = useOfertaGuard();
 
   // HISOBOT rejimida TUGALLANGAN (status===2) yoki RAD etilган (3/4) kontraktда
   // amal tugmalari (muddat uzaytirishni so'rash / qaytarish) YASHIRILADI — yakunlangan
@@ -38,7 +41,7 @@ const CreditorDebitor = () => {
           <View style={styles.buttonInsideContainer}>
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate('DebtDateLengthAsk', {item: item});
+                guardOferta(() => navigation.navigate('DebtDateLengthAsk', {item: item}));
               }}
               activeOpacity={0.8}
               style={styles.registerButton}>
@@ -54,7 +57,7 @@ const CreditorDebitor = () => {
           <View style={styles.buttonInsideContainer}>
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate('DebtTakeSelect', {item: item});
+                guardOferta(() => navigation.navigate('DebtTakeSelect', {item: item}));
               }}
               activeOpacity={0.8}
               style={styles.registerButton}>

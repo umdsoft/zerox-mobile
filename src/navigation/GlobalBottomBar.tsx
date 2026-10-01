@@ -10,7 +10,7 @@
  * Bosilganda BottomTabNavigator ichidagi tegishli tab'ga o'tadi.
  */
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   CoinIcon,
@@ -70,6 +70,7 @@ const SHAXSIY_QARZ_SCREENS = new Set([
   'FinanceDebtDetail',
   'FinanceDebtors',
   'FinanceDebtGroup',
+  'FinanceDebtList',
   'FinancePayoutCard',
 ]);
 
@@ -200,15 +201,38 @@ const goTab = (item: { tab: string; route?: string }) => {
   ref.dispatch(StackActions.popTo('BottomTabNavigator', { screen: item.tab }));
 };
 
+/**
+ * SS-DEV (2026-09-29, 29.09 hujjat 1-band): menyu ostidagi bo'shliq.
+ *
+ * ILDIZ: ildiz SafeAreaView (App.tsx) pastki inset'ni (iPhone home indicator,
+ * 34pt) butun ilovaga padding qilardi va menyu shu padding USTIDA turardi —
+ * menyu tagida ~34pt bo'sh chiziq qolib, panel "yuqorida osilib" ko'rinardi
+ * (09-24 dagi `padBottom=0` yechimi buni yo'qotmagan edi).
+ *
+ * Endi menyu ko'ringanda App.tsx pastki inset'ni QO'SHMAYDI — uni shu yerda
+ * hisoblaymiz:
+ *  - iOS (inset > 0): menyu inset ICHIGA tushadi, faqat home-indicator
+ *    chizig'idan (pastdan ~13pt) yuqorida qoladi. Menyu kartasining pastki
+ *    ~18pt qismi bo'sh (yorliqlar tepadan joylashgan), shu sabab bosiladigan
+ *    ikonka/yorliqlar baribir xavfsiz maydonda qoladi.
+ *  - Android / inset'siz qurilmalar: avvalgi natija AYNAN saqlanadi
+ *    (inset + inset bo'lmasa 8) — tizim navigatsiya tugmalari yopilmaydi.
+ */
+const IOS_INDICATOR_CLEARANCE = 14;
+const bottomGap = (insetBottom: number): number => {
+  if (insetBottom <= 0) return rs(8);
+  if (Platform.OS === 'ios') {
+    return Math.min(insetBottom, IOS_INDICATOR_CLEARANCE);
+  }
+  return insetBottom;
+};
+
 const GlobalBottomBar = ({ activeTab }: { activeTab?: string }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   // `activeTab` har navigatsiyada o'zgaradi -> qayta render -> bu qiymat yangi.
   const section = sectionOf(activeTab);
-  // SS-DEV (2026-09-24): iPhone'da bar "yuqoriroq" turardi — ildiz SafeAreaView
-  // pastki inset (34pt) + shu yerdagi paddingBottom(8) qo'shilardi. Inset bor
-  // qurilmada qo'shimcha padding KERAK EMAS (home-indicator maydoni o'zi bo'shliq).
-  const padBottom = insets.bottom > 0 ? 0 : rs(8);
+  const padBottom = bottomGap(insets.bottom);
   return (
   <View style={[styles.wrap, { paddingBottom: padBottom }]}>
     <View style={styles.bar}>

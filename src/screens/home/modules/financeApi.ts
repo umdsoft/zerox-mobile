@@ -117,13 +117,28 @@ export const financeApi = {
   // SS-DEV (2026-09-24): QARZDOR shikoyati — qarshi tomon (hamkor yoki do'kon)
   // noto'g'ri yozgan qarz bo'yicha. Backend `parseComplaintInput`: `reason` —
   // 'not_taken' | 'fully_paid' | 'partly_paid' | 'other' (ixtiyoriy), `izoh` —
-  // sabab tanlanmasa MAJBURIY (500 belgigacha). Javob: { success, duplicate? }.
+  // sabab tanlanmasa MAJBURIY (500 belgigacha). Javob: { success, data }.
+  // SS-DEV (2026-09-29): takror yuborish bloklanmaydi — har safar YANGI shikoyat.
   //   odam-odam: POST /finance/debts/:id/complaint (personal_debts.id)
   //   do'kon:    POST /finance/debts/shop/:qarzId/complaint ("shop_12" ham qabul qilinadi)
   complainDebt: (id: any, body: { reason?: string; izoh?: string }) =>
     axios.post(`${base}/debts/${id}/complaint`, body, auth()),
   complainShopDebt: (id: any, body: { reason?: string; izoh?: string }) =>
     axios.post(`${base}/debts/shop/${id}/complaint`, body, auth()),
+
+  // ── Tarif / SMS boshqaruvi (saytdagi components/finance/SmsManager.vue bilan AYNI
+  //    endpointlar). 27.09: Tariflar → "Batafsil" (SmsManager ekrani).
+  //    getSubscription: { subscription, sms:{total,used,remaining,warning}, features }
+  //    getSmsHistory:   { data: SmsHistory[], pagination:{ page, limit, total, totalPages } }
+  //    getSmsStats:     { total_sent, successful, failed, this_month, by_type }
+  getSubscription: () => axios.get(`${base}/subscription`, auth()),
+  // 28.09: `q` — qidiruv (telefon / summa / do'kon nomi; backend SMS matnidan izlaydi).
+  getSmsHistory: (page: number, limit = 20, q?: string) =>
+    axios.get(`${base}/subscription/sms-history`, {
+      ...auth(),
+      params: q ? { page, limit, q } : { page, limit },
+    }),
+  getSmsStats: () => axios.get(`${base}/subscription/sms-stats`, auth()),
 
   // ── Qarzdorlar (Debtors reliability) ──
   getDebtors: () => axios.get(`${base}/debtors`, auth()),

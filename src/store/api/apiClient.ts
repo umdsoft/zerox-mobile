@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
-import { installAuthRefresh, installGetRetry } from './authInterceptor';
+import { installAuthRefresh, installGetRetry, installOfertaRequired } from './authInterceptor';
 import { getDeviceUserAgent } from '../../helper/userAgent';
 
 /**
@@ -40,5 +40,6 @@ apiClient.interceptors.request.use(config => {
 installAuthRefresh(apiClient);
 // SS-PERF (2026-09-25): GET so'rovlar tarmoq xatosi/timeout/5xx'da 1 marta qayta uriniladi.
 installGetRetry(apiClient);
+installOfertaRequired(apiClient); // SS-DEV (2026-09-29): 403 OFERTA_REQUIRED → oferta oynasi
 
 export default apiClient;

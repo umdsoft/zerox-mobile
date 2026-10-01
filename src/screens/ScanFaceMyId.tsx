@@ -26,12 +26,12 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { HomeApi, getMe } from '../store/api/home';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { contractModalShow } from '../store/reducers/HomeReducer';
 import { useTranslation } from 'react-i18next';
 import Loading from './components/Loading';
 import { t } from 'i18next';
 import { URL } from './constants';
 import { useMyIdSession } from '../hooks/useMyIdSession';
+import { needsOferta, openOferta } from '../helper/ofertaGate';
 import { MYID } from '../config/myid';
 import {
   MyIdCameraShape,
@@ -40,6 +40,9 @@ import {
   useMyId,
   startMyId,
 } from 'react-native-nitro-myid';
+
+// Identifikatsiyadan keyin oferta oynasi bosh sahifaga o'tish animatsiyasi tugagach ochiladi.
+const OFERTA_AFTER_ID_DELAY_MS = 800;
 
 const returnMessage = response => {
   // response network-error/timeout'da undefined bo'lishi mumkin (P-003 timeout buni
@@ -207,16 +210,27 @@ const ScanFaceMyId = () => {
         if (response.data.success) {
           setLoading(true);
           dispatch(getMe()).then(val => {
-            if (val?.payload?.user?.data?.is_contract === 1) {
-              setLoading(false);
-              navigation.navigate('BottomTabNavigator');
-            } else {
-              setLoading(false);
+            setLoading(false);
+            const me = val?.payload?.user?.data;
+            if (me?.is_contract !== 1) {
               dispatch(HomeApi({ page: 1 }));
-              navigation.navigate('BottomTabNavigator');
-              setTimeout(() => {
-                dispatch(contractModalShow({ show: true }));
-              }, 1000);
+            }
+            navigation.navigate('BottomTabNavigator');
+            /**
+             * 01.10 (mobil hujjat, 4-band): "ro'yxatdan o'tish → identifikatsiya → oferta".
+             * ILDIZ: 29.09 da oferta MAJBURIY bo'lmasin deb identifikatsiyadan keyingi
+             * avtomatik ochilish ham olib tashlangan edi — yangi foydalanuvchiga oferta
+             * sahifasi umuman ko'rsatilmasdi. Endi: identifikatsiyadan so'ng oferta oynasi
+             * BIR MARTA avtomatik ochiladi, lekin MAJBURIY EMAS — "orqaga" (Android tugmasi
+             * yoki oynadagi orqaga tugmasi) bilan tasdiqlamasdan chiqib, ilovaning qolgan
+             * bo'limlaridan foydalanish mumkin. Qarz shartnomasida qarz berish/olishda
+             * oyna yana ochiladi (useOfertaGuard → guardOferta). `openOferta()` amalsiz
+             * chaqiriladi — yopilsa hech narsa bajarilmaydi.
+             * is_active: identifikatsiya hozirgina MUVAFFAQIYATLI — getMe javobi kechiksa
+             * (stale-guard) ham foydalanuvchi faol deb hisoblanadi.
+             */
+            if (needsOferta({ ...(me || {}), is_active: 1 })) {
+              setTimeout(() => openOferta(), OFERTA_AFTER_ID_DELAY_MS);
             }
           });
         } else {

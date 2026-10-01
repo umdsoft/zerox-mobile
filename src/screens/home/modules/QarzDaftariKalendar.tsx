@@ -22,8 +22,8 @@
  * saytdagi "Kun tahlili" kabi o'sha kun (yoki haftaning 7 kuni) uchun
  * BERILGAN va UNDIRILGAN qarzlar ro'yxati (mijoz, do'kon, summa, vaqt)
  * ko'rsatiladi. Manba: GET /qarz-daftari/kalendar/kun?date=YYYY-MM-DD&valyuta=
- * (hafta uchun 7 kun parallel so'ralib birlashtiriladi). Qator bosilsa qarz
- * sahifasiga (QarzDaftariQarz) o'tiladi.
+ * (hafta uchun 7 kun parallel so'ralib birlashtiriladi). 28.09: qator bosilsa
+ * amaliyot tafsiloti (QarzDaftariAmaliyot) ochiladi — ilgari QarzDaftariQarz edi.
  *
  * ⚠️ Valyutalar QO'SHILMAYDI: UZS va USD ni bitta songa jamlash ma'nosiz,
  * shu bois yuqorida valyuta tanlagich turadi.
@@ -45,7 +45,8 @@ import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { fMoney, fTime } from './financeMoney';
-import { ChevronLeft, ChevronRight, CloseIcon } from '../redesign/icons';
+import { fetchTxParams } from './qarzAmaliyot';
+import { ChevronLeft, ChevronRight, CloseIcon, UserIcon } from '../redesign/icons';
 
 const GREEN = '#16a34a';
 const RED = '#dc2626';
@@ -267,13 +268,26 @@ const QarzDaftariKalendar = () => {
     setVaraqLoading(false);
   }, []);
 
-  const goQarz = React.useCallback(
-    (qarzId?: number) => {
-      if (!qarzId) return;
-      closeVaraq();
-      navigation.navigate('QarzDaftariQarz', { id: qarzId });
+  /**
+   * 28.09 (2-band): qator bosilsa "Qarz tafsiloti" EMAS — amaliyot turiga mos
+   * "Amaliyot tafsiloti" (Qarz berildi / Qarz qaytarildi / Qarzdan voz kechildi)
+   * ochiladi. Varaqda faqat qisqa ma'lumot bor, shu bois to'liq amaliyot qarz
+   * tafsilotidan olinadi. `opening` — ikki marta bosilib ikki ekran ochilmasin.
+   */
+  const [opening, setOpening] = React.useState<number | null>(null);
+  const goAmaliyot = React.useCallback(
+    async (r: KunAmal) => {
+      if (!r?.qarz_id || opening != null) return;
+      setOpening(r.id);
+      try {
+        const params = await fetchTxParams(r);
+        closeVaraq();
+        navigation.navigate('QarzDaftariAmaliyot', params);
+      } finally {
+        setOpening(null);
+      }
     },
-    [navigation, closeVaraq],
+    [navigation, closeVaraq, opening],
   );
 
   const varaqJamiBer = varaqBer.reduce((s, r) => s + (Number(r.summa) || 0), 0);
@@ -318,7 +332,6 @@ const QarzDaftariKalendar = () => {
   // Oddiy render-funksiya (komponent emas) — har renderda yangi tur yaratilmasin.
   const renderAmal = (r: KunAmal, und: boolean) => {
     const nom = (r.mijoz || '—').trim();
-    const harf = nom.charAt(0).toUpperCase() || '•';
     const vaqt = hhmm(r.vaqt);
     const meta = [r.dokon, varaq?.turi === 'hafta' ? ddmm(r._date) : null, vaqt]
       .filter(Boolean)
@@ -327,21 +340,28 @@ const QarzDaftariKalendar = () => {
       <TouchableOpacity
         key={`${und ? 'u' : 'b'}${r.id}`}
         activeOpacity={0.75}
-        onPress={() => goQarz(r.qarz_id)}
+        onPress={() => goAmaliyot(r)}
+        disabled={opening != null}
         style={[styles.amalRow, und ? styles.amalRowUnd : styles.amalRowBer]}>
         <View style={[styles.amalAvatar, { backgroundColor: und ? UND_COLOR : BER_COLOR }]}>
-          <Text allowFontScaling={false} style={styles.amalAvatarText}>{harf}</Text>
+          {/* 2026-09-28: ismning bosh harfi o'rniga ODAM AVATARI (so'rov) —
+              rangli fon (qizil/yashil) semantikasi saqlanadi. */}
+          <UserIcon size={rs(18)} color="#fff" />
         </View>
         <View style={styles.flex1}>
           <Text allowFontScaling={false} style={styles.amalName} numberOfLines={1}>{nom}</Text>
           <Text allowFontScaling={false} style={styles.amalMeta} numberOfLines={1}>{meta || '—'}</Text>
         </View>
-        <Text
-          allowFontScaling={false}
-          style={[styles.amalSum, { color: und ? UND_COLOR : BER_COLOR }]}
-          numberOfLines={1}>
-          {und ? '−' : '+'}{fMoney(r.summa, r.valyuta || cur)}
-        </Text>
+        {opening === r.id ? (
+          <ActivityIndicator size="small" color={und ? UND_COLOR : BER_COLOR} />
+        ) : (
+          <Text
+            allowFontScaling={false}
+            style={[styles.amalSum, { color: und ? UND_COLOR : BER_COLOR }]}
+            numberOfLines={1}>
+            {und ? '−' : '+'}{fMoney(r.summa, r.valyuta || cur)}
+          </Text>
+        )}
       </TouchableOpacity>
     );
   };
@@ -725,8 +745,8 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.semibold,
     fontSize: rs(10.5),
     color: rd.color.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    // 2026-09-28: "BERILGAN"/"UNDIRILGAN" -> "Berilgan"/"Undirilgan" (so'rov:
+    // kichik harflar bilan). `textTransform: 'uppercase'` olib tashlandi.
   },
   sheetSumVal: { fontFamily: rd.font.bold, fontSize: rs(15), marginTop: rs(3) },
   sheetList: { flexGrow: 0 },
@@ -770,7 +790,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  amalAvatarText: { fontFamily: rd.font.bold, fontSize: rs(14), color: '#fff' },
   amalName: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: rd.color.text },
   amalMeta: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(1) },
   amalSum: { fontFamily: rd.font.bold, fontSize: rs(13), maxWidth: '42%' },

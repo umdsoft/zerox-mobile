@@ -13,6 +13,12 @@ const HOST = 'https://tb.zerox.uz';
 const URL = `${HOST}/api/v1`;
 export const SOCKET_URL = HOST;
 
+// 30.09: SAYT manzili HOST'ga mos — test backend (tb) bilan test sayt, prod bilan prod sayt.
+// Ilovadagi sayt havolalari (masalan Maxfiylik siyosati) shu orqali quriladi: ilgari doim
+// zerox.uz (prod) edi, u yerda /privacy-policy hali eski oferta matni bo'lgani uchun
+// "Maxfiylik siyosati" bosilganda oferta ochilardi.
+export const WEB_URL = HOST.includes('tb.zerox.uz') ? 'https://test.zerox.uz' : 'https://zerox.uz';
+
 // PDF xizmati (pdf.zerox.uz) HAM prod, HAM test'ga xizmat qiladi, lekin har biri
 // O'Z bazasidan o'qiydi: prod act.php/index.php -> admin_zerox; test
 // act_test.php/index_test.php -> admin_zerox_test. Shu bois DB-bog'liq PDF'lar

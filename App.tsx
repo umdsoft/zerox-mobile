@@ -241,7 +241,13 @@ const App: React.FC = () => {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: '#f5f7fb' }}
-      edges={['top', 'bottom']}>
+      // SS-DEV (2026-09-29, 29.09 hujjat 1-band): iPhone'da pastki menyu "yuqorida
+      // osilib" qolardi — ILDIZ: bu SafeAreaView pastki inset'ni (home indicator,
+      // 34pt) BUTUN ilovaga padding qilardi, menyu esa shu padding USTIDA turardi →
+      // tagida ~34pt bo'sh chiziq. Endi menyu ko'ringan ekranlarda pastki inset'ni
+      // GlobalBottomBar O'ZI boshqaradi (iOS'da menyu inset ichiga tushadi, faqat
+      // home-indicator chizig'idan yuqorida qoladi). Menyu yo'q ekranlarda — avvalgidek.
+      edges={showBottomBar ? ['top'] : ['top', 'bottom']}>
       <View style={isTablet ? styles.tabletFrame : styles.phoneFrame}>
       <I18nextProvider i18n={i18n}>
         {/* Navigation flex:1 — global menyu ko'ringanda kontent ustini yopmasdan
@@ -264,17 +270,21 @@ const App: React.FC = () => {
       {/* SS-DEV (2026-09-24): pastki xavfsiz maydon (home indicator) chizig'i
           ilgari OQ edi — sahifa fonи (#f5f7fb) bilan tab bar ostida OQ
           "bo'shliq" bo'lib ko'rinardi. Endi sahifa rangida. */}
-      <View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: insets.bottom,
-          backgroundColor: '#f5f7fb',
-        }}
-      />
+      {/* SS-DEV (2026-09-29): menyu ko'ringanda inset maydonini menyuning o'zi
+          (sahifa rangida) egallaydi — bu qatlam menyu pastini yopib qo'ymasin. */}
+      {!showBottomBar && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: insets.bottom,
+            backgroundColor: '#f5f7fb',
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };

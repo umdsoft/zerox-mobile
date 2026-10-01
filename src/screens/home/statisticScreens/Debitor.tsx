@@ -10,11 +10,14 @@ import AskTime from '../../../images/AskTime';
 import CharityDollar from '../../../images/CharityDollar';
 import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
+import {useOfertaGuard} from '../../../hooks/useOfertaGuard';
 
 const Debitor = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {type, item, status, person, isHave, report} = route.params;
+  // SS-DEV (2026-09-29): berilgan qarz AMALLARI — ommaviy oferta shart (ko'rish ochiq).
+  const guardOferta = useOfertaGuard();
 
   // HISOBOT (report) rejimida TUGALLANGAN (status===2) yoki RAD etilган (3/4)
   // kontraktда amal tugmalari (qaytarishni talab / muddat uzaytirish / voz kechish)
@@ -56,7 +59,7 @@ const Debitor = () => {
       {!hideActions && (
         <View style={styles.actions}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('FullDebtSelect', {item: item})}
+            onPress={() => guardOferta(() => navigation.navigate('FullDebtSelect', {item: item}))}
             activeOpacity={0.85}
             style={styles.primaryBtn}>
             <Dollar />
@@ -66,7 +69,7 @@ const Debitor = () => {
           </TouchableOpacity>
           <View style={styles.secRow}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('DebtDateLength', {item: item, id: item.id})}
+              onPress={() => guardOferta(() => navigation.navigate('DebtDateLength', {item: item, id: item.id}))}
               activeOpacity={0.85}
               style={[styles.secBtn, {backgroundColor: rd.color.primary}]}>
               <AskTime />
@@ -75,7 +78,7 @@ const Debitor = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigation.navigate('CharityDebt', {item: item})}
+              onPress={() => guardOferta(() => navigation.navigate('CharityDebt', {item: item}))}
               activeOpacity={0.85}
               style={[styles.secBtn, {backgroundColor: rd.color.primary}]}>
               <CharityDollar />
