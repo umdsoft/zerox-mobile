@@ -25,6 +25,7 @@ import {
   MessageIcon,
   PlusIcon,
 } from '../../redesign/icons';
+import AnimatedEmpty from '../../../components/AnimatedEmpty';
 
 /**
  * SmsHistory — "SMS xabarlar tarixi" (saytdagi kabi).
@@ -190,6 +191,8 @@ const SmsHistory = () => {
                   </View>
                 ) : (
                   <View style={styles.catBody}>
+                    {/* 02.10: bo'sh holat — harakatli ikonka */}
+                    <AnimatedEmpty variant="list" compact />
                     <Text allowFontScaling={false} style={styles.emptyRow}>
                       {t('Bu kategoriyada xabar yo‘q')}
                     </Text>

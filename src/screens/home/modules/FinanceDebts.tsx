@@ -15,6 +15,15 @@
  * SearchDebitor naqshi. Kontragent guruhi / qarz tafsiloti funksiyalari O'ZGARMADI.
  *
  * Backend: GET /finance/debts?limit=100 (o'z + ko'zgu qarzlar) — YAGONA manba.
+ *
+ * 02.10 (mobil hujjat, 2/10b/11-band) — sayt (pages/finance/debts/index.vue) bilan paritet:
+ *   - eng pastdagi "Tugallangan shaxsiy qarzlar" ro'yxati o'rniga Qarz shartnomasidagi kabi
+ *     "Yakunlangan qarzlar" bo'limi — IKKI karta: "Berilgan qarzlar" / "Olingan qarzlar"
+ *     (summa valyuta bo'yicha + soni); bosilganda yakunlangan qarzlar hisoboti
+ *     (FinanceDebtReport — sayt report/_side.vue). Manba: status=completed, sahifalab;
+ *   - sariq eslatma ("Tushundim") Yakunlangan qarzlar bo'limining TAGIGA ko'chirildi;
+ *   - "Muddati oz qolgan" bloklari sayt kabi GET /finance/debts/upcoming dan (fallback —
+ *     ro'yxat); "Barchasini ko'rish" sahifasi AYNAN shu funksiyadan (resolveUpcoming).
  */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
@@ -33,6 +42,7 @@ import { useFetch } from '../../../hooks/useFetch';
 import { storage } from '../../../store/api/token/getToken';
 import { fmtUSD, fmtUZS } from '../../../helper/money';
 import { rd, rs } from '../../../theme/rd';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 import RdHeader from '../redesign/RdHeader';
 import RdTopBar from '../redesign/RdTopBar';
 import DebtSummaryCard from '../redesign/DebtSummaryCard';
@@ -44,26 +54,26 @@ import {
   ClockIcon,
   IdCardIcon,
   InfoIcon,
-  StorefrontIcon,
-  UserIcon,
 } from '../redesign/icons';
-import { fCompact, fDate, localDateKey } from './financeMoney';
+import { fCompact, localDateKey } from './financeMoney';
 import {
-  completedDebts,
   CurSum,
-  daysLeft,
-  debtDetailParams,
   DebtListKind,
   FINANCE_DEBTS_URL,
+  FINANCE_UPCOMING_URL,
+  finishedOfSide,
   mergeDebts,
+  resolveUpcoming,
   summarizeDebts,
-  upcomingDebts,
+  summarizeDebtSvod,
+  svodTotals,
+  UpcomingRow,
+  upcomingTarget,
 } from './financeDebtGroups';
+import { useAllPersonalDebts } from './useAllPersonalDebts';
 
 const AMBER = '#f59e0b';
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
-// Pastdagi "Tugallangan" kartasida ko'rsatiladigan qatorlar soni.
-const COMPLETED_PREVIEW = 3;
 
 // SS8: eslatma yopilgan KUN (MMKV) — "Qarz daftari" dagi bilan bir xil naqsh.
 const DEBT_NOTE_KEY = 'fin_debt_note_hidden_day';
@@ -137,12 +147,12 @@ const dueBadge = (left: number | null, t: (k: string, o?: any) => string) => {
   return { label: t('{{n}} kun qoldi', { n: left }), color: rd.color.warning, bg: rd.color.warningBg };
 };
 
-const partyIcon = (d: any) => (d?.is_shop_debt ? StorefrontIcon : UserIcon);
-
 /**
  * "Muddati oz qolgan" kartasi — Qarz shartnomasidagi NearCard bilan bir xil
  * tuzilish (UZS/USD segment + jadval + "Barchasini ko'rish"), qo'shimcha ravishda
  * KONTRAGENT nomi (saytdagi `showName` rejimi).
+ * 02.10 (11-band): qatorlar `resolveUpcoming` dan (sahifadagi ro'yxat bilan bir manba);
+ * bo'sh holatda harakatli ikonka (12-band).
  */
 const NearDebtCard = ({
   title,
@@ -151,13 +161,13 @@ const NearDebtCard = ({
   onAll,
 }: {
   title: string;
-  rows: any[];
-  onRow: (d: any) => void;
+  rows: UpcomingRow[];
+  onRow: (r: UpcomingRow) => void;
   onAll: () => void;
 }) => {
   const { t } = useTranslation();
   const [cur, setCur] = React.useState<'UZS' | 'USD'>('UZS');
-  const list = rows.filter(d => String(d?.currency || 'UZS').toUpperCase() === cur);
+  const list = rows.filter(r => r.currency === cur);
   return (
     <View style={styles.box}>
       <View style={styles.nearHead}>
@@ -178,7 +188,7 @@ const NearDebtCard = ({
         </View>
       </View>
       {list.length === 0 ? (
-        <Text style={styles.boxEmpty}>{t('Hozircha muddati yaqin qarzlar yo‘q')}</Text>
+        <AnimatedEmpty variant="time" text={t('Hozircha muddati yaqin qarzlar yo‘q')} compact />
       ) : (
         <View>
           <View style={styles.tableHead}>
@@ -186,20 +196,20 @@ const NearDebtCard = ({
             <Text style={styles.tableHeadCol}>{t('Qolgan vaqt')}</Text>
             <Text style={[styles.tableHeadCol, styles.tableAmountCol]}>{t('Qarz miqdori')}</Text>
           </View>
-          {list.map((d, i) => {
-            const due = dueBadge(daysLeft(d?.due_date), t);
+          {list.map(r => {
+            const due = dueBadge(r.left, t);
             return (
               <TouchableOpacity
-                key={`${d?.id ?? i}`}
+                key={r.key}
                 activeOpacity={0.6}
-                onPress={() => onRow(d)}
+                onPress={() => onRow(r)}
                 style={styles.tableRow}>
-                <Text style={styles.tableName} numberOfLines={1}>{d?.source_name || '—'}</Text>
+                <Text style={styles.tableName} numberOfLines={1}>{r.name}</Text>
                 <View style={[styles.dueBadge, { backgroundColor: due.bg }]}>
                   <Text style={[styles.dueBadgeText, { color: due.color }]}>{due.label}</Text>
                 </View>
                 <Text style={[styles.tableAmount, styles.tableAmountCol]} numberOfLines={1}>
-                  {fCompact(d?.remaining_amount, d?.currency || 'UZS')}
+                  {fCompact(r.remaining, r.currency)}
                 </Text>
               </TouchableOpacity>
             );
@@ -214,65 +224,76 @@ const NearDebtCard = ({
   );
 };
 
-/** Eng pastki blok — "Tugallangan shaxsiy qarzlar" (oxirgi yopilganlar + hammasi). */
-const CompletedCard = ({
-  rows,
-  total,
-  onRow,
-  onAll,
+/**
+ * 02.10 (2/10b-band): "Yakunlangan qarzlar" — Qarz shartnomasi va sayt (DashboardReports)
+ * kabi sarlavha + IKKI karta: "Berilgan qarzlar" / "Olingan qarzlar" (summa valyuta bo'yicha,
+ * nishonda soni). Sarlavha yonidagi (i) — izoh (sayt InfoTip: tugallangan va voz kechilgan).
+ */
+const FinishedSection = ({
+  given,
+  taken,
+  givenCount,
+  takenCount,
+  onGiven,
+  onTaken,
 }: {
-  rows: any[];
-  total: number;
-  onRow: (d: any) => void;
-  onAll: () => void;
+  given: CurSum;
+  taken: CurSum;
+  givenCount: number;
+  takenCount: number;
+  onGiven: () => void;
+  onTaken: () => void;
 }) => {
   const { t } = useTranslation();
+  const [info, setInfo] = React.useState(false);
   return (
-    <View style={styles.box}>
-      <View style={styles.nearHead}>
+    <View style={styles.finished}>
+      <View style={styles.finishedHead}>
         <View style={styles.doneIcon}>
           <CheckCircleIcon size={rs(18)} color={rd.color.success} />
         </View>
-        <Text style={styles.boxTitle} numberOfLines={2}>{t('Tugallangan shaxsiy qarzlar')}</Text>
-        <View style={[styles.countPill, { backgroundColor: rd.color.successBg }]}>
-          <Text style={[styles.countPillText, { color: rd.color.success }]}>{total}</Text>
-        </View>
-      </View>
-      {rows.length === 0 ? (
-        <Text style={styles.boxEmpty}>{t('Hozircha tugallangan qarzlar yo‘q')}</Text>
-      ) : (
-        rows.map((d, i) => {
-          const Ico = partyIcon(d);
-          const lent = d?.type !== 'borrowed';
-          return (
-            <TouchableOpacity
-              key={`${d?.id ?? i}`}
-              activeOpacity={0.6}
-              onPress={() => onRow(d)}
-              style={styles.doneRow}>
-              <View style={styles.doneAvatar}>
-                <Ico size={rs(16)} color={rd.color.textSecondary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.tableName} numberOfLines={1}>{d?.source_name || '—'}</Text>
-                <Text style={styles.doneSub} numberOfLines={1}>
-                  {lent ? t('Berilgan qarz') : t('Olingan qarz')}
-                  {d?.due_date ? ` · ${fDate(d.due_date)}` : ''}
-                </Text>
-              </View>
-              <Text style={styles.doneAmount} numberOfLines={1}>
-                {fCompact(d?.amount, d?.currency || 'UZS')}
-              </Text>
-            </TouchableOpacity>
-          );
-        })
-      )}
-      {total > 0 ? (
-        <TouchableOpacity activeOpacity={0.8} onPress={onAll} style={styles.more}>
-          <Text style={styles.moreText}>{t('Barchasini ko‘rish')}</Text>
-          <ChevronRight size={rs(15)} color={rd.color.primary} />
+        <Text allowFontScaling={false} style={styles.finishedTitle} numberOfLines={1}>
+          {t('Yakunlangan qarzlar')}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setInfo(v => !v)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel={t('Ushbu qismda tugallangan va voz kechilgan qarzlar aks etadi')}>
+          <InfoIcon size={rs(17)} color={info ? rd.color.primary : rd.color.textTertiary} />
         </TouchableOpacity>
+      </View>
+      {info ? (
+        <Text allowFontScaling={false} style={styles.finishedInfo}>
+          {t('Ushbu qismda tugallangan va voz kechilgan qarzlar aks etadi')}
+        </Text>
       ) : null}
+      <View style={styles.debtGrid}>
+        <DebtSummaryCard
+          variant="stripe"
+          accent={rd.color.primary}
+          Icon={ArrowUpRight}
+          label={t('Berilgan qarzlar')}
+          badge={t('{{n}} ta', { n: givenCount })}
+          badgeBg={rd.color.primaryTint}
+          badgeColor={rd.color.primary}
+          amountColor={rd.color.text}
+          lines={money(given)}
+          onPress={onGiven}
+        />
+        <DebtSummaryCard
+          variant="stripe"
+          accent={rd.color.success}
+          Icon={ArrowDownLeft}
+          label={t('Olingan qarzlar')}
+          badge={t('{{n}} ta', { n: takenCount })}
+          badgeBg={rd.color.successBg}
+          badgeColor={rd.color.success}
+          amountColor={rd.color.text}
+          lines={money(taken)}
+          onPress={onTaken}
+        />
+      </View>
     </View>
   );
 };
@@ -303,7 +324,18 @@ const FinanceDebts = () => {
   };
 
   const listFetch = useFetch({ url: FINANCE_DEBTS_URL, method: 'GET' });
+  // 02.10 (11-band): "Muddati oz qolgan" — sayt kabi backend endpoint (fallback — ro'yxat).
+  const upFetch = useFetch({ url: FINANCE_UPCOMING_URL, method: 'GET' });
+  // 02.10 (2/10b-band): yakunlangan (tugallangan + voz kechilgan) qarzlar — sahifalab to'liq.
+  const finished = useAllPersonalDebts({ status: 'completed' });
   const refreshList = listFetch.onRefresh;
+  const refreshUp = upFetch.onRefresh;
+  const reloadFinished = finished.reload;
+  const refreshAll = React.useCallback(() => {
+    refreshList({});
+    refreshUp({});
+    reloadFinished();
+  }, [refreshList, refreshUp, reloadFinished]);
   const firstFocus = React.useRef(true);
   useFocusEffect(
     React.useCallback(() => {
@@ -311,19 +343,31 @@ const FinanceDebts = () => {
         firstFocus.current = false;
         return;
       }
-      refreshList({});
-    }, [refreshList]),
+      refreshAll();
+    }, [refreshAll]),
   );
 
   // 🔴 SS6: `mirror_debts` (hamkor/do'kon ko'zgu qarzlari) ham ro'yxatga kiradi.
   const debts = React.useMemo(() => mergeDebts(listFetch.data), [listFetch.data]);
   const sum = React.useMemo(() => summarizeDebts(debts), [debts]);
-  const nearGiven = React.useMemo(() => upcomingDebts(debts, 'given'), [debts]);
-  const nearTaken = React.useMemo(() => upcomingDebts(debts, 'taken'), [debts]);
-  const done = React.useMemo(() => completedDebts(debts), [debts]);
+  const nearGiven = React.useMemo(() => resolveUpcoming(upFetch.data, debts, 'given'), [upFetch.data, debts]);
+  const nearTaken = React.useMemo(() => resolveUpcoming(upFetch.data, debts, 'taken'), [upFetch.data, debts]);
+  const fin = React.useMemo(() => {
+    const g = finishedOfSide(finished.debts, 'lent');
+    const tk = finishedOfSide(finished.debts, 'borrowed');
+    return {
+      given: svodTotals(summarizeDebtSvod(g)),
+      taken: svodTotals(summarizeDebtSvod(tk)),
+      givenCount: g.length,
+      takenCount: tk.length,
+    };
+  }, [finished.debts]);
 
   const goList = (kind: DebtListKind) => navigation.navigate('FinanceDebtList', { kind });
-  const openDebt = (d: any) => navigation.navigate('FinanceDebtDetail', debtDetailParams(d));
+  const openUpcoming = (r: UpcomingRow) => {
+    const target = upcomingTarget(r, debts);
+    if (target) navigation.navigate(target.screen, target.params);
+  };
 
   return (
     <View style={styles.container}>
@@ -340,7 +384,7 @@ const FinanceDebts = () => {
         refreshControl={
           <RefreshControl
             refreshing={false}
-            onRefresh={() => refreshList({})}
+            onRefresh={refreshAll}
             tintColor={rd.color.primary}
             colors={[rd.color.primary]}
           />
@@ -410,17 +454,28 @@ const FinanceDebts = () => {
         <NearDebtCard
           title={t('Muddati oz qolgan berilgan qarzlar')}
           rows={nearGiven}
-          onRow={openDebt}
+          onRow={openUpcoming}
           onAll={() => goList('upcoming-given')}
         />
         <NearDebtCard
           title={t('Muddati oz qolgan olingan qarzlar')}
           rows={nearTaken}
-          onRow={openDebt}
+          onRow={openUpcoming}
           onAll={() => goList('upcoming-taken')}
         />
 
-        {/* SS7/SS8: tavsiyaviy eslatma ("Tushundim" — kun oxirigacha yopiladi). */}
+        {/* 5) 02.10 (2/10b-band): Yakunlangan qarzlar — Berilgan / Olingan kartalari (sayt kabi). */}
+        <FinishedSection
+          given={fin.given}
+          taken={fin.taken}
+          givenCount={fin.givenCount}
+          takenCount={fin.takenCount}
+          onGiven={() => navigation.navigate('FinanceDebtReport', { side: 'given' })}
+          onTaken={() => navigation.navigate('FinanceDebtReport', { side: 'taken' })}
+        />
+
+        {/* SS7/SS8: tavsiyaviy eslatma ("Tushundim" — kun oxirigacha yopiladi).
+            02.10 (2-band): Yakunlangan qarzlar bo'limining TAGIGA ko'chirildi. */}
         {!noteHidden && (
           <View style={styles.noteCard}>
             <View style={styles.noteIcon}>
@@ -436,14 +491,6 @@ const FinanceDebts = () => {
             </View>
           </View>
         )}
-
-        {/* 5) ENG PASTDA — tugallangan shaxsiy qarzlar */}
-        <CompletedCard
-          rows={done.slice(0, COMPLETED_PREVIEW)}
-          total={done.length}
-          onRow={openDebt}
-          onAll={() => goList('completed')}
-        />
       </ScrollView>
     </View>
   );
@@ -505,13 +552,6 @@ const styles = StyleSheet.create({
     padding: rs(16),
   },
   boxTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
-  boxEmpty: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13),
-    color: rd.color.textTertiary,
-    textAlign: 'center',
-    paddingVertical: rs(18),
-  },
   nearHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
   segment: { flexDirection: 'row', backgroundColor: rd.color.page, borderRadius: rd.radius.pill, padding: rs(3) },
   segmentBtn: { paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rd.radius.pill },
@@ -561,26 +601,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  countPill: { borderRadius: rd.radius.pill, paddingHorizontal: rs(10), paddingVertical: rs(3) },
-  countPillText: { fontFamily: rd.font.bold, fontSize: rs(12) },
-  doneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: rs(10),
-    paddingVertical: rs(10),
-    borderBottomWidth: 1,
-    borderBottomColor: rd.color.border,
+  // 02.10 (2/10b-band): "Yakunlangan qarzlar" bo'limi — sarlavha + 2 karta (Qarz shartnomasi kabi).
+  finished: { gap: rs(12) },
+  finishedHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
+  finishedTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
+  finishedInfo: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    lineHeight: rs(17),
+    color: rd.color.textSecondary,
+    backgroundColor: rd.color.primaryTint,
+    borderRadius: rd.radius.md,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(8),
   },
-  doneAvatar: {
-    width: rs(34),
-    height: rs(34),
-    borderRadius: rs(17),
-    backgroundColor: rd.color.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneSub: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
-  doneAmount: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.textSecondary },
 
   noteCard: {
     flexDirection: 'row',

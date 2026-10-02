@@ -64,6 +64,7 @@ import {
   IconProps,
   ShieldIcon,
 } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 type Nav = (route: string, params?: object) => void;
 
@@ -412,9 +413,8 @@ const DueTable = ({
 
       {filtered.length === 0 ? (
         <View style={styles.emptyBox}>
-          <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
-            <ClockIcon size={rs(22)} color={rd.color.textTertiary} />
-          </CircleIcon>
+          {/* 02.10: bo'sh holat — harakatli ikonka */}
+          <AnimatedEmpty variant="time" compact />
           <Text style={styles.emptyText}>
             {t('Yaqin orada muddati tugaydigan qarzlar yo‘q.')}
           </Text>

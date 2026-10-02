@@ -14,6 +14,7 @@ import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { fMoney, fCompact, num } from './financeMoney';
 import { ChevronRight } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 // SS12: tavsiyalar 3 TOIFAGA (Yuqori/O'rta/Past) — jiddiylik bo'yicha, ochib-yopiladigan.
 const PRIO_GROUPS = [
@@ -131,7 +132,8 @@ const FinanceAdvice = () => {
           {/* SS12: Tavsiyalar — 3 TOIFA (Yuqori/O'rta/Past), ochib-yopiladigan. */}
           {recs.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>✅</Text>
+              {/* 02.10: bo'sh holat — harakatli ikonka */}
+              <AnimatedEmpty variant="check" compact />
               <Text style={styles.emptyText}>{t('Hozircha tavsiyalar yo‘q — moliyaviy holatingiz barqaror.')}</Text>
             </View>
           ) : (

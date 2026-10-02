@@ -47,6 +47,7 @@ import { rd, rs } from '../../../theme/rd';
 import { fMoney, fTime } from './financeMoney';
 import { fetchTxParams } from './qarzAmaliyot';
 import { ChevronLeft, ChevronRight, CloseIcon, UserIcon } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const GREEN = '#16a34a';
 const RED = '#dc2626';
@@ -570,6 +571,8 @@ const QarzDaftariKalendar = () => {
               </View>
             ) : varaqBer.length === 0 && varaqUnd.length === 0 ? (
               <View style={styles.sheetCenter}>
+                {/* 02.10: bo'sh holat — harakatli ikonka */}
+                <AnimatedEmpty variant="time" compact />
                 <Text allowFontScaling={false} style={styles.sheetEmpty}>
                   {t('Bu davrda qarz amaliyoti yo‘q')}
                 </Text>

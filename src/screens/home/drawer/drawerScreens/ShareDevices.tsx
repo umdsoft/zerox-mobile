@@ -12,6 +12,7 @@ import {getUniqueId} from 'react-native-device-info';
 import {getDevicesAction, onDeleteDevices} from '../../../../store/api/home';
 import {rd, rs} from '../../../../theme/rd';
 import {useTranslation} from 'react-i18next';
+import AnimatedEmpty from '../../../components/AnimatedEmpty';
 
 const ShareDevices = () => {
   const {t} = useTranslation();
@@ -95,6 +96,8 @@ const ShareDevices = () => {
 
       {data.length === 0 ? (
         <View style={styles.emptyWrap}>
+          {/* 02.10: bo'sh holat — harakatli ikonka */}
+          <AnimatedEmpty variant="safe" compact />
           <Text style={styles.emptyText} allowFontScaling={false}>
             {t('Sizda boshqa seanslar mavjud emas')}
           </Text>

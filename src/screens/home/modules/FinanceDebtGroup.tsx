@@ -1,25 +1,28 @@
 /**
- * FinanceDebtGroup.tsx — BITTA kontragent bo'yicha shaxsiy qarzlar.
+ * FinanceDebtGroup.tsx — BITTA kontragent bo'yicha shaxsiy qarzlar ("Qarz oldi-berdi").
  *
- * SS4/SS5 (2026-09-18) — ekran qayta qurildi. Ilgari bu shunchaki qarzlar
- * ro'yxati edi; foydalanuvchi esa kontragent KARTOCHKASINI kutardi:
+ * SS4/SS5 (2026-09-18) — ekran qayta qurildi: tepada kontragent kartochkasi
+ * (ism, telefon, manzil, SMS/qo'ng'iroq, tahrirlash), o'rtada balans, pastda qarzlar.
  *
- *   1) TEPADA  — kim (yoki qaysi do'kon): ism, telefon, manzil;
- *                yonida SMS va qo'ng'iroq tugmalari, tahrirlash (faqat
- *                jismoniy shaxsda — do'kon ma'lumotini do'kon egasi yuritadi).
- *   2) O'RTADA — BALANS: berilgan / olingan va sof qoldiq (valyuta bo'yicha).
- *   3) PASTDA  — har bir rasmiylashtirilgan qarz alohida karta: sana, muddat,
- *                izoh, to'langanlik ulushi. Bosilsa — to'liq tafsilot.
- *
- * ⚠️ Qo'shimcha API so'rovi YO'Q: qarzlar chaqiruvchi ekranda allaqachon
- * yuklangan va `route.params.items` orqali uzatiladi.
+ * 02.10 (mobil hujjat 4/7-rasm): sayt `pages/finance/debts/group/_key.vue` ga tenglashtirildi:
+ *   • BO'LIM (`side`) — kontragent qaysi ro'yxatdan ochilgani: berilgan qarzlar → 'lent',
+ *     olingan → 'borrowed', tugallangan/aralash → '' (sayt `SIDE_BY_TAB`). `route.params.kind`
+ *     berilsa — undan, aks holda qarzlar turidan aniqlanadi (ro'yxat bir turdagilarni beradi);
+ *   • AMALLAR (sayt tartibi, pastel + ikonka): berilganda — Yana qarz berish / Qarzni yopish /
+ *     Talab qilish / Voz kechish; olinganda — Yana qarz olish / Qarzni qaytarish; bo'lim
+ *     noma'lum bo'lsa — Qarz berish / Qarz olish. BERILGAN qarz ichida "Qarz olish" YO'Q,
+ *     OLINGAN qarz ichida "Qarz berish" YO'Q (ilgari ikkalasi ham chiqardi);
+ *   • yopish / qaytarish / voz kechish — TANLANGAN qarz(lar)ga (FinanceDebtActionModal:
+ *     bir nechtasi yoki "Barchasi", to'liq yoki qisman);
+ *   • RO'YXAT — bo'lim ma'lum bo'lsa FAQAT amaldagi (ochiq) qarzlar ("Amaliyotlar"); tugallangan
+ *     va voz kechilganlar bu yerda ko'rinmaydi (ular "Tugallangan" ro'yxatida);
+ *   • amaldan keyin va ekranga qaytganda ro'yxat serverdan yangilanadi (sayt `loadDebts`).
  */
 import { safeOpenURL } from '@helper/safeOpenURL';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Dimensions,
   Linking,
   Modal,
   Pressable,
@@ -33,49 +36,88 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { rd, rs } from '../../../theme/rd';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 import RdHeader from '../redesign/RdHeader';
 import {
   CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+  HandCoinReturnIcon,
   InfoIcon,
   LockIcon,
   MessageIcon,
   PencilIcon,
   PhoneCallIcon,
   PhoneIcon,
+  PlusIcon,
   StorefrontIcon,
   UserIcon,
   WarningIcon,
 } from '../redesign/icons';
+import DebtActionButton, { PASTEL } from './DebtActionButton';
+import FinanceDebtActionModal, { BanIcon, totalsText } from './FinanceDebtActionModal';
 import { financeApi } from './financeApi';
-import { handlePlanRequiredError, isFeatureLocked, showPlanRequired, usePlanFeatures } from './planGate';
+import { groupKeyOf, mergeDebts } from './financeDebtGroups';
+import { isFeatureLocked, usePlanFeatures } from './planGate';
 import { fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num, parseLocalDate } from './financeMoney';
 import { fmtPhoneUzFull as fmtPhone } from '../../../helper/phone';
+import { useDebtGroupActions } from './useDebtGroupActions';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
 const BLUE = '#2f6fed';
+const ROSE = '#e11d48';
 
-// SS-AUDIT (2026-09-25): FinanceDebts/FinanceDebtDetail bilan YAGONA predikat
-// (financeMoney). DB holatlari active|overdue (ochiq) / completed|cancelled (yopiq)
-// bo'lgani uchun `isDone === !isDebtOpen`. Muddat LOKAL kun bo'yicha (ilgari
-// `.slice(0,10)` UTC — +05:00 da bir kun oldin "muddati o'tgan" chiqardi).
+type Side = 'lent' | 'borrowed' | '';
+
+// 02.10: qayta yuklash — backend maksimumi 100 (VULN-L8), ko'pi bilan 10 sahifa.
+const RELOAD_PAGE_LIMIT = 100;
+const RELOAD_MAX_PAGES = 10;
+
+// 02.10: ro'yxat turi (FinanceDebtList `kind`) → bo'lim (sayt SIDE_BY_TAB bilan bir xil).
+const SIDE_BY_KIND: Record<string, Side> = {
+  given: 'lent',
+  'overdue-given': 'lent',
+  'upcoming-given': 'lent',
+  taken: 'borrowed',
+  'overdue-taken': 'borrowed',
+  'upcoming-taken': 'borrowed',
+};
+
+
+// SS-AUDIT (2026-09-25): FinanceDebts/FinanceDebtDetail bilan YAGONA predikat (financeMoney).
 const isDone = (d: any) => !isDebtOpen(d);
 const isOverdue = isDebtOverdue;
 // Sana satridan LOKAL kun timestamp (yo'q/buzuq bo'lsa NaN).
 const dayTs = (s: any): number => parseLocalDate(String(s || ''))?.getTime() ?? NaN;
+const MARKER_RE = /^__(increase|forgive)__/;
+
+/** Voz kechilgan qarz — `__forgive__` marker yoki notes'dagi "Kechirilgan" (sayt `isForgiven`). */
+const isForgiven = (d: any): boolean => {
+  if (d?.status !== 'completed') return false;
+  const pays: any[] = Array.isArray(d?.payments) ? d.payments : [];
+  if (pays.some(p => /^__forgive__/.test(String(p?.notes || '')))) return true;
+  return /Kechirilgan|voz kechildi/i.test(String(d?.notes || ''));
+};
+
+/** Haqiqiy to'lovlar (markerlarsiz), qarz summasidan oshmaydi (sayt `paidOf`). */
+const paidOf = (d: any): number => {
+  if (Array.isArray(d?.payments)) {
+    const sum = d.payments
+      .filter((p: any) => !MARKER_RE.test(String(p?.notes || '')))
+      .reduce((s: number, p: any) => s + num(p?.amount), 0);
+    const total = num(d?.amount);
+    return total > 0 ? Math.min(sum, total) : sum;
+  }
+  if (d?.paid_amount != null) return num(d.paid_amount);
+  return isForgiven(d) ? 0 : Math.max(0, num(d?.amount) - num(d?.remaining_amount));
+};
 
 type Reliability = { level: 'none' | 'reliable' | 'medium' | 'risky'; total: number; on_time: number; late: number };
 
 /**
- * SS-DEV (2026-09-24): TAVSIYA — kontragentning oldingi qarzlarini o'z vaqtida
- * qaytarganiga qarab ishonchlilik. Backend `computeReliability`
- * (PersonalDebtController) bilan AYNAN bir xil qoida — `GET /finance/debts/:id`
- * javobidagi `reliability` bo'lsa u ustun, bo'lmasa ro'yxatdan shu yerda
- * hisoblanadi (ro'yxat `payments` bilan keladi):
- *   - yopilgan qarz: oxirgi HAQIQIY to'lov (marker yozuvlarsiz) muddatdan
- *     kechikmagan → o'z vaqtida, aks holda kech; muddatsiz yopilgan → ijobiy;
- *   - muddati o'tgan FAOL qarz → kech (salbiy signal).
- *   ratio ≥ 0.8 → ishonchli, ≥ 0.5 → o'rtacha, aks holda ehtiyot bo'ling.
+ * SS-DEV (2026-09-24): TAVSIYA — backend `computeReliability` (PersonalDebtController)
+ * bilan AYNAN bir xil qoida; server `reliability` bo'lsa u ustun.
  */
 const computeReliability = (debts: any[]): Reliability => {
   let onTime = 0;
@@ -84,13 +126,11 @@ const computeReliability = (debts: any[]): Reliability => {
   for (const d of debts) {
     if (d?.is_shop_debt) continue; // do'kon qaydlari — boshqa daftar, hisobga olinmaydi
     if (d?.status === 'completed') {
-      const pays = (d.payments || []).filter(
-        (p: any) => !/^__(increase|forgive)__/.test(String(p?.notes || '')),
-      );
+      const pays = (d.payments || []).filter((p: any) => !MARKER_RE.test(String(p?.notes || '')));
       let lastPay = 0;
       for (const p of pays) {
-        const t = new Date(String(p.payment_date || p.created_at || '').replace(' ', 'T')).getTime();
-        if (!isNaN(t) && t > lastPay) lastPay = t;
+        const ts = new Date(String(p.payment_date || p.created_at || '').replace(' ', 'T')).getTime();
+        if (!isNaN(ts) && ts > lastPay) lastPay = ts;
       }
       if (d.due_date && lastPay) {
         if (lastPay <= dayTs(d.due_date) + DAY) onTime++;
@@ -119,32 +159,86 @@ const REL_TEXT: Record<Reliability['level'], { title: string; desc: string; colo
   risky: { title: 'Ehtiyot bo‘ling', desc: 'Qarzlarini ko‘pincha kechiktirib qaytargan.', color: '#b91c1c', bg: '#fef2f2' },
 };
 
-// SS-AUDIT (2026-09-25): fmtPhone -> helper/phone.fmtPhoneUzFull (yagona manba).
-
 const FinanceDebtGroup = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
   const route = useRoute<any>();
-  const { title, isShop, items } = route.params || {};
+  const { title, isShop, items, kind } = route.params || {};
 
-  // Ro'yxat tahrirlashdan keyin yangilanishi uchun holatda saqlanadi.
+  // Ro'yxat tahrirlash/amaldan keyin yangilanishi uchun holatda saqlanadi.
   const [list, setList] = React.useState<any[]>(Array.isArray(items) ? items : []);
   const [editOpen, setEditOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  // SS4: tayyor SMS shablonlari + amal uchun qarz tanlash oynasi.
   const [showSms, setShowSms] = React.useState(false);
-  const [pickFor, setPickFor] = React.useState<'demand' | 'forgive' | null>(null);
-  const [acting, setActing] = React.useState(false);
   // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
   // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
   const plan = usePlanFeatures();
   const demandLocked = isFeatureLocked(plan, 'manual_sms_send');
 
-  const first = list[0] || {};
+  /** 02.10: bo'lim (sayt `side`). `kind` bo'lmasa — boshlang'ich qarzlar turidan. */
+  const side: Side = React.useMemo(() => {
+    if (isShop) return '';
+    if (kind) return SIDE_BY_KIND[String(kind)] || '';
+    const init: any[] = Array.isArray(items) ? items : [];
+    // Hammasi yopiq — "Tugallangan" ro'yxatidan kelingan (sayt: bo'lim noma'lum, hammasi ko'rinadi).
+    if (!init.length || !init.some(isDebtOpen)) return '';
+    if (init.every(d => d?.type !== 'borrowed')) return 'lent';
+    if (init.every(d => d?.type === 'borrowed')) return 'borrowed';
+    return '';
+  }, [isShop, kind, items]);
+
+  /** 02.10: serverdan qayta yuklash — shu kontragent (guruh kaliti) + shu bo'lim qarzlari. */
+  const groupKey = React.useMemo(
+    () => (Array.isArray(items) && items[0] ? groupKeyOf(items[0]) : ''),
+    [items],
+  );
+  const reload = React.useCallback(async () => {
+    if (!groupKey) return;
+    try {
+      // Backend bir so'rovda ≤100 ta o'z qarzini beradi — eski qarzlar tushib qolmasin, sahifalab
+      // olinadi (ko'zgu qarzlar faqat 1-javobda keladi). Ko'pi bilan RELOAD_MAX_PAGES sahifa.
+      const own: any[] = [];
+      let mirrors: any[] = [];
+      for (let page = 1; page <= RELOAD_MAX_PAGES; page += 1) {
+        const r = await financeApi.getDebts({ limit: RELOAD_PAGE_LIMIT, page });
+        const rows = mergeDebts({ data: r?.data?.data });
+        own.push(...rows);
+        if (page === 1) mirrors = mergeDebts({ mirror_debts: r?.data?.mirror_debts });
+        if (rows.length < RELOAD_PAGE_LIMIT) break;
+      }
+      const mine = [...own, ...mirrors].filter(d => groupKeyOf(d) === groupKey);
+      setList(side ? mine.filter(d => (side === 'lent' ? d?.type !== 'borrowed' : d?.type === 'borrowed')) : mine);
+    } catch (e) {
+      // Ataylab jim: yangilash ixtiyoriy — mavjud ro'yxat ko'rinib qoladi, amal xatosi alohida chiqadi.
+    }
+  }, [groupKey, side]);
+  // Tafsilot / qo'shish ekranidan qaytganda yangilansin (birinchi fokusda route ma'lumoti yetarli).
+  const firstFocus = React.useRef(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      reload();
+    }, [reload]),
+  );
+
+  const { actModal, setActModal, actBusy, demanding, onActConfirm, sendDemand } = useDebtGroupActions({
+    t,
+    navigation,
+    reload,
+    plan,
+    demandLocked,
+  });
+
+  // Oyna yopilayotganda (fade) sarlavha boshqa rejimga sakramasin — oxirgi rejim saqlanadi.
+  const lastMode = React.useRef<'close' | 'pay' | 'forgive'>('close');
+  if (actModal) lastMode.current = actModal;
+
+  const first = list[0] || (Array.isArray(items) ? items[0] : null) || {};
   const phone: string = first.phone || first.shop_phone || '';
-  // SS5 (2026-09-19): manzil FAQAT birinchi yozuvdan olinardi — agar u
-  // do'kon qarzi bo'lmasa manzil umuman chiqmasdi. Endi ro'yxatdagi
-  // manzili bor BIRINCHI yozuv olinadi.
+  // SS5 (2026-09-19): manzili bor BIRINCHI yozuv olinadi.
   const address: string = (() => {
     for (const d of list) {
       const a = [d.shop_region, d.shop_district].filter(Boolean).join(', ');
@@ -173,8 +267,24 @@ const FinanceDebtGroup = () => {
       }),
     [list],
   );
+  // 02.10 (sayt `listItems`): bo'lim ma'lum bo'lsa FAQAT amaldagi qarzlar.
+  const listItems = React.useMemo(() => (side ? sorted.filter(isDebtOpen) : sorted), [sorted, side]);
 
-  /** Valyuta bo'yicha berilgan / olingan / sof qoldiq. */
+  // 02.10 (sayt `openDebts` / `actionDebts` / `demandTarget`).
+  const openDebts = React.useMemo(
+    () => (side ? list.filter(d => isDebtOpen(d) && !d.is_shop_debt) : []),
+    [list, side],
+  );
+  const actionDebts = React.useMemo(
+    () => openDebts.filter(d => !d.is_mirror || !!d.can_operate),
+    [openDebts],
+  );
+  const demandTarget = React.useMemo(
+    () => actionDebts.find(d => d.is_mirror || !!d.phone) || null,
+    [actionDebts],
+  );
+
+  /** Valyuta bo'yicha berilgan / olingan / sof qoldiq (bo'lim noma'lum bo'lganda). */
   const balance = React.useMemo(() => {
     const m = new Map<string, { lent: number; borrowed: number }>();
     for (const d of list) {
@@ -188,16 +298,32 @@ const FinanceDebtGroup = () => {
     return [...m.entries()];
   }, [list]);
 
+  /** 02.10 (sayt `sideTotals`): Jami qarz | Undirilgan (Qaytarilgan) | Qoldiq — valyuta bo'yicha. */
+  const sideTotals = React.useMemo(() => {
+    const m = new Map<string, { paid: number; left: number }>();
+    for (const d of list) {
+      const cur = d.currency || 'UZS';
+      const rec = m.get(cur) || { paid: 0, left: 0 };
+      m.set(cur, {
+        paid: rec.paid + paidOf(d),
+        left: rec.left + (isDebtOpen(d) ? num(d.remaining_amount) : 0),
+      });
+    }
+    const rank = (c: string) => (c === 'UZS' ? 0 : c === 'USD' ? 1 : 2);
+    const rows = [...m.entries()]
+      .map(([currency, v]) => ({ currency, ...v, total: v.paid + v.left }))
+      .sort((a, b) => rank(a.currency) - rank(b.currency));
+    return rows.length ? rows : [{ currency: 'UZS', paid: 0, left: 0, total: 0 }];
+  }, [list]);
+
   /**
-   * SS4: kontragent ma'lumotini tahrirlash. Shaxsiy qarzda ism/telefon HAR BIR
-   * yozuvda saqlanadi, shu bois o'zgarish guruhning O'Z qarzlariga (ko'zgu
-   * bo'lmaganlariga) qo'llanadi — aks holda ro'yxat yana ikkiga bo'linib ketardi.
+   * SS4: kontragent ma'lumotini tahrirlash — o'zgarish guruhning O'Z qarzlariga
+   * (ko'zgu bo'lmaganlariga) qo'llanadi.
    */
-  const ownItems = list.filter((d) => !d.is_mirror);
+  const ownItems = list.filter(d => !d.is_mirror);
   const canEdit = !isShop && ownItems.length > 0;
 
-  // SS-DEV (2026-09-24): TAVSIYA — serverdan (o'z qaydim bo'lsa `GET /finance/debts/:id`
-  // javobidagi `reliability`), kelmasa ro'yxatdan mahalliy hisob.
+  // SS-DEV (2026-09-24): TAVSIYA — serverdan, kelmasa ro'yxatdan mahalliy hisob.
   const [serverRel, setServerRel] = React.useState<Reliability | null>(null);
   const firstOwnId = ownItems.length ? ownItems[0].id : null;
   React.useEffect(() => {
@@ -205,7 +331,7 @@ const FinanceDebtGroup = () => {
     if (!firstOwnId || isShop) return;
     financeApi
       .getDebtById(firstOwnId)
-      .then((r) => {
+      .then(r => {
         const rel = r?.data?.reliability;
         if (alive && rel && typeof rel.level === 'string') setServerRel(rel);
       })
@@ -233,18 +359,10 @@ const FinanceDebtGroup = () => {
     setSaving(true);
     try {
       const body = { source_name: nm, phone: phoneEdit ? `+998${phoneEdit}` : null };
-      // SS-AUDIT (2026-09-25): Promise.all o'rniga allSettled — 5 tadan 3-si
-      // yiqilsa serverda o'zgarganlar mahalliy ro'yxatda ham yangilanadi
-      // (ilgari hech biri yangilanmay, qayta urinishda qayta yozilardi).
-      const results = await Promise.allSettled(
-        ownItems.map((d) => financeApi.updateDebt(d.id, body)),
-      );
-      const okIds = new Set(
-        ownItems.filter((_, i) => results[i].status === 'fulfilled').map((d) => d.id),
-      );
-      setList((prev) =>
-        prev.map((d) => (okIds.has(d.id) ? { ...d, source_name: nm, phone: body.phone } : d)),
-      );
+      // SS-AUDIT (2026-09-25): allSettled — qisman muvaffaqiyat ham mahalliy ro'yxatda aks etadi.
+      const results = await Promise.allSettled(ownItems.map(d => financeApi.updateDebt(d.id, body)));
+      const okIds = new Set(ownItems.filter((_, i) => results[i].status === 'fulfilled').map(d => d.id));
+      setList(prev => prev.map(d => (okIds.has(d.id) ? { ...d, source_name: nm, phone: body.phone } : d)));
       if (okIds.size !== ownItems.length) {
         throw new Error('partial');
       }
@@ -258,67 +376,37 @@ const FinanceDebtGroup = () => {
   };
 
   // SS-AUDIT (2026-09-25): .catch — dialer yo'q qurilmada unhandled rejection bo'lmasin.
-  const call = () =>
-    phone && Linking.openURL(`tel:${String(phone).replace(/\s/g, '')}`).catch(() => {});
+  const call = () => phone && Linking.openURL(`tel:${String(phone).replace(/\s/g, '')}`).catch(() => {});
 
   /** Asosiy valyuta (UZS ustun) va uning sof balansi. */
   const [primaryCur, primaryBal] = React.useMemo(() => {
     const uzs = balance.find(([c]) => c === 'UZS');
-    return (uzs || balance[0] || ['UZS', { lent: 0, borrowed: 0 }]) as [
-      string,
-      { lent: number; borrowed: number },
-    ];
+    return (uzs || balance[0] || ['UZS', { lent: 0, borrowed: 0 }]) as [string, { lent: number; borrowed: number }];
   }, [balance]);
   const netAll = primaryBal.lent - primaryBal.borrowed;
-
-  /**
-   * Men amal qila oladigan (talab / voz kechish) qarzlar: BERILGAN va ochiq.
-   * 🔴 SS-DEV (2026-09-24) ILDIZ SABAB (3-rasm): ro'yxat "to'liq emas" —
-   * faqat O'ZIM kiritganlar kirardi; qarshi tomon "oldim" deb kiritgan
-   * KO'ZGU qarzda men qarz beruvchiman (`can_operate`), saytda u ham
-   * amallarga kiradi (`mirror-demand` / `mirror-forgive`). Endi u ham bor.
-   */
-  const actionable = React.useMemo(
-    () =>
-      list.filter(
-        (d) =>
-          !isDone(d) &&
-          d.type === 'lent' &&
-          (!d.is_mirror || (!!d.can_operate && !d.is_shop_debt)),
-      ),
-    [list],
-  );
 
   /** Eng yaqin qaytarish muddati (men qarzdor bo'lgan yozuvlar bo'yicha). */
   const nearestDue = React.useMemo(() => {
     const ds = list
-      .filter((d) => d.type === 'borrowed' && !isDone(d) && d.due_date)
-      .map((d) => dayTs(d.due_date))
-      .filter((x) => !isNaN(x))
+      .filter(d => d.type === 'borrowed' && !isDone(d) && d.due_date)
+      .map(d => dayTs(d.due_date))
+      .filter(x => !isNaN(x))
       .sort((a, b) => a - b);
-    // SS-AUDIT (2026-09-25): lokal kun (ilgari toISOString UTC — bir kun surilardi).
     return ds.length ? fDate(localDateKey(new Date(ds[0]))) : '';
   }, [list]);
 
-  /**
-   * SS4/SS5: SOF BALANSGA qarab tayyor SMS matnlari.
-   * Men qarzdor bo'lsam — qaytarish/karta so'rash matnlari; menga qarzdor
-   * bo'lsa — eslatma/talab matnlari. Har ikki holatda ham summa qo'shiladi,
-   * shunda foydalanuvchi matnni qo'lda yozmaydi.
-   */
+  /** SS4/SS5: SOF BALANSGA qarab tayyor SMS matnlari. */
   const smsTemplates = (): string[] => {
     const nm = String(name || title || '').trim();
     const sal = nm ? `Assalomu alaykum, ${nm}.` : 'Assalomu alaykum.';
     const amt = fMoney(Math.abs(netAll), primaryCur);
     const out: string[] = [];
     if (netAll < 0) {
-      // MEN QARZDORMAN
       out.push(`${sal} ${amt} qarzimni qaytarmoqchiman. Plastik karta raqamingizni tashlab yuborasizmi?`);
       if (nearestDue) out.push(`${sal} ${amt} qarzimni ${nearestDue} gacha qaytaraman.`);
       out.push(`${sal} ${amt} qarzimni tez orada qaytaraman, sal muhlat berasizmi?`);
       out.push(`${sal} Qarzni bo‘lib-bo‘lib qaytarsam bo‘ladimi?`);
     } else if (netAll > 0) {
-      // MENGA QARZDOR
       out.push(`${sal} ${amt} qarzni qachon qaytarasiz?`);
       out.push(`${sal} ${amt} qarz to‘lovini eslatib qo‘yaman.`);
       out.push(`${sal} Qarzni qaytarish uchun karta raqamimni yuboraman.`);
@@ -337,48 +425,6 @@ const FinanceDebtGroup = () => {
     safeOpenURL(url); // SS-SEC (2026-09-25): faqat https/tel/sms/tg
   };
 
-  /** Tanlangan qarz bo'yicha talab/voz kechish. */
-  const runAction = async (d: any) => {
-    if (acting || !pickFor) return;
-    setActing(true);
-    try {
-      // SS-DEV (2026-09-24): ko'zgu (men qarz beruvchi) — `mirror-*` endpointlar.
-      if (pickFor === 'demand') {
-        await financeApi.demandDebtAny(d.id, !!d.is_mirror);
-        Toast.show({ type: 'omad', props: { desc: t('Qaytarish bo‘yicha SMS yuborildi') } });
-      } else {
-        await financeApi.forgiveDebtAny(d.id, !!d.is_mirror);
-        setList((prev) =>
-          prev.map((x) =>
-            x.id === d.id ? { ...x, status: 'completed', remaining_amount: 0 } : x,
-          ),
-        );
-        Toast.show({ type: 'omad', props: { desc: t('Qarzdan voz kechildi') } });
-      }
-      setPickFor(null);
-    } catch (e: any) {
-      // 02.10: 403 `plan-required` — umumiy xato emas, tarif matni + Tariflar.
-      if (handlePlanRequiredError(e, { t, navigation })) {
-        setPickFor(null);
-        return;
-      }
-      const code = e?.response?.data?.code;
-      const msg =
-        code === 'no-card'
-          ? t('Talab qilish uchun avval plastik karta ma’lumotlaringizni kiriting.')
-          : code === 'no-phone'
-          ? t('Mijoz telefoni yo‘q')
-          : t('Xatolik yuz berdi');
-      Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
-      if (code === 'no-card') {
-        setPickFor(null);
-        navigation.navigate('FinancePayoutCard');
-      }
-    } finally {
-      setActing(false);
-    }
-  };
-
   /** Shu kontragent bilan yangi qarz rasmiylashtirish. */
   const addDebt = (initialType: 'lent' | 'borrowed') =>
     navigation.navigate('FinanceDebtAdd', {
@@ -387,30 +433,197 @@ const FinanceDebtGroup = () => {
       initialPhone: phone || '',
     });
 
-  // SS-AUDIT (2026-09-25): `if (saving) return <Loading/>` olib tashlandi — saqlash
-  // paytida BUTUN ekran (sarlavha, kartalar, modal) yo'qolib spinner chiqardi;
-  // endi modal ochiq qoladi, "Saqlash" tugmasi nofaol bo'ladi.
+  // 02.10: o'chiq amal bosilganda — sabab (sayt `title` izohi).
+  const hint = (msg: string) => Toast.show({ type: 'error2', visibilityTime: 3500, props: { desc: msg } });
+  const openAct = (mode: 'close' | 'pay' | 'forgive') => {
+    if (actBusy) return;
+    if (!actionDebts.length) {
+      hint(t('Aktiv qarzlar yo‘q'));
+      return;
+    }
+    setActModal(mode);
+  };
+  const onDemand = () => {
+    if (!actionDebts.length) {
+      hint(t('Aktiv qarzlar yo‘q'));
+      return;
+    }
+    if (!demandTarget) {
+      hint(t('Qarzdorning telefon raqami kiritilmagan — qarz tafsilotida qo‘shing'));
+      return;
+    }
+    sendDemand(demandTarget);
+  };
 
   const Ico = isShop ? StorefrontIcon : UserIcon;
+  const displayName = name || title;
+
+  const renderActions = () => {
+    if (isShop) return null;
+    const noAct = !actionDebts.length;
+    if (side === 'lent') {
+      return (
+        <View style={styles.actGrid}>
+          <DebtActionButton label={t('Yana qarz berish')} tone="blue" icon={<PlusIcon size={rs(15)} color={PASTEL.blue.fg} />} onPress={() => addDebt('lent')} />
+          <DebtActionButton
+            label={t('Qarzni yopish')}
+            tone="green"
+            disabled={noAct}
+            icon={<CheckIcon size={rs(15)} color={noAct ? PASTEL.off.fg : PASTEL.green.fg} strokeWidth={2.6} />}
+            onPress={() => openAct('close')}
+          />
+          <DebtActionButton
+            label={demanding ? t('Yuborilmoqda...') : t('Talab qilish')}
+            tone="yellow"
+            disabled={!demandTarget}
+            icon={<ClockIcon size={rs(15)} color={!demandTarget ? PASTEL.off.fg : PASTEL.yellow.fg} />}
+            trailing={demandLocked ? <LockIcon size={rs(13)} color={!demandTarget ? PASTEL.off.fg : PASTEL.yellow.fg} /> : null}
+            onPress={onDemand}
+          />
+          <DebtActionButton
+            label={t('Voz kechish')}
+            tone="red"
+            disabled={noAct}
+            icon={<BanIcon size={rs(15)} color={noAct ? PASTEL.off.fg : PASTEL.red.fg} strokeWidth={2.4} />}
+            onPress={() => openAct('forgive')}
+          />
+        </View>
+      );
+    }
+    if (side === 'borrowed') {
+      return (
+        <View style={styles.actGrid}>
+          <DebtActionButton label={t('Yana qarz olish')} tone="blue" icon={<PlusIcon size={rs(15)} color={PASTEL.blue.fg} />} onPress={() => addDebt('borrowed')} />
+          <DebtActionButton
+            label={t('Qarzni qaytarish')}
+            tone="green"
+            disabled={noAct}
+            icon={<HandCoinReturnIcon size={rs(15)} color={noAct ? PASTEL.off.fg : PASTEL.green.fg} />}
+            onPress={() => openAct('pay')}
+          />
+        </View>
+      );
+    }
+    return (
+      <View style={styles.actGrid}>
+        <DebtActionButton label={t('Qarz berish')} tone="green" icon={<PlusIcon size={rs(15)} color={PASTEL.green.fg} />} onPress={() => addDebt('lent')} />
+        <DebtActionButton label={t('Qarz olish')} tone="red" icon={<PlusIcon size={rs(15)} color={PASTEL.red.fg} />} onPress={() => addDebt('borrowed')} />
+      </View>
+    );
+  };
+
+  const renderDebt = (d: any, i: number) => {
+    const borrowed = d.type === 'borrowed';
+    const dirColor = borrowed ? RED : GREEN;
+    const remaining = num(d.remaining_amount);
+    const total = num(d.amount);
+    const paidPct = total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
+    const done = isDone(d);
+    const overdue = isOverdue(d);
+    const forgiven = isForgiven(d);
+    // SS-DEV (2026-09-24, sayt): tugallangan qarzda qoldiq (0) o'rniga DASTLABKI summa.
+    const shownAmt = d.status === 'completed' ? total : remaining;
+    const status = done
+      ? forgiven
+        ? { text: t('Voz kechildi'), color: ROSE }
+        : { text: t('Yopilgan'), color: GREEN }
+      : overdue
+      ? { text: t('Muddati o‘tgan'), color: RED }
+      : { text: t('Faol'), color: BLUE };
+    const origin = d.is_mirror && !d.is_shop_debt ? (d.can_operate ? t('Bog‘langan') : t('Faqat ko‘rish')) : '';
+    return (
+      <TouchableOpacity
+        key={`${d.is_mirror ? 'm' : 'o'}-${d.id ?? i}`}
+        style={styles.debtCard}
+        activeOpacity={0.85}
+        onPress={() =>
+          navigation.navigate(
+            'FinanceDebtDetail',
+            d.is_mirror ? { mirror: d, hideParty: true } : { id: d.id, hideParty: true },
+          )
+        }>
+        <View style={styles.debtTop}>
+          <View style={styles.chipRow}>
+            <View style={[styles.dirChip, { backgroundColor: dirColor + '14' }]}>
+              <Text allowFontScaling={false} style={[styles.dirChipText, { color: dirColor }]}>
+                {borrowed ? t('Olingan') : t('Berilgan')}
+              </Text>
+            </View>
+            {!!origin && (
+              <View style={[styles.dirChip, { backgroundColor: '#EEF2FF' }]}>
+                <Text allowFontScaling={false} style={[styles.dirChipText, { color: '#3730A3' }]}>{origin}</Text>
+              </View>
+            )}
+          </View>
+          <Text allowFontScaling={false} style={[styles.debtAmt, { color: dirColor }]} numberOfLines={1}>
+            {borrowed ? '−' : '+'}{fMoney(shownAmt, d.currency)}
+          </Text>
+        </View>
+
+        <View style={styles.metaRow}>
+          <Text allowFontScaling={false} style={styles.metaText}>
+            {d.start_date ? fDate(d.start_date) : '—'}
+          </Text>
+          <Text allowFontScaling={false} style={styles.metaDot}>·</Text>
+          <Text allowFontScaling={false} style={[styles.metaText, overdue && { color: RED }]}>
+            {d.due_date ? `${fDate(d.due_date)}${t('gacha')}` : t('Muddatsiz')}
+          </Text>
+          <View style={[styles.badge, { backgroundColor: status.color + '18' }]}>
+            <Text allowFontScaling={false} style={[styles.badgeText, { color: status.color }]}>{status.text}</Text>
+          </View>
+        </View>
+
+        {!!d.notes && (
+          <Text allowFontScaling={false} style={styles.note} numberOfLines={2}>
+            {d.notes}
+          </Text>
+        )}
+
+        {!done && (
+          <>
+            <View style={styles.barTrack}>
+              <View style={[styles.barFill, { width: `${paidPct}%`, backgroundColor: dirColor }]} />
+            </View>
+            <Text allowFontScaling={false} style={styles.paidPct}>
+              {t('{{p}}% to‘landi', { p: paidPct })}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      {/* SS4 (2026-09-19): ilgari bu yerda ham, pastdagi kartochkada ham
-          AYNI ism turardi — bitta ekranda nom ikki marta yozilardi.
-          Sarlavha umumiy qilindi, shaxs/do'kon nomi kartochkada qoladi. */}
       <RdHeader title={t('Qarz oldi-berdi')} />
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        {/* 1. KONTRAGENT kartochkasi */}
+        {/* 1. KONTRAGENT kartochkasi + AMALLAR (02.10: sayt sarlavha bloki — ism, telefon, amallar) */}
         <View style={styles.idCard}>
           <View style={styles.idTop}>
             <View style={[styles.avatar, { backgroundColor: BLUE + '14' }]}>
               <Ico size={rs(24)} color={BLUE} />
             </View>
-            <Text allowFontScaling={false} style={styles.idName} numberOfLines={2}>
-              {name || title}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text allowFontScaling={false} style={styles.idName} numberOfLines={2}>
+                {displayName}
+              </Text>
+              {/* 02.10: bo'lim belgisi (sayt `badgeLent` / `badgeBorrowed`) */}
+              {!!side && (
+                <View
+                  style={[
+                    styles.sideChip,
+                    { backgroundColor: side === 'lent' ? '#F0FDF4' : '#FEF2F2' },
+                  ]}>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.sideChipText, { color: side === 'lent' ? '#15803D' : '#B91C1C' }]}>
+                    {side === 'lent' ? t('Berilgan qarz') : t('Olingan qarz')}
+                  </Text>
+                </View>
+              )}
+            </View>
             {canEdit && (
               <TouchableOpacity
                 style={styles.idEdit}
@@ -450,52 +663,88 @@ const FinanceDebtGroup = () => {
               </Text>
             </View>
           )}
+
+          {!isShop && <View style={styles.actDivider} />}
+          {renderActions()}
+          {/* 02.10 (sayt): faol qarzlar soni va jami qoldig'i */}
+          {!!side && (
+            <View style={styles.actNote}>
+              <InfoIcon size={rs(13)} color={rd.color.textTertiary} />
+              <Text allowFontScaling={false} style={styles.actNoteText}>
+                {openDebts.length
+                  ? `${t('Faol qarzlar: {{n}} ta', { n: openDebts.length })}: ${totalsText(openDebts)}`
+                  : t('Aktiv qarzlar yo‘q')}
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* 2. BALANS */}
-        <View style={styles.balCard}>
-          <Text allowFontScaling={false} style={styles.balTitle}>{t('Balans')}</Text>
-          {balance.map(([cur, v]) => {
-            const net = v.lent - v.borrowed;
-            return (
-              <View key={cur} style={styles.balBlock}>
-                <View style={styles.balRow}>
-                  <Text allowFontScaling={false} style={styles.balLabel}>{t('Berilgan')}</Text>
-                  <Text allowFontScaling={false} style={[styles.balVal, { color: GREEN }]}>
-                    {v.lent > 0 ? '+' : ''}{fMoney(v.lent, cur)}
-                  </Text>
-                </View>
-                <View style={styles.balRow}>
-                  <Text allowFontScaling={false} style={styles.balLabel}>{t('Olingan')}</Text>
-                  <Text allowFontScaling={false} style={[styles.balVal, { color: RED }]}>
-                    {v.borrowed > 0 ? '−' : ''}{fMoney(v.borrowed, cur)}
-                  </Text>
-                </View>
-                <View style={styles.balDivider} />
-                <View style={styles.balRow}>
-                  <Text allowFontScaling={false} style={styles.balNetLabel}>{t('Sof balans')}</Text>
+        {/* 2. BALANS — 02.10: bo'lim ma'lum bo'lsa sayt kartalari (Jami | Undirilgan | Qoldiq) */}
+        {side ? (
+          <View style={styles.tiles}>
+            {[
+              { label: t('Jami qarz'), key: 'total' as const, color: rd.color.text },
+              {
+                label: side === 'lent' ? t('Undirilgan qarz') : t('Qaytarilgan qarz'),
+                key: 'paid' as const,
+                color: GREEN,
+              },
+              { label: t('Qoldiq qarz'), key: 'left' as const, color: side === 'lent' ? BLUE : RED },
+            ].map(tile => (
+              <View key={tile.key} style={styles.tile}>
+                <Text allowFontScaling={false} style={styles.tileLabel} numberOfLines={1}>
+                  {tile.label}
+                </Text>
+                {sideTotals.map(c => (
                   <Text
+                    key={c.currency}
                     allowFontScaling={false}
-                    style={[styles.balNet, { color: net < 0 ? RED : GREEN }]}>
-                    {net < 0 ? '−' : '+'}{fMoney(Math.abs(net), cur)}
+                    style={[styles.tileVal, { color: tile.color }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit>
+                    {fMoney(c[tile.key], c.currency)}
                   </Text>
-                </View>
+                ))}
               </View>
-            );
-          })}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.balCard}>
+            <Text allowFontScaling={false} style={styles.balTitle}>{t('Balans')}</Text>
+            {balance.map(([cur, v]) => {
+              const net = v.lent - v.borrowed;
+              return (
+                <View key={cur} style={styles.balBlock}>
+                  <View style={styles.balRow}>
+                    <Text allowFontScaling={false} style={styles.balLabel}>{t('Berilgan')}</Text>
+                    <Text allowFontScaling={false} style={[styles.balVal, { color: GREEN }]}>
+                      {v.lent > 0 ? '+' : ''}{fMoney(v.lent, cur)}
+                    </Text>
+                  </View>
+                  <View style={styles.balRow}>
+                    <Text allowFontScaling={false} style={styles.balLabel}>{t('Olingan')}</Text>
+                    <Text allowFontScaling={false} style={[styles.balVal, { color: RED }]}>
+                      {v.borrowed > 0 ? '−' : ''}{fMoney(v.borrowed, cur)}
+                    </Text>
+                  </View>
+                  <View style={styles.balDivider} />
+                  <View style={styles.balRow}>
+                    <Text allowFontScaling={false} style={styles.balNetLabel}>{t('Sof balans')}</Text>
+                    <Text allowFontScaling={false} style={[styles.balNet, { color: net < 0 ? RED : GREEN }]}>
+                      {net < 0 ? '−' : '+'}{fMoney(Math.abs(net), cur)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
-        {/* 2a. TAVSIYA (SS-DEV 2026-09-24) — saytdagi "Tavsiya" bloki:
-            oldingi qarzlarini o'z vaqtida qaytarganiga qarab. Do'kon
-            sahifasida ko'rsatilmaydi (do'kon qaydlari — boshqa daftar). */}
+        {/* 2a. TAVSIYA (SS-DEV 2026-09-24) — do'kon sahifasida ko'rsatilmaydi. */}
         {!isShop && (() => {
           const rt = REL_TEXT[reliability.level] || REL_TEXT.none;
           const RelIcon =
-            reliability.level === 'reliable'
-              ? CheckCircleIcon
-              : reliability.level === 'none'
-              ? InfoIcon
-              : WarningIcon;
+            reliability.level === 'reliable' ? CheckCircleIcon : reliability.level === 'none' ? InfoIcon : WarningIcon;
           return (
             <View style={styles.relCard}>
               <Text allowFontScaling={false} style={styles.relTitle}>{t('Tavsiya')}</Text>
@@ -509,9 +758,7 @@ const FinanceDebtGroup = () => {
                   </Text>
                   <Text allowFontScaling={false} style={styles.relDesc}>
                     {t(rt.desc)}
-                    {reliability.total > 0
-                      ? ` (${reliability.on_time}/${reliability.total} ${t('o‘z vaqtida')})`
-                      : ''}
+                    {reliability.total > 0 ? ` (${reliability.on_time}/${reliability.total} ${t('o‘z vaqtida')})` : ''}
                   </Text>
                 </View>
               </View>
@@ -519,144 +766,45 @@ const FinanceDebtGroup = () => {
           );
         })()}
 
-        {/* 2b. AMALLAR — shu kontragent bilan (SS4). */}
-        <View style={styles.actRow}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[styles.actBtn, { backgroundColor: GREEN }]}
-            onPress={() => addDebt('lent')}>
-            <Text allowFontScaling={false} style={styles.actBtnText}>{t('Qarz berish')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[styles.actBtn, { backgroundColor: BLUE }]}
-            onPress={() => addDebt('borrowed')}>
-            <Text allowFontScaling={false} style={styles.actBtnText}>{t('Qarz olish')}</Text>
-          </TouchableOpacity>
+        {/* 3. QARZLAR — 02.10: bo'lim ma'lum bo'lsa "Amaliyotlar" (faqat ochiq qarzlar) */}
+        <View style={styles.sectionHead}>
+          <Text allowFontScaling={false} style={styles.sectionTitle}>
+            {side ? t('Amaliyotlar') : t('Qarzlar')}
+          </Text>
+          <View style={styles.countChip}>
+            <Text allowFontScaling={false} style={styles.countChipText}>
+              {listItems.length} {t('ta qarz')}
+            </Text>
+          </View>
         </View>
 
-        {/* Talab / voz kechish — BERILGAN ochiq qarz bo'lsa (sayt: har bir
-            qarz alohida; SS-DEV 2026-09-24: ilgari sof balans MUSBAT bo'lishi
-            ham shart edi — olingan qarz kattaroq bo'lsa tugmalar yo'qolardi). */}
-        {actionable.length > 0 && (
-          <View style={styles.actRow}>
-            {/* SS-DEV (2026-09-24): chegara chizig'i OLIB TASHLANDI — tugmalar
-                "Qarz berish / Qarz olish" kabi TO'LDIRILGAN (amber / qizil). */}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={[styles.actBtnSoft, styles.actBtnAmber]}
-              onPress={() =>
-                demandLocked
-                  ? showPlanRequired({ expired: plan?.expired }, { t, navigation })
-                  : setPickFor('demand')
-              }>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(6) }}>
-                {demandLocked && <LockIcon size={rs(14)} color="#fff" />}
-                <Text allowFontScaling={false} style={[styles.actBtnSoftText, { flexShrink: 1 }]}>
-                  {t('Qaytarishni talab qilish')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={[styles.actBtnSoft, { backgroundColor: RED }]}
-              onPress={() => setPickFor('forgive')}>
-              <Text allowFontScaling={false} style={styles.actBtnSoftText}>
-                {t('Qarzdan voz kechish')}
-              </Text>
-            </TouchableOpacity>
+        {listItems.length ? (
+          listItems.map(renderDebt)
+        ) : (
+          <View style={styles.emptyCard}>
+            <AnimatedEmpty
+              variant={side === 'borrowed' ? 'taken' : side === 'lent' ? 'given' : 'list'}
+              text={side ? t('Aktiv qarzlar yo‘q') : t('Qarzlar yo‘q')}
+              compact
+            />
           </View>
         )}
-
-        {/* 3. QARZLAR */}
-        <Text allowFontScaling={false} style={styles.sectionTitle}>
-          {`${t('Qarzlar')} (${sorted.length})`}
-        </Text>
-
-        {sorted.map((d, i) => {
-          const borrowed = d.type === 'borrowed';
-          const dirColor = borrowed ? RED : GREEN;
-          const remaining = num(d.remaining_amount);
-          const total = num(d.amount);
-          const paidPct = total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
-          const done = isDone(d);
-          const overdue = isOverdue(d);
-          return (
-            <TouchableOpacity
-              key={d.id ?? i}
-              style={styles.debtCard}
-              activeOpacity={0.85}
-              onPress={() =>
-                navigation.navigate(
-                  'FinanceDebtDetail',
-                  d.is_mirror ? { mirror: d, hideParty: true } : { id: d.id, hideParty: true },
-                )
-              }>
-              <View style={styles.debtTop}>
-                <View style={[styles.dirChip, { backgroundColor: dirColor + '14' }]}>
-                  <Text allowFontScaling={false} style={[styles.dirChipText, { color: dirColor }]}>
-                    {borrowed ? t('Olingan') : t('Berilgan')}
-                  </Text>
-                </View>
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.debtAmt, { color: dirColor }]}
-                  numberOfLines={1}>
-                  {borrowed ? '−' : '+'}{fMoney(remaining, d.currency)}
-                </Text>
-              </View>
-
-              {/* Sana / muddat */}
-              <View style={styles.metaRow}>
-                <Text allowFontScaling={false} style={styles.metaText}>
-                  {d.start_date ? fDate(d.start_date) : '—'}
-                </Text>
-                <Text allowFontScaling={false} style={styles.metaDot}>·</Text>
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.metaText, overdue && { color: RED }]}>
-                  {d.due_date ? `${fDate(d.due_date)}${t('gacha')}` : t('Muddatsiz')}
-                </Text>
-                {done && (
-                  <View style={[styles.badge, { backgroundColor: GREEN + '18' }]}>
-                    <Text allowFontScaling={false} style={[styles.badgeText, { color: GREEN }]}>
-                      {t('Yopilgan')}
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {!!d.notes && (
-                <Text allowFontScaling={false} style={styles.note} numberOfLines={2}>
-                  {d.notes}
-                </Text>
-              )}
-
-              {!done && (
-                <>
-                  <View style={styles.barTrack}>
-                    <View
-                      style={[styles.barFill, { width: `${paidPct}%`, backgroundColor: dirColor }]}
-                    />
-                  </View>
-                  <Text allowFontScaling={false} style={styles.paidPct}>
-                    {t('{{p}}% to‘landi', { p: paidPct })}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          );
-        })}
         <View style={{ height: rs(20) }} />
       </ScrollView>
 
+      {/* 02.10: yopish / qaytarish / voz kechish — TANLANGAN qarz(lar)ga (sayt DebtActionModal). */}
+      <FinanceDebtActionModal
+        visible={!!actModal}
+        mode={actModal || lastMode.current}
+        debts={actionDebts}
+        name={String(displayName || '')}
+        busy={actBusy}
+        onCancel={() => setActModal('')}
+        onConfirm={onActConfirm}
+      />
+
       {/* SS4/SS5: tayyor SMS shablonlari */}
-      <Modal
-        visible={showSms}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setShowSms(false)}>
+      <Modal visible={showSms} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowSms(false)}>
         <View style={styles.backdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowSms(false)} />
           <View style={styles.editCard}>
@@ -665,26 +813,18 @@ const FinanceDebtGroup = () => {
             </Text>
             <ScrollView style={{ maxHeight: rs(330) }} showsVerticalScrollIndicator={false}>
               {smsTemplates().map((tpl, i) => (
-                <TouchableOpacity
-                  key={i}
-                  activeOpacity={0.85}
-                  style={styles.tplRow}
-                  onPress={() => sendSms(tpl)}>
+                <TouchableOpacity key={i} activeOpacity={0.85} style={styles.tplRow} onPress={() => sendSms(tpl)}>
                   <Text allowFontScaling={false} style={styles.tplText}>{tpl}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
             <View style={styles.editActions}>
-              <TouchableOpacity
-                style={[styles.editBtn, { backgroundColor: rd.color.surfaceAlt }]}
-                onPress={() => setShowSms(false)}>
+              <TouchableOpacity style={[styles.editBtn, { backgroundColor: rd.color.surfaceAlt }]} onPress={() => setShowSms(false)}>
                 <Text allowFontScaling={false} style={[styles.editBtnText, { color: rd.color.textSecondary }]}>
                   {t('Bekor qilish')}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.editBtn, { backgroundColor: BLUE }]}
-                onPress={() => sendSms()}>
+              <TouchableOpacity style={[styles.editBtn, { backgroundColor: BLUE }]} onPress={() => sendSms()}>
                 <Text allowFontScaling={false} style={[styles.editBtnText, { color: '#fff' }]}>
                   {t('Bo‘sh SMS yozish')}
                 </Text>
@@ -694,61 +834,8 @@ const FinanceDebtGroup = () => {
         </View>
       </Modal>
 
-      {/* SS4: amal uchun QAYSI qarz ekanini tanlash (bittadan ko'p bo'lishi mumkin) */}
-      <Modal
-        visible={!!pickFor}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setPickFor(null)}>
-        {/* SS-DEV (2026-09-24, 3-rasm): fon bosilganda yopiladi; ro'yxat
-            balandligi EKRANGA qarab (ilgari qat'iy 300 — ko'p qarzda kesilardi,
-            aylantirish borligi ham sezilmasdi). */}
-        <View style={styles.backdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => !acting && setPickFor(null)} />
-          <View style={[styles.editCard, styles.pickCard]}>
-            <Text allowFontScaling={false} style={styles.editTitle}>
-              {pickFor === 'demand' ? t('Qaytarishni talab qilish') : t('Qarzdan voz kechish')}
-            </Text>
-            <Text allowFontScaling={false} style={styles.pickHint}>
-              {t('Amal qaysi qarzga tegishli?')}
-            </Text>
-            <ScrollView style={styles.pickList} showsVerticalScrollIndicator={true}>
-              {actionable.map((d, i) => (
-                <TouchableOpacity
-                  key={d.id ?? i}
-                  activeOpacity={0.85}
-                  disabled={acting}
-                  style={styles.tplRow}
-                  onPress={() => runAction(d)}>
-                  <Text allowFontScaling={false} style={styles.pickAmt}>
-                    {fMoney(num(d.remaining_amount), d.currency)}
-                  </Text>
-                  <Text allowFontScaling={false} style={styles.pickMeta}>
-                    {d.start_date ? fDate(d.start_date) : '—'}
-                    {d.notes ? ` · ${d.notes}` : ''}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              style={[styles.editBtn, { backgroundColor: rd.color.surfaceAlt, marginTop: rs(12) }]}
-              onPress={() => setPickFor(null)}>
-              <Text allowFontScaling={false} style={[styles.editBtnText, { color: rd.color.textSecondary }]}>
-                {t('Bekor qilish')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       {/* Kontragentni tahrirlash */}
-      <Modal
-        visible={editOpen}
-        transparent
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setEditOpen(false)}>
+      <Modal visible={editOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setEditOpen(false)}>
         <View style={styles.backdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && setEditOpen(false)} />
           <View style={styles.editCard}>
@@ -770,7 +857,7 @@ const FinanceDebtGroup = () => {
               <TextInput
                 allowFontScaling={false}
                 value={phoneEdit}
-                onChangeText={(v) => setPhoneEdit(v.replace(/\D/g, '').slice(0, 9))}
+                onChangeText={v => setPhoneEdit(v.replace(/\D/g, '').slice(0, 9))}
                 keyboardType="number-pad"
                 placeholder="__ ___ __ __"
                 placeholderTextColor={rd.color.textTertiary}
@@ -779,9 +866,7 @@ const FinanceDebtGroup = () => {
             </View>
 
             <View style={styles.editActions}>
-              <TouchableOpacity
-                style={[styles.editBtn, { backgroundColor: rd.color.surfaceAlt }]}
-                onPress={() => setEditOpen(false)}>
+              <TouchableOpacity style={[styles.editBtn, { backgroundColor: rd.color.surfaceAlt }]} onPress={() => setEditOpen(false)}>
                 <Text allowFontScaling={false} style={[styles.editBtnText, { color: rd.color.textSecondary }]}>
                   {t('Bekor qilish')}
                 </Text>
@@ -804,28 +889,25 @@ const FinanceDebtGroup = () => {
 
 export default FinanceDebtGroup;
 
+const card = {
+  backgroundColor: rd.color.surface,
+  borderRadius: rs(18),
+  borderWidth: 1,
+  borderColor: rd.color.border,
+  padding: rs(14),
+};
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: rd.color.page },
   body: { paddingHorizontal: rs(16), paddingTop: rs(6) },
 
-  // 1. Kontragent
-  idCard: {
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(18),
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(14),
-    marginBottom: rs(12),
-  },
+  // 1. Kontragent + amallar
+  idCard: { ...card, marginBottom: rs(12) },
   idTop: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
-  avatar: {
-    width: rs(48),
-    height: rs(48),
-    borderRadius: rs(24),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  idName: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
+  avatar: { width: rs(48), height: rs(48), borderRadius: rs(24), alignItems: 'center', justifyContent: 'center' },
+  idName: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
+  sideChip: { alignSelf: 'flex-start', borderRadius: rd.radius.pill, paddingHorizontal: rs(8), paddingVertical: rs(2), marginTop: rs(4) },
+  sideChipText: { fontFamily: rd.font.semibold, fontSize: rs(10.5) },
   idEdit: {
     width: rs(34),
     height: rs(34),
@@ -844,53 +926,57 @@ const styles = StyleSheet.create({
     borderTopColor: rd.color.border,
   },
   idRowText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.textSecondary },
-  roundBtn: {
-    width: rs(34),
-    height: rs(34),
-    borderRadius: rs(17),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  roundBtn: { width: rs(34), height: rs(34), borderRadius: rs(17), alignItems: 'center', justifyContent: 'center' },
+  actDivider: { height: 1, backgroundColor: rd.color.border, marginTop: rs(12) },
+  // 02.10: sayt pastel tugmalari — 2 ustunli to'r
+  actGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(8), marginTop: rs(12) },
+  actNote: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(10) },
+  actNoteText: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary },
 
-  // 2. Balans
-  balCard: {
+  // 2. Bo'lim kartalari (sayt) / Balans
+  tiles: { flexDirection: 'row', gap: rs(8), marginBottom: rs(14) },
+  tile: {
+    flex: 1,
     backgroundColor: rd.color.surface,
-    borderRadius: rs(18),
+    borderRadius: rd.radius.md,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(14),
-    marginBottom: rs(14),
+    paddingVertical: rs(11),
+    paddingHorizontal: rs(8),
   },
-  balTitle: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(13),
-    color: rd.color.textTertiary,
-    marginBottom: rs(8),
-  },
+  tileLabel: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary, marginBottom: rs(3) },
+  tileVal: { fontFamily: rd.font.bold, fontSize: rs(12.5), marginTop: rs(1) },
+  balCard: { ...card, marginBottom: rs(14) },
+  balTitle: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.textTertiary, marginBottom: rs(8) },
   balBlock: { marginBottom: rs(6) },
-  balRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: rs(5),
-  },
+  balRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: rs(5) },
   balLabel: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
   balVal: { fontFamily: rd.font.semibold, fontSize: rs(13) },
   balDivider: { height: 1, backgroundColor: rd.color.border, marginVertical: rs(4) },
   balNetLabel: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.text },
   balNet: { fontFamily: rd.font.bold, fontSize: rs(15) },
 
+  // SS-DEV (2026-09-24): Tavsiya kartasi
+  relCard: { ...card, marginBottom: rs(2) },
+  relTitle: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.textTertiary, marginBottom: rs(8) },
+  relBox: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10), borderRadius: rd.radius.md, padding: rs(10) },
+  relIcon: { width: rs(34), height: rs(34), borderRadius: rs(10), alignItems: 'center', justifyContent: 'center' },
+  relLevel: { fontFamily: rd.font.bold, fontSize: rs(13.5) },
+  relDesc: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, lineHeight: rs(17), marginTop: rs(2) },
+
   // 3. Qarzlar
-  sectionTitle: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(13.5),
-    color: rd.color.text,
-    // SS4 (2026-09-19): tepada endi amal tugmalari turadi; 2 qatorli
-    // tugma ("Qaytarishni talab qilish") o'sganda sarlavha unga
-    // YOPISHIB qolardi — yuqoridan bo'sh joy qo'shildi.
-    marginTop: rs(18),
-    marginBottom: rs(8),
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: rs(18), marginBottom: rs(8) },
+  sectionTitle: { fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
+  countChip: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(2),
   },
+  countChipText: { fontFamily: rd.font.semibold, fontSize: rs(10.5), color: '#4B5563' },
+  emptyCard: { ...card, alignItems: 'center' },
   debtCard: {
     backgroundColor: rd.color.surface,
     borderRadius: rs(16),
@@ -899,73 +985,22 @@ const styles = StyleSheet.create({
     padding: rs(12),
     marginBottom: rs(10),
   },
-  debtTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: rs(8),
-  },
+  debtTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: rs(8) },
+  chipRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6), flexShrink: 1, flexWrap: 'wrap' },
   dirChip: { borderRadius: rd.radius.pill, paddingHorizontal: rs(9), paddingVertical: rs(3) },
   dirChipText: { fontFamily: rd.font.bold, fontSize: rs(11) },
   debtAmt: { flexShrink: 1, fontFamily: rd.font.bold, fontSize: rs(14) },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(8) },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: rs(6), marginTop: rs(8) },
   metaText: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary },
   metaDot: { color: rd.color.textTertiary, fontSize: rs(11.5) },
   badge: { borderRadius: rd.radius.pill, paddingHorizontal: rs(8), paddingVertical: rs(2) },
   badgeText: { fontFamily: rd.font.semibold, fontSize: rs(10) },
-  note: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(12),
-    color: rd.color.textSecondary,
-    marginTop: rs(6),
-  },
-  barTrack: {
-    height: rs(4),
-    borderRadius: rs(2),
-    backgroundColor: rd.color.surfaceAlt,
-    marginTop: rs(10),
-    overflow: 'hidden',
-  },
+  note: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary, marginTop: rs(6) },
+  barTrack: { height: rs(4), borderRadius: rs(2), backgroundColor: rd.color.surfaceAlt, marginTop: rs(10), overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: rs(2) },
   paidPct: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textTertiary, marginTop: rs(5) },
 
-  // Tahrirlash oynasi
-  // SS4 (2026-09-19)
-  actRow: { flexDirection: 'row', gap: rs(10), marginTop: rs(12) },
-  actBtn: {
-    flex: 1,
-    height: rs(46),
-    borderRadius: rd.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: '#fff' },
-  // SS-DEV (2026-09-24): to'ldirilgan uslub (actBtn bilan bir xil), chegara yo'q.
-  actBtnSoft: {
-    flex: 1,
-    minHeight: rs(46),
-    borderRadius: rd.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: rs(8),
-    paddingVertical: rs(8),
-  },
-  actBtnAmber: { backgroundColor: '#f59e0b' },
-  actBtnSoftText: { fontFamily: rd.font.semibold, fontSize: rs(12.5), textAlign: 'center', color: '#fff' },
-  // SS-DEV (2026-09-24): Tavsiya kartasi (saytdagi bilan bir xil tuzilma).
-  relCard: {
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(18),
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(14),
-    marginBottom: rs(2),
-  },
-  relTitle: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.textTertiary, marginBottom: rs(8) },
-  relBox: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10), borderRadius: rd.radius.md, padding: rs(10) },
-  relIcon: { width: rs(34), height: rs(34), borderRadius: rs(10), alignItems: 'center', justifyContent: 'center' },
-  relLevel: { fontFamily: rd.font.bold, fontSize: rs(13.5) },
-  relDesc: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, lineHeight: rs(17), marginTop: rs(2) },
+  // Modallar (SMS shablonlari / tahrirlash)
   tplRow: {
     backgroundColor: rd.color.surfaceAlt,
     borderRadius: rd.radius.md,
@@ -974,13 +1009,6 @@ const styles = StyleSheet.create({
     marginTop: rs(8),
   },
   tplText: { fontFamily: rd.font.regular, fontSize: rs(12.5), color: rd.color.text, lineHeight: rs(18) },
-  pickHint: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, marginTop: rs(4) },
-  // SS-DEV (2026-09-24): tanlov ro'yxati ekranning ~55% igacha, karta 85% dan oshmaydi.
-  pickCard: { maxHeight: '85%' },
-  pickList: { maxHeight: Math.round(Dimensions.get('window').height * 0.55) },
-  pickAmt: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
-  pickMeta: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
-
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(9,14,26,0.55)',
@@ -988,20 +1016,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: rs(20),
   },
-  editCard: {
-    width: '100%',
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(20),
-    padding: rs(18),
-  },
+  editCard: { width: '100%', backgroundColor: rd.color.surface, borderRadius: rs(20), padding: rs(18) },
   editTitle: { fontFamily: rd.font.bold, fontSize: rs(17), color: rd.color.text, marginBottom: rs(10) },
-  editLabel: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(12.5),
-    color: rd.color.textSecondary,
-    marginTop: rs(8),
-    marginBottom: rs(5),
-  },
+  editLabel: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.textSecondary, marginTop: rs(8), marginBottom: rs(5) },
   editInput: {
     minHeight: rs(44),
     borderRadius: rs(12),

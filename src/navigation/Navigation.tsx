@@ -104,6 +104,8 @@ import FinanceDebtDetail from '../screens/home/modules/FinanceDebtDetail';
 import FinanceDebtGroup from '../screens/home/modules/FinanceDebtGroup';
 // SS-DEV (2026-09-29): Shaxsiy qarz — kartadan ochiladigan ro'yxat sahifasi (kind bo'yicha).
 import FinanceDebtList from '../screens/home/modules/FinanceDebtList';
+// 02.10: Shaxsiy qarz — yakunlangan (tugallangan + voz kechilgan) qarzlar hisoboti (side bo'yicha).
+import FinanceDebtReport from '../screens/home/modules/FinanceDebtReport';
 import FinanceDebtors from '../screens/home/modules/FinanceDebtors';
 import FinanceFamily from '../screens/home/modules/FinanceFamily';
 import FinanceFamilyOverview from '../screens/home/modules/FinanceFamilyOverview';
@@ -305,6 +307,7 @@ const AllNavigators = [
   { name: 'FinanceDebtDetail', component: FinanceDebtDetail },
   { name: 'FinanceDebtGroup', component: FinanceDebtGroup },
   { name: 'FinanceDebtList', component: FinanceDebtList },
+  { name: 'FinanceDebtReport', component: FinanceDebtReport },
   { name: 'FinanceDebtors', component: FinanceDebtors },
   { name: 'FinanceFamily', component: FinanceFamily },
   { name: 'FinanceFamilyOverview', component: FinanceFamilyOverview },

@@ -30,6 +30,7 @@ import RdHeader from '../../redesign/RdHeader';
 import apiClient from '../../../../store/api/apiClient';
 import { storage } from '../../../../store/api/token/getToken';
 import { MonitorIcon, SmartphoneIcon, TrashIcon } from '../../redesign/icons';
+import AnimatedEmpty from '../../../components/AnimatedEmpty';
 
 type Session = {
   family_id: string;
@@ -328,9 +329,8 @@ const ActiveDevices = () => {
             ))
           ) : (
             <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
-                <MonitorIcon size={rs(28)} color={rd.color.primary} />
-              </View>
+              {/* 02.10: bo'sh holat — harakatli ikonka */}
+              <AnimatedEmpty variant="safe" compact />
               <Text allowFontScaling={false} style={styles.emptyText}>
                 {t('Boshqa faol qurilmalar yo‘q')}
               </Text>

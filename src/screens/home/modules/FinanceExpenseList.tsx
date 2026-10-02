@@ -22,7 +22,8 @@ import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { catLabel, dateKeyOf, fDateHeader, fMoney, fTime, localDateKey, num, payLabel, sourceLabel } from './financeMoney';
-import { ChevronLeft, ChevronRight, CoinIcon, PlusIcon, PencilIcon, TrashIcon } from '../redesign/icons';
+import { ChevronLeft, ChevronRight, PlusIcon, PencilIcon, TrashIcon } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const RED = '#dc2626';
 const MONTHS = [
@@ -187,9 +188,7 @@ const FinanceExpenseList = () => {
           {/* Ro'yxat (sana guruh) */}
           {groups.length === 0 ? (
             <View style={styles.emptyBox}>
-              <View style={styles.emptyIcon}>
-                <CoinIcon size={rs(24)} color={rd.color.textTertiary} />
-              </View>
+              <AnimatedEmpty variant="list" compact />
               <Text allowFontScaling={false} style={styles.emptyText}>{t('Bu oyda xarajatlar yo‘q')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('FinanceExpenseAdd')}

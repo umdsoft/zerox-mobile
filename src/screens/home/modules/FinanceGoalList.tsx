@@ -25,7 +25,8 @@ import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { amountToDisplay, amountToRaw, fDate, fMoney, fShort, fTime, num } from './financeMoney';
-import { PlusIcon, StarIcon, TrashIcon } from '../redesign/icons';
+import { PlusIcon, TrashIcon } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const PURPLE = '#7c3aed';
 const GREEN = '#16a34a';
@@ -221,9 +222,8 @@ const FinanceGoalList = () => {
           {/* Maqsadlar */}
           {goals.length === 0 ? (
             <View style={styles.emptyBox}>
-              <View style={styles.emptyIcon}>
-                <StarIcon size={rs(24)} color={rd.color.textTertiary} />
-              </View>
+              {/* 02.10: bo'sh holat — harakatli ikonka */}
+              <AnimatedEmpty variant="check" compact />
               <Text allowFontScaling={false} style={styles.emptyText}>
                 {t('Maqsadlar yo‘q')}
               </Text>

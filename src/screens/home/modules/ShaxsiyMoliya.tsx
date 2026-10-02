@@ -42,7 +42,6 @@ import {
   ArrowUpRight,
   BarChartIcon,
   BulbIcon,
-  CoinIcon,
   HomeIcon,
   IconProps,
   ShieldIcon,
@@ -61,6 +60,7 @@ import {
   healthStatusUz,
   num,
 } from './financeMoney';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 // Dizayn tizimidan tashqari literal ranglar (gradient/bar/kategoriya).
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
@@ -713,9 +713,8 @@ const ShaxsiyMoliya = () => {
         <View style={styles.card}>
           {recent.length === 0 ? (
             <View style={styles.emptyBox}>
-              <CircleIcon size={rs(40)} bg={rd.color.surfaceAlt}>
-                <CoinIcon size={rs(22)} color={rd.color.textTertiary} />
-              </CircleIcon>
+              {/* 02.10: bo'sh holat — harakatli ikonka */}
+              <AnimatedEmpty variant="list" compact />
               <Text allowFontScaling={false} style={styles.emptyText}>
                 {t('Amaliyotlar mavjud emas.')}
               </Text>

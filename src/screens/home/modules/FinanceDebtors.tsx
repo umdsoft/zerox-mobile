@@ -14,6 +14,7 @@ import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { fDate, fMoney, num } from './financeMoney';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const GREEN = '#16a34a';
 const AMBER = '#f59e0b';
@@ -68,7 +69,7 @@ const FinanceDebtors = () => {
           style={styles.search}
         />
         {list.length === 0 ? (
-          <View style={styles.empty}><Text style={styles.emptyText}>{t('Qarzdorlar yo‘q.')}</Text></View>
+          <View style={styles.empty}><AnimatedEmpty variant="loan" compact /><Text style={styles.emptyText}>{t('Qarzdorlar yo‘q.')}</Text></View>
         ) : (
           list.map((d, i) => {
             const r = num(d.rating);

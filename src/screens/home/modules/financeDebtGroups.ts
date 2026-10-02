@@ -13,6 +13,14 @@
  * Manba YAGONA: GET /finance/debts?limit=100 (`data` — o'z qarzlarim +
  * `mirror_debts` — hamkor/do'kon ko'zgu qarzlari). Sarlavha summalari va
  * ro'yxatlar shu bitta massivdan hisoblanadi (SS-DEV 2026-09-24 qoidasi).
+ *
+ * 02.10 (mobil hujjat, 2/3/10b/11-band) — sayt bilan PARITET:
+ *   - "Muddati oz qolgan" — sayt kabi GET /finance/debts/upcoming?days=7 (o'z + ko'zgu +
+ *     do'kon, 100 ta cheklovsiz); endpoint javob bermasa ro'yxatdan hisoblanadi (fallback).
+ *     Bosh sahifa bloki va "Barchasini ko'rish" sahifasi AYNAN bitta funksiyadan
+ *     (`resolveUpcoming`) foydalanadi — ikkalasida bir xil qarzlar.
+ *   - SVOD (sayt utils/debtSummary.js): jami / qaytarilgan / jarayonda / voz kechilgan.
+ *   - Yakunlangan qarzlar (tugallangan + voz kechilgan) — berilgan / olingan kesimida.
  */
 import { phoneLast9 } from '../../../helper/phone';
 import { URL } from '../../constants';
@@ -222,3 +230,247 @@ export const buildDebtGroups = (debts: any[]): DebtGroup[] => {
 
 /** Qarz tafsilotiga navigatsiya paramlari (ko'zgu qarz obyekt bilan ochiladi). */
 export const debtDetailParams = (d: any) => (d?.is_mirror ? { mirror: d } : { id: d?.id });
+
+// ───────────────────────── 02.10: sayt bilan paritet ─────────────────────────
+
+/** 02.10: "Muddati oz qolgan" — sayt index.vue `getUpcomingDebts(UPCOMING_DAYS)` bilan bir xil. */
+export const FINANCE_UPCOMING_URL = `${URL}/finance/debts/upcoming?days=${UPCOMING_DAYS}`;
+
+export type DebtSide = 'lent' | 'borrowed';
+type DebtKindTag = 'own' | 'mirror' | 'shop';
+
+const kindTagOf = (d: any): DebtKindTag => (d?.is_shop_debt ? 'shop' : d?.is_mirror ? 'mirror' : 'own');
+
+/** "Muddati oz qolgan" qatori — endpoint va fallback uchun YAGONA shakl. */
+export type UpcomingRow = {
+  key: string;
+  id: any;
+  kind: DebtKindTag;
+  type: DebtSide;
+  name: string;
+  phone: string | null;
+  amount: number;
+  remaining: number;
+  currency: string;
+  due_date: string | null;
+  left: number | null;
+  /** /finance/debts ro'yxatidagi to'liq yozuv (tafsilotga o'tish uchun); topilmasa null. */
+  debt: any | null;
+};
+
+const findDebt = (all: any[], kind: DebtKindTag, id: any): any | null =>
+  all.find(d => kindTagOf(d) === kind && String(d?.id) === String(id)) || null;
+
+/**
+ * 02.10 (11-band) — bosh sahifa bloki va "Barchasini ko'rish" sahifasi uchun YAGONA manba.
+ * Sayt kabi: backend /finance/debts/upcoming javobi (`data.given|taken`) bo'lsa — o'sha
+ * (100 ta cheklovsiz, o'z + ko'zgu + do'kon); bo'lmasa/xato bo'lsa — /finance/debts
+ * ro'yxatidan hisoblanadi (`upcomingDebts`). Muddat bo'yicha o'sish tartibida.
+ */
+export const resolveUpcoming = (payload: any, all: any[], side: 'given' | 'taken'): UpcomingRow[] => {
+  const api = payload?.success ? payload?.data?.[side] : undefined;
+  if (Array.isArray(api)) {
+    return api
+      .map((it: any): UpcomingRow => {
+        const kind: DebtKindTag = it?.kind === 'shop' || it?.kind === 'mirror' ? it.kind : 'own';
+        return {
+          key: `${kind}-${it?.id}`,
+          id: it?.id,
+          kind,
+          type: side === 'given' ? 'lent' : 'borrowed',
+          name: String(it?.partner_name || '').trim() || '—',
+          phone: it?.partner_phone || null,
+          amount: num(it?.amount),
+          remaining: num(it?.remaining),
+          currency: String(it?.currency || 'UZS').toUpperCase(),
+          due_date: it?.due_date || null,
+          left: Number.isFinite(Number(it?.days_left)) ? Number(it.days_left) : daysLeft(it?.due_date),
+          debt: findDebt(all, kind, it?.id),
+        };
+      })
+      .sort((a, b) => (a.left ?? 0) - (b.left ?? 0));
+  }
+  return upcomingDebts(all, side).map(
+    (d): UpcomingRow => ({
+      key: `${kindTagOf(d)}-${d?.id}`,
+      id: d?.id,
+      kind: kindTagOf(d),
+      type: isLent(d) ? 'lent' : 'borrowed',
+      name: String(d?.source_name || '').trim() || '—',
+      phone: d?.phone || d?.shop_phone || null,
+      amount: num(d?.amount),
+      remaining: num(d?.remaining_amount),
+      currency: String(d?.currency || 'UZS').toUpperCase(),
+      due_date: d?.due_date || null,
+      left: daysLeft(d?.due_date),
+      debt: d,
+    }),
+  );
+};
+
+/**
+ * "Muddati oz qolgan" qatoridan qayerga o'tish: to'liq yozuv bo'lsa — qarz tafsiloti
+ * (ko'zgu — obyekt bilan); o'z qarzim — id bilan; aks holda kontragent guruhi.
+ */
+export const upcomingTarget = (
+  row: UpcomingRow,
+  all: any[],
+): { screen: string; params: any } | null => {
+  if (row.debt) return { screen: 'FinanceDebtDetail', params: debtDetailParams(row.debt) };
+  if (row.kind === 'own' && row.id != null) return { screen: 'FinanceDebtDetail', params: { id: row.id } };
+  const key = groupKeyOf({
+    is_shop_debt: row.kind === 'shop',
+    source_name: row.name,
+    phone: row.phone,
+  });
+  const items = all.filter(d => groupKeyOf(d) === key);
+  if (!items.length) return null;
+  if (items.length === 1) return { screen: 'FinanceDebtDetail', params: debtDetailParams(items[0]) };
+  return { screen: 'FinanceDebtGroup', params: { title: row.name, isShop: row.kind === 'shop', items } };
+};
+
+const MARKER_RE = /^__(increase|forgive)__/;
+const FORGIVE_RE = /^__forgive__/;
+const MARKER_INCREASE_RE = /^__increase__/;
+
+/** Ochiq qarz (sayt `isOpenDebt`): active | overdue. */
+export const isOpenStatus = (d: any): boolean => d?.status === 'active' || d?.status === 'overdue';
+
+/** Voz kechilgan (tugallangan) qarz — `__forgive__` marker yoki eski izoh (sayt `isForgivenDebt`). */
+export const isForgivenDebt = (d: any): boolean => {
+  if (!d || d.status !== 'completed') return false;
+  const pays: any[] = Array.isArray(d.payments) ? d.payments : [];
+  if (pays.some(p => FORGIVE_RE.test(String(p?.notes || '')))) return true;
+  return /Kechirilgan|voz kechildi/i.test(String(d.notes || ''));
+};
+
+/**
+ * Haqiqiy to'lovlar yig'indisi (markerlarsiz), qarz summasidan OSHMAYDI (sayt `paidOfDebt`).
+ * Do'kon ko'zgusida `payments` bo'sh — `paid_amount` (miqdor − qoldiq) ishlatiladi.
+ */
+export const paidOfDebt = (d: any): number => {
+  if (!d) return 0;
+  const pays: any[] = Array.isArray(d.payments) ? d.payments : [];
+  if (pays.length) {
+    const sum = pays
+      .filter(p => !MARKER_RE.test(String(p?.notes || '')))
+      .reduce((s, p) => s + num(p?.amount), 0);
+    const total = num(d.amount);
+    return total > 0 ? Math.min(sum, total) : sum;
+  }
+  if (d.paid_amount != null) return num(d.paid_amount);
+  if (isForgivenDebt(d)) return 0;
+  return Math.max(0, num(d.amount) - num(d.remaining_amount));
+};
+
+export type SvodRow = { currency: string; total: number; paid: number; left: number; forgiven: number };
+export type DebtSvod = {
+  rows: SvodRow[];
+  count: number;
+  openCount: number;
+  closedCount: number;
+  forgivenCount: number;
+};
+
+const CUR_RANK: Record<string, number> = { UZS: 0, USD: 1 };
+const curRank = (c: string) => (CUR_RANK[c] != null ? CUR_RANK[c] : 2);
+
+/**
+ * Valyuta kesimidagi SVOD (sayt `summarizeDebts`): jami = `amount`, qaytarilgan = haqiqiy
+ * to'lovlar, jarayonda = ochiq qarzlar qoldig'i, voz kechilgan = yopilgandagi to'lanmagan qism.
+ * `rows` bo'sh bo'lsa ham bitta UZS qatori qaytadi ("0 UZS").
+ */
+export const summarizeDebtSvod = (debts: any[]): DebtSvod => {
+  const map: Record<string, SvodRow> = {};
+  let openCount = 0;
+  let closedCount = 0;
+  let forgivenCount = 0;
+  const list = (debts || []).filter(Boolean);
+  for (const d of list) {
+    const cur = String(d.currency || 'UZS').toUpperCase();
+    const prev = map[cur] || { currency: cur, total: 0, paid: 0, left: 0, forgiven: 0 };
+    const total = num(d.amount);
+    const paid = paidOfDebt(d);
+    const open = isOpenStatus(d);
+    const left = open ? num(d.remaining_amount) : 0;
+    map[cur] = {
+      currency: cur,
+      total: prev.total + total,
+      paid: prev.paid + paid,
+      left: prev.left + left,
+      forgiven: prev.forgiven + (open ? 0 : Math.max(0, total - paid - left)),
+    };
+    if (open) openCount += 1;
+    else if (d.status === 'completed') closedCount += 1;
+    if (isForgivenDebt(d)) forgivenCount += 1;
+  }
+  const rows = Object.values(map).sort((a, b) => curRank(a.currency) - curRank(b.currency));
+  return {
+    rows: rows.length ? rows : [{ currency: 'UZS', total: 0, paid: 0, left: 0, forgiven: 0 }],
+    count: list.length,
+    openCount,
+    closedCount,
+    forgivenCount,
+  };
+};
+
+/** Yakunlangan (tugallangan + voz kechilgan) qarzlar — sayt: status 'completed', tur bo'yicha. */
+export const finishedOfSide = (debts: any[], side: DebtSide): any[] =>
+  (debts || []).filter(d => d?.type === side && d?.status === 'completed');
+
+/** Svod qatorlaridan UZS / USD jami (bosh sahifa kartalari "0 UZS / 0 USD" formatida). */
+export const svodTotals = (svod: DebtSvod): CurSum =>
+  svod.rows.reduce(
+    (acc: CurSum, r) =>
+      r.currency === 'USD' ? { uzs: acc.uzs, usd: acc.usd + r.total } : r.currency === 'UZS'
+        ? { uzs: acc.uzs + r.total, usd: acc.usd }
+        : acc,
+    { uzs: 0, usd: 0 },
+  );
+
+/** Yopilgan sana — oxirgi haqiqiy to'lov / voz kechish (qo'shimcha qarz emas); bo'lmasa updated_at. */
+export const closedDateOf = (d: any): string | null => {
+  const pays: any[] = (Array.isArray(d?.payments) ? d.payments : []).filter(
+    (p: any) => !MARKER_INCREASE_RE.test(String(p?.notes || '')),
+  );
+  let best: string | null = null;
+  for (const p of pays) {
+    const v = p?.created_at || p?.payment_date;
+    if (v && (!best || new Date(String(v).replace(' ', 'T')) > new Date(String(best).replace(' ', 'T')))) best = v;
+  }
+  return best || d?.updated_at || null;
+};
+
+/** Sayt S5 qidiruvi: FISh / telefon / summa (raqamlar) bo'yicha. */
+export const matchDebtSearch = (
+  q: string,
+  name: any,
+  phone: any,
+  amounts: any[],
+): boolean => {
+  const s = String(q || '').trim().toLowerCase();
+  if (!s) return true;
+  const digits = s.replace(/\D/g, '');
+  if (String(name || '').toLowerCase().includes(s)) return true;
+  if (digits && String(phone || '').replace(/\D/g, '').includes(digits)) return true;
+  if (digits && amounts.map(a => String(a ?? '')).join(' ').replace(/\D/g, ' ').includes(digits)) return true;
+  return false;
+};
+
+/** Qarz yozuvi bo'yicha qidiruv (ro'yxat sahifalari). */
+export const debtMatches = (d: any, q: string): boolean =>
+  matchDebtSearch(q, d?.source_name, d?.phone || d?.shop_phone, [d?.amount, d?.remaining_amount]);
+
+/** Yuklangan sahifalarni birlashtirish: (tur-id) bo'yicha takrorsiz, created_at kamayish tartibida. */
+export const uniqueDebts = (rows: any[]): any[] => {
+  const seen = new Set<string>();
+  const out: any[] = [];
+  for (const d of rows) {
+    const k = `${kindTagOf(d)}-${d?.id}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(d);
+  }
+  const ts = (d: any) => new Date(String(d?.created_at || '').replace(' ', 'T')).getTime() || 0;
+  return out.sort((a, b) => ts(b) - ts(a));
+};

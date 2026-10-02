@@ -16,6 +16,7 @@ import { financeApi } from './financeApi';
 import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeForm';
 import { fDate, fMoney, num } from './financeMoney';
 import { PlusIcon } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const TEAL = '#0d9488';
 
@@ -132,7 +133,7 @@ const FinanceGap = () => {
         </View>
 
         {gaps.length === 0 ? (
-          <View style={styles.empty}><Text style={styles.emptyText}>{t('Gap yo‘q. "Yangi gap" orqali oching.')}</Text></View>
+          <View style={styles.empty}><AnimatedEmpty variant="time" compact /><Text style={styles.emptyText}>{t('Gap yo‘q. "Yangi gap" orqali oching.')}</Text></View>
         ) : (
           gaps.map((g, i) => {
             const sm = statusMeta(g.status);

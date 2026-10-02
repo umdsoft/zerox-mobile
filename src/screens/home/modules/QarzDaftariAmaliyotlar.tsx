@@ -36,6 +36,7 @@ import {
   ClockIcon,
   UserIcon,
 } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish / olish
@@ -351,9 +352,7 @@ const QarzDaftariAmaliyotlar = () => {
         }
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <View style={styles.emptyCircle}>
-              <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
-            </View>
+            <AnimatedEmpty variant="list" compact />
             <Text style={styles.emptyText}>{t('Hali amaliyotlar yo‘q')}</Text>
           </View>
         }

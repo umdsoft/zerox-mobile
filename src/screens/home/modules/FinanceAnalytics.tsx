@@ -20,6 +20,7 @@ import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { catLabel, fCompact, fDate, fillDailySeries, fMoney, num } from './financeMoney';
 import { ChevronLeft, ChevronRight } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const GREEN = '#16a34a';
 const BLUE = '#2f6fed';
@@ -255,6 +256,8 @@ const FinanceAnalytics = () => {
                   </View>
                 ) : (
                   <View style={styles.emptyBox}>
+                    {/* 02.10: bo'sh holat — harakatli ikonka */}
+                    <AnimatedEmpty variant="chart" compact />
                     <Text allowFontScaling={false} style={styles.emptyText}>
                       {t('Bu oyda ma’lumot yo‘q')}
                     </Text>
@@ -499,6 +502,8 @@ const FinanceAnalytics = () => {
 
             {!byCat.length && !(topRows || []).length && (
               <View style={styles.emptyBox}>
+                {/* 02.10: bo'sh holat — harakatli ikonka */}
+                <AnimatedEmpty variant="chart" compact />
                 <Text allowFontScaling={false} style={styles.emptyText}>
                   {t('Bu oyda ma’lumot yo‘q')}
                 </Text>

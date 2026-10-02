@@ -108,6 +108,11 @@ export const financeApi = {
   mirrorForgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-forgive`, {}, auth()),
   mirrorDemandDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-demand`, {}, auth()),
   mirrorHideDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-hide`, {}, auth()),
+  // 02.10: bir valyutadagi BIR NECHTA ochiq qarzga bitta summa (sayt `allocateDebtPayment`).
+  // Body: { ids, amount?, payment_date? } — amount yo'q bo'lsa tanlanganlar to'liq yopiladi.
+  // Serverda bitta tranzaksiya; summa muddati yaqin qarzlardan boshlab taqsimlanadi.
+  allocateDebtPayment: (body: { ids: any[]; amount?: number; payment_date?: string }) =>
+    axios.post(`${base}/debts/allocate-payment`, body, auth()),
   // SS-AUDIT (2026-09-25): "ko'zgu bo'lsa mirror-*, aks holda oddiy" tarmoqlanishi
   // 4 joyda (FinanceDebtDetail demand/forgive, FinanceDebtGroup runAction) takrorlanardi.
   demandDebtAny: (id: any, mirror: boolean) =>

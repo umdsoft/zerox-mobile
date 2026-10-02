@@ -1,16 +1,20 @@
 import {
+  ActivityIndicator,
   Linking,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import Loading from '../components/Loading';
+import AnimatedEmpty from '../components/AnimatedEmpty';
+import { exportCsv } from '../../helper/csvExport';
 import { sortMoneyText } from '../components/StatisticCard';
 
 import { storage } from '../../store/api/token/getToken';
@@ -25,6 +29,7 @@ import { settingDate } from '../../helper';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import {
+  ArrowDown,
   CalendarIcon,
   ChevronRight,
   ClockIcon,
@@ -91,6 +96,41 @@ const formatBirthday = (s?: string): string => {
   return m ? `${m[3]}.${m[2]}.${m[1]}` : str;
 };
 
+// 02.10: shartnomalar ro'yxati filtri — saytdagi (pages/user) kabi
+// Barchasi / Tugallangan / Jarayonda / Rad etilgan. Holat → filtr kaliti:
+// 2 = tugallangan; 3/4 = rad etilgan (bekor/rad); 0/1/5 = jarayonda (kutilmoqda,
+// faol, muddati o'tgan — hammasi hali yopilmagan). 10 (o'chirilgan) faqat "Barchasi"da.
+type ContractFilter = 'all' | 'completed' | 'active' | 'rejected';
+const contractFilterKey = (status: any): ContractFilter | 'other' => {
+  const s = Number(status);
+  if (s === 2) return 'completed';
+  if (s === 3 || s === 4) return 'rejected';
+  if (s === 0 || s === 1 || s === 5) return 'active';
+  return 'other';
+};
+const CONTRACT_FILTERS: { key: ContractFilter; label: string }[] = [
+  { key: 'all', label: 'Barchasi' },
+  { key: 'completed', label: 'Tugallangan' },
+  { key: 'active', label: 'Jarayonda' },
+  { key: 'rejected', label: 'Rad etilgan' },
+];
+// Ro'yxat bosqichma-bosqich ochiladi (uzun ro'yxat bir zumda chizilmasin).
+const CONTRACTS_PAGE = 20;
+// /contract/between limiti 50; sayt kabi eng ko'pi 20 sahifa (1000 ta) yig'iladi.
+const BETWEEN_LIMIT = 50;
+const BETWEEN_MAX_PAGES = 20;
+const DOWNLOAD_GREEN = '#1d7a45';
+
+// 02.10: jarayondagi shartnomalar TEPADA, keyin yopilganlar — har guruh ichida yangi→eski.
+const sortContracts = (rows: any[]): any[] => {
+  const finished = (c: any) => {
+    const k = contractFilterKey(c?.status);
+    return k === 'completed' || k === 'rejected' ? 1 : 0;
+  };
+  const ts = (c: any) => new Date(c?.created_at || 0).getTime();
+  return rows.slice().sort((a, b) => finished(a) - finished(b) || ts(b) - ts(a));
+};
+
 const ShowUserDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -99,6 +139,10 @@ const ShowUserDetails = () => {
   const [loading, setLoading] = useState(false);
   // R5: shu foydalanuvchi bilan tuzilgan shartnomalar.
   const [contracts, setContracts] = useState<any[]>([]);
+  // 02.10: holat filtri + yuklanish holati + bosqichma-bosqich ko'rsatish.
+  const [contractsLoading, setContractsLoading] = useState(false);
+  const [filter, setFilter] = useState<ContractFilter>('all');
+  const [visible, setVisible] = useState(CONTRACTS_PAGE);
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
 
@@ -106,45 +150,71 @@ const ShowUserDetails = () => {
     getUserData();
   }, []);
 
-  // R5: qarama-qarshi tomon (profil egasi) bilan tuzilgan shartnomalarni uning
-  // TELEFONI bo'yicha topamiz. debitor + creditor hisobotlarini qidiramiz va
-  // id bo'yicha dublikatlarni olib tashlaymiz. Xatolik jim — bo'lim ko'rsatilmaydi.
-  const fetchContracts = useCallback(async (phone: string) => {
+  // 02.10: saytdagi kabi `GET /contract/between/:uid` — MEN va SHU foydalanuvchi
+  // o'rtasidagi BARCHA shartnomalar (ikkala yo'nalish, tugallangan/jarayondagi/rad).
+  // Sahifalab yig'iladi. Endpoint mavjud bo'lmasa (eski server) — `null`.
+  const fetchBetween = useCallback(async (uid: string): Promise<any[] | null> => {
+    const token = storage.getString('token');
+    const hdr = { headers: { Authorization: `Bearer ${token}` } };
+    const all: any[] = [];
+    try {
+      let pages = 1;
+      for (let p = 1; p <= pages && p <= BETWEEN_MAX_PAGES; p++) {
+        const res = await axios.get(
+          URL + `/contract/between/${encodeURIComponent(uid)}?page=${p}&limit=${BETWEEN_LIMIT}`,
+          hdr,
+        );
+        const body = res?.data || {};
+        all.push(...((body.data as any[]) || []));
+        pages = Number(body?.pagination?.pages) || 1;
+      }
+      return all;
+    } catch (e) {
+      return all.length ? all : null;
+    }
+  }, []);
+
+  // R5 (zaxira): qarama-qarshi tomonni TELEFONI bo'yicha debitor + creditor
+  // hisobotlaridan qidiramiz, id bo'yicha dublikatlar olib tashlanadi.
+  // 02.10: yo'nalish (`direction`) hisobot turidan tiklanadi (debitor = men berganman).
+  const fetchByPhone = useCallback(async (phone: string): Promise<any[]> => {
     const p = String(phone || '').trim();
-    if (!p) return;
+    if (!p) return [];
     const token = storage.getString('token');
     const hdr = { headers: { Authorization: `Bearer ${token}` } };
     const q = encodeURIComponent(p);
-    try {
-      const [deb, cred] = await Promise.all([
-        axios
-          .get(URL + `/contract/report/search?type=debitor&page=1&limit=100&search=${q}`, hdr)
-          .catch(() => null),
-        axios
-          .get(URL + `/contract/report/search?type=creditor&page=1&limit=100&search=${q}`, hdr)
-          .catch(() => null),
-      ]);
-      const rows = [
-        ...((deb?.data?.data as any[]) || []),
-        ...((cred?.data?.data as any[]) || []),
-      ];
-      const map = new Map();
-      for (const r of rows) if (r?.id != null && !map.has(r.id)) map.set(r.id, r);
-      // C: JARAYONDAGI (status 0/1 — pending/faol) shartnomalar TEPADA, keyin
-      // Tugallangan(2)/Rad etilgan(4) — har guruh ichida yangi→eski (xronologik).
-      const finished = (c: any) => c?.status === 2 || c?.status === 4;
-      const ts = (c: any) => new Date(c?.created_at || 0).getTime();
-      const list = Array.from(map.values()).sort((a: any, b: any) => {
-        const fa = finished(a) ? 1 : 0;
-        const fb = finished(b) ? 1 : 0;
-        if (fa !== fb) return fa - fb; // jarayondagi (0) oldinda
-        return ts(b) - ts(a); // yangi→eski
-      });
-      setContracts(list);
-    } catch (e) {
-      // jim
-    }
+    const [deb, cred] = await Promise.all([
+      axios
+        .get(URL + `/contract/report/search?type=debitor&page=1&limit=100&search=${q}`, hdr)
+        .catch(() => null),
+      axios
+        .get(URL + `/contract/report/search?type=creditor&page=1&limit=100&search=${q}`, hdr)
+        .catch(() => null),
+    ]);
+    const rows = [
+      ...((deb?.data?.data as any[]) || []).map(r => ({ ...r, direction: 'lent' })),
+      ...((cred?.data?.data as any[]) || []).map(r => ({ ...r, direction: 'borrowed' })),
+    ];
+    const map = new Map();
+    for (const r of rows) if (r?.id != null && !map.has(r.id)) map.set(r.id, r);
+    return Array.from(map.values());
   }, []);
+
+  const fetchContracts = useCallback(
+    async (uid: string, phone: string) => {
+      setContractsLoading(true);
+      try {
+        const between = uid ? await fetchBetween(uid) : null;
+        const list = between ?? (await fetchByPhone(phone));
+        setContracts(sortContracts(list));
+      } catch (e) {
+        // jim — bo'lim bo'sh holatda qoladi
+      } finally {
+        setContractsLoading(false);
+      }
+    },
+    [fetchBetween, fetchByPhone],
+  );
 
   const getUserData = useCallback(async () => {
     const token = storage.getString('token');
@@ -156,12 +226,68 @@ const ShowUserDetails = () => {
 
       setData(data?.data);
       setLoading(false);
-      fetchContracts(data?.data?.phone);
+      fetchContracts(data?.data?.uid, data?.data?.phone);
     } catch (error) {
       setLoading(false);
       throw error;
     }
   }, [fetchContracts]);
+
+  // 02.10: filtr bo'yicha sonlar va filtrlangan ro'yxat (hisoblagich va yuklab olish shunga mos).
+  const filterCounts = useMemo(() => {
+    const cnt: Record<ContractFilter, number> = {
+      all: contracts.length,
+      completed: 0,
+      active: 0,
+      rejected: 0,
+    };
+    contracts.forEach(c => {
+      const k = contractFilterKey(c?.status);
+      if (k !== 'other') cnt[k] += 1;
+    });
+    return cnt;
+  }, [contracts]);
+  const filtered = useMemo(
+    () => (filter === 'all' ? contracts : contracts.filter(c => contractFilterKey(c?.status) === filter)),
+    [contracts, filter],
+  );
+  const shownContracts = filtered.slice(0, visible);
+
+  const onFilter = (k: ContractFilter) => {
+    setFilter(k);
+    setVisible(CONTRACTS_PAGE);
+  };
+
+  // 02.10: filtr qo'llangan shartnomalar ro'yxatini yuklab olish (saytdagi kabi ustunlar:
+  // Shartnoma, Yo'nalish, Summa, Qoldiq, Tuzilgan, Muddat, Holat). CSV — SearchDebitor bilan
+  // bir xil umumiy yordamchi orqali.
+  const onDownload = () => {
+    const u: any = data || {};
+    const who = [u.last_name, u.first_name, u.middle_name].filter(Boolean).join(' ') || u.uid || 'user';
+    return exportCsv({
+      baseName: `${who}_${t('Shartnomalar')}`,
+      header: [
+        t('Shartnoma'),
+        t('Yo‘nalish'),
+        t('Summa'),
+        t('Valyuta'),
+        t('Qoldiq'),
+        t('Tuzilgan'),
+        t('Muddat'),
+        t('Holat'),
+      ],
+      rows: filtered.map(c => [
+        c?.number || c?.uid || '',
+        c?.direction === 'lent' ? t('Berilgan') : c?.direction === 'borrowed' ? t('Olingan') : '',
+        c?.amount,
+        c?.currency,
+        c?.residual_amount ?? '',
+        formatBirthday(c?.contract_date || c?.created_at),
+        formatBirthday(c?.sana || c?.end_date),
+        contractStatusMeta(c?.status, t).label,
+      ]),
+    });
+  };
 
   if (loading) {
     return <Loading />;
@@ -227,53 +353,131 @@ const ShowUserDetails = () => {
         />
       </View>
 
-      {/* R5: shu foydalanuvchi bilan tuzilgan shartnomalar — bosilsa tafsilotga o'tadi. */}
-      {contracts.length > 0 && (
-        <View style={styles.contractsCard}>
-          <Text allowFontScaling={false} style={styles.contractsTitle}>
+      {/* R5: shu foydalanuvchi bilan tuzilgan shartnomalar — bosilsa tafsilotga o'tadi.
+          02.10: saytdagi kabi holat filtri (Barchasi/Tugallangan/Jarayonda/Rad etilgan) +
+          filtrlangan ro'yxatni "Yuklash" (CSV). Bo'sh bo'lsa — animatsiyali bo'sh holat. */}
+      <View style={styles.contractsCard}>
+        <View style={styles.contractsHead}>
+          <Text allowFontScaling={false} style={styles.contractsTitle} numberOfLines={1}>
             {t('Shartnomalar')}
           </Text>
-          {contracts.map((c, i) => (
-            <TouchableOpacity
-              key={c?.id ?? i}
-              activeOpacity={0.85}
-              style={[styles.contractRow, i > 0 && styles.contractDivider]}
-              onPress={() =>
-                navigation.navigate('DownloadStatistic', { item: c, id: c?.id })
-              }>
-              <View style={styles.contractIcon}>
-                <ContractIcon size={rs(18)} color={rd.color.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text allowFontScaling={false} style={styles.contractNumber} numberOfLines={1}>
-                  {c?.number ? `№ ${c.number}` : t('Shartnoma')}
-                </Text>
-                {/* C: sana OLIB TASHLANDI — faqat holat (rangli).
-                    SS-E: holat REAL statusdan kelib chiqadi (ilgari faqat 2 va 4 qaralib,
-                    3=bekor va 5=muddati o'tgan "Jarayonda" bo'lib noto'g'ri ko'rinardi).
-                    CONTRACT_STATUS: 0=kutil,1=faol,2=yakun,3=bekor,4=rad,5=muddat,10=o'chirilgan. */}
-                {(() => {
-                  const m = contractStatusMeta(c?.status, t);
-                  return (
+          {!contractsLoading && (
+            <View style={styles.countChip}>
+              <Text allowFontScaling={false} style={styles.countChipText}>
+                {filtered.length} {t('ta')}
+              </Text>
+            </View>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={contractsLoading || !filtered.length}
+            onPress={onDownload}
+            accessibilityRole="button"
+            accessibilityLabel={t('Yuklash')}
+            style={[styles.downloadBtn, (contractsLoading || !filtered.length) && styles.downloadBtnOff]}>
+            <ArrowDown size={rs(14)} color={rd.color.onPrimary} />
+            <Text allowFontScaling={false} style={styles.downloadText}>
+              {t('Yuklash')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {contracts.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroll}
+            contentContainerStyle={styles.filterRow}>
+            {CONTRACT_FILTERS.map(f => {
+              const active = filter === f.key;
+              return (
+                <TouchableOpacity
+                  key={f.key}
+                  activeOpacity={0.85}
+                  onPress={() => onFilter(f.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[styles.filterChip, active && styles.filterChipActive]}>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.filterText, active && styles.filterTextActive]}>
+                    {t(f.label)}
+                  </Text>
+                  <View style={[styles.filterBadge, active && styles.filterBadgeActive]}>
                     <Text
                       allowFontScaling={false}
-                      numberOfLines={1}
-                      style={[styles.contractMeta, { color: m.color }]}>
-                      {m.label}
+                      style={[styles.filterBadgeText, active && styles.filterBadgeTextActive]}>
+                      {filterCounts[f.key]}
                     </Text>
-                  );
-                })()}
-              </View>
-              <View style={styles.contractRight}>
-                <Text allowFontScaling={false} style={styles.contractAmount} numberOfLines={1}>
-                  {sortMoneyText(c?.amount) || 0} {c?.currency || ''}
-                </Text>
-                <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {contractsLoading ? (
+          <ActivityIndicator style={styles.contractsLoader} color={rd.color.primary} />
+        ) : filtered.length === 0 ? (
+          <AnimatedEmpty
+            variant="loan"
+            compact
+            text={
+              contracts.length === 0
+                ? t('Bu foydalanuvchi bilan shartnomalar yo‘q')
+                : t('Bu holatdagi shartnomalar yo‘q')
+            }
+          />
+        ) : (
+          shownContracts.map((c, i) => {
+            const m = contractStatusMeta(c?.status, t);
+            const dir =
+              c?.direction === 'lent' ? t('Berilgan') : c?.direction === 'borrowed' ? t('Olingan') : '';
+            return (
+              <TouchableOpacity
+                key={c?.id ?? i}
+                activeOpacity={0.85}
+                style={[styles.contractRow, styles.contractDivider]}
+                onPress={() =>
+                  navigation.navigate('DownloadStatistic', { item: c, id: c?.id })
+                }>
+                <View style={styles.contractIcon}>
+                  <ContractIcon size={rs(18)} color={rd.color.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text allowFontScaling={false} style={styles.contractNumber} numberOfLines={1}>
+                    {c?.number ? `№ ${c.number}` : t('Shartnoma')}
+                  </Text>
+                  {/* C: sana OLIB TASHLANDI — holat (rangli) + 02.10: yo'nalish (Berilgan/Olingan).
+                      SS-E: holat REAL statusdan (CONTRACT_STATUS: 0=kutil,1=faol,2=yakun,
+                      3=bekor,4=rad,5=muddat,10=o'chirilgan). */}
+                  <Text allowFontScaling={false} numberOfLines={1} style={styles.contractMeta}>
+                    <Text style={{ color: m.color }}>{m.label}</Text>
+                    {dir ? ` · ${dir}` : ''}
+                  </Text>
+                </View>
+                <View style={styles.contractRight}>
+                  <Text allowFontScaling={false} style={styles.contractAmount} numberOfLines={1}>
+                    {sortMoneyText(c?.amount) || 0} {c?.currency || ''}
+                  </Text>
+                  <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        )}
+
+        {!contractsLoading && filtered.length > visible && (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setVisible(v => v + CONTRACTS_PAGE)}
+            style={styles.moreBtn}>
+            <Text allowFontScaling={false} style={styles.moreText}>
+              {t('Yana ko‘rsatish')} ({filtered.length - visible})
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </ScreenLayout>
   );
 };
@@ -387,13 +591,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: rs(14),
     paddingVertical: rs(6),
   },
+  // 02.10: sarlavha qatori — nom + son + "Yuklash" tugmasi.
+  contractsHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(8),
+    paddingTop: rs(10),
+    paddingBottom: rs(8),
+  },
   contractsTitle: {
+    flexShrink: 1,
     fontFamily: rd.font.bold,
     fontSize: rs(14.5),
     color: rd.color.text,
-    marginTop: rs(10),
-    marginBottom: rs(4),
   },
+  countChip: {
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(2),
+    borderRadius: rd.radius.pill,
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  countChipText: { fontFamily: rd.font.semibold, fontSize: rs(11.5), color: rd.color.textSecondary },
+  downloadBtn: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(5),
+    height: rs(34),
+    paddingHorizontal: rs(12),
+    borderRadius: rd.radius.pill,
+    backgroundColor: DOWNLOAD_GREEN,
+  },
+  downloadBtnOff: { opacity: 0.45 },
+  downloadText: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.onPrimary },
+  // 02.10: holat filtri chip'lari (SearchDebitor tablari uslubida).
+  filterScroll: { marginHorizontal: rs(-14) },
+  filterRow: { paddingHorizontal: rs(14), gap: rs(8), paddingBottom: rs(10) },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: rs(6),
+    paddingHorizontal: rs(12),
+    height: rs(34),
+    borderRadius: rd.radius.pill,
+    backgroundColor: rd.color.surface,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+  },
+  filterChipActive: { backgroundColor: rd.color.primary, borderColor: rd.color.primary },
+  filterText: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
+  filterTextActive: { fontFamily: rd.font.semibold, color: rd.color.onPrimary },
+  filterBadge: {
+    minWidth: rs(20),
+    height: rs(20),
+    paddingHorizontal: rs(6),
+    borderRadius: rs(10),
+    backgroundColor: rd.color.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeActive: { backgroundColor: rd.color.onPrimaryChip },
+  filterBadgeText: { fontFamily: rd.font.bold, fontSize: rs(11), color: rd.color.textSecondary },
+  filterBadgeTextActive: { color: rd.color.onPrimary },
+  contractsLoader: { paddingVertical: rs(24) },
+  moreBtn: {
+    alignItems: 'center',
+    paddingVertical: rs(12),
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
+  },
+  moreText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.primary },
   contractRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -30,6 +30,7 @@ import { rd, rs } from '../../../theme/rd';
 import { compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 import { getDueMeta, sortText } from '../../components/StatisticCard';
 import Donut from '../redesign/Donut';
 import RdHeader from '../redesign/RdHeader';
@@ -284,9 +285,12 @@ const NearCard = ({
       </View>
 
       {rows.length === 0 ? (
-        <Text style={styles.nearEmpty}>
-          {t('Hozircha sizda muddati oz qolgan qarzdorliklar mavjud emas.')}
-        </Text>
+        // 02.10: bo'sh holat — animatsiyali (umumiy AnimatedEmpty).
+        <AnimatedEmpty
+          variant="time"
+          compact
+          text={t('Hozircha sizda muddati oz qolgan qarzdorliklar mavjud emas.')}
+        />
       ) : (
         <View>
           <View style={styles.tableHead}>
@@ -329,6 +333,8 @@ const NearCard = ({
 };
 
 // ---------- Hisobot kartasi (yonma-yon, rangli — so'rov SS4.6) ----------
+// 02.10: saytdagi kabi karta nomi "Berilgan qarzlar" / "Olingan qarzlar" (ilgari
+// "... hisoboti"); karta pastida "Ko'rish ›" — bosiladigani aniq ko'rinsin.
 const ReportCard = ({
   label,
   tint,
@@ -339,19 +345,35 @@ const ReportCard = ({
   tint: string;
   iconColor: string;
   onPress: () => void;
-}) => (
-  <TouchableOpacity
-    activeOpacity={0.85}
-    style={[styles.reportCard, { backgroundColor: tint, borderColor: tint }]}
-    onPress={onPress}>
-    <View style={styles.reportIcon}>
-      <BarChartIcon size={rs(20)} color={iconColor} />
-    </View>
-    <Text style={styles.reportLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+}) => {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={[styles.reportCard, { backgroundColor: tint, borderColor: tint }]}
+      onPress={onPress}>
+      <View style={styles.reportIcon}>
+        <BarChartIcon size={rs(20)} color={iconColor} />
+      </View>
+      <Text
+        allowFontScaling={false}
+        style={styles.reportLabel}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}>
+        {label}
+      </Text>
+      <View style={styles.reportMore}>
+        <Text allowFontScaling={false} style={[styles.reportMoreText, { color: iconColor }]}>
+          {t('Ko‘rish')}
+        </Text>
+        <ChevronRight size={rs(14)} color={iconColor} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 // Hisobot ro'yxatiga navigatsiya paramlari (Statistic.tsx bilan bir xil — SearchDebitor
 // real /contract/report endpointidan to'liq ro'yxatni yuklaydi).
@@ -543,21 +565,41 @@ const QarzShartnomasi = () => {
           }
         />
 
-        {/* 5. Hisobotlar — "Hisobotlar" sarlavhasi OLIB TASHLANDI (SS4.5); ikki karta
-            yonma-yon (chap=berilgan yashil, o'ng=olingan qizil — SS4.6). */}
-        <View style={styles.reportRow}>
-          <ReportCard
-            label={t('Berilgan qarzlar hisoboti')}
-            tint={rd.color.successBg}
-            iconColor={rd.color.success}
-            onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.debitor)}
-          />
-          <ReportCard
-            label={t('Olingan qarzlar hisoboti')}
-            tint={rd.color.errorBg}
-            iconColor={rd.color.error}
-            onPress={() => navigation.navigate('SearchDebitor', REPORT_NAV.creditor)}
-          />
+        {/* 5. Hisobotlar — ikki karta yonma-yon (chap=berilgan yashil, o'ng=olingan qizil — SS4.6).
+            02.10: saytdagi (contract-dashboard) kabi bo'lim sarlavhasi "Tugallangan qarz
+            shartnomalari" + izoh; kartalar "Berilgan qarzlar" / "Olingan qarzlar". Navigatsiya
+            o'zgarmadi — hisobot ro'yxati (tugallangan + rad etilgan, status tablari bilan). */}
+        <View style={styles.reportSection}>
+          <Text allowFontScaling={false} style={styles.reportSectionTitle}>
+            {t('Tugallangan qarz shartnomalari')}
+          </Text>
+          <Text allowFontScaling={false} style={styles.reportSectionSub}>
+            {t('Ushbu qismda yakunlangan hamda voz kechilgan qarzlar aks etadi')}
+          </Text>
+          <View style={styles.reportRow}>
+            <ReportCard
+              label={t('Berilgan qarzlar')}
+              tint={rd.color.successBg}
+              iconColor={rd.color.success}
+              onPress={() =>
+                navigation.navigate('SearchDebitor', {
+                  ...REPORT_NAV.debitor,
+                  title: t('Berilgan qarzlar'),
+                })
+              }
+            />
+            <ReportCard
+              label={t('Olingan qarzlar')}
+              tint={rd.color.errorBg}
+              iconColor={rd.color.error}
+              onPress={() =>
+                navigation.navigate('SearchDebitor', {
+                  ...REPORT_NAV.creditor,
+                  title: t('Olingan qarzlar'),
+                })
+              }
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -711,13 +753,6 @@ const styles = StyleSheet.create({
   segmentBtnActive: { backgroundColor: rd.color.primary },
   segmentText: { fontFamily: rd.font.semibold, fontSize: rs(11.5), color: rd.color.textSecondary },
   segmentTextActive: { color: rd.color.onPrimary },
-  nearEmpty: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(13),
-    color: rd.color.textTertiary,
-    textAlign: 'center',
-    paddingVertical: rs(20),
-  },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -743,6 +778,18 @@ const styles = StyleSheet.create({
   tableAmount: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
 
   // Hisobot kartasi
+  // 02.10: "Tugallangan qarz shartnomalari" bo'limi (sarlavha + izoh + 2 karta).
+  reportSection: { gap: rs(4) },
+  reportSectionTitle: { fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
+  reportSectionSub: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    lineHeight: rs(16),
+    color: rd.color.textTertiary,
+    marginBottom: rs(8),
+  },
+  reportMore: { flexDirection: 'row', alignItems: 'center', gap: rs(2), marginTop: rs(-2) },
+  reportMoreText: { fontFamily: rd.font.semibold, fontSize: rs(12) },
   reportRow: { flexDirection: 'row', gap: rs(12) },
   reportCard: {
     flex: 1,

@@ -37,6 +37,7 @@ import {
   InfoIcon,
   PlusIcon,
 } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const BLUE = '#2f6fed';
 const GREEN = '#16a34a';
@@ -154,9 +155,8 @@ const QarzDaftariKiritish = () => {
 
         {shops.length === 0 ? (
           <View style={styles.emptyCard}>
-            <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
-              <StorefrontIcon size={rs(28)} color={rd.color.textTertiary} />
-            </CircleIcon>
+            {/* 02.10: bo'sh holat — harakatli ikonka */}
+            <AnimatedEmpty variant="loan" />
             <Text style={styles.emptyTitle}>{t('Savdo faoliyatingiz hali yo‘q')}</Text>
             <Text style={styles.emptySub}>
               {t('Qarz kiritish uchun avval do‘kon (savdo faoliyati) qo‘shing.')}

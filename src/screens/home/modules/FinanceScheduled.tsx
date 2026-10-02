@@ -32,6 +32,7 @@ import { financeApi } from './financeApi';
 import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeForm';
 import { amountToDisplay, amountToRaw, fDate, fMoney, localDateKey, num } from './financeMoney';
 import { PlusIcon, TrashIcon, PencilIcon } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 const RED = '#f26464'; // SS13: "juda qizil"→sal ochiqroq (dc2626→f26464)
 const GREEN = '#16a34a';
@@ -237,6 +238,7 @@ const ScheduledList = ({ cfg }: { cfg: Cfg }) => {
 
         {items.length === 0 ? (
           <View style={styles.empty}>
+            <AnimatedEmpty variant="time" compact />
             <Text style={styles.emptyText}>{t('Hozircha yozuv yo‘q. "Yangi qo‘shish" orqali qo‘shing.')}</Text>
           </View>
         ) : (

@@ -1,5 +1,4 @@
 import {
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -15,9 +14,7 @@ import {useFetch} from '../../../hooks/useFetch';
 import Loading from '../../components/Loading';
 import {URL} from '../../constants';
 import axios from 'axios';
-import RNBlobUtil from 'react-native-blob-util';
-import FileViewer from 'react-native-file-viewer';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import {exportCsv} from '../../../helper/csvExport';
 import {storage} from '../../../store/api/token/getToken';
 import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../../theme/rd';
@@ -344,65 +341,22 @@ const SearchDebitor = () => {
       : s === 4 || s === '4'
       ? 'Rad etildi'
       : '';
-  const onExcel = async () => {
-    try {
-      if (!shown.length) {
-        Toast.show({
-          type: 'omad',
-          position: 'bottom',
-          props: {title: t('Ro‘yxat bo‘sh'), desc: t('Yuklab olish uchun ma’lumot yo‘q')},
-        });
-        return;
-      }
-      const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const header = ['№', 'F.I.Sh', 'Shartnoma', 'Summa', 'Valyuta', 'Sana', 'Holat'];
-      const lines = [header.map(esc).join(',')];
-      shown.forEach((it: any, i: number) => {
-        const fish = isDebitorRole ? it?.creditor_name : it?.debitor_name;
-        lines.push(
-          [
-            i + 1,
-            fish,
-            it?.number,
-            it?.amount,
-            it?.currency,
-            it?.contract_date || (it?.sana || '').slice(0, 10),
-            statusTx(it?.status),
-          ]
-            .map(esc)
-            .join(','),
-        );
-      });
-      const csv = '﻿' + lines.join('\r\n');
-      const fileName = `${isDebitorRole ? 'berilgan' : 'olingan'}_qarzlar_${Date.now()}.csv`;
-      const cachePath = `${RNBlobUtil.fs.dirs.CacheDir}/${fileName}`;
-      await RNBlobUtil.fs.writeFile(cachePath, csv, 'utf8');
-
-      if (Platform.OS === 'android') {
-        await RNBlobUtil.MediaCollection.copyToMediaStore(
-          {name: fileName, parentFolder: 'Zerox', mimeType: 'text/csv'},
-          'Download',
-          cachePath,
-        );
-      }
-      Toast.show({
-        type: 'omad',
-        position: 'bottom',
-        visibilityTime: 2500,
-        props: {
-          title: t('Excel yuklab olindi'),
-          desc:
-            Platform.OS === 'android'
-              ? t('Download/Zerox papkasiga saqlandi')
-              : fileName,
-        },
-      });
-      // Excel/Sheets ilovasida ochishga urinamiz (bo'lmasa — jimgina o'tkazamiz).
-      FileViewer.open(cachePath, {showOpenWithDialog: true}).catch(() => {});
-    } catch (e) {
-      console.error('excel export error', e);
-    }
-  };
+  // 02.10: CSV yaratish/saqlash/ulashish umumiy `exportCsv` yordamchisiga ko'chirildi
+  // (foydalanuvchi sahifasidagi shartnomalar ro'yxati ham shuni ishlatadi).
+  const onExcel = () =>
+    exportCsv({
+      baseName: `${isDebitorRole ? 'berilgan' : 'olingan'}_qarzlar`,
+      header: ['№', 'F.I.Sh', 'Shartnoma', 'Summa', 'Valyuta', 'Sana', 'Holat'],
+      rows: shown.map((it: any, i: number) => [
+        i + 1,
+        isDebitorRole ? it?.creditor_name : it?.debitor_name,
+        it?.number,
+        it?.amount,
+        it?.currency,
+        it?.contract_date || (it?.sana || '').slice(0, 10),
+        statusTx(it?.status),
+      ]),
+    });
 
   return (
     <View style={styles.container}>
@@ -432,7 +386,8 @@ const SearchDebitor = () => {
           style={styles.excelBtn}>
           <ArrowDown size={rs(16)} color={rd.color.onPrimary} />
           <Text allowFontScaling={false} style={styles.excelText}>
-            {t('Excelga yuklash')}
+            {/* 02.10: "Excelga yuklash" → "Yuklash" (ilovaning barcha qismida). */}
+            {t('Yuklash')}
           </Text>
         </TouchableOpacity>
       </View>

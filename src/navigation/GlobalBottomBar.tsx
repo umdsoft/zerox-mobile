@@ -71,6 +71,7 @@ const SHAXSIY_QARZ_SCREENS = new Set([
   'FinanceDebtors',
   'FinanceDebtGroup',
   'FinanceDebtList',
+  'FinanceDebtReport', // 02.10: yakunlangan qarzlar hisoboti
   'FinancePayoutCard',
 ]);
 

@@ -50,6 +50,7 @@ import {
   TransferIcon,
   UserIcon,
 } from '../redesign/icons';
+import AnimatedEmpty from '../../components/AnimatedEmpty';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish / berilgan
@@ -695,7 +696,10 @@ const QarzDaftariMijoz = () => {
             {`${t('Aktiv qarzlar')} (${aktivQarzlar.length})`}
           </Text>
           {aktivQarzlar.length === 0 ? (
-            <Text style={styles.aqEmpty}>{t('Aktiv qarzlar yo‘q')}</Text>
+            <>
+              <AnimatedEmpty variant="loan" compact />
+              <Text style={styles.aqEmpty}>{t('Aktiv qarzlar yo‘q')}</Text>
+            </>
           ) : (
             aktivQarzlar.map(q => (
               <ActiveQarzRow
