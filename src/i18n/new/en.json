@@ -1632,6 +1632,8 @@
     "subCell.left.tail": "left",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Automatic SMS to the debtor when a debt is recorded",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Please read the offer to the end to confirm it.",
-    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Please confirm that you have read the public offer."
+    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Please confirm that you have read the public offer.",
+    "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Your plan has expired. Renew your plan to use this feature.",
+    "Bu imkoniyat faqat pullik tarifda mavjud. Foydalanish uchun tarifni faollashtiring.": "This feature is available only on a paid plan. Activate a plan to use it."
   }
 }

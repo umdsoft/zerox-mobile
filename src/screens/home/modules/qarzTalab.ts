@@ -8,9 +8,12 @@
  *   428 no-card        — plastik karta kiritilmagan (`can_set_card` — egasimi)
  *   400 sms-not-sent   — SMS provayderi (Eskiz) rad etdi (`reason`)
  *   400 no-phone / not-active / wrong-type, 429 — juda ko'p urinish
+ *   403 plan-required  — 02.10: tarifda `manual_sms_send` yo'q (Free yoki muddati
+ *                        tugagan) → tarif matni + Tariflar sahifasi (planGate.ts)
  * Mijoz sahifasi (QarzDaftariMijoz) va qarz sahifasi (QarzDaftariQarz) — YAGONA mantiq.
  */
 import Toast from 'react-native-toast-message';
+import { handlePlanRequiredError } from './planGate';
 
 type Ctx = {
   t: (k: string) => string;
@@ -31,6 +34,9 @@ const MSG_BY_CODE: Record<string, string> = {
 export const showTalabError = (error: any, { t, navigation, faoliyatId, faoliyatNomi }: Ctx) => {
   const res = error?.response;
   const code: string | undefined = res?.data?.code;
+
+  // 02.10: tarif cheklovi — umumiy "Xatolik" emas, tarif matni + Tariflar sahifasi.
+  if (handlePlanRequiredError(error, { t, navigation })) return;
 
   // Karta kiritilmagan — egasini to'g'ridan-to'g'ri karta ekraniga olib o'tamiz.
   if (code === 'no-card') {

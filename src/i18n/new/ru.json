@@ -1633,6 +1633,8 @@
     "subCell.left.tail": "дней",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Автоматическое SMS должнику при оформлении долга",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Пожалуйста, чтобы подтвердить оферту, прочитайте её до конца.",
-    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Пожалуйста, отметьте, что вы ознакомились с публичной офертой."
+    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Пожалуйста, отметьте, что вы ознакомились с публичной офертой.",
+    "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Срок тарифа истёк. Чтобы пользоваться этой функцией, продлите тариф.",
+    "Bu imkoniyat faqat pullik tarifda mavjud. Foydalanish uchun tarifni faollashtiring.": "Эта функция доступна только на платном тарифе. Подключите тариф, чтобы пользоваться ею."
   }
 }

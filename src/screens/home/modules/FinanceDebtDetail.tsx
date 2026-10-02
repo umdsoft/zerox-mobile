@@ -34,10 +34,11 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
+import { handlePlanRequiredError, isFeatureLocked, showPlanRequired, smsPlanNotice, usePlanFeatures } from './planGate';
 import { fmtCard4 } from '../../../helper/cardBin';
 import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOpen, localDateKey, num } from './financeMoney';
 import { DateField } from './financeForm';
-import { MessageIcon, PhoneCallIcon, PhoneIcon, TrashIcon, PlusIcon, HandCoinReturnIcon, StorefrontIcon, WarningIcon } from '../redesign/icons';
+import { LockIcon, MessageIcon, PhoneCallIcon, PhoneIcon, TrashIcon, PlusIcon, HandCoinReturnIcon, StorefrontIcon, WarningIcon } from '../redesign/icons';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
@@ -135,6 +136,11 @@ const FinanceDebtDetail = () => {
   // SS2: 'Qarzni qaytarishni talab qilish' — shaxsiy karta rekvizitlari SHART.
   const [payoutCard, setPayoutCard] = React.useState<any>(null);
   const [demanding, setDemanding] = React.useState(false);
+  // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
+  // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
+  // ⚠️ Hook — `if (!d) return` DAN OLDIN bo'lishi shart.
+  const plan = usePlanFeatures();
+  const demandLocked = isFeatureLocked(plan, 'manual_sms_send');
   /**
    * 🔴 SS1 ILDIZ SABAB (2026-09-13): karta rekvizitlari FAQAT mount'da bir marta
    * o'qilardi (`useEffect(..., [])`). Foydalanuvchi "Qarzni qaytarishni talab
@@ -255,6 +261,7 @@ const FinanceDebtDetail = () => {
       Toast.show({ type: 'error2', props: { desc: 'Qoldiqdan ko‘p bo‘lmasin' } });
       return;
     }
+    let planNote: string | null = null;
     try {
       setPaying(true);
       const payDate = localDateKey(new Date());
@@ -276,19 +283,26 @@ const FinanceDebtDetail = () => {
           };
         });
       } else {
-        await financeApi.addDebtPayment(d.id, {
+        const pr = await financeApi.addDebtPayment(d.id, {
           amount: v,
           payment_date: payDate,
           // olingan qarzda to'lov = xarajat sifatida ham yoziladi (backend qo'llab-quvvatlaydi)
           create_expense: borrowed,
           notify_sms: paySms && !!d.phone, // SS5
         });
+        // 02.10: to'lov SAQLANDI, lekin SMS tarif sababli yuborilmagan bo'lishi mumkin
+        // (sms.reason 'PLAN_REQUIRED') — xato emas, ma'lumot sifatida ko'rsatamiz.
+        planNote = smsPlanNotice(pr?.data, t);
         refresh({});
       }
       setPayVal('');
       setPaySms(false);
       setShowPay(false);
-      Toast.show({ type: 'omad', props: { desc: 'To‘lov qo‘shildi' } });
+      Toast.show(
+        planNote
+          ? { type: 'omad', visibilityTime: 5000, props: { title: t('To‘lov qo‘shildi'), desc: planNote } }
+          : { type: 'omad', props: { desc: 'To‘lov qo‘shildi' } },
+      );
     } catch (e: any) {
       Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } });
     } finally {
@@ -355,6 +369,11 @@ const FinanceDebtDetail = () => {
   // SS2: qaytarishni talab qilish (SMS). Karta kiritilmagan bo‘lsa avval shu ekran.
   const demandRepay = async () => {
     if (demanding) return;
+    // 02.10: tarifda qo'lda SMS yo'q — karta so'ramasdan darhol tarif eslatmasi.
+    if (demandLocked) {
+      showPlanRequired({ expired: plan?.expired }, { t, navigation });
+      return;
+    }
     if (!payoutCard?.ready) {
       Toast.show({
         type: 'error2',
@@ -371,6 +390,8 @@ const FinanceDebtDetail = () => {
       await financeApi.demandDebtAny(d.id, isMirror);
       Toast.show({ type: 'omad', props: { desc: 'Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.' } });
     } catch (e: any) {
+      // 02.10: 403 `plan-required` — umumiy xato emas, tarif matni + Tariflar.
+      if (handlePlanRequiredError(e, { t, navigation })) return;
       const code = e?.response?.data?.code;
       const msg = code === 'no-card' ? 'Avval plastik karta ma’lumotlarini kiriting.'
         : code === 'no-phone' ? 'Qarzdor telefoni kiritilmagan.'
@@ -647,7 +668,11 @@ const FinanceDebtDetail = () => {
                   disabled={demanding}
                   onPress={demandRepay}
                   style={[styles.actionBtn, styles.actionBtnAmber, demanding && { opacity: 0.6 }]}>
-                  <MessageIcon size={rs(16)} color={AMBER} />
+                  {demandLocked ? (
+                    <LockIcon size={rs(16)} color={AMBER} />
+                  ) : (
+                    <MessageIcon size={rs(16)} color={AMBER} />
+                  )}
                   <Text allowFontScaling={false} style={[styles.actionText, { color: AMBER }]} numberOfLines={1}>
                     {demanding ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
                   </Text>

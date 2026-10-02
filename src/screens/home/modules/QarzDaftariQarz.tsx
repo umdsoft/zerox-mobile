@@ -29,12 +29,14 @@ import { sortMoneyText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import { showTalabError } from './qarzTalab';
+import { isFeatureLocked, isQarzStaffContext, showPlanRequired, usePlanFeatures } from './planGate';
 import {
   ArrowDownLeft,
   ArrowUpRight,
   StorefrontIcon,
   ChevronRight,
   ClockIcon,
+  LockIcon,
   PhoneIcon,
   ShieldIcon,
   TransferIcon,
@@ -162,6 +164,11 @@ const QarzDaftariQarz = () => {
   );
 
   const [talabLoading, setTalabLoading] = React.useState(false);
+  // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
+  // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
+  // ⚠️ Hook — `if (loading) return` DAN OLDIN bo'lishi shart.
+  const plan = usePlanFeatures();
+  const talabLocked = !isQarzStaffContext() && isFeatureLocked(plan, 'manual_sms_send');
 
   const qarz: any = (data as any)?.data;
 
@@ -201,6 +208,10 @@ const QarzDaftariQarz = () => {
   // Qaytarishni talab qilish (POST) — SMS yuboradi.
   const talabQil = async () => {
     if (talabLoading) return;
+    if (talabLocked) {
+      showPlanRequired({ expired: plan?.expired }, { t, navigation });
+      return;
+    }
     setTalabLoading(true);
     try {
       const token = storage.getString('token');
@@ -411,7 +422,11 @@ const QarzDaftariQarz = () => {
                 style={[styles.tile, { borderColor: AMBER + '55', backgroundColor: AMBER + '10' }]}
                 onPress={talabQil}
               >
-                <ClockIcon size={rs(20)} color={AMBER} />
+                {talabLocked ? (
+                  <LockIcon size={rs(20)} color={AMBER} />
+                ) : (
+                  <ClockIcon size={rs(20)} color={AMBER} />
+                )}
                 <Text style={[styles.tileText, { color: AMBER }]} numberOfLines={2}>
                   {talabLoading ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
                 </Text>

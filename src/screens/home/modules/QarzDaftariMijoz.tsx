@@ -31,6 +31,7 @@ import { sortMoneyText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
 import { creationParams } from './qarzAmaliyot';
 import { showTalabError } from './qarzTalab';
+import { isFeatureLocked, isQarzStaffContext, showPlanRequired, usePlanFeatures } from './planGate';
 import { buildQarzSmsTemplates } from './qarzSmsTemplates';
 import SmsTemplateSheet from '../../components/SmsTemplateSheet';
 import {
@@ -39,6 +40,7 @@ import {
   CheckCircleIcon,
   ChevronRight,
   ClockIcon,
+  LockIcon,
   MessageIcon,
   PencilIcon,
   PhoneCallIcon,
@@ -375,8 +377,16 @@ const QarzDaftariMijoz = () => {
    * xil endpoint: POST /qarz-daftari/qarz/:id/talab.
    */
   const [talabLoading, setTalabLoading] = React.useState(false);
+  // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
+  // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
+  const plan = usePlanFeatures();
+  const talabLocked = !isQarzStaffContext() && isFeatureLocked(plan, 'manual_sms_send');
   const talabQil = async () => {
     if (talabLoading || !lastActiveQarz?.id) return;
+    if (talabLocked) {
+      showPlanRequired({ expired: plan?.expired }, { t, navigation });
+      return;
+    }
     setTalabLoading(true);
     try {
       const token = storage.getString('token');
@@ -653,7 +663,11 @@ const QarzDaftariMijoz = () => {
               disabled={talabLoading}
               style={[styles.tile, { borderColor: AMBER + '55', backgroundColor: AMBER + '10' }]}
               onPress={talabQil}>
-              <ClockIcon size={rs(19)} color={AMBER} />
+              {talabLocked ? (
+                <LockIcon size={rs(19)} color={AMBER} />
+              ) : (
+                <ClockIcon size={rs(19)} color={AMBER} />
+              )}
               <Text style={[styles.tileText, { color: AMBER, fontSize: rs(sumValueSize) }]} numberOfLines={2}>
                 {talabLoading ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
               </Text>

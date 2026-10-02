@@ -1632,6 +1632,8 @@
     "subCell.left.tail": "кун",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Қарз қайд этилганда қарздорга автоматик СМС",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Илтимос, офертани тасдиқлаш учун уни охиригача ўқиб чиқинг.",
-    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Илтимос, оммавий оферта билан танишганингизни белгиланг."
+    "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Илтимос, оммавий оферта билан танишганингизни белгиланг.",
+    "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Тариф муддати тугаган. Бу имкониятдан фойдаланиш учун тарифни узайтиринг.",
+    "Bu imkoniyat faqat pullik tarifda mavjud. Foydalanish uchun tarifni faollashtiring.": "Бу имконият фақат пуллик тарифда мавжуд. Фойдаланиш учун тарифни фаоллаштиринг."
   }
 }

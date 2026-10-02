@@ -37,6 +37,7 @@ import RdHeader from '../redesign/RdHeader';
 import {
   CheckCircleIcon,
   InfoIcon,
+  LockIcon,
   MessageIcon,
   PencilIcon,
   PhoneCallIcon,
@@ -46,6 +47,7 @@ import {
   WarningIcon,
 } from '../redesign/icons';
 import { financeApi } from './financeApi';
+import { handlePlanRequiredError, isFeatureLocked, showPlanRequired, usePlanFeatures } from './planGate';
 import { fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num, parseLocalDate } from './financeMoney';
 import { fmtPhoneUzFull as fmtPhone } from '../../../helper/phone';
 
@@ -133,6 +135,10 @@ const FinanceDebtGroup = () => {
   const [showSms, setShowSms] = React.useState(false);
   const [pickFor, setPickFor] = React.useState<'demand' | 'forgive' | null>(null);
   const [acting, setActing] = React.useState(false);
+  // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
+  // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
+  const plan = usePlanFeatures();
+  const demandLocked = isFeatureLocked(plan, 'manual_sms_send');
 
   const first = list[0] || {};
   const phone: string = first.phone || first.shop_phone || '';
@@ -351,6 +357,11 @@ const FinanceDebtGroup = () => {
       }
       setPickFor(null);
     } catch (e: any) {
+      // 02.10: 403 `plan-required` — umumiy xato emas, tarif matni + Tariflar.
+      if (handlePlanRequiredError(e, { t, navigation })) {
+        setPickFor(null);
+        return;
+      }
       const code = e?.response?.data?.code;
       const msg =
         code === 'no-card'
@@ -534,10 +545,17 @@ const FinanceDebtGroup = () => {
             <TouchableOpacity
               activeOpacity={0.85}
               style={[styles.actBtnSoft, styles.actBtnAmber]}
-              onPress={() => setPickFor('demand')}>
-              <Text allowFontScaling={false} style={styles.actBtnSoftText}>
-                {t('Qaytarishni talab qilish')}
-              </Text>
+              onPress={() =>
+                demandLocked
+                  ? showPlanRequired({ expired: plan?.expired }, { t, navigation })
+                  : setPickFor('demand')
+              }>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(6) }}>
+                {demandLocked && <LockIcon size={rs(14)} color="#fff" />}
+                <Text allowFontScaling={false} style={[styles.actBtnSoftText, { flexShrink: 1 }]}>
+                  {t('Qaytarishni talab qilish')}
+                </Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.85}
