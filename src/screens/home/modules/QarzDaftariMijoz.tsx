@@ -34,11 +34,12 @@ import DemandConfirmModal from '../../components/DemandConfirmModal';
 import { buildQarzSmsTemplates } from './qarzSmsTemplates';
 import SmsTemplateSheet from '../../components/SmsTemplateSheet';
 import {
-  ArrowUpRight,
   CalendarIcon,
-  CheckCircleIcon,
+  CheckIcon,
   ChevronRight,
   ClockIcon,
+  HandCoinReturnIcon,
+  InfoIcon,
   LockIcon,
   MessageIcon,
   PencilIcon,
@@ -50,6 +51,9 @@ import {
   UserIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+// 03.10: amal tugmalari — Shaxsiy qarzdagi (FinanceDebtGroup/Detail) YAGONA pastel tugma.
+import DebtActionButton, { pastelFg } from './DebtActionButton';
+import { BanIcon } from './FinanceDebtActionModal';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish / berilgan
@@ -384,6 +388,7 @@ const QarzDaftariMijoz = () => {
   const talabLocked = talab.locked;
   const talabLoading = talab.demanding;
   const talabQil = () => {
+    if (talabLoading) return;
     if (!lastActiveQarz?.id) return;
     talab.start({
       id: lastActiveQarz.id,
@@ -408,6 +413,110 @@ const QarzDaftariMijoz = () => {
       qoldiq_uzs: qoldiqUzs,
       qoldiq_usd: qoldiqUsd,
     });
+  };
+
+  /**
+   * 03.10 (egasining hujjati): amal tugmalari Shaxsiy qarzdagidek — mijoz kartasi ICHIDA,
+   * ajratgich ostida 2×2 pastel to'r (DebtActionButton) + kulrang izoh qatori.
+   * Xulq-atvor Shaxsiy qarz bilan bir xil: aktiv qarz bo'lmasa tugma kulrang, lekin
+   * BOSILADI — sababi toast'da (sayt `title` izohi o'rniga). Amallarning o'zi
+   * o'zgarmagan: yopish/voz kechish ENG OXIRGI aktiv qarzga, talab — useQarzTalab oqimi.
+   */
+  const hint = (msg: string) =>
+    Toast.show({ type: 'error2', visibilityTime: 3500, props: { desc: msg } });
+  const noActive = !lastActiveQarz;
+  const talabOff = noActive || !telefon;
+  const onYopish = () => {
+    if (!lastActiveQarz) {
+      hint(t('Aktiv qarzlar yo‘q'));
+      return;
+    }
+    navigation.navigate('QarzDaftariYopish', { id: lastActiveQarz.id });
+  };
+  const onTalab = () => {
+    if (!lastActiveQarz) {
+      hint(t('Aktiv qarzlar yo‘q'));
+      return;
+    }
+    if (!telefon) {
+      hint(t('Mijoz telefoni yo‘q'));
+      return;
+    }
+    talabQil();
+  };
+  const onVozKechish = () => {
+    if (!lastActiveQarz) {
+      hint(t('Aktiv qarzlar yo‘q'));
+      return;
+    }
+    navigation.navigate('QarzDaftariVozKechish', { id: lastActiveQarz.id });
+  };
+
+  // 03.10: izoh qatori — aktiv qarzlar soni va jami qoldig'i (Shaxsiy qarz "Faol qarzlar").
+  const qoldiqParts = [
+    qoldiqUzs > 0 ? `${bigMoney(qoldiqUzs)} UZS` : '',
+    qoldiqUsd > 0 ? `${bigMoney(qoldiqUsd)} USD` : '',
+  ].filter(Boolean);
+  const aktivCount = aktivQarzlar.length;
+  const actNoteText = aktivCount
+    ? [t('Aktiv qarzlar: {{n}} ta', { n: aktivCount }), qoldiqParts.join(' · ')]
+        .filter(Boolean)
+        .join(': ')
+    : t('Aktiv qarzlar yo‘q');
+
+  const renderActions = () => {
+    const yangiBtn = (
+      <DebtActionButton
+        label={t('Yangi qarz')}
+        tone="blue"
+        icon={<PlusIcon size={rs(15)} color={pastelFg('blue')} />}
+        onPress={goYangi}
+      />
+    );
+    // Olingan qarz ("Qarz beruvchi"): talab / voz kechish YO'Q (SS8-7 qoidasi o'zgarmagan).
+    if (turi === 'olish') {
+      return (
+        <View style={styles.actGrid}>
+          {yangiBtn}
+          <DebtActionButton
+            label={t('Qarzni qaytarish')}
+            tone="green"
+            disabled={noActive}
+            icon={<HandCoinReturnIcon size={rs(15)} color={pastelFg('green', noActive)} />}
+            onPress={onYopish}
+          />
+        </View>
+      );
+    }
+    return (
+      <View style={styles.actGrid}>
+        {yangiBtn}
+        <DebtActionButton
+          label={t('Qarzni yopish')}
+          tone="green"
+          disabled={noActive}
+          icon={<CheckIcon size={rs(15)} color={pastelFg('green', noActive)} strokeWidth={2.6} />}
+          onPress={onYopish}
+        />
+        <DebtActionButton
+          label={talabLoading ? t('Yuborilmoqda...') : t('Talab qilish')}
+          tone="yellow"
+          disabled={talabOff}
+          icon={<ClockIcon size={rs(15)} color={pastelFg('yellow', talabOff)} />}
+          trailing={
+            talabLocked ? <LockIcon size={rs(13)} color={pastelFg('yellow', talabOff)} /> : null
+          }
+          onPress={onTalab}
+        />
+        <DebtActionButton
+          label={t('Voz kechish')}
+          tone="red"
+          disabled={noActive}
+          icon={<BanIcon size={rs(15)} color={pastelFg('red', noActive)} strokeWidth={2.4} />}
+          onPress={onVozKechish}
+        />
+      </View>
+    );
   };
 
   /**
@@ -533,6 +642,16 @@ const QarzDaftariMijoz = () => {
               </Text>
             </View>
           )}
+
+          {/* 03.10: AMALLAR — Shaxsiy qarzdagidek karta ichida, ajratgich ostida. */}
+          <View style={styles.actDivider} />
+          {renderActions()}
+          <View style={styles.actNote}>
+            <InfoIcon size={rs(13)} color={rd.color.textTertiary} />
+            <Text allowFontScaling={false} style={styles.actNoteText}>
+              {actNoteText}
+            </Text>
+          </View>
         </View>
 
         {/* SS9-2 (2026-09-17): "Kvitansiya" bu sahifadan OLIB TASHLANGAN — u
@@ -594,79 +713,8 @@ const QarzDaftariMijoz = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Amal tugmalari — kartalar TAGIDA (so'rov). "Yangi qarz" doim; "Qarzni
-            yopish" faqat aktiv qarz bo'lganda (eng oxirgi aktiv qarzga qo'llanadi). */}
-        <View style={styles.topActions}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.topBtn, { backgroundColor: accent }]}
-            onPress={goYangi}>
-            <PlusIcon size={rs(17)} color={rd.color.onPrimary} />
-            <Text style={[styles.topBtnText, { fontSize: rs(sumValueSize) }]}>{t('Yangi qarz')}</Text>
-          </TouchableOpacity>
-          {/* 🔴 SS1 (2026-09-20): bu tugma ilgari `{!!lastActiveQarz && ...}`
-              ichida edi — aktiv qarz bo'lmasa (hammasi qaytarilgan) UMUMAN
-              chizilmas va sahifada bitta tugma qolardi. Endi DOIM chiziladi:
-              tuzilish o'zgarmaydi, aktiv qarz bo'lmaganda esa o'chirilgan
-              ko'rinishda turadi (bosilmaydi — yolg'on amal bermaydi). */}
-          <TouchableOpacity
-            activeOpacity={lastActiveQarz ? 0.9 : 1}
-            disabled={!lastActiveQarz}
-            style={[
-              styles.topBtn,
-              { backgroundColor: GREEN },
-              !lastActiveQarz && styles.topBtnDisabled,
-            ]}
-            onPress={() =>
-              lastActiveQarz &&
-              navigation.navigate('QarzDaftariYopish', { id: lastActiveQarz.id })
-            }>
-            <CheckCircleIcon size={rs(17)} color={rd.color.onPrimary} />
-            <Text style={[styles.topBtnText, { fontSize: rs(sumValueSize) }]}>
-              {turi === 'olish' ? t('Qarzni qaytarish') : t('Qarzni yopish')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* SS8-7: "Yangi qarz"/"Qarzni yopish" TAGIDA — "Qaytarishni talab
-            qilish" va "Qarzdan voz kechish". Ikkalasi ham ENG OXIRGI AKTIV
-            qarzga qo'llanadi (yopish tugmasi bilan bir xil qoida), shu bois
-            aktiv qarz bo'lmasa ko'rsatilmaydi.
-            ⚠️ FAQAT BERILGAN qarzda. Olingan qarzda ("Qarz beruvchi" sahifasi)
-            ikkalasi ham mantiqsiz: qaytarishni O'ZIMIZDAN talab qila olmaymiz,
-            o'zimiz olgan qarzdan esa "voz kechish" — qarz beruvchining huquqi,
-            qarzdorniki emas (bir bosishda real majburiyat nolga tushib ketardi).
-            Bitta qarz sahifasi (QarzDaftariQarz) ham AYNAN shu qoidada ishlaydi —
-            ikki ekran bir xil xulq-atvorda qoladi. */}
-        {!!lastActiveQarz && turi !== 'olish' && (
-          <View style={styles.tileRow}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              disabled={talabLoading}
-              style={[styles.tile, { borderColor: AMBER + '55', backgroundColor: AMBER + '10' }]}
-              onPress={talabQil}>
-              {talabLocked ? (
-                <LockIcon size={rs(19)} color={AMBER} />
-              ) : (
-                <ClockIcon size={rs(19)} color={AMBER} />
-              )}
-              <Text style={[styles.tileText, { color: AMBER, fontSize: rs(sumValueSize) }]} numberOfLines={2}>
-                {talabLoading ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.tile, { borderColor: RED + '55', backgroundColor: RED + '10' }]}
-              onPress={() =>
-                navigation.navigate('QarzDaftariVozKechish', { id: lastActiveQarz.id })
-              }>
-              <ArrowUpRight size={rs(19)} color={RED} />
-              <Text style={[styles.tileText, { color: RED, fontSize: rs(sumValueSize) }]} numberOfLines={2}>
-                {t('Qarzdan voz kechish')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* 03.10: "Yangi qarz" / "Qarzni yopish" / "Talab qilish" / "Voz kechish" bu yerdan
+            mijoz kartasi ICHIGA ko'chirildi (Shaxsiy qarz uslubi — renderActions). */}
 
         {/* SS8-8: to'liq "Qarzlar" ro'yxati olib tashlangan (u "Amaliyotlar
             tarixi"da). 2026-09-28: uning o'rniga FAQAT AKTIV qarzlar ro'yxati —
@@ -776,23 +824,11 @@ const styles = StyleSheet.create({
   linkBtnOff: { opacity: 0.45 },
   linkText: { fontFamily: rd.font.semibold, fontSize: rs(11.5) },
 
-  // SS8-7: "Qaytarishni talab qilish" / "Qarzdan voz kechish" plitkalari
-  // (QarzDaftariQarz dagi bilan bir xil ko'rinish — bir xil amal, bir xil uslub).
-  tileRow: { flexDirection: 'row', gap: rs(10) },
-  tile: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // SS9-3 (2026-09-17): ikonka ustidagi ortiqcha bo'shliq qisqartirildi —
-    // ikkala plitka ham sahifaga to'liq sig'sin.
-    gap: rs(3),
-    borderRadius: rs(14),
-    borderWidth: 1.5,
-    paddingVertical: rs(9),
-    paddingHorizontal: rs(8),
-  },
-  tileText: { fontFamily: rd.font.semibold, fontSize: rs(12), textAlign: 'center' },
-
+  // 03.10: amal tugmalari (Shaxsiy qarz FinanceDebtGroup bilan bir xil o'lchamlar).
+  actDivider: { height: 1, backgroundColor: rd.color.border, marginTop: rs(14) },
+  actGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(8), marginTop: rs(12) },
+  actNote: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(10) },
+  actNoteText: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary },
 
   // Generic card
   card: {
@@ -874,34 +910,6 @@ const styles = StyleSheet.create({
 
   qRight: { flexDirection: 'row', alignItems: 'center', gap: rs(4) },
   qAmount: { fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
-
-  // Yangi qarz tugmasi
-  // R2: tepadagi amal tugmalari (Yangi qarz | Qarzni yopish) — yonma-yon.
-  topActions: { flexDirection: 'row', gap: rs(10) },
-  // SS1-1 (2026-09-19): tugmalar INGICHKAROQ (noziklashtirildi) — ilgari
-  // balandligi kartalarnikidan katta bo'lib, ekranni bosib turardi.
-  topBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(6),
-    borderRadius: rd.radius.pill,
-    paddingVertical: rs(10),
-    paddingHorizontal: rs(8),
-  },
-  // SS5 (2026-09-18): "Qarzni qaytarish" ikki qatorga sinadi — matn blok
-  // ichida MARKAZLASHTIRILADI (ilgari chapga tortilib, kartada qiyshiq
-  // ko'rinardi). `flexShrink` matn ikonkani siqib chiqarmasligi uchun.
-  // SS1 (2026-09-20): aktiv qarz yo'q — tugma turadi, lekin so'nik.
-  topBtnDisabled: { opacity: 0.45 },
-  topBtnText: {
-    flexShrink: 1,
-    textAlign: 'center',
-    fontFamily: rd.font.semibold,
-    fontSize: rs(13.5),
-    color: rd.color.onPrimary,
-  },
 
   // 2026-09-28: "Aktiv qarzlar" ro'yxati.
   aqSection: { gap: rs(8) },

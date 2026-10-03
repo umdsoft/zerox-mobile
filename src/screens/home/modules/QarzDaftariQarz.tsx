@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -29,8 +30,8 @@ import { useQarzTalab } from './qarzTalab';
 import { usePlanFeatures } from './planGate';
 import DemandConfirmModal from '../../components/DemandConfirmModal';
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
+  CheckIcon,
+  HandCoinReturnIcon,
   StorefrontIcon,
   ChevronRight,
   ClockIcon,
@@ -40,6 +41,9 @@ import {
   TransferIcon,
   UserIcon,
 } from '../redesign/icons';
+// 03.10: amal tugmalari — Shaxsiy qarzdagi (FinanceDebtDetail) YAGONA pastel tugma.
+import DebtActionButton, { pastelFg } from './DebtActionButton';
+import { BanIcon } from './FinanceDebtActionModal';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed';
@@ -215,6 +219,70 @@ const QarzDaftariQarz = () => {
       valyuta,
     });
 
+  /**
+   * 03.10 (egasining hujjati): amallar Shaxsiy qarzdagidek — mijoz kartasi ICHIDA,
+   * ajratgich ostida pastel to'r (DebtActionButton). Faqat AKTIV qarzda; yopilgan /
+   * voz kechilganda pastdagi holat yozuvi (infoPill) o'zgarmagan.
+   * Talab — telefon bo'lmasa kulrang, lekin bosiladi (sababi toast'da), Shaxsiy qarz kabi.
+   */
+  const isAktiv = qarz?.status === 'aktiv';
+  const telefon: string = qarz?.mijoz?.telefon || '';
+  const talabOff = !telefon;
+  const onTalab = () => {
+    if (talabLoading) return;
+    if (!telefon) {
+      Toast.show({ type: 'error2', visibilityTime: 3500, props: { desc: t('Mijoz telefoni yo‘q') } });
+      return;
+    }
+    talabQil();
+  };
+  const goYopish = () => navigation.navigate('QarzDaftariYopish', { id });
+
+  const renderActions = () => {
+    // Men qarzdorman — faqat qaytarish (talab / voz kechish YO'Q, SS8-7 qoidasi).
+    if (turi === 'olish') {
+      return (
+        <View style={styles.actGrid}>
+          <DebtActionButton
+            label={t('Qarzni qaytarish')}
+            tone="green"
+            style={styles.actFull}
+            icon={<HandCoinReturnIcon size={rs(15)} color={pastelFg('green')} />}
+            onPress={goYopish}
+          />
+        </View>
+      );
+    }
+    // SS8-4 iyerarxiyasi saqlandi: asosiy "Qarzni yopish" butun kenglikda, ostida ikkitasi.
+    return (
+      <View style={styles.actGrid}>
+        <DebtActionButton
+          label={t('Qarzni yopish')}
+          tone="green"
+          style={styles.actFull}
+          icon={<CheckIcon size={rs(15)} color={pastelFg('green')} strokeWidth={2.6} />}
+          onPress={goYopish}
+        />
+        <DebtActionButton
+          label={talabLoading ? t('Yuborilmoqda...') : t('Talab qilish')}
+          tone="yellow"
+          disabled={talabOff}
+          icon={<ClockIcon size={rs(15)} color={pastelFg('yellow', talabOff)} />}
+          trailing={
+            talabLocked ? <LockIcon size={rs(13)} color={pastelFg('yellow', talabOff)} /> : null
+          }
+          onPress={onTalab}
+        />
+        <DebtActionButton
+          label={t('Voz kechish')}
+          tone="red"
+          icon={<BanIcon size={rs(15)} color={pastelFg('red')} strokeWidth={2.4} />}
+          onPress={() => navigation.navigate('QarzDaftariVozKechish', { id })}
+        />
+      </View>
+    );
+  };
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
@@ -288,6 +356,14 @@ const QarzDaftariQarz = () => {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* 03.10: AMALLAR — Shaxsiy qarzdagidek karta ichida, ajratgich ostida. */}
+          {isAktiv && (
+            <>
+              <View style={styles.actDivider} />
+              {renderActions()}
+            </>
+          )}
         </View>
 
         {/* 2. Statistik qutilar (2x2) */}
@@ -350,74 +426,13 @@ const QarzDaftariQarz = () => {
           </>
         )}
 
-        {/* 4. Amallar — SS8-3: "Amallar" sarlavhasi OLIB TASHLANDI. */}
-        {qarz?.status !== 'aktiv' ? (
+        {/* 4. Holat — 03.10: aktiv qarz amallari mijoz kartasi ichida (renderActions). */}
+        {!isAktiv && (
           <View style={styles.infoPill}>
             <ClockIcon size={rs(18)} color={rd.color.textTertiary} />
             <Text style={styles.infoPillText}>
               {qarz?.status === 'voz_kechilgan' ? t('Voz kechilgan') : t('Qarz yopilgan')}
             </Text>
-          </View>
-        ) : turi === 'olish' ? (
-          // Men qarzdorman — qaytarish.
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.btn, styles.btnSolid, { backgroundColor: GREEN }]}
-            onPress={() => navigation.navigate('QarzDaftariYopish', { id })}
-          >
-            <ArrowDownLeft size={rs(18)} color="#fff" />
-            <Text style={styles.btnSolidText}>{t('Qarzni qaytarish')}</Text>
-          </TouchableOpacity>
-        ) : (
-          /* SS8-4: uchta bir xil tugma o'rniga IYERARXIYA —
-             ASOSIY amal ("Qarzni yopish") keng, to'la rangli;
-             yordamchi ikkitasi ostida YONMA-YON plitka (ikonka tepada). */
-          <View style={styles.actionsWrap}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.primaryAction}
-              onPress={() => navigation.navigate('QarzDaftariYopish', { id })}
-            >
-              <View style={styles.primaryActionIcon}>
-                <ArrowDownLeft size={rs(20)} color={GREEN} />
-              </View>
-              {/* SS6-4: `flex: 1` OLIB TASHLANDI — u blokni cho'zib, matnni chapga
-                  tiqib qo'yardi va qatorning `justifyContent: center` i ta'sirsiz
-                  qolardi. Endi matn bloki tabiiy kenglikda va card MARKAZIDA. */}
-              <View>
-                <Text style={styles.primaryActionTitle}>{t('Qarzni yopish')}</Text>
-                <Text style={styles.primaryActionSub}>{t('To‘liq yoki qisman to‘lov')}</Text>
-              </View>
-            </TouchableOpacity>
-
-            <View style={styles.tileRow}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                disabled={talabLoading}
-                style={[styles.tile, { borderColor: AMBER + '55', backgroundColor: AMBER + '10' }]}
-                onPress={talabQil}
-              >
-                {talabLocked ? (
-                  <LockIcon size={rs(20)} color={AMBER} />
-                ) : (
-                  <ClockIcon size={rs(20)} color={AMBER} />
-                )}
-                <Text style={[styles.tileText, { color: AMBER }]} numberOfLines={2}>
-                  {talabLoading ? t('Yuborilmoqda...') : t('Qaytarishni talab qilish')}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={[styles.tile, { borderColor: RED + '55', backgroundColor: RED + '10' }]}
-                onPress={() => navigation.navigate('QarzDaftariVozKechish', { id })}
-              >
-                <ArrowUpRight size={rs(20)} color={RED} />
-                <Text style={[styles.tileText, { color: RED }]} numberOfLines={2}>
-                  {t('Qarzdan voz kechish')}
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
       </ScrollView>
@@ -434,39 +449,10 @@ export default QarzDaftariQarz;
 
 // ---------- Uslublar ----------
 const styles = StyleSheet.create({
-  // SS8-4: amal tugmalari iyerarxiyasi (asosiy + 2 ta yordamchi plitka).
-  primaryAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // SS6-4: ikonka + matn guruhi card MARKAZIDA (chapga tiqilib qolmasin).
-    justifyContent: 'center',
-    gap: rs(12),
-    backgroundColor: '#16a34a12',
-    borderWidth: 1.5,
-    borderColor: '#16a34a55',
-    borderRadius: rd.radius.lg,
-    padding: rs(14),
-  },
-  primaryActionIcon: {
-    width: rs(42), height: rs(42), borderRadius: rs(21),
-    backgroundColor: rd.color.surface,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  primaryActionTitle: { fontFamily: rd.font.bold, fontSize: rs(15), color: '#16a34a' },
-  primaryActionSub: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
-  tileRow: { flexDirection: 'row', gap: rs(10), marginTop: rs(10) },
-  tile: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(6),
-    borderWidth: 1.5,
-    borderRadius: rd.radius.lg,
-    paddingVertical: rs(14),
-    paddingHorizontal: rs(8),
-    minHeight: rs(88),
-  },
-  tileText: { fontFamily: rd.font.semibold, fontSize: rs(12), textAlign: 'center', lineHeight: rs(16) },
+  // 03.10: amal tugmalari (Shaxsiy qarz FinanceDebtDetail bilan bir xil o'lchamlar).
+  actDivider: { height: 1, backgroundColor: rd.color.border, marginTop: rs(14) },
+  actGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(8), marginTop: rs(12) },
+  actFull: { flexBasis: '100%' },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {
@@ -600,19 +586,6 @@ const styles = StyleSheet.create({
   },
   tPillText: { fontFamily: rd.font.semibold, fontSize: rs(10) },
 
-  // Amallar
-  actionsWrap: { gap: rs(12) },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(8),
-    borderRadius: rs(14),
-    paddingVertical: rs(14),
-    paddingHorizontal: rs(16),
-  },
-  btnSolid: {},
-  btnSolidText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: '#fff' },
   btnOutline: {
     backgroundColor: rd.color.surface,
     borderWidth: 1.5,

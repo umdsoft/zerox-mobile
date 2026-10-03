@@ -5,9 +5,11 @@
  * ikonka + matn, ixtiyoriy oxirgi belgi (masalan tarif qulfi). O'chiq holat kulrang,
  * lekin BOSILADI — chaqiruvchi sababini (toast) ko'rsatadi (saytdagi `title` izohi o'rniga).
  * Ishlatiladi: FinanceDebtGroup ("Qarz oldi-berdi") va FinanceDebtDetail ("Qarz tafsiloti").
+ * 03.10: Qarz daftari ham (QarzDaftariMijoz, QarzDaftariQarz) — shu tugmalar, shu uslub.
+ *   `style` — ixtiyoriy (masalan, yolg'iz asosiy amal butun kenglikda: flexBasis 100%).
  */
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { rd, rs } from '../../../theme/rd';
 
 export const PASTEL = {
@@ -31,9 +33,10 @@ type Props = {
   disabled?: boolean;
   trailing?: React.ReactNode;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-const DebtActionButton = ({ label, tone, icon, disabled, trailing, onPress }: Props) => {
+const DebtActionButton = ({ label, tone, icon, disabled, trailing, onPress, style }: Props) => {
   const c = disabled ? PASTEL.off : PASTEL[tone];
   return (
     <TouchableOpacity
@@ -42,7 +45,7 @@ const DebtActionButton = ({ label, tone, icon, disabled, trailing, onPress }: Pr
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
-      style={[styles.btn, { backgroundColor: c.bg }]}>
+      style={[styles.btn, { backgroundColor: c.bg }, style]}>
       {icon}
       <Text allowFontScaling={false} style={[styles.text, { color: c.fg }]} numberOfLines={1}>
         {label}

@@ -1729,6 +1729,7 @@
     "Kartani o‘zgartirish": "Change card",
     "Karta qo‘shish": "Add card",
     "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "No shop card added — the SMS will be sent with the generic text.",
-    "Karta ma’lumotlari o‘chirildi.": "Card details removed."
+    "Karta ma’lumotlari o‘chirildi.": "Card details removed.",
+    "Aktiv qarzlar: {{n}} ta": "Active debts: {{n}}"
   }
 }
