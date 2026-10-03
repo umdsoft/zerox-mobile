@@ -1719,7 +1719,17 @@
     "{{n}} ta qarzdan voz kechildi": "Прощено долгов: {{n}}",
     "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Номер банковской карты и номер телефона для Telegram — оба обязательны.",
     "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "Номер карты должен состоять из 16 цифр.",
-    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Введите номер телефона полностью (9 цифр)."
-  },
-  "Karta ma’lumotlari o‘chirildi.": "Данные карты удалены."
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Введите номер телефона полностью (9 цифр).",
+    "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.": "Если включено, на номер {{phone}} будет отправлено SMS об оплате и остатке долга.",
+    "To‘lov saqlandi, lekin SMS yuborilmadi.": "Платёж сохранён, но SMS не отправлено.",
+    "Talab SMS yuborilsinmi?": "Отправить SMS-требование?",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.": "Должнику будет отправлено SMS с требованием вернуть долг. В SMS будет указана эта карта.",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.": "Должнику будет отправлено SMS с требованием вернуть долг.",
+    "Plastik karta kiritilmagan.": "Пластиковая карта не указана.",
+    "SMS matni": "Текст SMS",
+    "Kartani o‘zgartirish": "Изменить карту",
+    "Karta qo‘shish": "Добавить карту",
+    "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Карта магазина не указана — SMS будет отправлено с общим текстом.",
+    "Karta ma’lumotlari o‘chirildi.": "Данные карты удалены."
+  }
 }

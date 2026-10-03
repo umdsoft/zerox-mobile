@@ -875,6 +875,18 @@
     "{{n}} ta qarzdan voz kechildi": "{{n}} ta qarzdan voz kechildi",
     "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.",
     "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.",
-    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Telefon raqamini to‘liq kiriting (9 ta raqam)."
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Telefon raqamini to‘liq kiriting (9 ta raqam).",
+    "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.": "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.",
+    "To‘lov saqlandi, lekin SMS yuborilmadi.": "To‘lov saqlandi, lekin SMS yuborilmadi.",
+    "SMS yuborildi": "SMS yuborildi",
+    "SMS yuborish": "SMS yuborish",
+    "Talab SMS yuborilsinmi?": "Talab SMS yuborilsinmi?",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.": "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.": "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.",
+    "Plastik karta kiritilmagan.": "Plastik karta kiritilmagan.",
+    "SMS matni": "SMS matni",
+    "Kartani o‘zgartirish": "Kartani o‘zgartirish",
+    "Karta qo‘shish": "Karta qo‘shish",
+    "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi."
   }
 }

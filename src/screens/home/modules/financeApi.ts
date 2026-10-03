@@ -103,7 +103,8 @@ export const financeApi = {
   //   mirror-forgive: status=completed, remaining=0.
   //   mirror-demand : karta (payout card) shart — 400 `no-card` / `no-phone`.
   //   mirror-hide   : TUGALLANGAN ko'zgu qarzni faqat MENING ro'yxatimdan olib tashlash.
-  mirrorPayDebt: (id: any, body: { amount?: number; payment_date?: string; notes?: string }) =>
+  // 03.10: `notify_sms` — backend hozircha e'tiborsiz qoldiradi (javobda `sms` yo'q); qo'llab-quvvatlagach ishlaydi.
+  mirrorPayDebt: (id: any, body: { amount?: number; payment_date?: string; notes?: string; notify_sms?: boolean }) =>
     axios.post(`${base}/debts/${id}/mirror-payment`, body || {}, auth()),
   mirrorForgiveDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-forgive`, {}, auth()),
   mirrorDemandDebt: (id: any) => axios.post(`${base}/debts/${id}/mirror-demand`, {}, auth()),

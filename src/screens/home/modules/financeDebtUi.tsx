@@ -9,24 +9,29 @@
  *                     yoki yakunlangan hisobotda "Voz kechilgan" (sayt DebtSummaryCards);
  *   - FilterChips   — holat / valyuta tablari (nuqta + son);
  *   - ShowMoreButton — "Yana ko'rsatish (N)".
+ * 03.10 (mobil hujjat, 2/4-band): svod — bitta ixcham karta (3 ustun), tablar — bitta qatorli
+ * segment, toolbar — ro'yxat boshida ("N ta qarz" + "Yuklash", ostida qidiruv).
  */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { rd, rs } from '../../../theme/rd';
-import { ArrowDown, ArrowDownLeft, ArrowUpRight, CheckIcon, ClockIcon, CloseIcon, SearchIcon } from '../redesign/icons';
+import { ArrowDown, CloseIcon, SearchIcon } from '../redesign/icons';
 import { fMoney } from './financeMoney';
 import { DebtSide, DebtSvod, SvodRow } from './financeDebtGroups';
 
 // SearchDebitor "Yuklash" tugmasi bilan bir xil yashil (Excel/CSV).
 const EXPORT_GREEN = '#16a34a';
 const ROSE = '#be123c';
-const ROSE_BG = '#ffe4e6';
 const AMBER = '#b45309';
-const AMBER_BG = '#fef3c7';
 
 // ───────────────────────── Qidiruv + Yuklash ─────────────────────────
 
+/**
+ * 03.10 (mobil hujjat, 2/4-band): qidiruv sahifa TEPASIDAN ro'yxat boshiga ko'chirildi —
+ * ekranlar uni svod/tablardan KEYIN, qatorlar oldidan joylaydi. Ko'rinish ixcham:
+ * 1-qator — "N ta qarz" (ro'yxat sarlavhasi) + kichik "Yuklash"; 2-qator — qidiruv maydoni.
+ */
 export const DebtToolbar = ({
   search,
   onSearch,
@@ -44,8 +49,26 @@ export const DebtToolbar = ({
   const [focused, setFocused] = React.useState(false);
   return (
     <View style={styles.toolbar}>
+      <View style={styles.toolbarRow}>
+        <Text allowFontScaling={false} style={styles.countText} numberOfLines={1}>
+          {t('{{n}} ta qarz', { n: count })}
+        </Text>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onDownload}
+          disabled={disabled}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !!disabled }}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          style={[styles.downloadBtn, disabled && styles.downloadBtnDisabled]}>
+          <ArrowDown size={rs(13)} color={rd.color.onPrimary} />
+          <Text allowFontScaling={false} style={styles.downloadText}>
+            {t('Yuklash')}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <View style={[styles.searchBox, focused && styles.searchBoxFocused]}>
-        <SearchIcon size={rs(17)} color={rd.color.textTertiary} />
+        <SearchIcon size={rs(16)} color={rd.color.textTertiary} />
         <TextInput
           allowFontScaling={false}
           value={search}
@@ -63,70 +86,69 @@ export const DebtToolbar = ({
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityRole="button"
             accessibilityLabel={t('Tozalash')}>
-            <CloseIcon size={rs(16)} color={rd.color.textTertiary} />
+            <CloseIcon size={rs(15)} color={rd.color.textTertiary} />
           </TouchableOpacity>
         ) : null}
-      </View>
-      <View style={styles.toolbarRow}>
-        <View style={styles.countPill}>
-          <Text allowFontScaling={false} style={styles.countPillText}>
-            {t('{{n}} ta qarz', { n: count })}
-          </Text>
-        </View>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={onDownload}
-          disabled={disabled}
-          accessibilityRole="button"
-          style={[styles.downloadBtn, disabled && styles.downloadBtnDisabled]}>
-          <ArrowDown size={rs(15)} color={rd.color.onPrimary} />
-          <Text allowFontScaling={false} style={styles.downloadText}>
-            {t('Yuklash')}
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-// ───────────────────────── Svod kartalari ─────────────────────────
+// ───────────────────────── Svod (ixcham) ─────────────────────────
 
-const pct = (r: SvodRow) =>
-  r.total > 0 ? Math.min(100, Math.max(0, Math.round((r.paid / r.total) * 100))) : 0;
+type SvodLine = { currency: string; value: number };
 
-const SvodTile = ({
-  icon,
-  iconBg,
+/** Summa + kichikroq valyuta kodi; tor ustunga sig'magsa shrift avtomatik kichrayadi. */
+const SvodAmount = ({ line, color }: { line: SvodLine; color: string }) => (
+  <Text
+    allowFontScaling={false}
+    style={[styles.svodAmount, { color }]}
+    numberOfLines={1}
+    adjustsFontSizeToFit
+    minimumFontScale={0.6}>
+    {fMoney(line.value, '').trim()}
+    <Text style={styles.svodCur}> {line.currency}</Text>
+  </Text>
+);
+
+const SvodCol = ({
   label,
-  children,
+  dot,
+  color,
+  lines,
   foot,
-  wide,
+  divider,
 }: {
-  icon: React.ReactNode;
-  iconBg: string;
   label: string;
-  children: React.ReactNode;
+  dot: string;
+  color: string;
+  lines: SvodLine[];
   foot: string;
-  wide?: boolean;
+  divider?: boolean;
 }) => (
-  <View style={[styles.tile, wide ? styles.tileWide : styles.tileHalf]}>
-    <View style={styles.tileHead}>
-      <View style={[styles.tileIcon, { backgroundColor: iconBg }]}>{icon}</View>
-      <Text allowFontScaling={false} style={styles.tileLabel} numberOfLines={2}>
+  <View style={[styles.svodCol, divider && styles.svodColDivider]}>
+    <View style={styles.svodLabelRow}>
+      <View style={[styles.svodDot, { backgroundColor: dot }]} />
+      <Text allowFontScaling={false} style={styles.svodLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {label}
       </Text>
     </View>
-    {children}
-    <Text allowFontScaling={false} style={styles.tileFoot}>
+    {lines.map(l => (
+      <SvodAmount key={l.currency} line={l} color={color} />
+    ))}
+    <Text allowFontScaling={false} style={styles.svodFoot} numberOfLines={1}>
       {foot}
     </Text>
   </View>
 );
 
 /**
- * Sayt DebtSummaryCards: 1) Jami berilgan (olingan) — keng karta; 2) Qaytarilgan
- * (progress bilan); 3) Jarayonda (qoldiq) yoki `closedOnly` da Voz kechilgan.
- * Valyutalar ALOHIDA qatorlarda (hech qachon qo'shilmaydi).
+ * Sayt DebtSummaryCards: Jami berilgan (olingan) / Qaytarilgan / Jarayonda (qoldiq) yoki
+ * `closedOnly` da Voz kechilgan. Valyutalar ALOHIDA qatorlarda (hech qachon qo'shilmaydi).
+ *
+ * 03.10 (mobil hujjat, 2/4-band): uchta katta karta ekranning deyarli yarmini egallardi —
+ * endi BITTA ixcham karta, 3 ustun (ajratkich chiziq bilan). Faol ro'yxatda voz kechilgan
+ * summa (bo'lsa) kartaning pastki bir qatorida.
  */
 export const DebtSvodCards = ({
   svod,
@@ -139,74 +161,64 @@ export const DebtSvodCards = ({
 }) => {
   const { t } = useTranslation();
   const lent = side === 'lent';
-  const tone = lent
-    ? { fg: rd.color.primary, bg: rd.color.primaryTint }
-    : { fg: rd.color.error, bg: rd.color.errorBg };
-  const forgivenRows = svod.rows.filter(r => r.forgiven > 0.5);
-  const DirIcon = lent ? ArrowUpRight : ArrowDownLeft;
+  const tone = lent ? rd.color.primary : rd.color.error;
+  const rows: SvodRow[] = svod.rows.length
+    ? svod.rows
+    : [{ currency: 'UZS', total: 0, paid: 0, left: 0, forgiven: 0 }];
+  const pick = (k: 'total' | 'paid' | 'left' | 'forgiven'): SvodLine[] =>
+    rows.map(r => ({ currency: r.currency, value: r[k] }));
+  const forgivenRows = closedOnly ? [] : svod.rows.filter(r => r.forgiven > 0.5);
   return (
-    <View style={styles.svodGrid}>
-      <SvodTile
-        wide
-        icon={<DirIcon size={rs(16)} color={tone.fg} />}
-        iconBg={tone.bg}
-        label={lent ? t('Jami berilgan') : t('Jami olingan')}
-        foot={t('{{n}} ta qarz', { n: svod.count })}>
-        {svod.rows.map(r => (
-          <Text key={`t${r.currency}`} allowFontScaling={false} style={styles.tileAmountBig} numberOfLines={1} adjustsFontSizeToFit>
-            {fMoney(r.total, r.currency)}
+    <View style={styles.svodCard}>
+      <View style={styles.svodCols}>
+        <SvodCol
+          label={lent ? t('Jami berilgan') : t('Jami olingan')}
+          dot={tone}
+          color={rd.color.text}
+          lines={pick('total')}
+          foot={t('{{n}} ta qarz', { n: svod.count })}
+        />
+        <SvodCol
+          divider
+          label={t('Qaytarilgan')}
+          dot={rd.color.success}
+          color={rd.color.success}
+          lines={pick('paid')}
+          foot={t('{{n}} ta yopilgan', { n: svod.closedCount })}
+        />
+        {closedOnly ? (
+          <SvodCol
+            divider
+            label={t('Voz kechilgan')}
+            dot={ROSE}
+            color={ROSE}
+            lines={pick('forgiven')}
+            foot={t('{{n}} ta qarz', { n: svod.forgivenCount })}
+          />
+        ) : (
+          <SvodCol
+            divider
+            label={t('Jarayonda (qoldiq)')}
+            dot={AMBER}
+            color={tone}
+            lines={pick('left')}
+            foot={t('{{n}} ta faol', { n: svod.openCount })}
+          />
+        )}
+      </View>
+      {forgivenRows.length ? (
+        <View style={styles.svodNote}>
+          <View style={[styles.svodDot, { backgroundColor: ROSE }]} />
+          <Text
+            allowFontScaling={false}
+            style={styles.svodNoteText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}>
+            {t('Voz kechilgan')}: {forgivenRows.map(r => fMoney(r.forgiven, r.currency)).join(' · ')}
           </Text>
-        ))}
-        {!closedOnly &&
-          forgivenRows.map(r => (
-            <Text key={`f${r.currency}`} allowFontScaling={false} style={styles.tileForgiven}>
-              {t('Voz kechilgan')}: {fMoney(r.forgiven, r.currency)}
-            </Text>
-          ))}
-      </SvodTile>
-
-      <SvodTile
-        icon={<CheckIcon size={rs(15)} color={rd.color.success} />}
-        iconBg={rd.color.successBg}
-        label={t('Qaytarilgan')}
-        foot={t('{{n}} ta yopilgan', { n: svod.closedCount })}>
-        {svod.rows.map(r => (
-          <View key={`p${r.currency}`} style={styles.paidRow}>
-            <Text allowFontScaling={false} style={[styles.tileAmount, { color: rd.color.success }]} numberOfLines={1} adjustsFontSizeToFit>
-              {fMoney(r.paid, r.currency)}
-            </Text>
-            <View style={styles.barTrack}>
-              <View style={[styles.barFill, { width: `${pct(r)}%` }]} />
-            </View>
-          </View>
-        ))}
-      </SvodTile>
-
-      {closedOnly ? (
-        <SvodTile
-          icon={<CloseIcon size={rs(15)} color={ROSE} />}
-          iconBg={ROSE_BG}
-          label={t('Voz kechilgan')}
-          foot={t('{{n}} ta qarz', { n: svod.forgivenCount })}>
-          {svod.rows.map(r => (
-            <Text key={`z${r.currency}`} allowFontScaling={false} style={[styles.tileAmount, { color: ROSE }]} numberOfLines={1} adjustsFontSizeToFit>
-              {fMoney(r.forgiven, r.currency)}
-            </Text>
-          ))}
-        </SvodTile>
-      ) : (
-        <SvodTile
-          icon={<ClockIcon size={rs(15)} color={AMBER} />}
-          iconBg={AMBER_BG}
-          label={t('Jarayonda (qoldiq)')}
-          foot={t('{{n}} ta faol', { n: svod.openCount })}>
-          {svod.rows.map(r => (
-            <Text key={`l${r.currency}`} allowFontScaling={false} style={[styles.tileAmount, { color: tone.fg }]} numberOfLines={1} adjustsFontSizeToFit>
-              {fMoney(r.left, r.currency)}
-            </Text>
-          ))}
-        </SvodTile>
-      )}
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -215,6 +227,11 @@ export const DebtSvodCards = ({
 
 export type ChipDef = { key: string; label: string; count: number; dot: string; soft: string; fg: string };
 
+/**
+ * 03.10 (mobil hujjat, 2-band): "Barchasi / Tugallangan / Voz kechilgan" ikki qatorga
+ * tushardi — endi segment-boshqaruv: BITTA qator, tablar kenglikni bo'lishadi, uzun
+ * yozuv sig'magsa shrift biroz kichrayadi (qatorga o'tmaydi).
+ */
 export const FilterChips = ({
   chips,
   active,
@@ -224,7 +241,7 @@ export const FilterChips = ({
   active: string;
   onChange: (k: string) => void;
 }) => (
-  <View style={styles.chips}>
+  <View style={styles.segment} accessibilityRole="tablist">
     {chips.map(c => {
       const on = c.key === active;
       return (
@@ -232,15 +249,19 @@ export const FilterChips = ({
           key={c.key}
           activeOpacity={0.85}
           onPress={() => onChange(c.key)}
-          accessibilityRole="button"
+          accessibilityRole="tab"
           accessibilityState={{ selected: on }}
-          style={[styles.chip, on ? { backgroundColor: c.soft, borderColor: c.soft } : null]}>
-          <View style={[styles.chipDot, { backgroundColor: c.dot }]} />
-          <Text allowFontScaling={false} style={[styles.chipText, on ? { color: c.fg } : null]}>
+          style={[styles.segBtn, on && styles.segBtnOn]}>
+          <Text
+            allowFontScaling={false}
+            style={[styles.segText, on ? { color: c.fg } : null]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}>
             {c.label}
           </Text>
-          <View style={[styles.chipCount, { backgroundColor: on ? c.dot : c.soft }]}>
-            <Text allowFontScaling={false} style={[styles.chipCountText, { color: on ? '#fff' : c.fg }]}>
+          <View style={[styles.segCount, { backgroundColor: on ? c.dot : c.soft }]}>
+            <Text allowFontScaling={false} style={[styles.segCountText, { color: on ? '#fff' : c.fg }]}>
               {c.count}
             </Text>
           </View>
@@ -265,90 +286,111 @@ export const ShowMoreButton = ({ rest, onPress }: { rest: number; onPress: () =>
 };
 
 const styles = StyleSheet.create({
-  toolbar: { gap: rs(10), marginBottom: rs(14) },
+  // 03.10: ixcham toolbar (ro'yxat boshida)
+  toolbar: { gap: rs(8), marginBottom: rs(12) },
+  toolbarRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: rs(10) },
+  countText: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.text },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: rs(8),
     backgroundColor: rd.color.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: rd.color.border,
-    borderRadius: rd.radius.pill,
-    height: rs(48),
-    paddingHorizontal: rs(16),
+    borderRadius: rd.radius.md,
+    height: rs(42),
+    paddingHorizontal: rs(12),
   },
   searchBoxFocused: { borderColor: rd.color.primary },
   searchInput: {
     flex: 1,
     fontFamily: rd.font.regular,
-    fontSize: rs(13.5),
+    fontSize: rs(13),
     color: rd.color.text,
     paddingVertical: 0,
   },
-  toolbarRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  countPill: {
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    borderRadius: rd.radius.pill,
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(6),
-  },
-  countPillText: { fontFamily: rd.font.semibold, fontSize: rs(12), color: rd.color.textSecondary },
   downloadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: rs(6),
-    height: rs(40),
-    paddingHorizontal: rs(16),
+    gap: rs(5),
+    height: rs(32),
+    paddingHorizontal: rs(12),
     borderRadius: rd.radius.pill,
     backgroundColor: EXPORT_GREEN,
   },
   downloadBtnDisabled: { opacity: 0.5 },
-  downloadText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.onPrimary },
+  downloadText: { fontFamily: rd.font.semibold, fontSize: rs(12), color: rd.color.onPrimary },
 
-  svodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(10), marginBottom: rs(16) },
-  tile: {
+  // 03.10: ixcham svod — bitta karta, 3 ustun
+  svodCard: {
     backgroundColor: rd.color.surface,
     borderRadius: rd.radius.lg,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(14),
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(4),
+    marginBottom: rs(12),
   },
-  tileWide: { width: '100%' },
-  tileHalf: { width: '48%', flexGrow: 1 },
-  tileHead: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginBottom: rs(8) },
-  tileIcon: { width: rs(30), height: rs(30), borderRadius: rs(9), alignItems: 'center', justifyContent: 'center' },
-  tileLabel: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(11.5), color: rd.color.textSecondary },
-  tileAmountBig: { fontFamily: rd.font.bold, fontSize: rs(18), color: rd.color.text, lineHeight: rs(24) },
-  tileAmount: { fontFamily: rd.font.bold, fontSize: rs(14), lineHeight: rs(20) },
-  tileForgiven: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: ROSE, marginTop: rs(2) },
-  tileFoot: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textTertiary, marginTop: rs(6) },
-  paidRow: { marginBottom: rs(4) },
-  barTrack: { height: rs(6), borderRadius: rs(3), backgroundColor: rd.color.surfaceAlt, marginTop: rs(4), overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: rs(3), backgroundColor: '#22c55e' },
-
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(8), marginBottom: rs(14) },
-  chip: {
+  svodCols: { flexDirection: 'row' },
+  svodCol: { flex: 1, minWidth: 0, paddingHorizontal: rs(8) },
+  svodColDivider: { borderLeftWidth: 1, borderLeftColor: rd.color.border },
+  svodLabelRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginBottom: rs(5) },
+  svodDot: { width: rs(6), height: rs(6), borderRadius: rs(3) },
+  svodLabel: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(10.5), color: rd.color.textSecondary },
+  svodAmount: { fontFamily: rd.font.bold, fontSize: rs(13.5), lineHeight: rs(19) },
+  svodCur: { fontFamily: rd.font.medium, fontSize: rs(10) },
+  svodFoot: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary, marginTop: rs(4) },
+  svodNote: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: rs(6),
-    paddingHorizontal: rs(12),
-    height: rs(36),
-    borderRadius: rd.radius.pill,
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
+    marginTop: rs(10),
+    marginHorizontal: rs(8),
+    paddingTop: rs(8),
+    borderTopWidth: 1,
+    borderTopColor: rd.color.border,
   },
-  chipDot: { width: rs(8), height: rs(8), borderRadius: rs(4) },
-  chipText: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
-  chipCount: { minWidth: rs(20), height: rs(20), paddingHorizontal: rs(6), borderRadius: rs(10), alignItems: 'center', justifyContent: 'center' },
-  chipCountText: { fontFamily: rd.font.bold, fontSize: rs(11) },
+  svodNoteText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(11), color: ROSE },
+
+  // 03.10: segment-tablar (bitta qator)
+  segment: {
+    flexDirection: 'row',
+    gap: rs(4),
+    padding: rs(3),
+    borderRadius: rd.radius.md,
+    backgroundColor: rd.color.surfaceAlt,
+    marginBottom: rs(12),
+  },
+  segBtn: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(5),
+    height: rs(34),
+    paddingHorizontal: rs(6),
+    borderRadius: rs(9),
+  },
+  segBtnOn: {
+    backgroundColor: rd.color.surface,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  segText: { flexShrink: 1, fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary },
+  segCount: {
+    minWidth: rs(18),
+    height: rs(18),
+    paddingHorizontal: rs(5),
+    borderRadius: rs(9),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segCountText: { fontFamily: rd.font.bold, fontSize: rs(10.5) },
 
   moreBtn: {
     alignSelf: 'center',

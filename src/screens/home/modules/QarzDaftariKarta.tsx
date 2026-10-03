@@ -60,6 +60,10 @@ const QarzDaftariKarta = () => {
   const { t } = useTranslation();
   const faoliyat_id = route.params?.faoliyat_id;
   const faoliyat_nomi: string | undefined = route.params?.faoliyat_nomi;
+  // 03.10: "Talab qilish" oqimidan ochilgan — saqlangach orqaga (tasdiq oynasi o'zi ochiladi),
+  // "Kartani o'zgartirish" bosilgan bo'lsa ko'rish emas, darhol TAHRIRLASH rejimi.
+  const returnOnSave = !!route.params?.return_on_save;
+  const startInEdit = !!route.params?.edit;
 
   const { data, loading } = useFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat`,
@@ -88,9 +92,9 @@ const QarzDaftariKarta = () => {
     setOwner(cur.karta_egasi || '');
     setPhone(fmtPhone(cur.telegram_telefon || ''));
     // Ikkalasi ham ulangan bo'lsa — KO'RISH rejimi.
-    if (cur.karta_raqami && cur.telegram_telefon) setMode('view');
+    if (cur.karta_raqami && cur.telegram_telefon && !startInEdit) setMode('view');
     setFilled(true);
-  }, [shops, faoliyat_id, filled]);
+  }, [shops, faoliyat_id, filled, startInEdit]);
 
   const cardDigits = card.replace(/\D/g, '');
   const phoneDigits = phone.replace(/\D/g, '');
@@ -147,6 +151,11 @@ const QarzDaftariKarta = () => {
       // foydalanuvchi saqlangan ma'lumotni ko'rib tasdiqlashi qulayroq.
       // Bo'shatib saqlangan bo'lsa — ko'rish rejimi emas (ko'rsatadigan rekvizit yo'q).
       if (!clearing) setMode('view');
+      // 03.10: talab oqimi — karta saqlandi, talab tasdiq oynasiga qaytamiz.
+      if (returnOnSave && !clearing) {
+        navigation.goBack();
+        return;
+      }
       Toast.show({
         type: 'omad',
         position: 'bottom',

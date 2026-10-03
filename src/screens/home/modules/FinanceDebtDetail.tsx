@@ -45,7 +45,9 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
-import { handlePlanRequiredError, isFeatureLocked, showPlanRequired, smsPlanNotice, usePlanFeatures } from './planGate';
+import { useFinanceDemand } from './useDebtGroupActions';
+import DemandConfirmModal from '../../components/DemandConfirmModal';
+import { isFeatureLocked, showPlanRequired, usePlanFeatures } from './planGate';
 import { fmtCard4 } from '../../../helper/cardBin';
 import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num } from './financeMoney';
 import { DateField } from './financeForm';
@@ -68,6 +70,7 @@ import {
 } from '../redesign/icons';
 import DebtActionButton, { pastelFg } from './DebtActionButton';
 import { BanIcon } from './FinanceDebtActionModal';
+import { smsNoticeText, smsOutcome, stripWaiverNote } from './debtSms';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
@@ -148,12 +151,14 @@ const FinanceDebtDetail = () => {
   const [complaintBusy, setComplaintBusy] = React.useState(false);
   const [complaintSent, setComplaintSent] = React.useState(false);
   const [payoutCard, setPayoutCard] = React.useState<any>(null);
-  const [demanding, setDemanding] = React.useState(false);
   // 02.10: tarif qulflari — talab (manual_sms_send) va to'lov SMS (auto_sms_reminder).
   // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q. ⚠️ Hook — `if (!d) return` DAN OLDIN.
   const plan = usePlanFeatures();
   const demandLocked = isFeatureLocked(plan, 'manual_sms_send');
   const smsLocked = isFeatureLocked(plan, 'auto_sms_reminder');
+  // 03.10: talab — karta tekshiruvi + "Talab SMS yuborilsinmi?" oynasi (useDebtGroupActions.useFinanceDemand).
+  const finDemand = useFinanceDemand({ t, navigation, plan, demandLocked });
+  const demanding = finDemand.demanding;
   // 🔴 SS1 (2026-09-13): karta rekvizitlari har FOKUSda qayta o'qiladi.
   useFocusEffect(
     React.useCallback(() => {
@@ -194,6 +199,8 @@ const FinanceDebtDetail = () => {
   const payments: any[] = d.payments || [];
   const partyPhone: string = String(d.phone || d.shop_phone || d.owner_phone || '');
   const shopAddress: string = [d.shop_region, d.shop_district].filter(Boolean).join(', ');
+  // 03.10: foydalanuvchi izohi (voz kechish avtomatik qismisiz).
+  const userNote = stripWaiverNote(d.notes);
   const forgiven =
     completed &&
     (payments.some(p => FORGIVE_RE.test(String(p?.notes || ''))) || /Kechirilgan|voz kechildi/i.test(String(d.notes || '')));
@@ -306,14 +313,19 @@ const FinanceDebtDetail = () => {
     let planNote: string | null = null;
     const ymd = localDateKey(payDate);
     const note = payNotes.trim();
+    // 03.10 (10-rasm): SMS faqat kalit yoqilgan va telefon bo'lsa (ko'zguda — qarshi tomon raqami).
+    const wantSms = paySms && !smsLocked && !!d.phone;
     try {
       setPaying(true);
       if (isMirror) {
         // SS-DEV (2026-09-24): ko'zgu (men qarz beruvchi) — `mirror-payment`; To'liq = summasiz.
-        const body: { amount?: number; payment_date: string; notes?: string } = { payment_date: ymd };
+        // 03.10: `notify_sms` — backend hozircha qo'llamaydi; javobda `sms` yo'q → "yuborilmadi".
+        const body: { amount?: number; payment_date: string; notes?: string; notify_sms?: boolean } = { payment_date: ymd };
         if (!payFull) body.amount = payAmount;
         if (note) body.notes = note;
+        if (wantSms) body.notify_sms = true;
         const r = await financeApi.mirrorPayDebt(d.id, body);
+        planNote = smsNoticeText([smsOutcome(r?.data, wantSms)], [r?.data], t);
         const newRem = Math.max(0, num(r?.data?.remaining_amount ?? remaining - payAmount));
         const pay = r?.data?.data || { id: `tmp_${Date.now()}`, amount: payAmount, payment_date: ymd, notes: note };
         setMirrorLocal((prev: any) => {
@@ -331,12 +343,13 @@ const FinanceDebtDetail = () => {
           payment_date: ymd,
           // olingan qarzda to'lov = xarajat sifatida ham yoziladi (backend qo'llab-quvvatlaydi)
           create_expense: borrowed,
-          notify_sms: paySms && !!d.phone,
+          notify_sms: wantSms,
         };
         if (note) body.notes = note;
         const pr = await financeApi.addDebtPayment(d.id, body);
         // 02.10: to'lov SAQLANDI, lekin SMS tarif sababli yuborilmagan bo'lishi mumkin.
-        planNote = smsPlanNotice(pr?.data, t);
+        // 03.10: + boshqa sabab bilan yuborilmagan / yuborilgan holati ham aytiladi.
+        planNote = smsNoticeText([smsOutcome(pr?.data, wantSms)], [pr?.data], t);
         refresh({});
       }
       setShowPay(false);
@@ -358,6 +371,7 @@ const FinanceDebtDetail = () => {
   // 02.10: to'lov SMS'i tarifda yo'q bo'lsa — yoqilmaydi, Tariflar taklifi (sayt `toggleNotifySms`).
   const togglePaySms = (v: boolean) => {
     if (v && smsLocked) {
+      setShowPay(false); // 03.10: oyna Tariflar ekrani ustida qolib ketmasin
       showPlanRequired({ expired: plan?.expired }, { t, navigation });
       return;
     }
@@ -383,39 +397,9 @@ const FinanceDebtDetail = () => {
     }
   };
 
-  // SS2: qaytarishni talab qilish (SMS). Karta kiritilmagan bo'lsa avval karta ekrani.
-  const demandRepay = async () => {
-    if (demanding) return;
-    // 02.10: tarifda qo'lda SMS yo'q — karta so'ramasdan darhol tarif eslatmasi.
-    if (demandLocked) {
-      showPlanRequired({ expired: plan?.expired }, { t, navigation });
-      return;
-    }
-    if (!payoutCard?.ready) {
-      Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: t('Avval plastik karta ma’lumotlarini kiriting.') } });
-      navigation.navigate('FinancePayoutCard');
-      return;
-    }
-    try {
-      setDemanding(true);
-      await financeApi.demandDebtAny(d.id, isMirror);
-      Toast.show({ type: 'omad', props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') } });
-    } catch (e: any) {
-      // 02.10: 403 `plan-required` — umumiy xato emas, tarif matni + Tariflar.
-      if (handlePlanRequiredError(e, { t, navigation })) return;
-      const code = e?.response?.data?.code;
-      const msg =
-        code === 'no-card'
-          ? t('Avval plastik karta ma’lumotlarini kiriting.')
-          : code === 'no-phone'
-          ? t('Qarzdor telefoni kiritilmagan.')
-          : e?.response?.data?.message || t('Xatolik yuz berdi');
-      Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
-      if (code === 'no-card') navigation.navigate('FinancePayoutCard');
-    } finally {
-      setDemanding(false);
-    }
-  };
+  // SS2: qaytarishni talab qilish (SMS). 03.10: karta yo'q → karta ekrani, bor → tasdiq oynasi
+  // (OK yuboradi, X yubormaydi); tarif qulfi (02.10) — oqim ichida.
+  const demandRepay = () => finDemand.start({ id: d.id, is_mirror: isMirror });
 
   const openComplaint = () => {
     setComplaintReason('');
@@ -582,7 +566,12 @@ const FinanceDebtDetail = () => {
               <PhoneIcon size={rs(15)} color={rd.color.textTertiary} />
               <Text allowFontScaling={false} style={styles.phoneText} numberOfLines={1}>{partyPhone}</Text>
               <View style={styles.phoneActions}>
-                <TouchableOpacity activeOpacity={0.85} onPress={() => setShowSms(true)} style={styles.smsBtn} accessibilityLabel={t('SMS yuborish')}>
+                {/* 03.10 (7-rasm): yopilgan (qoldiq 0) qarzda shablon kerak emas — SMS ilovasi bo'sh matn bilan */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => (completed || remaining <= 0 ? sendSms() : setShowSms(true))}
+                  style={styles.smsBtn}
+                  accessibilityLabel={t('SMS yuborish')}>
                   <MessageIcon size={rs(15)} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -689,12 +678,14 @@ const FinanceDebtDetail = () => {
             />
           )}
           {num(d.interest_rate) > 0 && <Row label={t('Foiz stavkasi')} value={`${num(d.interest_rate)}%`} />}
-          {d.notes ? <Row label={isMirror ? t('Mahsulot yoki izoh') : t('Izoh')} value={d.notes} /> : null}
+          {/* 03.10 (8-rasm): voz kechish avtomatik izohi ("Kechirilgan (voz kechildi)") — tarixda bor, qator yashiriladi */}
+          {userNote ? <Row label={isMirror ? t('Mahsulot yoki izoh') : t('Izoh')} value={userNote} /> : null}
           {!!d.created_at && <Row label={t('Qayd etilgan')} value={fDateTime(d.created_at)} />}
         </View>
 
-        {/* SS6: KO'ZGU qarz — tushuntirish (sayt "hamkor qaydi" matnlari). */}
-        {isMirror ? (
+        {/* SS6: KO'ZGU qarz — tushuntirish (sayt "hamkor qaydi" matnlari).
+            03.10 (3-rasm): faqat AMALDAGI qarzda — yopilgan/voz kechilganda amal yo'q, izoh ortiqcha. */}
+        {isMirror && active ? (
           <View style={styles.mirrorNote}>
             <Text allowFontScaling={false} style={styles.mirrorNoteTitle}>
               {d.is_shop_debt ? t('👁 Kuzatuv rejimi') : t('🤝 Hamkor qaydi')}
@@ -824,19 +815,26 @@ const FinanceDebtDetail = () => {
                   placeholderTextColor={rd.color.textTertiary}
                   style={styles.modalInput}
                 />
-                {/* SS5: qarama-qarshi tomonga SMS (ixtiyoriy). Ko'zguda (`mirror-payment`) parametr yo'q. */}
-                {!!d.phone && !isMirror && (
+                {/* SS5 / 03.10 (10-rasm): "SMS yuborish" — standart O'CHIQ, tarif qulfi bilan. Ko'zguda ham
+                    (qarshi tomon raqami); `mirror-payment` hozircha SMS yubormaydi — natija toastda aytiladi. */}
+                {!!d.phone && (
                   <View style={styles.smsRow}>
                     <View style={{ flex: 1, paddingRight: rs(10) }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(6) }}>
-                        <Text allowFontScaling={false} style={styles.smsLabel}>{t('SMS xabarnoma yuborish')}</Text>
+                        <Text allowFontScaling={false} style={styles.smsLabel}>{t('SMS yuborish')}</Text>
                         {smsLocked && <LockIcon size={rs(13)} color={rd.color.textTertiary} />}
                       </View>
                       <Text allowFontScaling={false} style={styles.smsSub}>
-                        {t('Belgilansa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi (SMS paketi bo‘lsa).', { phone: d.phone })}
+                        {t('Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.', { phone: d.phone })}
                       </Text>
                     </View>
-                    <Switch value={paySms} onValueChange={togglePaySms} trackColor={{ true: BLUE, false: rd.color.border }} thumbColor="#fff" />
+                    <Switch
+                      value={paySms && !smsLocked}
+                      onValueChange={togglePaySms}
+                      trackColor={{ true: BLUE, false: rd.color.border }}
+                      thumbColor="#fff"
+                      accessibilityLabel={t('SMS yuborish')}
+                    />
                   </View>
                 )}
               </ScrollView>
@@ -946,8 +944,9 @@ const FinanceDebtDetail = () => {
                   ) : (
                     <>
                       {/* 02.10 (sayt 30.09): ✅ + "…yetkazildi. Qarz bo'yicha o'zgarish bo'lsa, u shu yerda ko'rinadi." */}
+                      {/* 03.10 (11/12-rasm): yashil blok — ikonka tepada, matn MARKAZDA */}
                       <View style={styles.complainDone}>
-                        <CheckCircleIcon size={rs(18)} color="#16a34a" />
+                        <CheckCircleIcon size={rs(22)} color="#16a34a" />
                         <Text allowFontScaling={false} style={styles.complainDoneText}>{complaintTarget.done}</Text>
                       </View>
                       <TouchableOpacity style={[styles.confirmDel, { backgroundColor: GREEN, marginTop: rs(14) }]} onPress={() => setShowComplaint(false)}>
@@ -988,6 +987,9 @@ const FinanceDebtDetail = () => {
           </View>
         </View>
       </Modal>
+
+      {/* 03.10: talab tasdiq oynasi — OK SMS yuboradi, X yubormaydi, kartani o'zgartirish. */}
+      <DemandConfirmModal {...finDemand.modal} />
 
       {/* O'chirish tasdig'i — 02.10 (sayt): bir tomonlama, faqat mening ro'yxatimdan. */}
       <Modal visible={showDel} transparent animationType="fade" statusBarTranslucent onRequestClose={() => !deleting && setShowDel(false)}>
@@ -1115,8 +1117,9 @@ const styles = StyleSheet.create({
   formLabelHint: { fontFamily: rd.font.regular, color: rd.color.textTertiary },
   complainInput: { height: rs(76), marginTop: rs(10), paddingTop: rs(10), textAlignVertical: 'top', fontFamily: rd.font.regular, fontSize: rs(13.5) },
   complainCard: { maxHeight: '92%' },
-  complainDone: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(8), backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', borderRadius: rd.radius.md, padding: rs(12), marginTop: rs(4) },
-  complainDoneText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(13), color: '#166534', lineHeight: rs(19) },
+  // 03.10: ustun + markaz (ilgari ikonka chapda, matn chapga tekislangan edi)
+  complainDone: { alignItems: 'center', gap: rs(8), backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', borderRadius: rd.radius.md, paddingVertical: rs(14), paddingHorizontal: rs(14), marginTop: rs(4) },
+  complainDoneText: { fontFamily: rd.font.medium, fontSize: rs(13), color: '#166534', lineHeight: rs(19), textAlign: 'center' },
 
   backdrop: { flex: 1, backgroundColor: 'rgba(9,14,26,0.55)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: rs(24) },
   confirmCard: { width: '100%', backgroundColor: rd.color.surface, borderRadius: rd.radius.xxl, padding: rs(20) },

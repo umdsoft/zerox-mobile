@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   Linking,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -15,7 +14,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
 import AnimatedEmpty from '../components/AnimatedEmpty';
 import { exportCsv } from '../../helper/csvExport';
-import { sortMoneyText } from '../components/StatisticCard';
+import ContractsSwipeList, {
+  ContractFilter,
+  contractFilterKey,
+  contractStatusMeta,
+  filterContracts,
+} from './ContractsSwipeList';
 
 import { storage } from '../../store/api/token/getToken';
 import axios from 'axios';
@@ -31,9 +35,7 @@ import { rd, rs } from '../../theme/rd';
 import {
   ArrowDown,
   CalendarIcon,
-  ChevronRight,
   ClockIcon,
-  ContractIcon,
   IconProps,
   IdCardIcon,
   LocationIcon,
@@ -71,20 +73,6 @@ const InfoRow = ({
   </View>
 );
 
-// SS-E: shartnoma holati REAL statusdan (backend CONTRACT_STATUS):
-// 0=Kutilmoqda, 1=Jarayonda(faol), 2=Tugallangan, 3=Bekor qilingan, 4=Rad etilgan,
-// 5=Muddati o'tgan, 10=O'chirilgan. Ilgari faqat 2 va 4 qaralib, 3/5 noto'g'ri
-// "Jarayonda" ko'rinardi (ro'yxat ↔ shartnoma ichidagi holat mos kelmasdi).
-const contractStatusMeta = (status: any, t: any): { label: string; color: string } => {
-  const s = Number(status);
-  if (s === 2) return { label: t('198'), color: '#16a34a' }; // Tugallangan
-  if (s === 3 || s === 4) return { label: t('261'), color: '#dc2626' }; // Bekor/Rad etilgan
-  if (s === 5) return { label: t('Muddati o‘tgan'), color: '#dc2626' };
-  if (s === 10) return { label: t('O‘chirilgan'), color: '#94a3b8' };
-  if (s === 0) return { label: t('Kutilmoqda'), color: '#f59e0b' };
-  return { label: t('195'), color: '#f59e0b' }; // Jarayonda (1)
-};
-
 // Tug'ilgan sanani DD.MM.YYYY ko'rinishiga keltiradi (SS4 so'rovi).
 // Backend "1999-07-06" (YYYY-MM-DD, ba'zan vaqt qismi bilan) qaytaradi — foydalanuvchi
 // "06.07.1999" ko'rishi kerak. new Date() ISHLATMAYMIZ (timezone kuni surib yuborishi
@@ -96,26 +84,6 @@ const formatBirthday = (s?: string): string => {
   return m ? `${m[3]}.${m[2]}.${m[1]}` : str;
 };
 
-// 02.10: shartnomalar ro'yxati filtri — saytdagi (pages/user) kabi
-// Barchasi / Tugallangan / Jarayonda / Rad etilgan. Holat → filtr kaliti:
-// 2 = tugallangan; 3/4 = rad etilgan (bekor/rad); 0/1/5 = jarayonda (kutilmoqda,
-// faol, muddati o'tgan — hammasi hali yopilmagan). 10 (o'chirilgan) faqat "Barchasi"da.
-type ContractFilter = 'all' | 'completed' | 'active' | 'rejected';
-const contractFilterKey = (status: any): ContractFilter | 'other' => {
-  const s = Number(status);
-  if (s === 2) return 'completed';
-  if (s === 3 || s === 4) return 'rejected';
-  if (s === 0 || s === 1 || s === 5) return 'active';
-  return 'other';
-};
-const CONTRACT_FILTERS: { key: ContractFilter; label: string }[] = [
-  { key: 'all', label: 'Barchasi' },
-  { key: 'completed', label: 'Tugallangan' },
-  { key: 'active', label: 'Jarayonda' },
-  { key: 'rejected', label: 'Rad etilgan' },
-];
-// Ro'yxat bosqichma-bosqich ochiladi (uzun ro'yxat bir zumda chizilmasin).
-const CONTRACTS_PAGE = 20;
 // /contract/between limiti 50; sayt kabi eng ko'pi 20 sahifa (1000 ta) yig'iladi.
 const BETWEEN_LIMIT = 50;
 const BETWEEN_MAX_PAGES = 20;
@@ -142,7 +110,6 @@ const ShowUserDetails = () => {
   // 02.10: holat filtri + yuklanish holati + bosqichma-bosqich ko'rsatish.
   const [contractsLoading, setContractsLoading] = useState(false);
   const [filter, setFilter] = useState<ContractFilter>('all');
-  const [visible, setVisible] = useState(CONTRACTS_PAGE);
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
 
@@ -247,16 +214,7 @@ const ShowUserDetails = () => {
     });
     return cnt;
   }, [contracts]);
-  const filtered = useMemo(
-    () => (filter === 'all' ? contracts : contracts.filter(c => contractFilterKey(c?.status) === filter)),
-    [contracts, filter],
-  );
-  const shownContracts = filtered.slice(0, visible);
-
-  const onFilter = (k: ContractFilter) => {
-    setFilter(k);
-    setVisible(CONTRACTS_PAGE);
-  };
+  const filtered = useMemo(() => filterContracts(contracts, filter), [contracts, filter]);
 
   // 02.10: filtr qo'llangan shartnomalar ro'yxatini yuklab olish (saytdagi kabi ustunlar:
   // Shartnoma, Yo'nalish, Summa, Qoldiq, Tuzilgan, Muddat, Holat). CSV — SearchDebitor bilan
@@ -382,100 +340,20 @@ const ShowUserDetails = () => {
           </TouchableOpacity>
         </View>
 
-        {contracts.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filterScroll}
-            contentContainerStyle={styles.filterRow}>
-            {CONTRACT_FILTERS.map(f => {
-              const active = filter === f.key;
-              return (
-                <TouchableOpacity
-                  key={f.key}
-                  activeOpacity={0.85}
-                  onPress={() => onFilter(f.key)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  style={[styles.filterChip, active && styles.filterChipActive]}>
-                  <Text
-                    allowFontScaling={false}
-                    style={[styles.filterText, active && styles.filterTextActive]}>
-                    {t(f.label)}
-                  </Text>
-                  <View style={[styles.filterBadge, active && styles.filterBadgeActive]}>
-                    <Text
-                      allowFontScaling={false}
-                      style={[styles.filterBadgeText, active && styles.filterBadgeTextActive]}>
-                      {filterCounts[f.key]}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-
+        {/* 03.10 (1-band): filtr chip bosib HAM, ro'yxatni chapga/o'ngga surib HAM almashadi
+            (pastki menyu kabi PagerView). "Yuklash" va son — faol filtr bo'yicha. */}
         {contractsLoading ? (
           <ActivityIndicator style={styles.contractsLoader} color={rd.color.primary} />
-        ) : filtered.length === 0 ? (
-          <AnimatedEmpty
-            variant="loan"
-            compact
-            text={
-              contracts.length === 0
-                ? t('Bu foydalanuvchi bilan shartnomalar yo‘q')
-                : t('Bu holatdagi shartnomalar yo‘q')
-            }
-          />
+        ) : contracts.length === 0 ? (
+          <AnimatedEmpty variant="loan" compact text={t('Bu foydalanuvchi bilan shartnomalar yo‘q')} />
         ) : (
-          shownContracts.map((c, i) => {
-            const m = contractStatusMeta(c?.status, t);
-            const dir =
-              c?.direction === 'lent' ? t('Berilgan') : c?.direction === 'borrowed' ? t('Olingan') : '';
-            return (
-              <TouchableOpacity
-                key={c?.id ?? i}
-                activeOpacity={0.85}
-                style={[styles.contractRow, styles.contractDivider]}
-                onPress={() =>
-                  navigation.navigate('DownloadStatistic', { item: c, id: c?.id })
-                }>
-                <View style={styles.contractIcon}>
-                  <ContractIcon size={rs(18)} color={rd.color.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text allowFontScaling={false} style={styles.contractNumber} numberOfLines={1}>
-                    {c?.number ? `№ ${c.number}` : t('Shartnoma')}
-                  </Text>
-                  {/* C: sana OLIB TASHLANDI — holat (rangli) + 02.10: yo'nalish (Berilgan/Olingan).
-                      SS-E: holat REAL statusdan (CONTRACT_STATUS: 0=kutil,1=faol,2=yakun,
-                      3=bekor,4=rad,5=muddat,10=o'chirilgan). */}
-                  <Text allowFontScaling={false} numberOfLines={1} style={styles.contractMeta}>
-                    <Text style={{ color: m.color }}>{m.label}</Text>
-                    {dir ? ` · ${dir}` : ''}
-                  </Text>
-                </View>
-                <View style={styles.contractRight}>
-                  <Text allowFontScaling={false} style={styles.contractAmount} numberOfLines={1}>
-                    {sortMoneyText(c?.amount) || 0} {c?.currency || ''}
-                  </Text>
-                  <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
-
-        {!contractsLoading && filtered.length > visible && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => setVisible(v => v + CONTRACTS_PAGE)}
-            style={styles.moreBtn}>
-            <Text allowFontScaling={false} style={styles.moreText}>
-              {t('Yana ko‘rsatish')} ({filtered.length - visible})
-            </Text>
-          </TouchableOpacity>
+          <ContractsSwipeList
+            contracts={contracts}
+            filter={filter}
+            counts={filterCounts}
+            onFilterChange={setFilter}
+            onOpen={c => navigation.navigate('DownloadStatistic', { item: c, id: c?.id })}
+          />
         )}
       </View>
     </ScreenLayout>
@@ -624,67 +502,7 @@ const styles = StyleSheet.create({
   },
   downloadBtnOff: { opacity: 0.45 },
   downloadText: { fontFamily: rd.font.semibold, fontSize: rs(12.5), color: rd.color.onPrimary },
-  // 02.10: holat filtri chip'lari (SearchDebitor tablari uslubida).
-  filterScroll: { marginHorizontal: rs(-14) },
-  filterRow: { paddingHorizontal: rs(14), gap: rs(8), paddingBottom: rs(10) },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: rs(6),
-    paddingHorizontal: rs(12),
-    height: rs(34),
-    borderRadius: rd.radius.pill,
-    backgroundColor: rd.color.surface,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-  },
-  filterChipActive: { backgroundColor: rd.color.primary, borderColor: rd.color.primary },
-  filterText: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
-  filterTextActive: { fontFamily: rd.font.semibold, color: rd.color.onPrimary },
-  filterBadge: {
-    minWidth: rs(20),
-    height: rs(20),
-    paddingHorizontal: rs(6),
-    borderRadius: rs(10),
-    backgroundColor: rd.color.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterBadgeActive: { backgroundColor: rd.color.onPrimaryChip },
-  filterBadgeText: { fontFamily: rd.font.bold, fontSize: rs(11), color: rd.color.textSecondary },
-  filterBadgeTextActive: { color: rd.color.onPrimary },
   contractsLoader: { paddingVertical: rs(24) },
-  moreBtn: {
-    alignItems: 'center',
-    paddingVertical: rs(12),
-    borderTopWidth: 1,
-    borderTopColor: rd.color.border,
-  },
-  moreText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.primary },
-  contractRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: rs(12),
-    paddingVertical: rs(12),
-  },
-  contractDivider: { borderTopWidth: 1, borderTopColor: rd.color.border },
-  contractIcon: {
-    width: rs(38),
-    height: rs(38),
-    borderRadius: rs(19),
-    backgroundColor: rd.color.primaryTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contractNumber: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
-  contractMeta: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(11.5),
-    color: rd.color.textTertiary,
-    marginTop: rs(2),
-  },
-  contractRight: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
-  contractAmount: { fontFamily: rd.font.bold, fontSize: rs(13.5), color: rd.color.text },
 
   // Telefon raqami o'ng tomonidagi ikki tugma qatori (SMS + qo'ng'iroq).
   phoneActions: {

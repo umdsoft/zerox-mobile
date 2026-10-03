@@ -11,6 +11,10 @@
  *   - 20 tadan "Yana ko'rsatish", bo'sh holatda harakatli ikonka.
  * Manba: GET /finance/debts?type=..&status=completed (sahifalab, o'z + ko'zgu + do'kon).
  *
+ * 03.10 (mobil hujjat, 2-band): sarlavha "Berilgan qarzlar" / "Olingan qarzlar" (izohsiz);
+ *   tablar bitta qatorda (segment), svod — bitta ixcham karta; qidiruv + "N ta qarz" +
+ *   "Yuklash" sahifa tepasidan RO'YXAT BOSHIGA ko'chirildi.
+ *
  * Route params: { side: 'given' | 'taken' }.
  */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -183,11 +187,13 @@ const FinanceDebtReport = () => {
     ];
   }, [rows, t]);
 
-  const title = isGiven ? t('Yakunlangan berilgan qarzlar') : t('Yakunlangan olingan qarzlar');
+  // 03.10: sarlavha qisqardi ("Yakunlangan ..." emas); CSV fayl nomi esa aniq qoladi.
+  const title = isGiven ? t('Berilgan qarzlar') : t('Olingan qarzlar');
+  const fileName = isGiven ? t('Yakunlangan berilgan qarzlar') : t('Yakunlangan olingan qarzlar');
 
   const onDownload = () => {
     exportCsv({
-      baseName: title,
+      baseName: fileName,
       header: [
         isGiven ? t('Qarz oluvchi') : t('Qarz beruvchi'),
         t('Telefon'),
@@ -216,15 +222,8 @@ const FinanceDebtReport = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader
-        title={title}
-        subtitle={
-          isGiven
-            ? t('Siz bergan qarzlar: tugallangan va voz kechilgan')
-            : t('Siz olgan qarzlar: tugallangan va voz kechilgan')
-        }
-        showBack
-      />
+      {/* 03.10: izoh ("Siz bergan qarzlar: ...") olib tashlandi */}
+      <RdHeader title={title} showBack />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.content}
@@ -233,15 +232,16 @@ const FinanceDebtReport = () => {
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={reload} tintColor={rd.color.primary} colors={[rd.color.primary]} />
         }>
+        {/* 03.10: svod (ixcham) → tablar → qidiruv → ro'yxat */}
+        {src.ready ? <DebtSvodCards svod={svod} side={side} closedOnly /> : null}
+        <FilterChips chips={chips} active={bucket} onChange={k => setBucket(k as Bucket)} />
         <DebtToolbar
           search={search}
           onSearch={setSearch}
           onDownload={onDownload}
-          count={rows.length}
+          count={visible.length}
           disabled={!visible.length}
         />
-        <FilterChips chips={chips} active={bucket} onChange={k => setBucket(k as Bucket)} />
-        {src.ready ? <DebtSvodCards svod={svod} side={side} closedOnly /> : null}
 
         {showLoading ? (
           <View style={styles.loadingBox}>

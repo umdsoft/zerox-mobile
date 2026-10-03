@@ -21,17 +21,16 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import axios from 'axios';
 import { useFetch } from '../../../hooks/useFetch';
-import { storage } from '../../../store/api/token/getToken';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
 import { creationParams } from './qarzAmaliyot';
-import { showTalabError } from './qarzTalab';
-import { isFeatureLocked, isQarzStaffContext, showPlanRequired, usePlanFeatures } from './planGate';
+import { useQarzTalab } from './qarzTalab';
+import { usePlanFeatures } from './planGate';
+import DemandConfirmModal from '../../components/DemandConfirmModal';
 import { buildQarzSmsTemplates } from './qarzSmsTemplates';
 import SmsTemplateSheet from '../../components/SmsTemplateSheet';
 import {
@@ -377,40 +376,22 @@ const QarzDaftariMijoz = () => {
    * SMS eslatma yuboradi. Mantiq qarz sahifasidagi (QarzDaftariQarz) bilan bir
    * xil endpoint: POST /qarz-daftari/qarz/:id/talab.
    */
-  const [talabLoading, setTalabLoading] = React.useState(false);
   // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
   // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
   const plan = usePlanFeatures();
-  const talabLocked = !isQarzStaffContext() && isFeatureLocked(plan, 'manual_sms_send');
-  const talabQil = async () => {
-    if (talabLoading || !lastActiveQarz?.id) return;
-    if (talabLocked) {
-      showPlanRequired({ expired: plan?.expired }, { t, navigation });
-      return;
-    }
-    setTalabLoading(true);
-    try {
-      const token = storage.getString('token');
-      await axios.post(
-        `${URL}/qarz-daftari/qarz/${lastActiveQarz.id}/talab`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      Toast.show({
-        type: 'omad',
-        props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') },
-      });
-    } catch (error: any) {
-      // 29.09 (3-band): aniq sabab (karta yo'q → karta ekrani, SMS rad etildi, ...).
-      showTalabError(error, {
-        t,
-        navigation,
-        faoliyatId: mijoz?.savdo_faoliyat_id,
-        faoliyatNomi: dokonNomi,
-      });
-    } finally {
-      setTalabLoading(false);
-    }
+  // 03.10: SMS darhol ketmaydi — karta tekshiruvi + "Talab SMS yuborilsinmi?" (qarzTalab.useQarzTalab).
+  const talab = useQarzTalab({ t, navigation, plan });
+  const talabLocked = talab.locked;
+  const talabLoading = talab.demanding;
+  const talabQil = () => {
+    if (!lastActiveQarz?.id) return;
+    talab.start({
+      id: lastActiveQarz.id,
+      faoliyatId: mijoz?.savdo_faoliyat_id,
+      faoliyatNomi: dokonNomi,
+      amount: lastActiveQarz.qoldiq != null ? lastActiveQarz.qoldiq : lastActiveQarz.miqdor,
+      valyuta: lastActiveQarz.valyuta,
+    });
   };
 
   const goYangi = () => {
@@ -726,6 +707,11 @@ const QarzDaftariMijoz = () => {
         onClose={() => setShowSms(false)}
         phone={telefon}
         templates={smsTemplates}
+      />
+      {/* 03.10: "Talab SMS yuborilsinmi?" — OK yuboradi, X yubormaydi, kartani o'zgartirish. */}
+      <DemandConfirmModal
+        {...talab.modal}
+        noCardNote={t('Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.')}
       />
     </View>
   );

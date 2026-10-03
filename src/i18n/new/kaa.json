@@ -1718,7 +1718,17 @@
     "{{n}} ta qarzdan voz kechildi": "{{n}} qarızdan waz keshildi",
     "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Plastik karta nomeri hám Telegram ushın telefon nomeri — ekewi de mindetli.",
     "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "Karta nomeri 16 sannan ibarat bolıwı kerek.",
-    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Telefon nomerin tolıq kiritiń (9 san)."
-  },
-  "Karta ma’lumotlari o‘chirildi.": "Karta maǵlıwmatları óshirildi."
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Telefon nomerin tolıq kiritiń (9 san).",
+    "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.": "Qosılsa, {{phone}} nomerine tólem hám qalǵan qarız haqqında SMS jiberiledi.",
+    "To‘lov saqlandi, lekin SMS yuborilmadi.": "Tólem saqlandı, biraq SMS jiberilmedi.",
+    "Talab SMS yuborilsinmi?": "Talap SMS jiberilsin be?",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.": "Qarızdarǵa qarızdı qaytarıw talabı SMS arqalı jiberiledi. SMS’te tómendegi karta kórsetiledi.",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.": "Qarızdarǵa qarızdı qaytarıw talabı SMS arqalı jiberiledi.",
+    "Plastik karta kiritilmagan.": "Plastik karta kirgizilmegen.",
+    "SMS matni": "SMS teksti",
+    "Kartani o‘zgartirish": "Kartanı ózgertiw",
+    "Karta qo‘shish": "Karta qosıw",
+    "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Dúkan kartası kirgizilmegen — SMS ulıwma tekstte jiberiledi.",
+    "Karta ma’lumotlari o‘chirildi.": "Karta maǵlıwmatları óshirildi."
+  }
 }

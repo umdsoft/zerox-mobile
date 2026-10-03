@@ -16,6 +16,10 @@
  *   (kontragent, qolgan kun, qoldiq, muddat) — sayt bloki kabi; manba bosh sahifa bloki bilan
  *   AYNAN bitta (`resolveUpcoming`: /finance/debts/upcoming, fallback — ro'yxat).
  *
+ * 03.10 (mobil hujjat, 4/9-band): svod — bitta ixcham karta; qidiruv + "N ta qarz" +
+ *   "Yuklash" sahifa tepasidan RO'YXAT BOSHIGA ko'chirildi; "Muddati oz qolgan" sahifalarida
+ *   sarlavha ostidagi izoh olib tashlandi (bo'sh holat ikonkasidagi oq fon — AnimatedEmpty'da).
+ *
  * Route params: { kind: 'given' | 'taken' | 'overdue-given' | 'overdue-taken' |
  *                 'upcoming-given' | 'upcoming-taken' | 'completed' }.
  */
@@ -76,14 +80,15 @@ const KINDS: DebtListKind[] = [
   'completed',
 ];
 
-/** 02.10: sarlavha ostidagi izoh (sayt `subtitles`). */
-const KIND_SUBTITLE: Record<DebtListKind, string> = {
+/**
+ * 02.10: sarlavha ostidagi izoh (sayt `subtitles`).
+ * 03.10 (9-band): "Muddati oz qolgan berilgan / olingan" sahifalarida izoh YO'Q.
+ */
+const KIND_SUBTITLE: Partial<Record<DebtListKind, string>> = {
   given: 'Sizdan qarz olgan shaxslar ro‘yxati',
   taken: 'Sizga qarz bergan shaxslar ro‘yxati',
   'overdue-given': 'Qaytarish muddati o‘tgan berilgan qarzlar',
   'overdue-taken': 'Qaytarish muddati o‘tgan olingan qarzlar',
-  'upcoming-given': 'Muddati {{n}} kun ichida keladigan berilgan qarzlar',
-  'upcoming-taken': 'Muddati {{n}} kun ichida keladigan olingan qarzlar',
   completed: 'To‘liq yopilgan qarzlar',
 };
 
@@ -338,7 +343,9 @@ const FinanceDebtList = () => {
   };
 
   const title = t(DEBT_KIND_TITLE[kind]);
-  const count = isUpcoming ? upRows.length : scoped.length;
+  const subtitleKey = KIND_SUBTITLE[kind];
+  // 03.10: "N ta qarz" endi ro'yxat sarlavhasi — qidiruv/valyuta filtridan KEYINGI son.
+  const count = isUpcoming ? upVisible.length : groups.reduce((n, g) => n + g.items.length, 0);
   const loading = !!listFetch.loading || (isUpcoming && !!upFetch.loading);
 
   /** 02.10: ko'rinayotgan ro'yxatni CSV'ga ("Yuklash", sayt exportExcel ustunlari). */
@@ -387,7 +394,7 @@ const FinanceDebtList = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title={title} subtitle={t(KIND_SUBTITLE[kind], { n: UPCOMING_DAYS })} showBack />
+      <RdHeader title={title} subtitle={subtitleKey ? t(subtitleKey) : undefined} showBack />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.content}
@@ -401,14 +408,7 @@ const FinanceDebtList = () => {
             colors={[rd.color.primary]}
           />
         }>
-        <DebtToolbar
-          search={search}
-          onSearch={setSearch}
-          onDownload={onDownload}
-          count={count}
-          disabled={!visibleCount}
-        />
-
+        {/* 03.10: svod (ixcham) → [jami qoldiq + valyuta tablari] → qidiruv → ro'yxat */}
         {svodSide && svod && svodAll.ready ? <DebtSvodCards svod={svod} side={svodSide} /> : null}
 
         {isUpcoming && upRows.length ? (
@@ -417,6 +417,14 @@ const FinanceDebtList = () => {
             <FilterChips chips={curChips} active={cur} onChange={setCur} />
           </>
         ) : null}
+
+        <DebtToolbar
+          search={search}
+          onSearch={setSearch}
+          onDownload={onDownload}
+          count={count}
+          disabled={!visibleCount}
+        />
 
         {visibleCount === 0 ? (
           loading ? (

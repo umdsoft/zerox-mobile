@@ -1718,7 +1718,17 @@
     "{{n}} ta qarzdan voz kechildi": "{{n}} debts waived",
     "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Both the bank card number and the Telegram phone number are required.",
     "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "The card number must consist of 16 digits.",
-    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Enter the full phone number (9 digits)."
-  },
-  "Karta ma’lumotlari o‘chirildi.": "Card details removed."
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Enter the full phone number (9 digits).",
+    "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.": "If enabled, an SMS about the payment and the remaining debt will be sent to {{phone}}.",
+    "To‘lov saqlandi, lekin SMS yuborilmadi.": "Payment saved, but the SMS was not sent.",
+    "Talab SMS yuborilsinmi?": "Send the demand SMS?",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.": "The debtor will receive an SMS asking to repay the debt. The SMS will include the card below.",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.": "The debtor will receive an SMS asking to repay the debt.",
+    "Plastik karta kiritilmagan.": "No bank card has been added.",
+    "SMS matni": "SMS text",
+    "Kartani o‘zgartirish": "Change card",
+    "Karta qo‘shish": "Add card",
+    "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "No shop card added — the SMS will be sent with the generic text.",
+    "Karta ma’lumotlari o‘chirildi.": "Card details removed."
+  }
 }

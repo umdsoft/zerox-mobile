@@ -41,6 +41,7 @@ import {
   BarChartIcon,
   ChevronRight,
   ClockIcon,
+  InfoIcon,
 } from '../redesign/icons';
 import DebtSummaryCard from '../redesign/DebtSummaryCard';
 import { debtNav, DebtRole, DebtTab } from '../redesign/debtNav';
@@ -334,7 +335,8 @@ const NearCard = ({
 
 // ---------- Hisobot kartasi (yonma-yon, rangli — so'rov SS4.6) ----------
 // 02.10: saytdagi kabi karta nomi "Berilgan qarzlar" / "Olingan qarzlar" (ilgari
-// "... hisoboti"); karta pastida "Ko'rish ›" — bosiladigani aniq ko'rinsin.
+// "... hisoboti"). 03.10 (12-band): karta pastidagi "Ko'rish ›" OLIB TASHLANDI — kartaning
+// o'zi bosiladi (butun karta TouchableOpacity).
 const ReportCard = ({
   label,
   tint,
@@ -346,7 +348,6 @@ const ReportCard = ({
   iconColor: string;
   onPress: () => void;
 }) => {
-  const { t } = useTranslation();
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -365,13 +366,38 @@ const ReportCard = ({
         minimumFontScale={0.8}>
         {label}
       </Text>
-      <View style={styles.reportMore}>
-        <Text allowFontScaling={false} style={[styles.reportMoreText, { color: iconColor }]}>
-          {t('Ko‘rish')}
-        </Text>
-        <ChevronRight size={rs(14)} color={iconColor} />
-      </View>
     </TouchableOpacity>
+  );
+};
+
+// 03.10 (12-band): "Tugallangan qarz shartnomalari" sarlavhasi — izoh doim ko'rinmaydi,
+// sarlavha O'NGIDAGI (i) bosilganda ochiladi (Shaxsiy qarz "Yakunlangan qarzlar" —
+// FinanceDebts.FinishedSection — bilan AYNAN bir xil naqsh va uslub).
+const ReportSectionHead = () => {
+  const { t } = useTranslation();
+  const [info, setInfo] = React.useState(false);
+  const infoText = t('Ushbu qismda yakunlangan hamda voz kechilgan qarzlar aks etadi');
+  return (
+    <>
+      <View style={styles.reportSectionHead}>
+        <Text allowFontScaling={false} style={styles.reportSectionTitle} numberOfLines={2}>
+          {t('Tugallangan qarz shartnomalari')}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setInfo(v => !v)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: info }}
+          accessibilityLabel={infoText}>
+          <InfoIcon size={rs(17)} color={info ? rd.color.primary : rd.color.textTertiary} />
+        </TouchableOpacity>
+      </View>
+      {info ? (
+        <Text allowFontScaling={false} style={styles.reportSectionInfo}>
+          {infoText}
+        </Text>
+      ) : null}
+    </>
   );
 };
 
@@ -572,12 +598,7 @@ const QarzShartnomasi = () => {
             shartnomalari" + izoh; kartalar "Berilgan qarzlar" / "Olingan qarzlar". Navigatsiya
             o'zgarmadi — hisobot ro'yxati (tugallangan + rad etilgan, status tablari bilan). */}
         <View style={styles.reportSection}>
-          <Text allowFontScaling={false} style={styles.reportSectionTitle}>
-            {t('Tugallangan qarz shartnomalari')}
-          </Text>
-          <Text allowFontScaling={false} style={styles.reportSectionSub}>
-            {t('Ushbu qismda yakunlangan hamda voz kechilgan qarzlar aks etadi')}
-          </Text>
+          <ReportSectionHead />
           <View style={styles.reportRow}>
             <ReportCard
               label={t('Berilgan qarzlar')}
@@ -781,17 +802,20 @@ const styles = StyleSheet.create({
 
   // Hisobot kartasi
   // 02.10: "Tugallangan qarz shartnomalari" bo'limi (sarlavha + izoh + 2 karta).
-  reportSection: { gap: rs(4) },
-  reportSectionTitle: { fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
-  reportSectionSub: {
+  // 03.10: sarlavha + (i) bir qatorda; izoh (ochilganda) — FinanceDebts `finishedInfo` uslubi.
+  reportSection: { gap: rs(12) },
+  reportSectionHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
+  reportSectionTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
+  reportSectionInfo: {
     fontFamily: rd.font.regular,
     fontSize: rs(12),
-    lineHeight: rs(16),
-    color: rd.color.textTertiary,
-    marginBottom: rs(8),
+    lineHeight: rs(17),
+    color: rd.color.textSecondary,
+    backgroundColor: rd.color.primaryTint,
+    borderRadius: rd.radius.md,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(8),
   },
-  reportMore: { flexDirection: 'row', alignItems: 'center', gap: rs(2), marginTop: rs(-2) },
-  reportMoreText: { fontFamily: rd.font.semibold, fontSize: rs(12) },
   reportRow: { flexDirection: 'row', gap: rs(12) },
   reportCard: {
     flex: 1,

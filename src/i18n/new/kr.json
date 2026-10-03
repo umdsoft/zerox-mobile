@@ -1718,7 +1718,17 @@
     "{{n}} ta qarzdan voz kechildi": "{{n}} та қарздан воз кечилди",
     "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Пластик карта рақами ва Telegram учун телефон рақами — иккаласи ҳам мажбурий.",
     "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "Карта рақами 16 та рақамдан иборат бўлиши керак.",
-    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Телефон рақамини тўлиқ киритинг (9 та рақам)."
-  },
-  "Karta ma’lumotlari o‘chirildi.": "Карта маълумотлари ўчирилди."
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Телефон рақамини тўлиқ киритинг (9 та рақам).",
+    "Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.": "Ёқилса, {{phone}} рақамига тўлов ва қолдиқ қарз ҳақида SMS юборилади.",
+    "To‘lov saqlandi, lekin SMS yuborilmadi.": "Тўлов сақланди, лекин SMS юборилмади.",
+    "Talab SMS yuborilsinmi?": "Талаб SMS юборилсинми?",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi. SMS’da quyidagi karta ko‘rsatiladi.": "Қарздорга қарзни қайтариш талаби SMS орқали юборилади. SMS’да қуйидаги карта кўрсатилади.",
+    "Qarzdorga qarzni qaytarish talabi SMS orqali yuboriladi.": "Қарздорга қарзни қайтариш талаби SMS орқали юборилади.",
+    "Plastik karta kiritilmagan.": "Пластик карта киритилмаган.",
+    "SMS matni": "SMS матни",
+    "Kartani o‘zgartirish": "Картани ўзгартириш",
+    "Karta qo‘shish": "Карта қўшиш",
+    "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Дўкон картаси киритилмаган — SMS умумий матнда юборилади.",
+    "Karta ma’lumotlari o‘chirildi.": "Карта маълумотлари ўчирилди."
+  }
 }

@@ -10,7 +10,10 @@
  *               To'liq / Qisman; qisman summa HAR VALYUTA uchun alohida (UZS va USD qo'shilmaydi),
  *               bir valyutada bir nechta qarz bo'lsa summa muddati yaqin qarzdan boshlab
  *               taqsimlanadi (oldindan ko'rinadi — debtAllocation).
- * Natija: onConfirm({ debts, amounts }) — amounts: valyuta → summa | null (null = butun qoldiq).
+ * Natija: onConfirm({ debts, amounts, sms }) — amounts: valyuta → summa | null (null = butun qoldiq).
+ * 03.10 (10-rasm): yopish/qaytarishda "SMS yuborish" kaliti — STANDART O'CHIQ; faqat telefoni bor
+ *   qarz tanlanganda ko'rinadi. Tarifda imkoniyat yo'q bo'lsa (`smsLocked`) — qulf belgisi, bosilsa
+ *   yoqilmaydi, `onSmsLocked` (Tariflar taklifi) chaqiriladi.
  */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +25,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -29,12 +33,13 @@ import {
 } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { rd, rs } from '../../../theme/rd';
-import { CheckIcon, HandCoinReturnIcon } from '../redesign/icons';
+import { CheckIcon, HandCoinReturnIcon, LockIcon } from '../redesign/icons';
 import { allocatePayment, Allocation } from './debtAllocation';
 import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOverdue, num } from './financeMoney';
 
 export type DebtActionMode = 'close' | 'pay' | 'forgive';
-export type DebtActionResult = { debts: any[]; amounts: Record<string, number | null> };
+// 03.10: `sms` — to'lov haqida qarama-qarshi tomonga SMS (faqat yopish/qaytarishda).
+export type DebtActionResult = { debts: any[]; amounts: Record<string, number | null>; sms?: boolean };
 
 type Props = {
   visible: boolean;
@@ -44,6 +49,10 @@ type Props = {
   busy: boolean;
   onCancel: () => void;
   onConfirm: (r: DebtActionResult) => void;
+  /** 03.10: tarifda to'lov SMS'i yo'q — kalit qulflangan. */
+  smsLocked?: boolean;
+  /** 03.10: qulflangan kalit bosilganda (Tariflar taklifi). */
+  onSmsLocked?: () => void;
 };
 
 /** 02.10: "taqiq" belgisi (aylana + chiziq) — sayt voz kechish ikonkasi bilan bir xil. */
@@ -79,13 +88,14 @@ const Checkbox = ({ on, color }: { on: boolean; color: string }) => (
   </View>
 );
 
-const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, onConfirm }: Props) => {
+const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, onConfirm, smsLocked, onSmsLocked }: Props) => {
   const { t } = useTranslation();
   const tone = TONES[mode];
   const isForgive = mode === 'forgive';
   const [selected, setSelected] = React.useState<string[]>([]);
   const [partial, setPartial] = React.useState(false);
   const [amounts, setAmounts] = React.useState<Record<string, string>>({});
+  const [sms, setSms] = React.useState(false);
 
   // Har ochilishda toza holat; bitta qarz bo'lsa — darhol tanlangan (sayt `created`).
   React.useEffect(() => {
@@ -93,6 +103,7 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
     setSelected(debts.length === 1 ? [debtKey(debts[0])] : []);
     setPartial(false);
     setAmounts({});
+    setSms(false); // 03.10: har ochilishda O'CHIQ
   }, [visible, debts]);
 
   const selectedDebts = debts.filter(d => selected.includes(debtKey(d)));
@@ -134,6 +145,16 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isForgive, partial, selected, amounts, debts]);
 
+  // 03.10: SMS — telefoni bor tanlangan qarz bo'lsagina (raqam ko'rsatiladi).
+  const smsPhone = isForgive ? '' : String(selectedDebts.find(d => !!d?.phone)?.phone || '');
+  const toggleSms = (v: boolean) => {
+    if (v && smsLocked) {
+      onSmsLocked?.();
+      return;
+    }
+    setSms(v);
+  };
+
   const canConfirm =
     selectedDebts.length > 0 &&
     (isForgive || !partial || selectedCurrencies.every(c => amountOf(c) > 0 && !isOver(c)));
@@ -157,7 +178,7 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
     const usePartial = !isForgive && partial;
     const out: Record<string, number | null> = {};
     for (const c of selectedCurrencies) out[c] = usePartial ? amountOf(c) : null;
-    onConfirm({ debts: selectedDebts, amounts: out });
+    onConfirm({ debts: selectedDebts, amounts: out, sms: !isForgive && !!smsPhone && sms && !smsLocked });
   };
   const cancel = () => {
     if (!busy) onCancel();
@@ -309,6 +330,27 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
                   )}
                 </View>
               )}
+              {/* 03.10: "SMS yuborish" — standart o'chiq; tarif qulfi bilan */}
+              {!!smsPhone && (
+                <View style={styles.smsRow}>
+                  <View style={styles.smsTextWrap}>
+                    <View style={styles.smsLabelRow}>
+                      <Text allowFontScaling={false} style={styles.smsLabel}>{t('SMS yuborish')}</Text>
+                      {smsLocked ? <LockIcon size={rs(13)} color={rd.color.textTertiary} /> : null}
+                    </View>
+                    <Text allowFontScaling={false} style={styles.smsSub}>
+                      {t('Yoqilsa, {{phone}} raqamiga to‘lov va qoldiq qarz haqida SMS yuboriladi.', { phone: smsPhone })}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={sms && !smsLocked}
+                    onValueChange={toggleSms}
+                    trackColor={{ true: rd.color.primary, false: rd.color.border }}
+                    thumbColor="#fff"
+                    accessibilityLabel={t('SMS yuborish')}
+                  />
+                </View>
+              )}
               {isForgive && (
                 <Text allowFontScaling={false} style={[styles.hint, { marginTop: rs(6) }]}>
                   {t('Tanlangan qarzlar yopiladi va qolgan summa qaytmaydi.')}
@@ -434,6 +476,21 @@ const styles = StyleSheet.create({
   cur: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.textTertiary, marginLeft: rs(8) },
   err: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: '#dc2626', marginTop: rs(5) },
   hint: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, lineHeight: rs(16) },
+  // 03.10: "SMS yuborish" kaliti
+  smsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: rs(12),
+    backgroundColor: rd.color.page,
+    borderRadius: rd.radius.md,
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    padding: rs(12),
+  },
+  smsTextWrap: { flex: 1, paddingRight: rs(10) },
+  smsLabelRow: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  smsLabel: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
+  smsSub: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textTertiary, marginTop: rs(2), lineHeight: rs(15) },
   btns: { flexDirection: 'row', gap: rs(10), paddingHorizontal: rs(18), paddingTop: rs(14), paddingBottom: rs(18) },
   cancelBtn: {
     flex: 1,

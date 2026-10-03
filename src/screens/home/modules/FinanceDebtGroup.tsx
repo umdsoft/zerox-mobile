@@ -55,13 +55,15 @@ import {
   WarningIcon,
 } from '../redesign/icons';
 import DebtActionButton, { PASTEL } from './DebtActionButton';
-import FinanceDebtActionModal, { BanIcon, totalsText } from './FinanceDebtActionModal';
+import FinanceDebtActionModal, { BanIcon, DebtActionResult, totalsText } from './FinanceDebtActionModal';
 import { financeApi } from './financeApi';
 import { groupKeyOf, mergeDebts } from './financeDebtGroups';
-import { isFeatureLocked, usePlanFeatures } from './planGate';
+import { handlePlanRequiredError, isFeatureLocked, isPlanRequiredError, showPlanRequired, usePlanFeatures } from './planGate';
+import { joinAmounts, payDebtsWithSms, smsNoticeText, SmsPayError, stripWaiverNote } from './debtSms';
 import { fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num, parseLocalDate } from './financeMoney';
 import { fmtPhoneUzFull as fmtPhone } from '../../../helper/phone';
 import { useDebtGroupActions } from './useDebtGroupActions';
+import DemandConfirmModal from '../../components/DemandConfirmModal';
 
 const RED = '#dc2626';
 const GREEN = '#16a34a';
@@ -224,13 +226,65 @@ const FinanceDebtGroup = () => {
     }, [reload]),
   );
 
-  const { actModal, setActModal, actBusy, demanding, onActConfirm, sendDemand } = useDebtGroupActions({
+  // 03.10: `demandModal` — "Talab SMS yuborilsinmi?" tasdiq oynasi (karta + OK / X / o'zgartirish).
+  const { actModal, setActModal, actBusy, demanding, onActConfirm, sendDemand, demandModal } = useDebtGroupActions({
     t,
     navigation,
     reload,
     plan,
     demandLocked,
   });
+
+  /**
+   * 03.10 (10-rasm): yopish/qaytarishda "SMS yuborish" (standart o'chiq). Tarif qulfi —
+   * to'lov xabari `auto_sms_reminder` (backend SMS_KINDS.PAYMENT_NOTICE). SMS yoqilganda har qarz
+   * alohida `/payments` + `notify_sms` (allocate-payment SMS yubormaydi) — debtSms.payDebtsWithSms.
+   */
+  const smsLocked = isFeatureLocked(plan, 'auto_sms_reminder');
+  const [smsBusy, setSmsBusy] = React.useState(false);
+  const onSmsLocked = () => {
+    setActModal(''); // Modal Tariflar ekrani ustida qolib ketmasin
+    showPlanRequired({ expired: plan?.expired }, { t, navigation });
+  };
+  const showPayError = (e: any) => {
+    if (isPlanRequiredError(e)) setActModal('');
+    if (handlePlanRequiredError(e, { t, navigation })) return;
+    const d = e?.response?.data || {};
+    const msg =
+      d.code === 'over-remaining'
+        ? t('Summa qoldiqdan oshmasligi kerak')
+        : d.code === 'already-closed'
+        ? t('Qarz allaqachon yopilgan')
+        : d.message || t('Xatolik yuz berdi');
+    Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
+  };
+  const payWithSms = async ({ debts, amounts }: DebtActionResult) => {
+    if (smsBusy || actBusy || !debts.length) return;
+    setSmsBusy(true);
+    try {
+      const r = await payDebtsWithSms(debts, amounts);
+      setActModal('');
+      const okMsg = r.allClosed ? t('Qarz yopildi') : t('To‘lov qayd etildi');
+      const note = smsNoticeText(r.outcomes, r.resData, t);
+      Toast.show(
+        note
+          ? { type: 'omad', visibilityTime: 5000, props: { title: okMsg, desc: note } }
+          : { type: 'omad', props: { desc: okMsg } },
+      );
+      await reload();
+    } catch (e) {
+      const err = e instanceof SmsPayError ? e : null;
+      if (err?.done) {
+        setActModal('');
+        await reload();
+      }
+      showPayError(err ? err.cause : e);
+    } finally {
+      setSmsBusy(false);
+    }
+  };
+  const onConfirmAct = (r: DebtActionResult) =>
+    r.sms && actModal !== 'forgive' ? payWithSms(r) : onActConfirm(r);
 
   // Oyna yopilayotganda (fade) sarlavha boshqa rejimga sakramasin — oxirgi rejim saqlanadi.
   const lastMode = React.useRef<'close' | 'pay' | 'forgive'>('close');
@@ -378,12 +432,23 @@ const FinanceDebtGroup = () => {
   // SS-AUDIT (2026-09-25): .catch — dialer yo'q qurilmada unhandled rejection bo'lmasin.
   const call = () => phone && Linking.openURL(`tel:${String(phone).replace(/\s/g, '')}`).catch(() => {});
 
-  /** Asosiy valyuta (UZS ustun) va uning sof balansi. */
-  const [primaryCur, primaryBal] = React.useMemo(() => {
-    const uzs = balance.find(([c]) => c === 'UZS');
-    return (uzs || balance[0] || ['UZS', { lent: 0, borrowed: 0 }]) as [string, { lent: number; borrowed: number }];
+  /**
+   * 03.10 (6-rasm): SOF qoldiq HAR VALYUTA bo'yicha — ilgari faqat asosiy (UZS) valyuta olinib,
+   * shablonlarda "754 000 UZS" chiqar, 480 000 USD tushib qolardi.
+   * `owed` — menga qarzdor (sof > 0), `owe` — men qarzdorman (sof < 0).
+   */
+  const smsNet = React.useMemo(() => {
+    const owed: { amount: number; currency: string }[] = [];
+    const owe: { amount: number; currency: string }[] = [];
+    for (const [currency, v] of balance) {
+      const net = v.lent - v.borrowed;
+      if (net > 0.004) owed.push({ amount: net, currency });
+      else if (net < -0.004) owe.push({ amount: -net, currency });
+    }
+    return { owed, owe };
   }, [balance]);
-  const netAll = primaryBal.lent - primaryBal.borrowed;
+  // 03.10 (7-rasm): qoldiq yo'q — shablon kerak emas, SMS ilovasi bo'sh matn bilan ochiladi.
+  const hasOutstanding = smsNet.owed.length > 0 || smsNet.owe.length > 0;
 
   /** Eng yaqin qaytarish muddati (men qarzdor bo'lgan yozuvlar bo'yicha). */
   const nearestDue = React.useMemo(() => {
@@ -395,22 +460,27 @@ const FinanceDebtGroup = () => {
     return ds.length ? fDate(localDateKey(new Date(ds[0]))) : '';
   }, [list]);
 
-  /** SS4/SS5: SOF BALANSGA qarab tayyor SMS matnlari. */
+  /** SS4/SS5: SOF BALANSGA qarab tayyor SMS matnlari. 03.10: summa — BARCHA valyutalar. */
   const smsTemplates = (): string[] => {
     const nm = String(name || title || '').trim();
     const sal = nm ? `Assalomu alaykum, ${nm}.` : 'Assalomu alaykum.';
-    const amt = fMoney(Math.abs(netAll), primaryCur);
+    const owedAmt = joinAmounts(smsNet.owed);
+    const oweAmt = joinAmounts(smsNet.owe);
     const out: string[] = [];
-    if (netAll < 0) {
-      out.push(`${sal} ${amt} qarzimni qaytarmoqchiman. Plastik karta raqamingizni tashlab yuborasizmi?`);
-      if (nearestDue) out.push(`${sal} ${amt} qarzimni ${nearestDue} gacha qaytaraman.`);
-      out.push(`${sal} ${amt} qarzimni tez orada qaytaraman, sal muhlat berasizmi?`);
+    if (oweAmt && !owedAmt) {
+      out.push(`${sal} ${oweAmt} qarzimni qaytarmoqchiman. Plastik karta raqamingizni tashlab yuborasizmi?`);
+      if (nearestDue) out.push(`${sal} ${oweAmt} qarzimni ${nearestDue} gacha qaytaraman.`);
+      out.push(`${sal} ${oweAmt} qarzimni tez orada qaytaraman, sal muhlat berasizmi?`);
       out.push(`${sal} Qarzni bo‘lib-bo‘lib qaytarsam bo‘ladimi?`);
-    } else if (netAll > 0) {
-      out.push(`${sal} ${amt} qarzni qachon qaytarasiz?`);
-      out.push(`${sal} ${amt} qarz to‘lovini eslatib qo‘yaman.`);
+    } else if (owedAmt && !oweAmt) {
+      out.push(`${sal} ${owedAmt} qarzni qachon qaytarasiz?`);
+      out.push(`${sal} ${owedAmt} qarz to‘lovini eslatib qo‘yaman.`);
       out.push(`${sal} Qarzni qaytarish uchun karta raqamimni yuboraman.`);
-      out.push(`${sal} ${amt} qarzni bo‘lib-bo‘lib qaytarsangiz ham bo‘ladi. Kelishaylikmi?`);
+      out.push(`${sal} ${owedAmt} qarzni bo‘lib-bo‘lib qaytarsangiz ham bo‘ladi. Kelishaylikmi?`);
+    } else if (owedAmt && oweAmt) {
+      // 03.10: valyutalar bo'yicha yo'nalish har xil (masalan, UZS bergan, USD olgan).
+      out.push(`${sal} Hisob-kitob: sizning qarzingiz ${owedAmt}, mening qarzim ${oweAmt}. Gaplashib olsak bo‘ladimi?`);
+      out.push(`${sal} Qarz hisobi bo‘yicha gaplashsak bo‘ladimi?`);
     } else {
       out.push(`${sal} Qarz hisobi bo‘yicha gaplashsak bo‘ladimi?`);
     }
@@ -573,9 +643,10 @@ const FinanceDebtGroup = () => {
           </View>
         </View>
 
-        {!!d.notes && (
+        {/* 03.10 (8-rasm): voz kechish avtomatik izohi ("Kechirilgan (…)") ko'rsatilmaydi */}
+        {!!stripWaiverNote(d.notes) && (
           <Text allowFontScaling={false} style={styles.note} numberOfLines={2}>
-            {d.notes}
+            {stripWaiverNote(d.notes)}
           </Text>
         )}
 
@@ -642,7 +713,7 @@ const FinanceDebtGroup = () => {
               </Text>
               <TouchableOpacity
                 style={[styles.roundBtn, { backgroundColor: BLUE }]}
-                onPress={() => setShowSms(true)}
+                onPress={() => (hasOutstanding ? setShowSms(true) : sendSms())}
                 accessibilityLabel={t('SMS yuborish')}>
                 <MessageIcon size={rs(16)} color="#fff" />
               </TouchableOpacity>
@@ -792,15 +863,19 @@ const FinanceDebtGroup = () => {
         <View style={{ height: rs(20) }} />
       </ScrollView>
 
+      {/* 03.10: talab tasdiq oynasi — OK SMS yuboradi, X yubormaydi. */}
+      <DemandConfirmModal {...demandModal} />
       {/* 02.10: yopish / qaytarish / voz kechish — TANLANGAN qarz(lar)ga (sayt DebtActionModal). */}
       <FinanceDebtActionModal
         visible={!!actModal}
         mode={actModal || lastMode.current}
         debts={actionDebts}
         name={String(displayName || '')}
-        busy={actBusy}
+        busy={actBusy || smsBusy}
         onCancel={() => setActModal('')}
-        onConfirm={onActConfirm}
+        onConfirm={onConfirmAct}
+        smsLocked={smsLocked}
+        onSmsLocked={onSmsLocked}
       />
 
       {/* SS4/SS5: tayyor SMS shablonlari */}

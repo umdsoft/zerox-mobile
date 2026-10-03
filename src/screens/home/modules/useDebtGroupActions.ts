@@ -9,6 +9,9 @@
  *   • voz kechish — tanlangan har bir qarz uchun ketma-ket `/forgive` (ko'zguda `mirror-forgive`);
  *     qisman muvaffaqiyat ham aniq aytiladi;
  *   • talab — bitta SMS (matn qarzga bog'liq emas): telefonli eng oxirgi ochiq qarz.
+ *     03.10: SMS darhol ketmaydi — `useFinanceDemand` (FinanceDebtDetail ham shuni ishlatadi):
+ *     karta yo'q → "Plastik karta ma'lumotlari" (FinancePayoutCard), saqlab qaytilgach tasdiq;
+ *     karta bor → "Talab SMS yuborilsinmi?" (DemandConfirmModal): OK / X / Kartani o'zgartirish.
  * Tarif qulfi (02.10, planGate) saqlangan: 403 `plan-required` → tarif matni + Tariflar.
  */
 import React from 'react';
@@ -17,7 +20,8 @@ import { allocatePayment, groupByCurrency } from './debtAllocation';
 import { DebtActionMode, DebtActionResult } from './FinanceDebtActionModal';
 import { financeApi } from './financeApi';
 import { localDateKey, num } from './financeMoney';
-import { handlePlanRequiredError, PlanState, showPlanRequired } from './planGate';
+import { handlePlanRequiredError, PlanState, planRequiredText } from './planGate';
+import { DemandCard, useDemandFlow } from './useDemandFlow';
 
 type Translate = (k: string, o?: any) => string;
 type Nav = { navigate: (name: string, params?: object) => void };
@@ -32,10 +36,83 @@ type Args = {
 
 const today = () => localDateKey(new Date());
 
+/** 03.10: backend `demandName` — FISh ning ko'pi bilan 2 so'zi (familiya + ism). */
+const DEMAND_NAME_MAX_WORDS = 2;
+const demandName = (fish: string): string =>
+  String(fish || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+    .slice(0, DEMAND_NAME_MAX_WORDS).join(' ') || 'foydalanuvchi';
+
+/** "+998XXXXXXXXX" (backend `fmtTgPhone` bilan bir xil). */
+const tgPhoneSms = (raw: string): string => {
+  const d = String(raw || '').replace(/\D/g, '');
+  if (!d) return '';
+  return d.length === 9 ? `+998${d}` : `+${d}`;
+};
+
+type FinanceDemandArgs = {
+  t: Translate;
+  navigation: Nav;
+  plan: PlanState | null;
+  demandLocked: boolean;
+};
+
+/**
+ * 03.10: Shaxsiy qarz "Talab qilish" — FinanceDebtGroup va FinanceDebtDetail uchun YAGONA oqim.
+ * Karta: GET /finance/payout-card (`card_number` bo'lsa yetarli — Telegram bo'lmasa backend
+ * akkaunt telefonini qo'yadi). SMS matni — backend 89560 shabloni (faqat o'zbekcha).
+ * Hook — ekranning har qanday erta `return` idan OLDIN chaqirilishi shart.
+ */
+export const useFinanceDemand = ({ t, navigation, plan, demandLocked }: FinanceDemandArgs) => {
+  const fishRef = React.useRef('');
+  const flow = useDemandFlow<any>({
+    locked: demandLocked,
+    // 03.10: toast + jim navigatsiya EMAS — sababi yozilgan "Tarif cheklovi" oynasi.
+    lockedText: () => planRequiredText({ expired: plan?.expired }, t),
+    onUpgrade: () => navigation.navigate('Types'),
+    loadCard: async (): Promise<DemandCard | null> => {
+      const r = await financeApi.getPayoutCard();
+      const d = r?.data?.data || {};
+      fishRef.current = String(d.fish || '');
+      const number = String(d.card_number || '').replace(/\D/g, '');
+      if (!number) return null;
+      return {
+        number,
+        holder: String(d.card_holder || d.fish || '').trim(),
+        telegramPhone: String(d.telegram_phone || ''),
+      };
+    },
+    openCardScreen: () => navigation.navigate('FinancePayoutCard'),
+    noCardText: t('Talab qilish uchun avval plastik karta ma’lumotlaringizni kiriting.'),
+    buildPreview: (_debt, card) => {
+      const tg = tgPhoneSms(card?.telegramPhone || '');
+      if (!card || !tg) return undefined;
+      return `${demandName(fishRef.current)}dan olgan qarzingizni ${card.number} ga o'tkazishingiz mumkin. Pul o'tkazilganidan so'ng ${tg} ga telegram orqali xabar yuboring.`;
+    },
+    send: async (debt: any) => {
+      try {
+        await financeApi.demandDebtAny(debt.id, !!debt.is_mirror);
+        Toast.show({ type: 'omad', props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') } });
+      } catch (e: any) {
+        // 02.10: 403 `plan-required` — tarif matni + Tariflar.
+        if (handlePlanRequiredError(e, { t, navigation })) return;
+        const code = e?.response?.data?.code;
+        const msg =
+          code === 'no-card'
+            ? t('Avval plastik karta ma’lumotlarini kiriting.')
+            : code === 'no-phone'
+            ? t('Qarzdor telefoni kiritilmagan.')
+            : e?.response?.data?.message || t('Xatolik yuz berdi');
+        Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
+        if (code === 'no-card') navigation.navigate('FinancePayoutCard');
+      }
+    },
+  });
+  return flow;
+};
+
 export const useDebtGroupActions = ({ t, navigation, reload, plan, demandLocked }: Args) => {
   const [actModal, setActModal] = React.useState<DebtActionMode | ''>('');
   const [actBusy, setActBusy] = React.useState(false);
-  const [demanding, setDemanding] = React.useState(false);
 
   /** Server `code` bo'yicha joriy tilda xabar (server matni faqat o'zbekcha bo'lishi mumkin). */
   const actError = (e: any) => {
@@ -158,35 +235,17 @@ export const useDebtGroupActions = ({ t, navigation, reload, plan, demandLocked 
     return actPayGroups(debts, amounts);
   };
 
-  /** Talab SMS — karta yo'q bo'lsa karta ekrani; tarifda yo'q bo'lsa — Tariflar taklifi. */
-  const sendDemand = async (debt: any) => {
-    if (!debt || demanding) return;
-    if (demandLocked) {
-      showPlanRequired({ expired: plan?.expired }, { t, navigation });
-      return;
-    }
-    setDemanding(true);
-    try {
-      await financeApi.demandDebtAny(debt.id, !!debt.is_mirror);
-      Toast.show({ type: 'omad', props: { desc: t('Qaytarish bo‘yicha SMS yuborildi') } });
-    } catch (e: any) {
-      if (handlePlanRequiredError(e, { t, navigation })) return;
-      const code = e?.response?.data?.code;
-      if (code === 'no-card') {
-        Toast.show({
-          type: 'error2',
-          visibilityTime: 4000,
-          props: { desc: t('Talab qilish uchun avval plastik karta ma’lumotlaringizni kiriting.') },
-        });
-        navigation.navigate('FinancePayoutCard');
-        return;
-      }
-      const msg = code === 'no-phone' ? t('Mijoz telefoni yo‘q') : e?.response?.data?.message || t('Xatolik yuz berdi');
-      Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
-    } finally {
-      setDemanding(false);
-    }
-  };
+  // 03.10: talab — karta tekshiruvi + "Talab SMS yuborilsinmi?" tasdiq oynasi (useFinanceDemand).
+  const demand = useFinanceDemand({ t, navigation, plan, demandLocked });
+  const sendDemand = (debt: any) => demand.start(debt);
 
-  return { actModal, setActModal, actBusy, demanding, onActConfirm, sendDemand };
+  return {
+    actModal,
+    setActModal,
+    actBusy,
+    demanding: demand.demanding,
+    onActConfirm,
+    sendDemand,
+    demandModal: demand.modal,
+  };
 };

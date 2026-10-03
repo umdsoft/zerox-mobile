@@ -9,7 +9,6 @@
  * muddati o'tgan = QIZIL, kutilmoqda/aktiv = SARIQ.
  */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,16 +19,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
-import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
-import { showTalabError } from './qarzTalab';
-import { isFeatureLocked, isQarzStaffContext, showPlanRequired, usePlanFeatures } from './planGate';
+import { useQarzTalab } from './qarzTalab';
+import { usePlanFeatures } from './planGate';
+import DemandConfirmModal from '../../components/DemandConfirmModal';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -163,12 +161,14 @@ const QarzDaftariQarz = () => {
     }, [onRefresh]),
   );
 
-  const [talabLoading, setTalabLoading] = React.useState(false);
   // 02.10: Free / muddati tugagan tarifda talab (qo'lda SMS) YOPIQ — oldindan qulf.
   // Imkoniyatlar yuklanmagan bo'lsa qulf yo'q (server 403 `plan-required` hal qiladi).
   // ⚠️ Hook — `if (loading) return` DAN OLDIN bo'lishi shart.
   const plan = usePlanFeatures();
-  const talabLocked = !isQarzStaffContext() && isFeatureLocked(plan, 'manual_sms_send');
+  // 03.10: SMS darhol ketmaydi — karta tekshiruvi + "Talab SMS yuborilsinmi?" (qarzTalab.useQarzTalab).
+  const talab = useQarzTalab({ t, navigation, plan });
+  const talabLocked = talab.locked;
+  const talabLoading = talab.demanding;
 
   const qarz: any = (data as any)?.data;
 
@@ -205,40 +205,15 @@ const QarzDaftariQarz = () => {
   const dokonNomi: string =
     qarz?.savdoFaoliyat?.nomi || qarz?.savdo_faoliyat?.nomi || '';
 
-  // Qaytarishni talab qilish (POST) — SMS yuboradi.
-  const talabQil = async () => {
-    if (talabLoading) return;
-    if (talabLocked) {
-      showPlanRequired({ expired: plan?.expired }, { t, navigation });
-      return;
-    }
-    setTalabLoading(true);
-    try {
-      const token = storage.getString('token');
-      await axios.post(
-        `${URL}/qarz-daftari/qarz/${id}/talab`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      // 'omad'/'error' toast custom config `props.title` ni o'qiydi (text1 EMAS) —
-      // aks holda BO'SH karta chiqadi (faqat ikonka). Shu bois props ishlatamiz.
-      // SS8-5: matn aniqroq — nima uchun SMS yuborilgani ko'rinsin.
-      Toast.show({
-        type: 'omad',
-        props: { desc: t('Qarzni qaytarish bo‘yicha sms xabarnoma yuborildi.') },
-      });
-    } catch (error: any) {
-      // 29.09 (3-band): aniq sabab (karta yo'q → karta ekrani, SMS rad etildi, ...).
-      showTalabError(error, {
-        t,
-        navigation,
-        faoliyatId: qarz?.savdo_faoliyat_id,
-        faoliyatNomi: dokonNomi,
-      });
-    } finally {
-      setTalabLoading(false);
-    }
-  };
+  // Qaytarishni talab qilish — 03.10: avval karta / tasdiq oynasi, OK bosilgach SMS.
+  const talabQil = () =>
+    talab.start({
+      id,
+      faoliyatId: qarz?.savdo_faoliyat_id,
+      faoliyatNomi: dokonNomi,
+      amount: qarz?.qoldiq != null ? qarz.qoldiq : qarz?.miqdor,
+      valyuta,
+    });
 
   return (
     <View style={styles.screen}>
@@ -446,6 +421,11 @@ const QarzDaftariQarz = () => {
           </View>
         )}
       </ScrollView>
+      {/* 03.10: "Talab SMS yuborilsinmi?" — OK yuboradi, X yubormaydi, kartani o'zgartirish. */}
+      <DemandConfirmModal
+        {...talab.modal}
+        noCardNote={t('Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.')}
+      />
     </View>
   );
 };
