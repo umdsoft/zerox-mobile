@@ -34,7 +34,8 @@ import AboutMe from '../screens/home/drawer/drawerScreens/AboutMe';
 import Support from '../screens/home/drawer/drawerScreens/Support';
 import ActiveDevices from '../screens/home/drawer/drawerScreens/ActiveDevices';
 
-import SearchDebitor from '../screens/home/statisticScreens/SearchDebitor';
+// 03.10: oferta darvozasi bilan (berilgan/olingan/muddati o'tgan/oz qolgan ro'yxatlari)
+import SearchDebitor from '../screens/home/statisticScreens/SearchDebitorGate';
 import CreditorDebitor from '../screens/home/statisticScreens/CreditorDebitor';
 import UserScreen from '../screens/other/UserScreen';
 import RegisterWithPeople from '../screens/auth/RegisterWithPeople';

@@ -553,7 +553,8 @@ const QarzShartnomasi = () => {
           five={deb.five}
           onPress={() => goList('debitor', 'near', t('Muddati oz qolgan (debitor)'))}
           onRow={(uid, type) =>
-            navigation.navigate('ShowUserDetails', { id: uid, type })
+            // 03.10: muddati oz qolgan qarz qatori ham oferta talab qiladi
+            guardOferta(() => navigation.navigate('ShowUserDetails', { id: uid, type }))
           }
         />
         <NearCard
@@ -561,7 +562,8 @@ const QarzShartnomasi = () => {
           five={cred.five}
           onPress={() => goList('creditor', 'near', t('Muddati oz qolgan (kreditor)'))}
           onRow={(uid, type) =>
-            navigation.navigate('ShowUserDetails', { id: uid, type })
+            // 03.10: muddati oz qolgan qarz qatori ham oferta talab qiladi
+            guardOferta(() => navigation.navigate('ShowUserDetails', { id: uid, type }))
           }
         />
 
