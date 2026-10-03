@@ -274,7 +274,8 @@ const RegisterWithPeople = () => {
             <TouchableOpacity
               style={styles.supportBtn}
               onPress={() => {
-                Linking.openURL('https://t.me/zeroxuz_bot');
+                // 03.10: bot nomi — @ZeroXuzbot (sayt bilan bir xil).
+                Linking.openURL('https://t.me/ZeroXuzbot');
               }}
               activeOpacity={0.6}
             >

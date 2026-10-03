@@ -94,16 +94,40 @@ const QarzDaftariKarta = () => {
 
   const cardDigits = card.replace(/\D/g, '');
   const phoneDigits = phone.replace(/\D/g, '');
-  // Bo'sh forma ham saqlanadi (rekvizitni O'CHIRISH uchun); to'ldirilgan bo'lsa — to'liq bo'lsin.
+  /**
+   * 03.10 (sayt hujjati, 7-rasm): plastik karta raqami VA telegram uchun telefon
+   * raqami — IKKALASI HAM MAJBURIY (faqat bittasini saqlab bo'lmaydi; SMS'da ikkalasi
+   * birga ishlatiladi). IKKALASINI BIRGA bo'shatib saqlash — rekvizitni o'chirish
+   * (backend va sayt bilan bir xil qoida: "ikkalasi yoki hech biri").
+   */
   const cardLocal = isLocalCard(cardDigits);
   const foreignScheme = internationalScheme(cardDigits);
-  const valid =
-    (cardDigits.length === 0 || cardDigits.length === 16) &&
-    cardLocal &&
-    (phoneDigits.length === 0 || phoneDigits.length === 9);
+  const clearing = !cardDigits.length && !phoneDigits.length;
+  const valid = clearing || (cardDigits.length === 16 && cardLocal && phoneDigits.length === 9);
+
+  // Nima yetishmasligini aniq aytamiz (tugma bosilganda) — null: hammasi to'g'ri.
+  const validationError = (): string | null => {
+    if (clearing) return null;
+    if (!cardDigits.length || !phoneDigits.length) {
+      return t('Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.');
+    }
+    if (cardDigits.length !== 16) return t('Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.');
+    if (!cardLocal) {
+      return t('{{scheme}} kartasi qabul qilinmaydi — O‘zbekiston kartasini kiriting', {
+        scheme: foreignScheme,
+      });
+    }
+    if (phoneDigits.length !== 9) return t('Telefon raqamini to‘liq kiriting (9 ta raqam).');
+    return null;
+  };
 
   const submit = async () => {
-    if (saving || !valid) return;
+    if (saving) return;
+    const err = validationError();
+    if (err) {
+      Toast.show({ type: 'error2', visibilityTime: 3500, props: { desc: err } });
+      return;
+    }
     const cur = shops.find((s: any) => String(s.id) === String(faoliyat_id));
     try {
       setSaving(true);
@@ -113,7 +137,7 @@ const QarzDaftariKarta = () => {
           // `nomi` backend validatsiyasi uchun MAJBURIY — mavjud nomni o'zgarishsiz yuboramiz.
           nomi: cur?.nomi || faoliyat_nomi,
           karta_raqami: cardDigits,
-          karta_egasi: owner.trim(),
+          karta_egasi: clearing ? '' : owner.trim(),
           telegram_telefon: phoneDigits,
         },
         { headers: { Authorization: `Bearer ${storage.getString('token')}` } },
@@ -121,15 +145,26 @@ const QarzDaftariKarta = () => {
       // So'rov: sahifa PASTIDA tasdiq xabari. `goBack()` QILMAYMIZ —
       // App.tsx navigatsiya listeneri toast'ni darhol yopib yuborardi, qolaversa
       // foydalanuvchi saqlangan ma'lumotni ko'rib tasdiqlashi qulayroq.
-      setMode('view');
+      // Bo'shatib saqlangan bo'lsa — ko'rish rejimi emas (ko'rsatadigan rekvizit yo'q).
+      if (!clearing) setMode('view');
       Toast.show({
         type: 'omad',
         position: 'bottom',
         visibilityTime: 3500,
-        props: { desc: t('Karta ma’lumotlari va telegram raqami saqlandi.') },
+        props: {
+          desc: clearing
+            ? t('Karta ma’lumotlari o‘chirildi.')
+            : t('Karta ma’lumotlari va telegram raqami saqlandi.'),
+        },
       });
     } catch (e: any) {
-      const msg = e?.response?.data?.message || t('Xatolik yuz berdi');
+      // 03.10: backend ham ikkalasini talab qiladi (400 `card-and-phone-required`) —
+      // shu holatda o'z tilimizdagi aniq xabar; aks holda backend xabari.
+      const code = e?.response?.data?.code;
+      const msg =
+        code === 'card-and-phone-required'
+          ? t('Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.')
+          : e?.response?.data?.message || t('Xatolik yuz berdi');
       Toast.show({ type: 'error2', props: { desc: String(msg) } });
     } finally {
       setSaving(false);
@@ -184,20 +219,26 @@ const QarzDaftariKarta = () => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.viewLabel}>{t('Plastik karta')}</Text>
-                  <Text style={styles.viewValue} allowFontScaling={false} numberOfLines={1}>
-                    {card}
-                  </Text>
+                  {/* 03.10 (sayt hujjati, 7-rasm): tahrirlash ikonkasi qator oxirida
+                      emas — karta raqamining YONIDA. */}
+                  <View style={styles.viewValueRow}>
+                    <Text style={styles.viewValue} allowFontScaling={false} numberOfLines={1}>
+                      {card}
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      style={styles.viewEditBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('Tahrirlash')}
+                      onPress={() => setMode('edit')}>
+                      <PencilIcon size={rs(15)} color={BLUE} />
+                    </TouchableOpacity>
+                  </View>
                   <Text style={styles.viewSub} numberOfLines={1}>
                     {[localBrand(cardDigits), owner].filter(Boolean).join(' · ') || t('Karta egasi ko‘rsatilmagan')}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  style={styles.viewEditBtn}
-                  onPress={() => setMode('edit')}>
-                  <PencilIcon size={rs(18)} color={BLUE} />
-                </TouchableOpacity>
               </View>
 
               <View style={styles.viewCard}>
@@ -206,17 +247,22 @@ const QarzDaftariKarta = () => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.viewLabel}>{t('Telegram uchun telefon raqami')}</Text>
-                  <Text style={styles.viewValue} allowFontScaling={false} numberOfLines={1}>
-                    +998 {phone}
-                  </Text>
+                  {/* 03.10: tahrirlash ikonkasi telefon raqamining YONIDA. */}
+                  <View style={styles.viewValueRow}>
+                    <Text style={styles.viewValue} allowFontScaling={false} numberOfLines={1}>
+                      +998 {phone}
+                    </Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      style={styles.viewEditBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('Tahrirlash')}
+                      onPress={() => setMode('edit')}>
+                      <PencilIcon size={rs(15)} color={BLUE} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  style={styles.viewEditBtn}
-                  onPress={() => setMode('edit')}>
-                  <PencilIcon size={rs(18)} color={BLUE} />
-                </TouchableOpacity>
               </View>
 
               <Text style={styles.hint}>
@@ -227,7 +273,11 @@ const QarzDaftariKarta = () => {
           <>
 
           {/* Karta raqami */}
-          <Text style={styles.label}>{t('Plastik karta raqami')}</Text>
+          {/* 03.10: majburiy maydon belgisi (*) — karta ham, telefon ham. */}
+          <Text style={styles.label}>
+            {t('Plastik karta raqami')}
+            <Text style={styles.required}> *</Text>
+          </Text>
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
@@ -268,7 +318,10 @@ const QarzDaftariKarta = () => {
           </View>
 
           {/* Telegram telefon */}
-          <Text style={styles.label}>{t('Telegram uchun telefon raqami')}</Text>
+          <Text style={styles.label}>
+            {t('Telegram uchun telefon raqami')}
+            <Text style={styles.required}> *</Text>
+          </Text>
           <View style={styles.inputBox}>
             <Text allowFontScaling={false} style={styles.prefix}>+998</Text>
             <TextInput
@@ -286,10 +339,14 @@ const QarzDaftariKarta = () => {
             {t('Mijoz qarzni plastik kartangizga o‘tkazganligi to‘g‘risida sizga telegram orqali xabar beradi.')}
           </Text>
 
+          {/* 03.10: tugma xira bo'lsa ham BOSILADI — nima yetishmasligi xabarda
+              aytiladi (ilgari disabled edi, sababi ko'rinmasdi). */}
           <TouchableOpacity
             activeOpacity={0.9}
-            disabled={!valid || saving}
+            disabled={saving}
             onPress={submit}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !valid || saving }}
             style={[styles.saveBtn, (!valid || saving) && { opacity: 0.5 }]}>
             <Text style={styles.saveBtnText}>{t('Saqlash')}</Text>
           </TouchableOpacity>
@@ -396,16 +453,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewLabel: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: rd.color.textTertiary },
-  viewValue: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text, marginTop: rs(2) },
+  // 03.10: qiymat + tahrirlash ikonkasi yonma-yon (ikonka qator oxiriga cho'zilmaydi).
+  viewValueRow: { flexDirection: 'row', alignItems: 'center', marginTop: rs(2) },
+  viewValue: { flexShrink: 1, fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
   viewSub: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
   viewEditBtn: {
-    width: rs(36),
-    height: rs(36),
-    borderRadius: rs(18),
+    width: rs(28),
+    height: rs(28),
+    borderRadius: rs(14),
+    marginLeft: rs(8),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: rd.color.surfaceAlt,
   },
+  required: { color: '#dc2626' },
   hint: {
     fontFamily: rd.font.regular,
     fontSize: rs(11.5),

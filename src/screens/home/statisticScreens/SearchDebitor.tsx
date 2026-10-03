@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import React, {useRef, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import StatisticCard, {getDueMeta} from '../../components/StatisticCard';
+import StatisticCard, {getDueMeta, reportStatusMeta} from '../../components/StatisticCard';
+import {settingDate} from '../../../helper';
 import {useFetch} from '../../../hooks/useFetch';
 import Loading from '../../components/Loading';
 import {URL} from '../../constants';
@@ -333,29 +334,45 @@ const SearchDebitor = () => {
   // ── Excel (CSV) eksport — hozir ko'rinayotgan ro'yxatni faylga saqlaydi.
   //    Server excel endpoint'i yo'q, shu bois CSV klientda yaratiladi (Excel
   //    CSV'ni to'g'ridan-to'g'ri ochadi). UTF-8 BOM — kirill/o'zbek harflari uchun.
-  const statusTx = (s: any) =>
-    s === 3 || s === '3'
-      ? 'Jarayonda'
-      : s === 2 || s === '2'
-      ? 'Tasdiqlangan'
-      : s === 4 || s === '4'
-      ? 'Rad etildi'
-      : '';
+  /**
+   * 03.10 (2-band): "Holat" ustuni BO'SH chiqardi.
+   * 🔴 ILDIZ: faol ro'yxat (`/contract/return`) javobida `status` maydoni YO'Q,
+   * eski `statusTx(it.status)` esa faqat status bo'yicha ishlardi (va 2/3 ma'nosi
+   * ham teskari edi: 2=Tugallangan, 3/4=Rad). Endi ro'yxatdagi badge bilan AYNAN
+   * bir xil mantiq: hisobotda — c.status, faol ro'yxatda — muddat (end_date).
+   */
+  const statusTx = (it: any): string => {
+    if (isReport) return t(reportStatusMeta(it?.status).label);
+    const due = getDueMeta(it?.end_date);
+    if (due.cat === 'overdue') return t('Muddati o‘tgan');
+    if (due.cat === 'near') {
+      return due.diff === 0 ? t('Bugun') : t('{{n}} kun qoldi', {n: due.diff});
+    }
+    return t('Jarayonda');
+  };
+  // 03.10 (2-band): "Sana" = shartnoma TUZILGAN sana, dd.mm.yyyy. Ilgari xom
+  // "YYYY-MM-DD" yozilardi — Excel uni sanaga aylantirib tor ustunda "########"
+  // ko'rsatardi; zaxira `sana` esa QAYTARISH muddati edi (noto'g'ri maydon).
+  const tuzilganSana = (it: any): string =>
+    settingDate(it?.contract_date) || settingDate(it?.created_at);
   // 02.10: CSV yaratish/saqlash/ulashish umumiy `exportCsv` yordamchisiga ko'chirildi
   // (foydalanuvchi sahifasidagi shartnomalar ro'yxati ham shuni ishlatadi).
   const onExcel = () =>
     exportCsv({
       baseName: `${isDebitorRole ? 'berilgan' : 'olingan'}_qarzlar`,
-      header: ['№', 'F.I.Sh', 'Shartnoma', 'Summa', 'Valyuta', 'Sana', 'Holat'],
+      header: ['№', t('F.I.Sh'), t('Shartnoma'), t('Summa'), t('Valyuta'), t('Sana'), t('Holat')],
       rows: shown.map((it: any, i: number) => [
         i + 1,
         isDebitorRole ? it?.creditor_name : it?.debitor_name,
         it?.number,
         it?.amount,
         it?.currency,
-        it?.contract_date || (it?.sana || '').slice(0, 10),
-        statusTx(it?.status),
+        tuzilganSana(it),
+        statusTx(it),
       ]),
+      // 03.10: shartnoma raqami ("2/11/2025-1") va sana Excel'da SANAGA
+      // aylantirilmasin — matn sifatida yoziladi.
+      textColumns: [2, 5],
     });
 
   return (

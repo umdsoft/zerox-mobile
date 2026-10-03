@@ -388,7 +388,7 @@ const LoginWithPhone = () => {
               kirishда muammo bo'lsa Telegram botga murojaat. */}
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => Linking.openURL('https://t.me/zeroxuz_bot')}
+            onPress={() => Linking.openURL('https://t.me/ZeroXuzbot') /* 03.10: bot nomi — @ZeroXuzbot */}
             style={styles.supportBtn}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >

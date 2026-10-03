@@ -409,7 +409,8 @@ const SetLocalPassword = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {
-              Linking.openURL('https://t.me/zeroxuz_bot');
+              // 03.10: bot nomi — @ZeroXuzbot (sayt bilan bir xil).
+              Linking.openURL('https://t.me/ZeroXuzbot');
             }}
           >
             <MainText

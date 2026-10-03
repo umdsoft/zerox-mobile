@@ -23,6 +23,8 @@ import { style } from '../../../../theme/style';
 import { titleCase } from '../../../../helper/returnName';
 import { fmtPhoneUz } from '../../../../helper/phone';
 import { sortText } from '../../../components/StatisticCard';
+import Toast from 'react-native-toast-message';
+import { fetchCreationParams } from '../../modules/qarzAmaliyot';
 
 // Backend `SHOP_COMPLAINT_REASONS` kalitlari -> i18n kalitlari (FinanceDebtDetail bilan bir xil matn).
 const REASON_KEYS: Record<string, string> = {
@@ -56,12 +58,28 @@ const Shikoyat = ({ item, okay, navigation }: any) => {
   const izoh = String((isShop ? it.sh_izoh : it.pc_izoh) || '').trim();
   const debtId = isShop ? it.sh_qarz_id : it.pc_debt_id;
 
-  const goToDebt = () => {
-    if (!debtId || !navigation?.navigate) return;
-    if (isShop) {
-      navigation.navigate('QarzDaftariQarz', { id: debtId });
-    } else {
+  // 03.10 (1-band): ikki marta bosilib ikki ekran ochilmasin (so'rov davomida).
+  const [opening, setOpening] = React.useState(false);
+
+  const goToDebt = async () => {
+    if (!debtId || !navigation?.navigate || opening) return;
+    if (!isShop) {
       navigation.navigate('FinanceDebtDetail', { id: debtId });
+      return;
+    }
+    // 03.10 (1-band): do'kon qarzi bo'yicha shikoyat "Qarz tafsiloti" (QarzDaftariQarz)
+    // EMAS — shu qarzni bergan AMALIYOT tafsilotini ("Qarz berildi") ochadi
+    // (kalendar / mijoz sahifasi / amaliyotlar tarixi bilan bir xil ekran).
+    setOpening(true);
+    try {
+      const params = await fetchCreationParams(debtId);
+      if (!params) {
+        Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+        return;
+      }
+      navigation.navigate('QarzDaftariAmaliyot', params);
+    } finally {
+      setOpening(false);
     }
   };
 
@@ -73,7 +91,7 @@ const Shikoyat = ({ item, okay, navigation }: any) => {
       actions={
         <>
           {debtId ? (
-            <NotifButton label={t('Qarzga o‘tish') as string} onPress={goToDebt} />
+            <NotifButton label={t('Qarzga o‘tish') as string} onPress={goToDebt} loading={opening} />
           ) : null}
           <NotifButton label="Ok" variant="ghost" onPress={() => okay?.(it.id, it.type)} />
         </>

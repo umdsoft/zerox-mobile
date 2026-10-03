@@ -72,7 +72,9 @@ export const getDueMeta = (endDate: any): DueMeta => {
 
 // HISOBOT rejimida qator statusi (c.status): 2=Tugallangan (yashil), 3/4=Rad
 // etilgan (qizil), aks holda Jarayonda (ko'k). Faol ro'yxatда esa muddat badge'i.
-const reportStatusMeta = (status: any) => {
+// 03.10: eksport qilindi — SearchDebitor "Yuklash" faylidagi "Holat" ustuni aynan
+// ro'yxatdagi badge bilan bir xil bo'lishi uchun (mantiq o'zgarmagan).
+export const reportStatusMeta = (status: any) => {
   const s = Number(status);
   if (s === 2)
     return { label: 'Tugallangan', color: rd.color.success, bg: rd.color.successBg };

@@ -26,6 +26,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import Toast from 'react-native-toast-message';
 import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
+import { getQarzShop } from '../../../store/api/token/qarzShop';
 import { rd, rs } from '../../../theme/rd';
 import { sortMoneyText, sortText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
@@ -124,12 +125,63 @@ const Section = ({
   </View>
 );
 
+// 03.10 (3-band): obyektdagi do'kon (savdo faoliyati) nomi. Backend qarz
+// tafsilotida `savdoFaoliyat` (camelCase relation) qaytaradi; qolganlari —
+// kelajakda tekis maydon qo'shilsa ham ishlashi uchun.
+const shopNameOf = (o: any): string =>
+  String(
+    o?.savdoFaoliyat?.nomi ||
+      o?.savdo_faoliyat?.nomi ||
+      o?.savdo_faoliyat_nomi ||
+      o?.faoliyat_nomi ||
+      '',
+  ).trim();
+
+/**
+ * 03.10 (3-band): "Do'kon" qatori uchun nom. Tartib:
+ *   1) route params (tx / qarz / mijoz) ichidagi do'kon nomi — qo'shimcha so'rov yo'q;
+ *   2) tanlangan do'kon (qarzShop) — id qarznikiga MOS bo'lsa;
+ *   3) aks holda qarz tafsiloti so'raladi (`savdoFaoliyat.nomi`);
+ *   4) so'rov yiqilsa — tanlangan do'kon nomi (bo'lim shu do'kon bo'yicha ishlaydi).
+ */
+const useDokonNomi = (tx: any, qarz: any, mijoz: any): string => {
+  const direct = shopNameOf(tx) || shopNameOf(qarz) || shopNameOf(mijoz);
+  const faoliyatId =
+    Number(qarz?.savdo_faoliyat_id || mijoz?.savdo_faoliyat_id || tx?.savdo_faoliyat_id) || 0;
+  const selected = getQarzShop();
+  const selectedNomi =
+    selected?.nomi && (!faoliyatId || selected.id === faoliyatId) ? selected.nomi : '';
+  const qarzId = qarz?.id ?? tx?.qarz_id;
+  const needFetch = !direct && !(faoliyatId && selectedNomi) && !!qarzId;
+  const [fetched, setFetched] = React.useState('');
+  React.useEffect(() => {
+    if (!needFetch) return;
+    let alive = true;
+    axios
+      .get(`${URL}/qarz-daftari/qarz/${qarzId}`, {
+        headers: { Authorization: `Bearer ${storage.getString('token')}` },
+      })
+      .then(({ data }) => {
+        if (alive) setFetched(shopNameOf(data?.data));
+      })
+      .catch(() => {
+        // Do'kon nomi ixtiyoriy — so'rov yiqilsa tanlangan do'kon nomi / '—' qoladi.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [needFetch, qarzId]);
+  return direct || fetched || selectedNomi;
+};
+
 const QarzDaftariAmaliyot = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
 
   const tx: any = route.params?.tx || {};
   const qarz: any = route.params?.qarz || {};
+  const mijozParam: any = route.params?.mijoz || {};
+  const dokonNomi = useDokonNomi(tx, qarz, mijozParam);
 
   const turi: Turi = tx?.turi;
   const { color, Icon } = metaOf(turi);
@@ -364,6 +416,9 @@ const QarzDaftariAmaliyot = () => {
           {/* Kim bajargan: xodim bo'lsa uning telefoni, aks holda do'kon egasiniki.
               Backend `bajaruvchi_telefon` ni aynan shu qoida bilan hisoblaydi. */}
           <Row label={t('Kim bajargan')} value={tx?.bajaruvchi_telefon || '—'} />
+          {/* 03.10 (3-band): amaliyot QAYSI DO'KONDA (savdo faoliyati) bajarilgan —
+              barcha turlarda (qarz berildi / qaytarildi / voz kechildi). */}
+          <Row label={t('Do‘kon')} value={dokonNomi || '—'} />
           {/* SS-C: yangi qarz amaliyotida `izoh` = mahsulot nomi, u quyida
               "Mahsulot yoki xizmat" qatorida ko'rsatiladi — takrorlamaymiz. */}
           {!!tx?.izoh && String(tx.izoh) !== String(opMahsulot || '') && (

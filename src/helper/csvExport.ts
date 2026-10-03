@@ -24,9 +24,23 @@ export type CsvExportOptions = {
   header: string[];
   /** Qatorlar — har biri `header` tartibidagi qiymatlar. */
   rows: Cell[][];
+  /**
+   * 03.10: MATN sifatida saqlanishi SHART bo'lgan ustunlar (0 dan boshlab indeks).
+   * Excel CSV ochganda "2/11/2025-1" (shartnoma raqami) va "02.11.2025" kabi
+   * qiymatlarni o'zi SANA/raqamga aylantiradi (tor ustunda "########").
+   * Bu ustunlardagi qiymat `="..."` ko'rinishida yoziladi — Excel / Google Sheets /
+   * WPS uni aynan matn sifatida ko'rsatadi. Berilmasa — eski xatti-harakat.
+   */
+  textColumns?: number[];
 };
 
 const esc = (v: Cell): string => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+// 03.10: matn-ustun katakchasi — `="qiymat"` (bo'sh qiymat oddiy bo'sh katak bo'ladi).
+const escText = (v: Cell): string => {
+  const s = String(v ?? '');
+  return s ? esc(`="${s.replace(/"/g, '""')}"`) : esc('');
+};
 
 /** Fayl nomidan taqiqlangan belgilarni olib tashlaydi. */
 const safeName = (s: string): string =>
@@ -35,9 +49,11 @@ const safeName = (s: string): string =>
     .replace(/\s+/g, '_')
     .trim() || 'export';
 
-export const buildCsv = (header: string[], rows: Cell[][]): string => {
+export const buildCsv = (header: string[], rows: Cell[][], textColumns: number[] = []): string => {
   const lines = [header.map(esc).join(',')];
-  rows.forEach(r => lines.push(r.map(esc).join(',')));
+  rows.forEach(r =>
+    lines.push(r.map((v, i) => (textColumns.includes(i) ? escText(v) : esc(v))).join(',')),
+  );
   return '﻿' + lines.join('\r\n');
 };
 
@@ -46,7 +62,12 @@ export const buildCsv = (header: string[], rows: Cell[][]): string => {
  * Ro'yxat bo'sh bo'lsa — "Ro'yxat bo'sh" toast'i, fayl yaratilmaydi.
  * @returns muvaffaqiyatli saqlangan bo'lsa `true`.
  */
-export const exportCsv = async ({ baseName, header, rows }: CsvExportOptions): Promise<boolean> => {
+export const exportCsv = async ({
+  baseName,
+  header,
+  rows,
+  textColumns,
+}: CsvExportOptions): Promise<boolean> => {
   const t = i18next.t.bind(i18next);
   if (!rows.length) {
     Toast.show({
@@ -59,7 +80,7 @@ export const exportCsv = async ({ baseName, header, rows }: CsvExportOptions): P
   try {
     const fileName = `${safeName(baseName)}_${Date.now()}.csv`;
     const cachePath = `${RNBlobUtil.fs.dirs.CacheDir}/${fileName}`;
-    await RNBlobUtil.fs.writeFile(cachePath, buildCsv(header, rows), 'utf8');
+    await RNBlobUtil.fs.writeFile(cachePath, buildCsv(header, rows, textColumns), 'utf8');
 
     // 02.10 (review): Android 7–9 (API < 29) da MediaStore nusxasi WRITE_EXTERNAL_STORAGE
     // ruxsatini talab qiladi (manifestda yo'q) — xato bo'lsa umumiy "Xatolik" EMAS: fayl

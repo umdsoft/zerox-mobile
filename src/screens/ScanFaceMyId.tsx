@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { CaptureProtection } from 'react-native-capture-protection';
 
 import LottieView from 'lottie-react-native';
@@ -31,7 +31,9 @@ import Loading from './components/Loading';
 import { t } from 'i18next';
 import { URL } from './constants';
 import { useMyIdSession } from '../hooks/useMyIdSession';
-import { needsOferta, openOferta } from '../helper/ofertaGate';
+import { needsOferta } from '../helper/ofertaGate';
+import { markOfertaAfterIdentification } from '../helper/ofertaAfterId';
+import { navigationRef } from '../navigation/NavigationRef';
 import { MYID } from '../config/myid';
 import {
   MyIdCameraShape,
@@ -40,9 +42,6 @@ import {
   useMyId,
   startMyId,
 } from 'react-native-nitro-myid';
-
-// Identifikatsiyadan keyin oferta oynasi bosh sahifaga o'tish animatsiyasi tugagach ochiladi.
-const OFERTA_AFTER_ID_DELAY_MS = 800;
 
 const returnMessage = response => {
   // response network-error/timeout'da undefined bo'lishi mumkin (P-003 timeout buni
@@ -215,23 +214,35 @@ const ScanFaceMyId = () => {
             if (me?.is_contract !== 1) {
               dispatch(HomeApi({ page: 1 }));
             }
-            navigation.navigate('BottomTabNavigator');
             /**
              * 01.10 (mobil hujjat, 4-band): "ro'yxatdan o'tish → identifikatsiya → oferta".
-             * ILDIZ: 29.09 da oferta MAJBURIY bo'lmasin deb identifikatsiyadan keyingi
-             * avtomatik ochilish ham olib tashlangan edi — yangi foydalanuvchiga oferta
-             * sahifasi umuman ko'rsatilmasdi. Endi: identifikatsiyadan so'ng oferta oynasi
-             * BIR MARTA avtomatik ochiladi, lekin MAJBURIY EMAS — "orqaga" (Android tugmasi
-             * yoki oynadagi orqaga tugmasi) bilan tasdiqlamasdan chiqib, ilovaning qolgan
-             * bo'limlaridan foydalanish mumkin. Qarz shartnomasida qarz berish/olishda
-             * oyna yana ochiladi (useOfertaGuard → guardOferta). `openOferta()` amalsiz
-             * chaqiriladi — yopilsa hech narsa bajarilmaydi.
+             * Oferta oynasi BIR MARTA avtomatik ochiladi, lekin MAJBURIY EMAS — "orqaga"
+             * bilan tasdiqlamasdan chiqib, ilovaning qolgan bo'limlaridan foydalanish
+             * mumkin; Qarz shartnomasida qarz berish/olishda yana ochiladi (useOfertaGuard).
              * is_active: identifikatsiya hozirgina MUVAFFAQIYATLI — getMe javobi kechiksa
              * (stale-guard) ham foydalanuvchi faol deb hisoblanadi.
+             *
+             * 03.10 (mobil hujjat, 1-band): 01.10 dagi `setTimeout(openOferta, 800)`
+             * ishlamasdi — ILDIZ helper/ofertaAfterId.ts da (MyID kamerasidan qaytishda
+             * ilova PIN bilan qulflanib, stek qayta tiklanardi). Endi oyna "navbat"
+             * orqali ochiladi: ContractModal uni foydalanuvchi oddiy ekranga tushganda
+             * (qulf ochilgandan keyin ham) iste'mol qiladi.
              */
             if (needsOferta({ ...(me || {}), is_active: 1 })) {
-              setTimeout(() => openOferta(), OFERTA_AFTER_ID_DELAY_MS);
+              markOfertaAfterIdentification(me?.id);
             }
+            // 03.10: MyID davomida ilova qulflangan bo'lsa (stek PIN ekraniga reset
+            // qilingan) — bu ekran stekda yo'q; eski `navigation` bilan o'tish PIN'ni
+            // chetlab o'tardi. Qulfdan keyin identifikatsiya ekraniga QAYTMASLIK uchun
+            // saqlangan stekni o'chiramiz → PIN'dan so'ng bosh sahifa ochiladi.
+            const curRoute = (navigationRef.current as any)?.getCurrentRoute?.()?.name;
+            if (curRoute === 'SetLocalPassword' && storage.getBoolean('appLocked')) {
+              storage.delete('preLockNavState');
+              return;
+            }
+            // 03.10: v7'da `navigate` stekdagi bosh sahifaga QAYTMAYDI, ustiga yangisini
+            // qo'shardi (orqaga bosilsa yana identifikatsiya ekrani) — popTo.
+            navigation.dispatch(StackActions.popTo('BottomTabNavigator'));
           });
         } else {
           response.data.msg === 'user-is-active'

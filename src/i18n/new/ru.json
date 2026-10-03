@@ -1716,6 +1716,10 @@
     "Summa tanlangan qarzlar qoldig‘idan oshmasligi kerak": "Сумма не должна превышать остаток выбранных долгов",
     "Butun qoldiq yopiladi:": "Будет погашен весь остаток:",
     "Tanlangan qarzlar yopiladi va qolgan summa qaytmaydi.": "Выбранные долги будут закрыты, оставшаяся сумма не вернётся.",
-    "{{n}} ta qarzdan voz kechildi": "Прощено долгов: {{n}}"
-  }
+    "{{n}} ta qarzdan voz kechildi": "Прощено долгов: {{n}}",
+    "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Номер банковской карты и номер телефона для Telegram — оба обязательны.",
+    "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "Номер карты должен состоять из 16 цифр.",
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Введите номер телефона полностью (9 цифр)."
+  },
+  "Karta ma’lumotlari o‘chirildi.": "Данные карты удалены."
 }

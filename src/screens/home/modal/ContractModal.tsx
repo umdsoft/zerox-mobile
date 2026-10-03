@@ -24,12 +24,21 @@ import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from '../redesign/icons';
 import {
   clearPendingOfertaAction,
+  openOferta,
   runPendingOfertaAction,
   setOfertaOpener,
 } from '../../../helper/ofertaGate';
+import {
+  OFERTA_WAIT_ROUTES,
+  consumeOfertaAfterIdentification,
+  hasOfertaAfterIdentification,
+} from '../../../helper/ofertaAfterId';
+import { navigationRef } from '../../../navigation/NavigationRef';
 const { width, height } = Dimensions.get('screen');
+// 03.10: identifikatsiyadan keyingi oyna — ekran o'tish animatsiyasi tugagach.
+const OFERTA_AFTER_ID_DELAY_MS = 800;
 // SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
-const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (1 sahifali hujjat)
+const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (03.10: 1 sahifali hujjatga — 0)
 const PER_PAGE_MS = 1500; // har bir KEYINGI sahifa uchun eng kam vaqt: (n-1)*1.5 s
 const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi
 // Hujjat UMUMAN yuklanmasa (onLoadComplete ham, onPageChanged ham kelmasa) —
@@ -154,8 +163,14 @@ const ContractModal = () => {
       fallbackTimerRef.current = null;
     }
     const n = Math.max(1, Number(numberOfPages) || 1);
-    const minMs = Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS);
     if (readTimerRef.current) clearTimeout(readTimerRef.current);
+    // 03.10 (mobil hujjat, 1-band): ekranga to'liq sig'adigan (1 sahifali) hujjat
+    // yuklanishi bilan "oxirigacha ko'rilgan" hisoblanadi — aylantiradigan joy yo'q.
+    if (n === 1) {
+      setReadTimerDone(true);
+      return;
+    }
+    const minMs = Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS);
     readTimerRef.current = setTimeout(() => setReadTimerDone(true), minMs);
   }, []);
 
@@ -169,6 +184,51 @@ const ContractModal = () => {
     setOfertaOpener(() => dispatch(contractModalShow({ show: true })));
     return () => setOfertaOpener(null);
   }, [dispatch]);
+
+  /**
+   * 03.10 (mobil hujjat, 1-band): identifikatsiyadan KEYIN oferta sahifasi
+   * (ILDIZ va navbat: helper/ofertaAfterId.ts). Navbat foydalanuvchi qulf /
+   * identifikatsiya ekranidan chiqib ilovaning oddiy ekraniga tushganda
+   * (navigatsiya 'state' hodisasi) yoki /user/me yangilanganda iste'mol
+   * qilinadi — bir marta. Taymer faqat unmount'da tozalanadi: user ob'ekti
+   * almashsa (HomeApi) navbat iste'mol qilingan oyna yo'qolib qolmasin.
+   */
+  const userData = user?.data;
+  const userDataRef = useRef<any>(userData);
+  const contractRef = useRef<boolean>(!!contract);
+  useEffect(() => {
+    contractRef.current = !!contract;
+  }, [contract]);
+  const afterIdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tryOpenAfterId = useCallback(() => {
+    if (afterIdTimerRef.current || !hasOfertaAfterIdentification()) return;
+    // Qulf holatida joriy ekran SetLocalPassword — u OFERTA_WAIT_ROUTES'da.
+    const nav: any = navigationRef.current;
+    const routeName = nav?.getCurrentRoute?.()?.name;
+    if (!routeName || OFERTA_WAIT_ROUTES.has(routeName)) return;
+    if (!consumeOfertaAfterIdentification(userDataRef.current)) return;
+    afterIdTimerRef.current = setTimeout(() => {
+      afterIdTimerRef.current = null;
+      // Oyna allaqachon ochiq (masalan "Qarz berish" darvozasi) — eslab qolingan
+      // amalni o'chirib yubormaslik uchun qayta ochmaymiz.
+      if (!contractRef.current) openOferta();
+    }, OFERTA_AFTER_ID_DELAY_MS);
+  }, []);
+
+  useEffect(() => {
+    const nav: any = navigationRef.current;
+    const unsub = nav?.addListener?.('state', tryOpenAfterId);
+    return () => {
+      unsub?.();
+      if (afterIdTimerRef.current) clearTimeout(afterIdTimerRef.current);
+      afterIdTimerRef.current = null;
+    };
+  }, [tryOpenAfterId]);
+
+  useEffect(() => {
+    userDataRef.current = userData;
+    tryOpenAfterId();
+  }, [userData, tryOpenAfterId]);
 
   /**
    * Foydalanuvchi ofertani tasdiqlashni ISTAMASA — oynani yopadi va ilovaning
@@ -471,6 +531,8 @@ const ContractModal = () => {
                   }
                   onClose();
                 }}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !(check && !needRead) }}
                 activeOpacity={0.85}
                 style={[
                   styles.btn,

@@ -1715,6 +1715,10 @@
     "Summa tanlangan qarzlar qoldig‘idan oshmasligi kerak": "Amount must not exceed the balance of the selected debts",
     "Butun qoldiq yopiladi:": "The whole balance will be closed:",
     "Tanlangan qarzlar yopiladi va qolgan summa qaytmaydi.": "The selected debts will be closed and the remaining amount will not be returned.",
-    "{{n}} ta qarzdan voz kechildi": "{{n}} debts waived"
-  }
+    "{{n}} ta qarzdan voz kechildi": "{{n}} debts waived",
+    "Plastik karta raqami va telegram uchun telefon raqami — ikkalasi ham majburiy.": "Both the bank card number and the Telegram phone number are required.",
+    "Karta raqami 16 ta raqamdan iborat bo‘lishi kerak.": "The card number must consist of 16 digits.",
+    "Telefon raqamini to‘liq kiriting (9 ta raqam).": "Enter the full phone number (9 digits)."
+  },
+  "Karta ma’lumotlari o‘chirildi.": "Card details removed."
 }
