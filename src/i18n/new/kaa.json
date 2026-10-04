@@ -1731,6 +1731,15 @@
     "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Dúkan kartası kirgizilmegen — SMS ulıwma tekstte jiberiledi.",
     "Karta ma’lumotlari o‘chirildi.": "Karta maǵlıwmatları óshirildi.",
     "Aktiv qarzlar: {{n}} ta": "Aktiv qarızlar: {{n}}",
-    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Qarız qatnasıqları hám jeke finanslardı biz benen ańsat basqarıń."
+    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Qarız qatnasıqları hám jeke finanslardı biz benen ańsat basqarıń.",
+    "Qarz munosabatlari va shaxsiy moliyani ZeroX bilan boshqaring.": "Qarız qatnasıqları hám jeke finanslardı ZeroX penen basqarıń.",
+    "Mijozga yangi qarz berildi va qarz daftariga kiritildi.": "Klientke jańa qarız berildi hám qarız dápterine kirgizildi.",
+    "Mijozdan qarz olindi va qarz daftariga kiritildi.": "Klientten qarız alındı hám qarız dápterine kirgizildi.",
+    "Qarzning bir qismi yoki to‘liq summasi qaytarildi.": "Qarızdıń bir bólegi yamasa tolıq summası qaytarıldı.",
+    "Qarzning bir qismi yoki to‘liq summasidan voz kechildi.": "Qarızdıń bir bóleginen yamasa tolıq summasınan waz keshildi.",
+    "Talabnoma yuborilsinmi?": "Talapnama jiberilsin be?",
+    "Talabnoma matni": "Talapnama teksti",
+    "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Qosımshanıń jańa versiyası bar. Iltimas, qosımshanı jańalań.",
+    "Yangilash": "Jańalaw"
   }
 }

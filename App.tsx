@@ -24,6 +24,7 @@ import { checkingInternet } from './src/store/reducers/HomeReducer';
 import { getMe } from './src/store/api/home';
 import useAppStateListener from './src/hooks/useAppStateListener';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
+import ForceUpdateGate from './src/screens/components/ForceUpdateGate'; // SS-DEV (2026-10-04)
 import DeviceInfo from 'react-native-device-info';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
@@ -261,6 +262,8 @@ const App: React.FC = () => {
         <NoInternet onChangeIntenet={onChangeIntenet} />
         {/* <UpdateModal /> */}
         <ExpirePassportModal />
+        {/* SS-DEV (2026-10-04): majburiy yangilanish — eng OXIRIDA (boshqa oynalar ustida). */}
+        <ForceUpdateGate />
       </I18nextProvider>
       </View>
       {/* SS-DEV (2026-09-24): toast iPhone'da Dynamic Island / status bar OSTIDA

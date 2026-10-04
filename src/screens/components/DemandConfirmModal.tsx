@@ -1,5 +1,5 @@
 /**
- * DemandConfirmModal.tsx — 03.10: "Talab SMS yuborilsinmi?" markaziy tasdiq oynasi.
+ * DemandConfirmModal.tsx — 03.10: "Talabnoma yuborilsinmi?" (04.10 gacha "Talab SMS yuborilsinmi?") markaziy tasdiq oynasi.
  *
  * Egasining hujjati (5-rasm): "Talab qilish" bosilganda SMS darhol ketmaydi — avval
  * oldin kiritilgan karta (yashirilgan raqam + egasi / bank, Telegram raqami) ko'rsatiladi:
@@ -107,6 +107,7 @@ const DemandConfirmModal = ({
   busy,
   card,
   preview,
+  previewLoading,
   canChangeCard,
   onConfirm,
   onClose,
@@ -158,7 +159,8 @@ const DemandConfirmModal = ({
               style={styles.title}
               accessibilityRole="header"
             >
-              {t('Talab SMS yuborilsinmi?')}
+              {/* SS-DEV (2026-10-04): "Talab SMS yuborilsinmi?" -> "Talabnoma yuborilsinmi?" */}
+              {t('Talabnoma yuborilsinmi?')}
             </Text>
             <Text allowFontScaling={false} style={styles.subtitle}>
               {card
@@ -200,14 +202,22 @@ const DemandConfirmModal = ({
                 </View>
               )}
 
-              {!!preview && (
+              {(!!preview || !!previewLoading) && (
                 <View style={styles.previewBox}>
                   <Text allowFontScaling={false} style={styles.previewLabel}>
-                    {t('SMS matni')}
+                    {t('Talabnoma matni')}
                   </Text>
-                  <Text allowFontScaling={false} style={styles.previewText}>
-                    {preview}
-                  </Text>
+                  {previewLoading && !preview ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={rd.color.textTertiary}
+                      style={styles.previewSpinner}
+                    />
+                  ) : (
+                    <Text allowFontScaling={false} style={styles.previewText}>
+                      {preview}
+                    </Text>
+                  )}
                 </View>
               )}
             </ScrollView>
@@ -406,10 +416,10 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.semibold,
     fontSize: rs(11),
     color: rd.color.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    // SS-DEV (2026-10-04): uppercase olib tashlandi ("Talabnoma matni" — oddiy yozuv).
     marginBottom: rs(4),
   },
+  previewSpinner: { alignSelf: 'flex-start', marginVertical: rs(4) },
   previewText: {
     fontFamily: rd.font.regular,
     fontSize: rs(12.5),

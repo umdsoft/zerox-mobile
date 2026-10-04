@@ -44,7 +44,7 @@ import {
   BulbIcon,
   InfoIcon,
   ChevronRight,
-  CoinIcon,
+  PersonalDebtIcon,
   ContractIcon,
   IconProps,
   LedgerIcon,
@@ -207,7 +207,7 @@ const HeroBanner = ({
       </Text>
       <Text style={styles.heroSub} numberOfLines={2} allowFontScaling={false}>
         {/* SS-DEV (2026-10-04): 04.10 hujjat, 3-band — yangi shior (5 tilda). */}
-        {t('Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.')}
+        {t('Qarz munosabatlari va shaxsiy moliyani ZeroX bilan boshqaring.')}
       </Text>
       <View style={styles.heroChips}>
         <View style={styles.heroChip}>
@@ -890,7 +890,7 @@ const HomeRedesign = () => {
             UZS+USD alohida. Ma'lumot Shaxsiy moliya (analytics.finance) qarzlaridan. */}
         <ModuleWithSubs
           title="Shaxsiy qarz"
-          Icon={CoinIcon}
+          Icon={PersonalDebtIcon} /* SS-DEV (2026-10-04): pastki menyu bilan bir xil */
           info="Shaxsiy qarz — bu tanishlaringiz bilan o‘zaro oldi-berdi munosabatlaringiz. Bergan va olgan qarzlaringizni tizimda ro‘yxatdan o‘tkazish orqali moliyaviy holatingizni doimiy kuzatib borasiz."
           debLabel="Berilgan qarz"
           credLabel="Olingan qarz"

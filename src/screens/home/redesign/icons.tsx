@@ -623,6 +623,19 @@ export const CoinIcon = (p: IconProps) => (
   </Base>
 );
 
+// SS-DEV (2026-10-04): "Shaxsiy qarz" ikonkasi — qo'ldan qo'lga pul berish (lucide
+// "hand-coins", ISC litsenziya). Ilgari CoinIcon (target ko'rinishli doira) edi — shaxsiy
+// qarzni ifodalamasdi. Bosh sahifa kartasi va GlobalBottomBar'da AYNAN shu ikonka.
+export const PersonalDebtIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+    <Path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+    <Path d="m2 16 6 6" />
+    <Circle cx="16" cy="9" r="2.9" />
+    <Circle cx="6" cy="5" r="3" />
+  </Base>
+);
+
 export const BackspaceIcon = (p: IconProps) => (
   <Base {...p}>
     <Path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />

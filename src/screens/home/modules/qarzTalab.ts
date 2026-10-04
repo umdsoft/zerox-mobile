@@ -111,24 +111,30 @@ const normTg = (raw: unknown): string => {
 /** Backend `fmtAmount`: butun son, minglik bo'shliq bilan. */
 const smsAmount = (n: unknown): string =>
   String(Math.round(parseFloat(String(n ?? 0)) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-/** Backend `storeDokonidagi`: "... dokoni" → "... dokonidagi". */
-const DOKON_SUFFIX_RE = /(^|\s+)do['ʻʼ‘’`]?koni?$/i;
-const storeDokonidagi = (store: string): string => {
-  const s = String(store || '').trim() || 'ZeroX';
-  const base = s.replace(DOKON_SUFFIX_RE, '').trim();
-  return `${base || s} dokonidagi`;
-};
-
-/** SMS matni ko'rinishi — backend `buildTalabSmsVariants` 1-varianti (faqat o'zbekcha). */
+/**
+ * ZAXIRA matn (faqat talab-preview so'rovi muvaffaqiyatsiz bo'lsa) — backend
+ * qarzSms.service QARZ_SMS_TEMPLATES.talab (uz) bilan bir xil. SS-DEV (2026-10-04).
+ */
 const buildTalabPreview = (q: QarzTalabTarget, card: DemandCard | null): string => {
   const store = String(q.faoliyatNomi || 'ZeroX').trim() || 'ZeroX';
   const a = smsAmount(q.amount);
   const cw = q.valyuta || 'UZS';
+  const num = normCard(card?.number);
   const tg = normTg(card?.telegramPhone);
-  if (card && tg) {
-    return `${storeDokonidagi(store)} ${a} ${cw} qarzingizni qaytarish talab qilinmoqda. Qarzni ${card.number} ga o'tkazib, bu haqda ${tg} ga telegram orqali xabar yuboring.`;
+  if (num && tg) {
+    return `${store}dagi ${a} ${cw} qarzni qaytarishingiz talab qilinmoqda. Pulni ${num} ga o'tkazib, ${tg} ga telegramda xabar yuboring.`;
   }
-  return `Sizning ${store}dan bo'lgan ${a} ${cw} qarzingizni bugun qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring.`;
+  return `Sizning ${store}dan bo'lgan ${a} ${cw} qarzingizni qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring`;
+};
+
+/**
+ * SS-DEV (2026-10-04): GET /qarz-daftari/qarz/:id/talab-preview — backend `talab` yuboradigan
+ * matn bilan AYNAN bir xil (buildQarzSms('talab', ...)). Matn bitta manbadan.
+ */
+const loadTalabPreview = async (q: QarzTalabTarget): Promise<string | undefined> => {
+  const res = await axios.get(`${URL}/qarz-daftari/qarz/${q.id}/talab-preview`, authHeaders());
+  const text = res?.data?.data?.text;
+  return typeof text === 'string' && text.trim() ? text : undefined;
 };
 
 const authHeaders = () => ({ headers: { Authorization: `Bearer ${storage.getString('token')}` } });
@@ -179,6 +185,7 @@ export const useQarzTalab = ({ t, navigation, plan }: TalabArgs) => {
     allowWithoutCard: staff,
     noCardText: t('Talab SMS’ida karta ko‘rsatilishi uchun plastik karta raqamini kiriting.'),
     buildPreview: buildTalabPreview,
+    loadPreview: loadTalabPreview,
     send: async q => {
       try {
         await axios.post(`${URL}/qarz-daftari/qarz/${q.id}/talab`, {}, authHeaders());

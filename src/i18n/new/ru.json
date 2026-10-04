@@ -1732,6 +1732,15 @@
     "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "Карта магазина не указана — SMS будет отправлено с общим текстом.",
     "Karta ma’lumotlari o‘chirildi.": "Данные карты удалены.",
     "Aktiv qarzlar: {{n}} ta": "Активные долги: {{n}}",
-    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Управляйте долговыми отношениями и личными финансами легко вместе с нами."
+    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Управляйте долговыми отношениями и личными финансами легко вместе с нами.",
+    "Qarz munosabatlari va shaxsiy moliyani ZeroX bilan boshqaring.": "Управляйте долговыми отношениями и личными финансами с ZeroX.",
+    "Mijozga yangi qarz berildi va qarz daftariga kiritildi.": "Клиенту выдан новый долг, и он внесён в долговую книгу.",
+    "Mijozdan qarz olindi va qarz daftariga kiritildi.": "От клиента получен долг, и он внесён в долговую книгу.",
+    "Qarzning bir qismi yoki to‘liq summasi qaytarildi.": "Возвращена часть или полная сумма долга.",
+    "Qarzning bir qismi yoki to‘liq summasidan voz kechildi.": "Произведён отказ от части или полной суммы долга.",
+    "Talabnoma yuborilsinmi?": "Отправить требование?",
+    "Talabnoma matni": "Текст требования",
+    "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Доступна новая версия приложения. Пожалуйста, обновите приложение.",
+    "Yangilash": "Обновить"
   }
 }

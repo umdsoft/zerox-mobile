@@ -13,11 +13,11 @@ import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
-  CoinIcon,
   ContractIcon,
   HomeIcon,
   IconProps,
   LedgerIcon,
+  PersonalDebtIcon,
   WalletIcon,
 } from '../screens/home/redesign/icons';
 import { rd, rs } from '../theme/rd';
@@ -43,7 +43,7 @@ const TABS: {
   { label: 'Qarz\nshartnomasi', Icon: ContractIcon, tab: 'QarzShartnomasi' },
   { label: 'Qarz\ndaftari', Icon: LedgerIcon, tab: 'QarzDaftari' },
   // SS7: yangi 5-bo'lim — "Shaxsiy qarz" (RdTabBar bilan bir xil tartib).
-  { label: 'Shaxsiy\nqarz', Icon: CoinIcon, tab: 'ShaxsiyQarz' },
+  { label: 'Shaxsiy\nqarz', Icon: PersonalDebtIcon, tab: 'ShaxsiyQarz' }, // SS-DEV (2026-10-04)
   // "Statistika" -> "Shaxsiy moliya" (RdTabBar bilan bir xil).
   { label: 'Shaxsiy\nmoliya', Icon: WalletIcon, tab: 'Statistic' },
 ];

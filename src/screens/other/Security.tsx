@@ -9,7 +9,7 @@ import FingerIcon from '../../images/Finger';
 import { Switch } from 'react-native-paper';
 import { storage } from '../../store/api/token/getToken';
 import ReactNativeBiometrics from 'react-native-biometrics';
-import LottieView from 'lottie-react-native';
+import AnimatedSecurityShield from '../components/AnimatedSecurityShield';
 import { t } from 'i18next';
 import FaceIdIcon from '../../images/faceid';
 import ScreenLayout from '../components/ScreenLayout';
@@ -83,11 +83,9 @@ const Security = () => {
       {/* Ikona TEPADA (deyarli yarim sahifa), bandlar PASTKI yarmda —
           bir qo'lda qulay boshqarish uchun. */}
       <View style={styles.top}>
-        <LottieView
-          autoPlay
-          source={require('../../images/lottie/list/8tdue8bgdH.json')}
-          style={styles.lottie}
-        />
+        {/* SS-DEV (2026-10-04): hujjat+qalqon lottie o'rniga xavfsizlikni ifodalovchi
+            animatsiyali qalqon (pulse + qulf + tasdiq belgisi), yangi paketsiz. */}
+        <AnimatedSecurityShield size={rs(150)} />
       </View>
       {/* 3 band — HAR BIRI ALOHIDA KARTA (so'rov bo'yicha; ilgari bitta kartaда
           divider bilan birlashib turardi). */}
@@ -143,7 +141,6 @@ const styles = StyleSheet.create({
   // Ikona yuqori qismda (biroz yuqoriroq) — top flex:1, past bo'sh joy flex:0.45.
   top: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   bottomGap: { flex: 0.45 },
-  lottie: { width: rs(150), height: rs(150) },
   // Har band ALOHIDA karta — orasida bo'shliq.
   cardList: { gap: rs(12) },
   rowCard: {

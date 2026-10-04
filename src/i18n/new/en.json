@@ -1731,6 +1731,15 @@
     "Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.": "No shop card added — the SMS will be sent with the generic text.",
     "Karta ma’lumotlari o‘chirildi.": "Card details removed.",
     "Aktiv qarzlar: {{n}} ta": "Active debts: {{n}}",
-    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Manage your debt relationships and personal finances with ease, together with us."
+    "Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.": "Manage your debt relationships and personal finances with ease, together with us.",
+    "Qarz munosabatlari va shaxsiy moliyani ZeroX bilan boshqaring.": "Manage your debt relationships and personal finances with ZeroX.",
+    "Mijozga yangi qarz berildi va qarz daftariga kiritildi.": "A new debt was given to the customer and recorded in the debt book.",
+    "Mijozdan qarz olindi va qarz daftariga kiritildi.": "A debt was taken from the customer and recorded in the debt book.",
+    "Qarzning bir qismi yoki to‘liq summasi qaytarildi.": "Part or the full amount of the debt was repaid.",
+    "Qarzning bir qismi yoki to‘liq summasidan voz kechildi.": "Part or the full amount of the debt was waived.",
+    "Talabnoma yuborilsinmi?": "Send the demand notice?",
+    "Talabnoma matni": "Demand notice text",
+    "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "A new version of the app is available. Please update the app.",
+    "Yangilash": "Update"
   }
 }

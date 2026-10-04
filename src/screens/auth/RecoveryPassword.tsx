@@ -181,8 +181,8 @@ const RecoveryPassword = () => {
     });
   }, []);
   const handleResponse = useCallback(
-    json => {
-      switch (json.code) {
+    (json: any) => {
+      switch (json?.code) {
         case 4:
           showToast(
             'error2',
@@ -215,8 +215,19 @@ const RecoveryPassword = () => {
             t('Parolni o‘zgartirishda xatolik sodir bo‘ldi.'),
           );
           break;
-        default:
-          showToast('error', t('Xatolik'), t('Noma’lum xatolik yuz berdi.'));
+        default: {
+          // SS-DEV (2026-10-04): ilgari 'error' turi (BaseToast text1/text2) ishlatilardi,
+          // biz esa props.desc uzatardik -> BO'SH qizil toast. Endi doim 'error2' (desc'ni
+          // ko'rsatadi) va backend matni (message/msg/error), bo'lmasa umumiy matn.
+          const backendText = [json?.message, json?.msg, json?.error].find(
+            v => typeof v === 'string' && v.trim() && v !== 'error',
+          );
+          showToast(
+            'error2',
+            t('Xatolik'),
+            backendText || t('Noma’lum xatolik yuz berdi.'),
+          );
+        }
       }
     },
     [navigation, showToast],
@@ -252,7 +263,7 @@ const RecoveryPassword = () => {
         handleResponse(data);
       } else {
         showToast(
-          'error',
+          'error2',
           t('Xatolik'),
           t('Server bilan bog‘lanishda muammo yuzaga keldi'),
         );

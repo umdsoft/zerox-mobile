@@ -54,6 +54,21 @@ const TITLE_BY_TURI: Record<string, string> = {
   voz_kechish: 'Qarzdan voz kechildi',
 };
 
+// SS-DEV (2026-10-04, 04.10 hujjat 4-band): tavsif qatori QAYTARILDI (ixcham, 2 qatorgacha).
+const DESC_BY_TURI: Record<string, string> = {
+  berish: 'Mijozga yangi qarz berildi va qarz daftariga kiritildi.',
+  olish: 'Mijozdan qarz olindi va qarz daftariga kiritildi.',
+  qaytarish: 'Qarzning bir qismi yoki to‘liq summasi qaytarildi.',
+  voz_kechish: 'Qarzning bir qismi yoki to‘liq summasidan voz kechildi.',
+};
+
+// SS-DEV (2026-10-04): bosh karta OQ emas — turga mos och fon (pastdagi oq kartalardan ajraladi).
+const BG_BY_COLOR: Record<string, string> = {
+  [BLUE]: '#eaf1fe',
+  [GREEN]: '#e8f7ee',
+  [PURPLE]: '#f3edfe',
+};
+
 const metaOf = (turi: Turi) => {
   switch (turi) {
     case 'berish':
@@ -395,12 +410,20 @@ const QarzDaftariAmaliyot = () => {
             (kichik rangli badge) va summa. Tavsif olib tashlandi — pastdagi
             bo'limlar va Kvitansiya/Ulashish tugmalari bitta ekranga sig'adi.
             Ranglar: berildi — ko'k, qaytarildi — yashil, voz kechildi — binafsha. */}
-        <View style={[styles.hero, { borderLeftColor: color }]}>
-          <View style={[styles.heroIcon, { backgroundColor: color + '1A' }]}>
+        <View
+          style={[
+            styles.hero,
+            {
+              borderLeftColor: color,
+              borderColor: color + '33',
+              backgroundColor: BG_BY_COLOR[color] || rd.color.surface,
+            },
+          ]}>
+          <View style={[styles.heroIcon, { backgroundColor: color + '1F' }]}>
             <Icon size={rs(20)} color={color} />
           </View>
           <View style={styles.heroBody}>
-            <View style={[styles.heroBadge, { backgroundColor: color + '14' }]}>
+            <View style={[styles.heroBadge, { backgroundColor: color + '1F' }]}>
               <Text allowFontScaling={false} style={[styles.heroTitle, { color }]} numberOfLines={1}>
                 {t(TITLE_BY_TURI[turi] || 'Amaliyot')}
               </Text>
@@ -414,6 +437,11 @@ const QarzDaftariAmaliyot = () => {
               {sign}
               {money(tx?.summa, valyuta)}
             </Text>
+            {!!DESC_BY_TURI[turi] && (
+              <Text allowFontScaling={false} style={styles.heroDesc} numberOfLines={2}>
+                {t(DESC_BY_TURI[turi])}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -854,7 +882,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroBody: { flex: 1, alignItems: 'flex-start', gap: rs(4) },
+  heroBody: { flex: 1, alignItems: 'flex-start', gap: rs(3) },
   heroBadge: {
     paddingHorizontal: rs(8),
     paddingVertical: rs(2),
@@ -862,6 +890,12 @@ const styles = StyleSheet.create({
   },
   heroTitle: { fontFamily: rd.font.semibold, fontSize: rs(11.5) },
   heroAmount: { fontFamily: rd.font.bold, fontSize: rs(18), color: rd.color.text },
+  heroDesc: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(12),
+    lineHeight: rs(16),
+    color: rd.color.textSecondary,
+  },
 
   card: {
     backgroundColor: rd.color.surface,

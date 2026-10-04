@@ -41,8 +41,13 @@ export type DemandFlowOptions<T> = {
   allowWithoutCard?: boolean;
   /** Karta yo'q va kiritish ekrani ochilayotganda ko'rsatiladigan matn. */
   noCardText: string;
-  /** SMS matni ko'rinishi (ixtiyoriy). */
+  /** SMS matni ko'rinishi (ixtiyoriy). `loadPreview` bo'lsa — faqat zaxira (tarmoq xatosida). */
   buildPreview?: (target: T, card: DemandCard | null) => string | undefined;
+  /**
+   * SS-DEV (2026-10-04): SMS matni SERVERDAN (backend yuboradigan matn bilan aynan bir xil).
+   * Bo'sh/xato bo'lsa `buildPreview` zaxirasi ko'rsatiladi.
+   */
+  loadPreview?: (target: T, card: DemandCard | null) => Promise<string | undefined>;
   /** SMS yuborish — muvaffaqiyat/xato toastlari shu funksiya ichida. */
   send: (target: T) => Promise<void>;
 };
@@ -59,6 +64,8 @@ export type DemandModalState = {
   busy: boolean;
   card: DemandCard | null;
   preview?: string;
+  /** SS-DEV (2026-10-04): server matni yuklanmoqda. */
+  previewLoading?: boolean;
   canChangeCard: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -73,6 +80,8 @@ export const useDemandFlow = <T>(opts: DemandFlowOptions<T>) => {
   const [checking, setChecking] = React.useState(false);
   const [card, setCard] = React.useState<DemandCard | null>(null);
   const [preview, setPreview] = React.useState<string | undefined>(undefined);
+  const [previewLoading, setPreviewLoading] = React.useState(false);
+  const previewSeq = React.useRef(0);
   const [planMsg, setPlanMsg] = React.useState('');
   const targetRef = React.useRef<T | null>(null);
   // 03.10: karta oynasiga talab UCHUN o'tildi — qaytganda tasdiq oynasini qayta ochamiz.
@@ -84,7 +93,27 @@ export const useDemandFlow = <T>(opts: DemandFlowOptions<T>) => {
   const showConfirm = (target: T, c: DemandCard | null) => {
     const o = optsRef.current;
     setCard(c);
-    setPreview(o.buildPreview ? o.buildPreview(target, c) : undefined);
+    const fallback = o.buildPreview ? o.buildPreview(target, c) : undefined;
+    const seq = ++previewSeq.current;
+    if (o.loadPreview) {
+      // SS-DEV (2026-10-04): matn bitta manbadan — backend (talab-preview).
+      setPreview(undefined);
+      setPreviewLoading(true);
+      o.loadPreview(target, c)
+        .then(text => {
+          if (seq !== previewSeq.current) return;
+          setPreview(text && text.trim() ? text : fallback);
+        })
+        .catch(() => {
+          if (seq === previewSeq.current) setPreview(fallback);
+        })
+        .finally(() => {
+          if (seq === previewSeq.current) setPreviewLoading(false);
+        });
+    } else {
+      setPreviewLoading(false);
+      setPreview(fallback);
+    }
     setVisible(true);
   };
 
@@ -180,6 +209,7 @@ export const useDemandFlow = <T>(opts: DemandFlowOptions<T>) => {
     busy,
     card,
     preview,
+    previewLoading,
     canChangeCard: !!opts.openCardScreen,
     onConfirm,
     onClose,
