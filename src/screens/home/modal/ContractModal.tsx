@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from '../redesign/icons';
 import {
   clearPendingOfertaAction,
+  needsOferta,
   openOferta,
   runPendingOfertaAction,
   setOfertaOpener,
@@ -200,20 +201,64 @@ const ContractModal = () => {
     contractRef.current = !!contract;
   }, [contract]);
   const afterIdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tryOpenAfterId = useCallback(() => {
-    if (afterIdTimerRef.current || !hasOfertaAfterIdentification()) return;
-    // Qulf holatida joriy ekran SetLocalPassword — u OFERTA_WAIT_ROUTES'da.
+  // SS-DEV (2026-10-04): oyna ochiq turganda ilova QULFLANSA (PIN ekrani) — oyna
+  // vaqtincha yashiriladi va qulf ochilgach QAYTA ko'rsatiladi (pastga qarang).
+  const hiddenByLockRef = useRef(false);
+  const currentRouteName = (): string | undefined => {
     const nav: any = navigationRef.current;
-    const routeName = nav?.getCurrentRoute?.()?.name;
-    if (!routeName || OFERTA_WAIT_ROUTES.has(routeName)) return;
+    return nav?.getCurrentRoute?.()?.name;
+  };
+  const tryOpenAfterId = useCallback(() => {
+    const routeName = currentRouteName();
+    const waiting = !routeName || OFERTA_WAIT_ROUTES.has(routeName);
+    /**
+     * SS-DEV (2026-10-04, 04.10 hujjat 1-band): ILDIZ (2-qism) — Android'da MyID
+     * alohida Activity; javob (`isactivate` → getMe → popTo) qulfdan OLDIN kelsa,
+     * oyna bosh sahifada ochilib, 1-2 soniyadan keyin AppState qulfi stekni PIN
+     * ekraniga reset qilardi. ContractModal navigatordan TASHQARIDA (App ildizida)
+     * chiziladi — oyna PIN ekrani USTIDA qolardi yoki foydalanuvchi uni PIN deb
+     * o'ylab orqaga bosib yopib yuborardi; navbat esa allaqachon iste'mol qilingan
+     * bo'lgani uchun qulf ochilgach oyna QAYTA chiqmasdi. Endi: qulf/kirish ekraniga
+     * o'tilganda ochiq oyna yashiriladi (eslab qolingan amal SAQLANADI) va oddiy
+     * ekranga qaytilganda yana ko'rsatiladi.
+     */
+    if (waiting) {
+      if (contractRef.current) {
+        dispatch(contractModalShow({ show: false }));
+        if (routeName === 'SetLocalPassword' && storage.getBoolean('appLocked')) {
+          hiddenByLockRef.current = true;
+        } else {
+          // Chiqish (logout) / kirish ekrani — oyna va eslab qolingan amal bekor.
+          hiddenByLockRef.current = false;
+          clearPendingOfertaAction();
+        }
+      }
+      return;
+    }
+    if (hiddenByLockRef.current) {
+      hiddenByLockRef.current = false;
+      if (!contractRef.current && needsOferta({ ...(userDataRef.current || {}), is_active: 1 })) {
+        dispatch(contractModalShow({ show: true }));
+      } else {
+        clearPendingOfertaAction();
+      }
+      return;
+    }
+    if (afterIdTimerRef.current || !hasOfertaAfterIdentification()) return;
     if (!consumeOfertaAfterIdentification(userDataRef.current)) return;
     afterIdTimerRef.current = setTimeout(() => {
       afterIdTimerRef.current = null;
+      const r = currentRouteName();
+      if (!r || OFERTA_WAIT_ROUTES.has(r)) {
+        // Shu 0.8 s ichida ilova qulflandi — qulf ochilgach ko'rsatamiz.
+        if (r === 'SetLocalPassword') hiddenByLockRef.current = true;
+        return;
+      }
       // Oyna allaqachon ochiq (masalan "Qarz berish" darvozasi) — eslab qolingan
       // amalni o'chirib yubormaslik uchun qayta ochmaymiz.
       if (!contractRef.current) openOferta();
     }, OFERTA_AFTER_ID_DELAY_MS);
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const nav: any = navigationRef.current;
@@ -237,6 +282,7 @@ const ContractModal = () => {
    */
   const onDecline = useCallback(() => {
     if (loading) return;
+    hiddenByLockRef.current = false;
     clearPendingOfertaAction();
     dispatch(contractModalShow({ show: false }));
   }, [dispatch, loading]);

@@ -72,11 +72,21 @@ export const consumeOfertaAfterIdentification = (userData: any): boolean => {
   if (!owner || !userData) return false;
   const otherUser =
     owner !== ANY_USER && userData.id != null && String(userData.id) !== owner;
-  if (!otherUser && !userData.is_xodim && Number(userData.is_active) !== 1) return false;
   try {
     storage.delete(OFERTA_AFTER_ID_KEY);
   } catch (_) {
-    // o'chirilmasa ham — natija quyidagi needsOferta bilan aniqlanadi.
+    // o'chirilmasa ham — natija quyida aniqlanadi.
   }
-  return !otherUser && needsOferta(userData);
+  /**
+   * SS-DEV (2026-10-04, 04.10 hujjat 1-band): ILGARI bu yerda `is_active !== 1`
+   * bo'lsa navbat KUTARDI. Navbat FAQAT `/user/isactivate` muvaffaqiyatli
+   * bo'lgach yoziladi — ya'ni identifikatsiya ANIQ o'tgan. Lekin Redux'dagi
+   * user ob'ekti ko'pincha hali ESKI (is_active=0): ScanFaceMyId'dagi getMe
+   * MyID'dan qaytishda tarmoq/sessiya-guard sabab bo'sh qaytsa yoki qulf
+   * ekranidan keyin yangilanmasa, `userData` o'zgarmaydi → navbat hech qachon
+   * iste'mol qilinmas, oyna OCHILMASDI. Endi shu foydalanuvchi uchun
+   * identifikatsiya o'tgan deb hisoblanadi (is_active: 1) — faqat oferta
+   * allaqachon tasdiqlangan (is_contract=1) yoki xodim bo'lsa ochilmaydi.
+   */
+  return !otherUser && needsOferta({ ...userData, is_active: 1 });
 };

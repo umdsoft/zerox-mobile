@@ -206,7 +206,8 @@ const HeroBanner = ({
         {name ? t('Xush kelibsiz, {{name}}!', { name }) : t('Xush kelibsiz!')}
       </Text>
       <Text style={styles.heroSub} numberOfLines={2} allowFontScaling={false}>
-        {t('Shartnomalarni elektron rasmiylashtiring va oson boshqaring.')}
+        {/* SS-DEV (2026-10-04): 04.10 hujjat, 3-band — yangi shior (5 tilda). */}
+        {t('Qarz munosabatlari va shaxsiy moliyani biz bilan oson boshqaring.')}
       </Text>
       <View style={styles.heroChips}>
         <View style={styles.heroChip}>

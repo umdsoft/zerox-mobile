@@ -42,6 +42,8 @@ const BLUE = '#2f6fed';
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 const AMBER = '#f59e0b';
+// SS-DEV (2026-10-04): "Qarzdan voz kechildi" — binafsha (04.10 hujjat, 2-band).
+const PURPLE = '#7c3aed';
 
 type Turi = 'berish' | 'olish' | 'qaytarish' | 'voz_kechish';
 
@@ -50,15 +52,6 @@ const TITLE_BY_TURI: Record<string, string> = {
   olish: 'Qarz olindi',
   qaytarish: 'Qarz qaytarildi',
   voz_kechish: 'Qarzdan voz kechildi',
-};
-
-// Amaliyot mazmunini bir jumlada tushuntiramiz (foydalanuvchi "nima bo'ldi?"
-// degan savolga ekranning o'zidan javob olsin).
-const DESC_BY_TURI: Record<string, string> = {
-  berish: 'Mijozga yangi qarz berildi va qarz daftariga yozildi.',
-  olish: 'Mijozdan qarz olindi va qarz daftariga yozildi.',
-  qaytarish: 'Qarzning bir qismi yoki to‘liq summasi qaytarildi.',
-  voz_kechish: 'Qarzning bir qismi yoki to‘liq summasidan voz kechildi.',
 };
 
 const metaOf = (turi: Turi) => {
@@ -70,7 +63,7 @@ const metaOf = (turi: Turi) => {
     case 'qaytarish':
       return { color: GREEN, Icon: ArrowDownLeft };
     case 'voz_kechish':
-      return { color: RED, Icon: ClockIcon };
+      return { color: PURPLE, Icon: ClockIcon };
     default:
       return { color: rd.color.textTertiary, Icon: ClockIcon };
   }
@@ -395,19 +388,33 @@ const QarzDaftariAmaliyot = () => {
         style={{ flex: 1 }}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
-        {/* 1. Bosh karta — amaliyot turi va summasi */}
-        <View style={[styles.hero, { borderColor: color + '33', backgroundColor: color + '0F' }]}>
-          <View style={[styles.heroIcon, { backgroundColor: color + '1F' }]}>
-            <Icon size={rs(24)} color={color} />
+        {/* 1. Bosh karta — amaliyot turi va summasi.
+            SS-DEV (2026-10-04, 04.10 hujjat 2-band): katta markazlashgan karta
+            (ikonka + sarlavha + 24pt summa + tavsif) ~2 baravar IXCHAM bitta
+            qatorga aylantirildi: chapda rangli doira ikonka, o'ngida amal nomi
+            (kichik rangli badge) va summa. Tavsif olib tashlandi — pastdagi
+            bo'limlar va Kvitansiya/Ulashish tugmalari bitta ekranga sig'adi.
+            Ranglar: berildi — ko'k, qaytarildi — yashil, voz kechildi — binafsha. */}
+        <View style={[styles.hero, { borderLeftColor: color }]}>
+          <View style={[styles.heroIcon, { backgroundColor: color + '1A' }]}>
+            <Icon size={rs(20)} color={color} />
           </View>
-          <Text style={[styles.heroTitle, { color }]}>
-            {t(TITLE_BY_TURI[turi] || 'Amaliyot')}
-          </Text>
-          <Text style={[styles.heroAmount, { color }]} numberOfLines={1} adjustsFontSizeToFit>
-            {sign}
-            {money(tx?.summa, valyuta)}
-          </Text>
-          <Text style={styles.heroDesc}>{t(DESC_BY_TURI[turi] || '')}</Text>
+          <View style={styles.heroBody}>
+            <View style={[styles.heroBadge, { backgroundColor: color + '14' }]}>
+              <Text allowFontScaling={false} style={[styles.heroTitle, { color }]} numberOfLines={1}>
+                {t(TITLE_BY_TURI[turi] || 'Amaliyot')}
+              </Text>
+            </View>
+            <Text
+              allowFontScaling={false}
+              style={styles.heroAmount}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}>
+              {sign}
+              {money(tx?.summa, valyuta)}
+            </Text>
+          </View>
         </View>
 
         {/* 2. Amaliyot — qachon va KIM bajargan */}
@@ -827,32 +834,34 @@ const styles = StyleSheet.create({
     gap: rs(12),
   },
 
+  // SS-DEV (2026-10-04): ixcham bosh karta (bitta qator, ~64pt).
   hero: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: rs(6),
-    borderRadius: rs(18),
-    borderWidth: 1.5,
-    paddingVertical: rs(18),
-    paddingHorizontal: rs(16),
+    gap: rs(12),
+    backgroundColor: rd.color.surface,
+    borderRadius: rs(16),
+    borderWidth: 1,
+    borderColor: rd.color.border,
+    borderLeftWidth: rs(4),
+    paddingVertical: rs(12),
+    paddingHorizontal: rs(14),
   },
   heroIcon: {
-    width: rs(48),
-    height: rs(48),
-    borderRadius: rs(24),
+    width: rs(40),
+    height: rs(40),
+    borderRadius: rs(20),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: rs(2),
   },
-  heroTitle: { fontFamily: rd.font.semibold, fontSize: rs(13.5), textAlign: 'center' },
-  heroAmount: { fontFamily: rd.font.bold, fontSize: rs(24), textAlign: 'center' },
-  heroDesc: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(11.5),
-    color: rd.color.textSecondary,
-    textAlign: 'center',
-    lineHeight: rs(16),
-    marginTop: rs(2),
+  heroBody: { flex: 1, alignItems: 'flex-start', gap: rs(4) },
+  heroBadge: {
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(2),
+    borderRadius: rs(8),
   },
+  heroTitle: { fontFamily: rd.font.semibold, fontSize: rs(11.5) },
+  heroAmount: { fontFamily: rd.font.bold, fontSize: rs(18), color: rd.color.text },
 
   card: {
     backgroundColor: rd.color.surface,

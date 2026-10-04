@@ -39,7 +39,6 @@ import {
   ChevronRight,
   ClockIcon,
   HandCoinReturnIcon,
-  InfoIcon,
   LockIcon,
   MessageIcon,
   PencilIcon,
@@ -452,17 +451,8 @@ const QarzDaftariMijoz = () => {
     navigation.navigate('QarzDaftariVozKechish', { id: lastActiveQarz.id });
   };
 
-  // 03.10: izoh qatori — aktiv qarzlar soni va jami qoldig'i (Shaxsiy qarz "Faol qarzlar").
-  const qoldiqParts = [
-    qoldiqUzs > 0 ? `${bigMoney(qoldiqUzs)} UZS` : '',
-    qoldiqUsd > 0 ? `${bigMoney(qoldiqUsd)} USD` : '',
-  ].filter(Boolean);
-  const aktivCount = aktivQarzlar.length;
-  const actNoteText = aktivCount
-    ? [t('Aktiv qarzlar: {{n}} ta', { n: aktivCount }), qoldiqParts.join(' · ')]
-        .filter(Boolean)
-        .join(': ')
-    : t('Aktiv qarzlar yo‘q');
+  // SS-DEV (2026-10-04): "Talab qilish" ostidagi "Aktiv qarzlar: N ta: … UZS" izoh
+  // qatori OLIB TASHLANDI (04.10 hujjat, 4-band) — aktiv qarzlar ro'yxati pastda bor.
 
   const renderActions = () => {
     const yangiBtn = (
@@ -646,12 +636,6 @@ const QarzDaftariMijoz = () => {
           {/* 03.10: AMALLAR — Shaxsiy qarzdagidek karta ichida, ajratgich ostida. */}
           <View style={styles.actDivider} />
           {renderActions()}
-          <View style={styles.actNote}>
-            <InfoIcon size={rs(13)} color={rd.color.textTertiary} />
-            <Text allowFontScaling={false} style={styles.actNoteText}>
-              {actNoteText}
-            </Text>
-          </View>
         </View>
 
         {/* SS9-2 (2026-09-17): "Kvitansiya" bu sahifadan OLIB TASHLANGAN — u
@@ -827,8 +811,6 @@ const styles = StyleSheet.create({
   // 03.10: amal tugmalari (Shaxsiy qarz FinanceDebtGroup bilan bir xil o'lchamlar).
   actDivider: { height: 1, backgroundColor: rd.color.border, marginTop: rs(14) },
   actGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(8), marginTop: rs(12) },
-  actNote: { flexDirection: 'row', alignItems: 'center', gap: rs(6), marginTop: rs(10) },
-  actNoteText: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary },
 
   // Generic card
   card: {
