@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -35,7 +34,22 @@ import {
   hasOfertaAfterIdentification,
 } from '../../../helper/ofertaAfterId';
 import { navigationRef } from '../../../navigation/NavigationRef';
-const { width, height } = Dimensions.get('screen');
+import {
+  useSafeAreaFrame,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import {
+  downloadOfertaPdf,
+  ofertaDocLang,
+  removeOfertaFile,
+} from '../../../helper/ofertaPdf';
+import { bundledOfertaSource } from '../../../helper/ofertaBundled';
+
+// SS-DEV (2026-10-04): hujjat manbai — serverdan yuklangan fayl yoki ilova ichidagi zaxira.
+type DocSource =
+  | { kind: 'loading' }
+  | { kind: 'remote'; path: string }
+  | { kind: 'bundled' };
 // 03.10: identifikatsiyadan keyingi oyna — ekran o'tish animatsiyasi tugagach.
 const OFERTA_AFTER_ID_DELAY_MS = 800;
 // SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
@@ -46,8 +60,10 @@ const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oyn
 // foydalanuvchi abadiy qamalib qolmasin. YUKLANGAN hujjat uchun bu taymer
 // ISHLAMAYDI (pastga qarang). 27.09 (1-band): taymer endi darvozani OCHMAYDI —
 // avval PDF bir marta avtomatik qayta yuklanadi, keyin xato + "Qayta urinish".
-const FALLBACK_MS = 60000;
-const MAX_AUTO_RELOADS = 1;
+// SS-DEV (2026-10-04): yuklash endi helper/ofertaPdf.ts da (timeout + 2 qayta
+// urinish); bu taymer faqat FAYLNI CHIZISH bosqichini kuzatadi — hodisa kelmasa
+// server nusxasidan ilova ichidagi zaxiraga o'tiladi.
+const FALLBACK_MS = 20000;
 
 const ContractModal = () => {
   const dispatch = useDispatch();
@@ -71,7 +87,15 @@ const ContractModal = () => {
   // darvozani VAQT bo'yicha ochib yuborardi — foydalanuvchi 1-sahifada turib
   // tasdiqlay olardi (skrinshotdagi holat: hint yo'q, checkbox belgilangan).
   // Endi vaqtning o'zi HECH QACHON darvozani ochmaydi (pastda armNoEventTimer).
-  const autoReloadsRef = useRef(0);
+  // SS-DEV (2026-10-04): hujjat manbai (server → zaxira) va uning sinxron nusxasi.
+  const [docSrc, setDocSrc] = useState<DocSource>({ kind: 'loading' });
+  const docSrcRef = useRef<DocSource>({ kind: 'loading' });
+  const loadSeqRef = useRef(0);
+  const dlTaskRef = useRef<any>(null);
+  const setSource = useCallback((s: DocSource) => {
+    docSrcRef.current = s;
+    setDocSrc(s);
+  }, []);
   const loadedAtRef = useRef<number | null>(null);
   // Sinxron nusxa — ketma-ket sahifa tekshiruvi (p === maxPage + 1) uchun.
   const maxPageRef = useRef(1);
@@ -133,25 +157,35 @@ const ContractModal = () => {
   }, [clearTimers]);
 
   /**
-   * 27.09 (1-band): "hodisa yo'q" kuzatuvchisi. FALLBACK_MS davomida na yuklash
-   * progressi, na onLoadComplete/onPageChanged kelmasa — darvoza OCHILMAYDI:
-   * avval PDF avtomatik qayta yuklanadi (MAX_AUTO_RELOADS), yana kelmasa xato
-   * oynasi ("Qayta urinish") ko'rsatiladi. Yuklab olish progressi kelib tursa
-   * taymer qayta boshlanadi (sekin internetda ham noto'g'ri xato chiqmaydi).
+   * SS-DEV (2026-10-04): server nusxasi ochilmasa (buzuq fayl / native xato /
+   * hodisa kelmadi) — ilova ichidagi zaxira PDF. Zaxira ham ochilmasa (amalda
+   * bo'lmasligi kerak) — oxirgi chora sifatida xato + "Qayta urinish".
+   */
+  const onDocFailed = useCallback(() => {
+    const cur = docSrcRef.current;
+    if (cur.kind === 'remote') {
+      removeOfertaFile(cur.path);
+      setSource({ kind: 'bundled' });
+      return;
+    }
+    if (cur.kind === 'bundled') setPdfErr(true);
+  }, [setSource]);
+
+  /**
+   * 27.09 (1-band): "hodisa yo'q" kuzatuvchisi. FALLBACK_MS davomida
+   * onLoadComplete/onPageChanged kelmasa — darvoza OCHILMAYDI.
+   * SS-DEV (2026-10-04): fayl endi oldindan yuklab olinadi (helper/ofertaPdf.ts),
+   * taymer faqat chizish bosqichini kuzatadi: server nusxasi → ilova ichidagi
+   * zaxira PDF; zaxira ham bo'lmasa xato oynasi ("Qayta urinish").
    */
   const armNoEventTimer = useCallback(() => {
     if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
     fallbackTimerRef.current = setTimeout(() => {
       fallbackTimerRef.current = null;
       if (loadedAtRef.current) return;
-      if (autoReloadsRef.current < MAX_AUTO_RELOADS) {
-        autoReloadsRef.current += 1;
-        setReloadKey(k => k + 1);
-        return;
-      }
-      setPdfErr(true);
+      onDocFailed();
     }, FALLBACK_MS);
-  }, []);
+  }, [onDocFailed]);
 
   // Hujjat yuklandi — o'qish taymerini boshlaymiz, fallback O'CHIRILADI.
   const markLoaded = useCallback((numberOfPages: number) => {
@@ -287,23 +321,91 @@ const ContractModal = () => {
     dispatch(contractModalShow({ show: false }));
   }, [dispatch, loading]);
 
-  // Modal ochilganda avtomatik qayta yuklash hisoblagichi nollanadi.
+  /**
+   * SS-DEV (2026-10-04, 04.10 (1) 1-band): oyna ochilganda / "Qayta urinish"da
+   * hujjat (qayta) yuklanadi: server (timeout 15 s, 2 qayta urinish, backoff) →
+   * bo'lmasa ilova ichidagi zaxira PDF. Hujjat tili sayt bilan bir xil
+   * (en/kaa → uz). uid hali yo'q bo'lsa (`id=undefined` → 404) — darhol zaxira.
+   */
+  const docLang = ofertaDocLang(storage.getString('lang'));
+  const uid = user?.data?.uid;
+  const uidRef = useRef(uid);
+  uidRef.current = uid;
   useEffect(() => {
-    if (contract) autoReloadsRef.current = 0;
-  }, [contract]);
+    if (!contract) return;
+    const seq = ++loadSeqRef.current;
+    const cancelled = () => seq !== loadSeqRef.current;
+    const prev = docSrcRef.current;
+    if (prev.kind === 'remote') removeOfertaFile(prev.path);
+    setPdfErr(false);
+    resetGate();
+    setSource({ kind: 'loading' });
+    const id = uidRef.current;
+    if (!id) {
+      setSource({ kind: 'bundled' });
+    } else {
+      const url = `${PDF_OFERTA_URL}?id=${id}&lang=${docLang}&download=0`;
+      downloadOfertaPdf(url, cancelled, task => {
+        dlTaskRef.current = task;
+      }).then(path => {
+        dlTaskRef.current = null;
+        if (cancelled()) return;
+        setSource(path ? { kind: 'remote', path } : { kind: 'bundled' });
+      });
+    }
+    return () => {
+      loadSeqRef.current += 1;
+      try {
+        dlTaskRef.current?.cancel?.();
+      } catch (_) {}
+      dlTaskRef.current = null;
+    };
+  }, [contract, reloadKey, docLang, resetGate, setSource]);
 
+  // Manba tayyor bo'lganda: darvoza nollanadi va "hodisa yo'q" kuzatuvchisi
+  // ishga tushadi (chizish bosqichi). Taymer otganda hujjat yuklangan bo'lsa —
+  // HECH NARSA qilinmaydi; aks holda server nusxasi → zaxira (onDocFailed).
   useEffect(() => {
-    if (contract) {
+    if (contract && docSrc.kind !== 'loading') {
       resetGate();
-      // Native hodisalar (onLoadComplete/onPageChanged) UMUMAN kelmasa —
-      // qayta yuklash / xato oynasi (darvoza OCHILMAYDI). Taymer otganda
-      // hujjat yuklangan bo'lsa — HECH NARSA qilinmaydi.
       armNoEventTimer();
     } else {
       clearTimers();
     }
     return clearTimers;
-  }, [contract, reloadKey, resetGate, clearTimers, armNoEventTimer]);
+  }, [contract, docSrc, resetGate, clearTimers, armNoEventTimer]);
+
+  const pdfSource =
+    docSrc.kind === 'remote'
+      ? { uri: `file://${docSrc.path}`, cache: false }
+      : docSrc.kind === 'bundled'
+      ? bundledOfertaSource(docLang)
+      : null;
+
+  // SS-DEV (2026-10-04): xavfsiz maydon. ILDIZ (orqaga tugmasi status bar ostida
+  // kesilardi): oyna `height: Dimensions('screen')` bilan chizilar va Paper Modal
+  // uni ota (SafeAreaView ichidagi, ekrandan KICHIK) maydonda MARKAZLARDI — ortiqcha
+  // balandlik tepadan va pastdan teng kesilardi. Endi oyna ota maydonni AYNAN
+  // to'ldiradi (flex:1) va ota inset'larni qoplamagan qismi (status bar / notch,
+  // home indicator / Android nav bar) o'lchab olinib padding qilinadi.
+  const insets = useSafeAreaInsets();
+  const frame = useSafeAreaFrame();
+  const mainRef = useRef<View>(null);
+  const [pad, setPad] = useState({ top: 0, bottom: 0 });
+  const measureInsets = useCallback(() => {
+    mainRef.current?.measureInWindow((_x, y, _w, h) => {
+      if (!h) return;
+      const top = Math.max(0, Math.round(insets.top - (y - frame.y)));
+      const bottom = Math.max(
+        0,
+        Math.round(insets.bottom - (frame.y + frame.height - (y + h))),
+      );
+      setPad(p => (p.top === top && p.bottom === bottom ? p : { top, bottom }));
+    });
+  }, [insets.top, insets.bottom, frame.y, frame.height]);
+  useEffect(() => {
+    if (contract) measureInsets();
+  }, [contract, measureInsets]);
 
   // Darvoza yopiq bo'lsa rozilik belgisi hech qachon true qolmasin
   // (masalan qayta yuklash / holat o'zgarishi paytida).
@@ -311,21 +413,25 @@ const ContractModal = () => {
     if (needRead && check) setCheck(false);
   }, [needRead, check]);
 
-  // 27.09 (1-band): ogohlantirish TEPADA — pastda "Tasdiqlash" tugmasini
-  // yopib qo'ymaydi (talab: "yuqorida yoki pastda").
-  const warn = useCallback((desc: string) => {
-    Toast.show({
-      autoHide: true,
-      visibilityTime: 3500,
-      position: 'top',
-      type: 'error2',
-      props: { desc },
-    });
-  }, []);
-  // 01.10 (mobil hujjat, 4-band): oferta oxirigacha o'qilmay turib "tanishdim" belgisini
-  // qo'ymoqchi bo'lsa — aynan shu matn (5 tilda).
+  // SS-DEV (2026-10-04, 04.10 (1) 1-band): ogohlantirish sahifa PASTIDA —
+  // rozilik qatori ustida (Tasdiqlash tugmasini yopmaydi).
+  const warn = useCallback(
+    (desc: string) => {
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3500,
+        position: 'bottom',
+        bottomOffset: insets.bottom + rs(130),
+        type: 'error2',
+        props: { desc },
+      });
+    },
+    [insets.bottom],
+  );
+  // SS-DEV (2026-10-04): oferta oxirigacha o'qilmay turib "tanishdim" belgisini
+  // qo'ymoqchi bo'lsa — aynan shu matn (5 tilda, i18n/new/*.json).
   const warnRead = useCallback(() => {
-    warn(t('Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.'));
+    warn(t('Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.'));
   }, [t, warn]);
   // O'qib bo'lingan, lekin "tanishdim" belgilanmagan holda "Tasdiqlash" bosildi.
   const warnCheck = useCallback(() => {
@@ -394,8 +500,18 @@ const ContractModal = () => {
       dismissable={false}
       // SS-DEV (2026-09-29): Android "orqaga" — oynani yopadi (majburiy emas).
       dismissableBackButton
-      onDismiss={onDecline}>
-      <View style={styles.main}>
+      onDismiss={onDecline}
+      // SS-DEV (2026-10-04): Paper wrapper'ning o'z inset margin'lari va markazlash
+      // o'chiriladi — oyna ota maydonni to'liq egallaydi, inset'lar `pad` orqali.
+      style={styles.modalWrapper}
+      contentContainerStyle={styles.modalContent}>
+      <View
+        ref={mainRef}
+        onLayout={measureInsets}
+        style={[
+          styles.main,
+          { paddingTop: pad.top + rs(8), paddingBottom: pad.bottom },
+        ]}>
         {/* SS-DEV (2026-09-29): oferta endi majburiy emas (faqat Qarz shartnomasi
             amallari uchun shart). 01.10 (mobil hujjat, 4-band): chiqish — ilovadagi
             barcha ekranlar kabi chap tomondagi "ORQAGA" tugmasi (RdHeader uslubi);
@@ -432,7 +548,7 @@ const ContractModal = () => {
                   onPress={() => {
                     setPdfErr(false);
                     // SS-DEV (2026-09-24): reloadKey o'zgarishi useEffect orqali
-                    // darvozani to'liq nollaydi.
+                    // darvozani to'liq nollaydi (2026-10-04: server → zaxira qaytadan).
                     setReloadKey(k => k + 1);
                   }}
                   style={styles.retryBtn}
@@ -442,18 +558,23 @@ const ContractModal = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
+            ) : !pdfSource ? (
+              // SS-DEV (2026-10-04): serverdan yuklanmoqda (timeout + qayta urinishlar).
+              <View style={styles.errBox}>
+                <ActivityIndicator size="large" color={rd.color.primary} />
+              </View>
             ) : (
               <Pdf
-                key={reloadKey}
+                key={`${reloadKey}-${docSrc.kind}`}
                 trustAllCerts={false}
                 // SS-DEV (2026-09-24): sahifa-sahifa VERTIKAL scroll (pageSnap +
                 // pageFling) — onPageChanged har sahifada ketma-ket keladi.
                 enablePaging={true}
                 horizontal={false}
                 page={1}
-                onError={error => {
-                  console.error(error);
-                  setPdfErr(true);
+                // SS-DEV (2026-10-04): server nusxasi ochilmasa — ilova ichidagi zaxira.
+                onError={() => {
+                  if (!loadedAtRef.current) onDocFailed();
                 }}
                 renderActivityIndicator={() => (
                   <ActivityIndicator
@@ -462,18 +583,7 @@ const ContractModal = () => {
                     style={styles.indicator}
                   />
                 )}
-                source={{
-                  cache: false,
-                  uri: `${PDF_OFERTA_URL}?id=${user?.data?.uid}&lang=${
-                    storage.getString('lang') || 'uz'
-                  }&download=0`,
-                  method: 'GET',
-                }}
-                // 27.09 (1-band): yuklab olish davom etayotgan bo'lsa "hodisa
-                // yo'q" taymeri qayta boshlanadi (sekin internet ≠ xato).
-                onLoadProgress={() => {
-                  if (!loadedAtRef.current) armNoEventTimer();
-                }}
+                source={pdfSource}
                 onLoadComplete={(numberOfPages: number) => {
                   setLoading(false);
                   // So'rov: checkbox `page===allPage`да yoqiladi. Ilgari `allPage` FAQAT
@@ -606,13 +716,23 @@ const ContractModal = () => {
 export default ContractModal;
 
 const styles = StyleSheet.create({
+  // SS-DEV (2026-10-04): Paper Modal wrapper — margin/markazlash yo'q (pastga qarang).
+  modalWrapper: {
+    marginTop: 0,
+    marginBottom: 0,
+    justifyContent: 'flex-start',
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  // SS-DEV (2026-10-04): ilgari `height: Dimensions('screen')` — ota maydondan
+  // katta bo'lib, markazlanganda tepasi (orqaga tugmasi) kesilardi. Endi flex:1.
   main: {
+    flex: 1,
+    width: '100%',
     backgroundColor: rd.color.surface,
-    width: width,
-    height: height,
-    alignSelf: 'center',
     paddingHorizontal: rs(16),
-    paddingTop: rs(8),
   },
   topBar: {
     flexDirection: 'row',
@@ -712,7 +832,7 @@ const styles = StyleSheet.create({
     borderRadius: rd.radius.lg,
     alignSelf: 'center',
     width: '100%',
-    marginBottom: rs(40),
+    marginBottom: rs(16),
   },
   btnActiveShadow: {
     shadowColor: rd.color.primary,

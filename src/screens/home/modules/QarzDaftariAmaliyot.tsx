@@ -42,8 +42,9 @@ const BLUE = '#2f6fed';
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 const AMBER = '#f59e0b';
-// SS-DEV (2026-10-04): "Qarzdan voz kechildi" — binafsha (04.10 hujjat, 2-band).
-const PURPLE = '#7c3aed';
+// SS-DEV (2026-10-04, "Yangi mobil xatolar 04.10 (1)" 3-band): "Qarzdan voz kechildi" —
+// binafsha o'rniga QIZIL oila: chiziq/ikonka/badge #DC2626, karta foni #FEF2F2.
+const VOZ_RED = RED;
 
 type Turi = 'berish' | 'olish' | 'qaytarish' | 'voz_kechish';
 
@@ -66,7 +67,7 @@ const DESC_BY_TURI: Record<string, string> = {
 const BG_BY_COLOR: Record<string, string> = {
   [BLUE]: '#eaf1fe',
   [GREEN]: '#e8f7ee',
-  [PURPLE]: '#f3edfe',
+  [VOZ_RED]: '#fef2f2',
 };
 
 const metaOf = (turi: Turi) => {
@@ -78,7 +79,7 @@ const metaOf = (turi: Turi) => {
     case 'qaytarish':
       return { color: GREEN, Icon: ArrowDownLeft };
     case 'voz_kechish':
-      return { color: PURPLE, Icon: ClockIcon };
+      return { color: VOZ_RED, Icon: ClockIcon };
     default:
       return { color: rd.color.textTertiary, Icon: ClockIcon };
   }
@@ -409,7 +410,7 @@ const QarzDaftariAmaliyot = () => {
             qatorga aylantirildi: chapda rangli doira ikonka, o'ngida amal nomi
             (kichik rangli badge) va summa. Tavsif olib tashlandi — pastdagi
             bo'limlar va Kvitansiya/Ulashish tugmalari bitta ekranga sig'adi.
-            Ranglar: berildi — ko'k, qaytarildi — yashil, voz kechildi — binafsha. */}
+            Ranglar: berildi — ko'k, qaytarildi — yashil, voz kechildi — qizil (2026-10-04). */}
         <View
           style={[
             styles.hero,
