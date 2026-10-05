@@ -1,5 +1,7 @@
 import {
+  Animated,
   Dimensions,
+  Easing,
   Platform,
   ScrollView,
   StatusBar,
@@ -10,7 +12,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { style } from '../../theme/style';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
@@ -42,7 +44,14 @@ import { Mode, Placement } from 'react-native-popover-view/dist/Types';
 import { widthPercentageToDP } from 'react-native-responsive-screen';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
-import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
+import {
+  SearchIcon,
+  UserIcon,
+  ChevronRight,
+  IdCardIcon,
+  CalendarIcon,
+} from '../home/redesign/icons';
+import Svg, { Defs, LinearGradient, Rect, Stop, Circle } from 'react-native-svg';
 import Person from '../../images/home/person';
 import Famale from '../../images/Famale';
 const { width } = Dimensions.get('window');
@@ -63,6 +72,10 @@ const SearchUserScreen = () => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const dispatch = useDispatch();
+  // SS-DEV (2026-10-05): ID maydoni fokus holati (chegara rangi uchun).
+  const [focused, setFocused] = useState(false);
+  // SS-DEV (2026-10-05): yo'nalish rangi — berish: ko'k, olish: yashil.
+  const accent = type === 1 ? ACCENT_GIVE : ACCENT_TAKE;
   // Foydalanuvchini qidirish
 
   const SearchUser = async () => {
@@ -175,17 +188,21 @@ const SearchUserScreen = () => {
           )
         ) : (
           <>
-            {/* Hero — qidiruv ikonkasi + kontekst sarlavhasi (bo'sh joyni to'ldiradi) */}
-            <View style={styles.hero}>
-              <View style={styles.heroBadge}>
-                <SearchIcon size={rs(38)} color={rd.color.primary} />
-              </View>
-              <Text style={styles.heroTitle} allowFontScaling={false}>
+            {/* SS-DEV (2026-10-05): yangi hero — gradient (berish: ko'k, olish:
+                yashil) + animatsiyali ikonka (odam silueti, pulsli halqalar,
+                atrofida aylanuvchi lupa). Matn o'zgarmagan. */}
+            <View style={styles.heroCard}>
+              <HeroGradient stops={accent.gradient} id={`srch${type}`} />
+              <View style={styles.heroDecor1} />
+              <View style={styles.heroDecor2} />
+              <SearchPulse color={accent.solid} />
+              <Text style={styles.heroCardTitle} allowFontScaling={false}>
                 {type === 1 ? t('Qarz berish') : t('Qarz olish')}
               </Text>
             </View>
 
             <View style={styles.card}>
+              <View style={[styles.cardAccent, { backgroundColor: accent.solid }]} />
             {/* Foydalanuvchi ID */}
             <View style={styles.fieldGroup}>
               <View style={styles.labelRow}>
@@ -216,8 +233,15 @@ const SearchUserScreen = () => {
                 </Popover>
               </View>
 
-              <View style={styles.inputWrap}>
-                <SearchIcon size={rs(18)} color={rd.color.textTertiary} />
+              <View
+                style={[
+                  styles.inputWrap,
+                  focused && { borderColor: accent.solid },
+                ]}
+              >
+                <View style={[styles.fieldIcon, { backgroundColor: accent.tint }]}>
+                  <IdCardIcon size={rs(18)} color={accent.solid} />
+                </View>
                 <MaskedTextInput
                   value={userID}
                   placeholder="100000/AA"
@@ -229,6 +253,8 @@ const SearchUserScreen = () => {
                   mask="[000000]{/}[AA]"
                   placeholderTextColor={rd.color.textTertiary}
                   keyboardType="default"
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
                   style={styles.inputField}
                 />
               </View>
@@ -242,8 +268,11 @@ const SearchUserScreen = () => {
               <TouchableOpacity
                 onPress={() => setOpen(!open)}
                 activeOpacity={0.8}
-                style={styles.dateInput}
+                style={[styles.dateInput, open && { borderColor: accent.solid }]}
               >
+                <View style={[styles.fieldIcon, { backgroundColor: accent.tint }]}>
+                  <CalendarIcon size={rs(18)} color={accent.solid} />
+                </View>
                 {settingDate(date) === settingDate(Date.now()) ? (
                   <Text style={styles.datePlaceholder} allowFontScaling={false}>
                     {t('kk.oo.yyyy')}
@@ -262,9 +291,16 @@ const SearchUserScreen = () => {
               activeOpacity={0.8}
               style={[
                 styles.primaryButton,
+                { backgroundColor: accent.solid, shadowColor: accent.solid },
                 disabled && styles.primaryButtonDisabled,
               ]}
             >
+              <View style={styles.btnIcon}>
+                <SearchIcon
+                  size={rs(18)}
+                  color={disabled ? rd.color.textTertiary : rd.color.onPrimary}
+                />
+              </View>
               <Text
                 style={[
                   styles.primaryButtonText,
@@ -336,6 +372,118 @@ const SearchUserScreen = () => {
       />
 
       {/* <Toast config={toastConfig} /> */}
+    </View>
+  );
+};
+
+// SS-DEV (2026-10-05): qidiruv sahifasi hero ranglari (yo'nalish bo'yicha).
+const ACCENT_GIVE = {
+  gradient: ['#2f6fed', '#5a4fe4'] as const,
+  solid: rd.color.primary,
+  tint: rd.color.primaryTint,
+};
+const ACCENT_TAKE = {
+  gradient: ['#16a34a', '#0d9488'] as const,
+  solid: rd.color.success,
+  tint: rd.color.successBg,
+};
+
+const HeroGradient = ({
+  stops,
+  id,
+}: {
+  stops: readonly [string, string];
+  id: string;
+}) => (
+  <Svg style={StyleSheet.absoluteFill}>
+    <Defs>
+      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+        <Stop offset="0" stopColor={stops[0]} />
+        <Stop offset="1" stopColor={stops[1]} />
+      </LinearGradient>
+    </Defs>
+    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
+  </Svg>
+);
+
+/**
+ * SS-DEV (2026-10-05): animatsiyali qidiruv belgisi — markazda odam silueti,
+ * atrofida 2 ta pulsli halqa (scale+opacity) va orbita bo'ylab aylanuvchi lupa.
+ * Faqat RN `Animated` (native driver) — yangi paket yo'q.
+ */
+const SearchPulse = ({ color }: { color: string }) => {
+  const pulse = useRef(new Animated.Value(0)).current;
+  const spin = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const p = Animated.loop(
+      Animated.timing(pulse, {
+        toValue: 1,
+        duration: 2200,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    );
+    const r = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 4200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    p.start();
+    r.start();
+    return () => {
+      p.stop();
+      r.stop();
+    };
+  }, [pulse, spin]);
+
+  const ring = (delay: number) => {
+    const v = Animated.modulo(Animated.add(pulse, delay), 1);
+    return {
+      opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }),
+      transform: [
+        { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.9] }) },
+      ],
+    };
+  };
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  const counter = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '-360deg'],
+  });
+
+  return (
+    <View style={styles.pulseBox}>
+      <Animated.View style={[styles.pulseRing, ring(0)]} />
+      <Animated.View style={[styles.pulseRing, ring(0.5)]} />
+      <View style={styles.pulseCore}>
+        <Svg width={rs(46)} height={rs(46)} viewBox="0 0 46 46">
+          <Circle cx="23" cy="17" r="8" fill={rd.color.onPrimary} />
+          <Rect
+            x="9"
+            y="28"
+            width="28"
+            height="14"
+            rx="7"
+            fill={rd.color.onPrimary}
+          />
+        </Svg>
+      </View>
+      <Animated.View
+        style={[styles.orbit, { transform: [{ rotate }] }]}
+        pointerEvents="none"
+      >
+        <Animated.View
+          style={[styles.orbitBadge, { transform: [{ rotate: counter }] }]}
+        >
+          <SearchIcon size={rs(16)} color={color} />
+        </Animated.View>
+      </Animated.View>
     </View>
   );
 };
@@ -553,6 +701,104 @@ const styles = StyleSheet.create({
     fontSize: rs(18),
     color: rd.color.text,
   },
+  // SS-DEV (2026-10-05): gradient hero kartasi + animatsiyali belgi
+  heroCard: {
+    borderRadius: rd.radius.huge,
+    overflow: 'hidden',
+    alignItems: 'center',
+    paddingTop: rs(26),
+    paddingBottom: rs(22),
+    marginBottom: rs(18),
+  },
+  heroDecor1: {
+    position: 'absolute',
+    width: rs(160),
+    height: rs(160),
+    borderRadius: rs(80),
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -rs(60),
+    right: -rs(40),
+  },
+  heroDecor2: {
+    position: 'absolute',
+    width: rs(110),
+    height: rs(110),
+    borderRadius: rs(55),
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    bottom: -rs(50),
+    left: -rs(30),
+  },
+  heroCardTitle: {
+    fontFamily: rd.font.bold,
+    fontSize: rs(19),
+    color: rd.color.onPrimary,
+    marginTop: rs(16),
+  },
+  pulseBox: {
+    width: rs(120),
+    height: rs(120),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.9)',
+  },
+  pulseCore: {
+    width: rs(72),
+    height: rs(72),
+    borderRadius: rs(36),
+    backgroundColor: rd.color.onPrimaryChip,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  orbit: {
+    position: 'absolute',
+    width: rs(112),
+    height: rs(112),
+  },
+  orbitBadge: {
+    position: 'absolute',
+    top: 0,
+    left: rs(56) - rs(15),
+    width: rs(30),
+    height: rs(30),
+    borderRadius: rs(15),
+    backgroundColor: rd.color.onPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  cardAccent: {
+    position: 'absolute',
+    top: 0,
+    left: rs(24),
+    right: rs(24),
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  fieldIcon: {
+    width: rs(34),
+    height: rs(34),
+    borderRadius: rd.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnIcon: {
+    marginRight: rs(8),
+  },
   // Tooltip — sahifani to'liq qoraytirmaydi (yengil backdrop), toza qora kartochka
   tooltip: {
     borderRadius: rd.radius.lg,
@@ -572,12 +818,20 @@ const styles = StyleSheet.create({
     color: rd.color.onPrimary,
     lineHeight: rs(18),
   },
+  // SS-DEV (2026-10-05): forma kartasi — soya bilan
   card: {
     backgroundColor: rd.color.surface,
-    borderRadius: rd.radius.lg,
+    borderRadius: rd.radius.huge,
     borderWidth: 1,
     borderColor: rd.color.border,
-    padding: rs(16),
+    padding: rs(18),
+    paddingTop: rs(22),
+    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
   fieldGroup: {
     marginBottom: rs(18),
@@ -600,7 +854,7 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     borderRadius: rd.radius.lg,
     height: rs(56),
-    paddingHorizontal: rs(16),
+    paddingHorizontal: rs(10),
   },
   inputField: {
     flex: 1,
@@ -617,15 +871,18 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     borderRadius: rd.radius.lg,
     height: rs(56),
-    paddingHorizontal: rs(16),
-    justifyContent: 'center',
+    paddingHorizontal: rs(10),
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   datePlaceholder: {
+    marginLeft: rs(10),
     fontFamily: rd.font.medium,
     fontSize: rs(15),
     color: rd.color.textTertiary,
   },
   dateValue: {
+    marginLeft: rs(10),
     fontFamily: rd.font.medium,
     fontSize: rs(15),
     color: rd.color.text,
@@ -637,9 +894,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    marginTop: rs(4),
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   primaryButtonDisabled: {
     backgroundColor: rd.color.surfaceAlt,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   successButton: {
     backgroundColor: rd.color.success,
