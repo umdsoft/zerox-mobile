@@ -11,7 +11,7 @@ import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
+  Animated,
   Modal,
   RefreshControl,
   ScrollView,
@@ -34,6 +34,14 @@ import { DEBT_NAV } from './debtNav';
 // Rasmiy "ZeroX" wordmark (logotipning matn qismi) — header uchun.
 import ZeroXWordmark from '../../../images/TextAndLogo';
 import { useFetch } from '../../../hooks/useFetch';
+// SS-DEV (2026-10-05): bosh sahifa MMKV keshi (darhol ko'rsatish) + snapshot.
+import {
+  homeDashboardUrl,
+  homeDebtStatsUrl,
+  hydrateHomeFromCache,
+  primeHomeFetchCache,
+  saveHomeSnapshot,
+} from '../../../helper/homeCache';
 // SS13: bosh sahifa summalari TANLANGAN do'konga bo'ysunadi.
 import { ownShopQuery, useQarzShop } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
@@ -108,6 +116,46 @@ const CircleIcon = ({ size, bg, children }: { size: number; bg: string; children
     {children}
   </View>
 );
+
+/**
+ * SS-DEV (2026-10-05): Shimmer — birinchi yuklashda (kesh yo'q) 0 o'rniga
+ * kulrang miltillovchi blok. Faqat native-driver opacity animatsiyasi.
+ */
+const Shimmer = ({
+  width,
+  height,
+  radius = rs(6),
+  onDark = false,
+  style,
+}: {
+  width: number | `${number}%`;
+  height: number;
+  radius?: number;
+  onDark?: boolean;
+  style?: any;
+}) => {
+  const v = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(v, { toValue: 1, duration: 650, useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: 650, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [v]);
+  const opacity = v.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
+  return (
+    <Animated.View
+      style={[
+        onDark ? styles.shimmerDark : styles.shimmerLight,
+        { width, height, borderRadius: radius, opacity },
+        style,
+      ]}
+    />
+  );
+};
 
 /**
  * Header — chapda menyu tugmasi, o'ngda AVATAR + qo'ng'iroq.
@@ -189,10 +237,12 @@ const HeroBanner = ({
   name,
   score,
   status,
+  loading,
 }: {
   name: string;
   score: number;
   status: string;
+  loading?: boolean;
 }) => {
   const { t } = useTranslation();
   return (
@@ -211,17 +261,25 @@ const HeroBanner = ({
       </Text>
       <View style={styles.heroChips}>
         <View style={styles.heroChip}>
-          <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
-            {score}
-          </Text>
+          {loading ? (
+            <Shimmer width={rs(44)} height={rs(20)} onDark style={styles.heroChipSkel} />
+          ) : (
+            <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
+              {score}
+            </Text>
+          )}
           <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
             {t('Moliyaviy sog‘liq')}
           </Text>
         </View>
         <View style={styles.heroChip}>
-          <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
-            {t(status)}
-          </Text>
+          {loading ? (
+            <Shimmer width={rs(56)} height={rs(20)} onDark style={styles.heroChipSkel} />
+          ) : (
+            <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
+              {t(status)}
+            </Text>
+          )}
           <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
             {t('Holat')}
           </Text>
@@ -298,7 +356,10 @@ const MetricCard = ({
             // Dashboard (shartnoma+daftar birlashgan summa) hali kelmagan —
             // qisman/xato raqam KO'RSATILMAYDI (aks holda keyin sakraydi).
             // O'rniga skeleton; summa TAYYOR bo'lganda bir marta paydo bo'ladi.
-            <View style={styles.metricSkeleton} />
+            <>
+              <Shimmer width="68%" height={rs(18)} style={styles.metricSkeleton} />
+              <Shimmer width="40%" height={rs(14)} style={styles.metricSkeleton} />
+            </>
           ) : (
             <>
               <Text style={styles.metricUzs} numberOfLines={1} adjustsFontSizeToFit>
@@ -312,6 +373,14 @@ const MetricCard = ({
     </TouchableOpacity>
   );
 };
+
+// SS-DEV (2026-10-05): modul sub-kartasi summalari uchun skeleton (UZS + USD).
+const SubSkeleton = () => (
+  <>
+    <Shimmer width="72%" height={rs(18)} style={styles.subSkel} />
+    <Shimmer width="46%" height={rs(14)} style={styles.subSkel} />
+  </>
+);
 
 // Modul kartasi — "Qarz shartnomasi" (Debitor + Kreditor qiymatlari bilan).
 // Modul kartasi — sarlavha + ikona + IKKI sub-summa (Debitor / Kreditor).
@@ -329,6 +398,7 @@ const ModuleWithSubs = ({
   credLabel,
   // So'rov SS1: strelka o'rniga lampochka — bosilsa bo'lim izohi (info) modalда chiqadi.
   info,
+  loading,
 }: {
   title: string;
   Icon: (p: IconProps) => JSX.Element;
@@ -340,6 +410,7 @@ const ModuleWithSubs = ({
   debLabel?: string;
   credLabel?: string;
   info?: string;
+  loading?: boolean;
 }) => {
   const { t } = useTranslation();
   const [infoOpen, setInfoOpen] = React.useState(false);
@@ -367,17 +438,29 @@ const ModuleWithSubs = ({
       </View>
       <View style={styles.moduleSubRow}>
         <View style={[styles.moduleSub, { backgroundColor: rd.color.successBg }]}>
-          <Text style={[styles.moduleSubAmt, { color: rd.color.success }]} numberOfLines={1} adjustsFontSizeToFit>
-            {debUzs}
-          </Text>
-          {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
+          {loading ? (
+            <SubSkeleton />
+          ) : (
+            <>
+              <Text style={[styles.moduleSubAmt, { color: rd.color.success }]} numberOfLines={1} adjustsFontSizeToFit>
+                {debUzs}
+              </Text>
+              {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
+            </>
+          )}
           <Text style={styles.moduleSubLabel}>{t(debLabel || 'Berilgan qarz')}</Text>
         </View>
         <View style={[styles.moduleSub, { backgroundColor: rd.color.errorBg }]}>
-          <Text style={[styles.moduleSubAmt, { color: rd.color.error }]} numberOfLines={1} adjustsFontSizeToFit>
-            {credUzs}
-          </Text>
-          {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
+          {loading ? (
+            <SubSkeleton />
+          ) : (
+            <>
+              <Text style={[styles.moduleSubAmt, { color: rd.color.error }]} numberOfLines={1} adjustsFontSizeToFit>
+                {credUzs}
+              </Text>
+              {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
+            </>
+          )}
           <Text style={styles.moduleSubLabel}>{t(credLabel || 'Olingan qarz')}</Text>
         </View>
       </View>
@@ -511,11 +594,25 @@ const HomeRedesign = () => {
   const storeUser = useSelector((s: any) => s.HomeReducer.user);
   const home = useSelector((s: any) => s.HomeReducer.home);
   const notification = useSelector((s: any) => s.HomeReducer.notification);
-  const loading = useSelector((s: any) => s.HomeReducer.loading);
   const usd = useSelector((s: any) => s.HomeReducer.usd);
   const analytics = useSelector((s: any) => s.HomeReducer.analytics);
   const myId = storeUser?.data?.id;
   const [refreshing, setRefreshing] = React.useState(false);
+  // SS-DEV (2026-10-05): (a) stale-while-revalidate — MMKV snapshot'dan useFetch
+  // xotira keshini RENDER'DAN OLDIN to'ldiramiz (useFetch boshlang'ich holati
+  // darhol keshdan oladi), Redux'ni esa paint'dan oldin (useLayoutEffect).
+  // Login/PIN'dagi warmHome() odatda buni allaqachon qilgan bo'ladi.
+  React.useState(() => {
+    if (!storeUser?.data) primeHomeFetchCache();
+    return 0;
+  });
+  React.useLayoutEffect(() => {
+    if (!storeUser?.data) hydrateHomeFromCache(dispatch);
+    // faqat mount'da
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Birinchi yuklash yakunlandimi (xato bo'lsa ham) — skeleton abadiy qolmasin.
+  const [homeSettled, setHomeSettled] = React.useState(false);
   const notifFirstFocus = React.useRef(true);
 
   // Login qilinganmi (token bor)? Login qilingan foydalanuvchiga HECH QACHON demo
@@ -528,8 +625,10 @@ const HomeRedesign = () => {
   // muvaffaqiyatsiz bo'lsa (refreshToken yo'q/eskirgan) -> UNAUTHORIZED qaytadi -> qayta
   // login (PIN/k2 saqlanadi). Tarmoq xatosi (code yo'q) sessiyani buzmaydi.
   React.useEffect(() => {
-    (dispatch(HomeApi({ page: 1 }) as any) as any)
+    // SS-DEV (2026-10-05): dedupe — login/PIN prefetch'i bilan bitta so'rov.
+    (dispatch(HomeApi({ page: 1, dedupe: true } as any) as any) as any)
       .unwrap?.()
+      .finally?.(() => setHomeSettled(true))
       .catch((err: any) => {
         const code = err?.code || err?.response?.data?.code;
         if (code === 'UNAUTHORIZED') {
@@ -785,6 +884,35 @@ const HomeRedesign = () => {
       : 'Past');
 
   // So'nggi amaliyotlar + bildirishnoma soni (real, aks holda demo).
+  // SS-DEV (2026-10-05): (d) birinchi marta (kesh yo'q) — 0 o'rniga skeleton.
+  const firstLoad = isLoggedIn && !hasHome && !homeSettled;
+  const personalLoading =
+    !debtStatsData && !analytics && !debtStats.error && (firstLoad || debtStats.loading);
+  const dashLoading = !dashReady && !daftariDash.error;
+
+  // SS-DEV (2026-10-05): oxirgi muvaffaqiyatli ma'lumotni MMKV'ga (user_id
+  // kaliti bilan) yozamiz — keyingi ochilishda darhol ko'rsatiladi.
+  const bild = notification?.bild;
+  const dashData = daftariDash.data;
+  const statsData = debtStats.data;
+  React.useEffect(() => {
+    if (!hasHome || !storeUser?.data) return;
+    const uidAtStart = storage.getString('user_id');
+    const tm = setTimeout(() => {
+      const fetchSnap: Record<string, any> = {};
+      if (dashValid) fetchSnap[homeDashboardUrl()] = dashData;
+      if ((statsData as any)?.data) fetchSnap[homeDebtStatsUrl()] = statsData;
+      saveHomeSnapshot(uidAtStart, {
+        user: storeUser,
+        home,
+        analytics,
+        bild: Array.isArray(bild) ? bild : [],
+        fetch: fetchSnap,
+      });
+    }, 800);
+    return () => clearTimeout(tm);
+  }, [hasHome, storeUser, home, analytics, bild, dashValid, dashData, statsData]);
+
   const recentOpsData = useReal
     ? buildRecentOps(notification?.bild, myId)
     : recentOps;
@@ -821,14 +949,16 @@ const HomeRedesign = () => {
           />
         }
       >
-        {loading && !hasHome && (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator color={rd.color.primary} />
-          </View>
-        )}
+        {/* SS-DEV (2026-10-05): spinner olib tashlandi — o'rniga keshdan darhol
+            ma'lumot yoki (birinchi marta) skeleton bloklar. */}
 
         {/* Hero banner — moliyaviy sog'liq */}
-        <HeroBanner name={name} score={healthScore} status={healthStatus} />
+        <HeroBanner
+          name={name}
+          score={healthScore}
+          status={healthStatus}
+          loading={firstLoad && !analytics}
+        />
 
         {/* Sarlavhasiz: kartalarning o'zi nimani ko'rsatayotganini aytadi,
             ustidagi umumiy nom qo'shimcha ma'lumot bermasdi. */}
@@ -841,7 +971,7 @@ const HomeRedesign = () => {
             label="Berilgan qarz"
             uzs={uzsText(totDebUZS)}
             usd={usdText(totDebUSD)}
-            loading={!dashReady}
+            loading={dashLoading}
             // Home drill-down -> manba TANLASH sahifasi (2 vertikal karta), ro'yxatsiz.
             onPress={() =>
               nav('SearchDebitor', { ...DEBT_NAV.debitor, view: 'select' })
@@ -854,7 +984,7 @@ const HomeRedesign = () => {
             label="Olingan qarz"
             uzs={uzsText(totCredUZS)}
             usd={usdText(totCredUSD)}
-            loading={!dashReady}
+            loading={dashLoading}
             onPress={() =>
               nav('SearchDebitor', { ...DEBT_NAV.creditor, view: 'select' })
             }
@@ -872,6 +1002,7 @@ const HomeRedesign = () => {
           debUsd={usdText(shDebUSD)}
           credUzs={uzsText(shCredUZS)}
           credUsd={usdText(shCredUSD)}
+          loading={firstLoad && !bqDash && !oqDash}
           onPress={() => nav('QarzShartnomasi')}
         />
         {/* Qarz daftari — FAQAT daftar summasi + daftar ikonasi + debitor/kreditor. */}
@@ -883,6 +1014,7 @@ const HomeRedesign = () => {
           debUsd={usdText(dfDebUSD)}
           credUzs={uzsText(dfCredUZS)}
           credUsd={usdText(dfCredUSD)}
+          loading={dashLoading}
           onPress={() => nav('QarzDaftari')}
         />
         {/* SS1: Bosh sahifada "Shaxsiy moliya" o'rniga "Shaxsiy qarz" — Debitor
@@ -898,6 +1030,7 @@ const HomeRedesign = () => {
           debUsd={usdText(debtStatsData ? curTotal(debtStatsData.lent_by_currency, 'USD') : numv(analytics?.debts?.lent_usd))}
           credUzs={uzsText(debtStatsData ? curTotal(debtStatsData.borrowed_by_currency, 'UZS') : numv(analytics?.debts?.borrowed_uzs))}
           credUsd={usdText(debtStatsData ? curTotal(debtStatsData.borrowed_by_currency, 'USD') : numv(analytics?.debts?.borrowed_usd))}
+          loading={personalLoading}
           onPress={() => nav('FinanceDebts')}
         />
       </ScrollView>
@@ -1071,13 +1204,13 @@ const styles = StyleSheet.create({
   metricValueBig: { fontFamily: rd.font.bold, fontSize: rs(19), color: rd.color.text },
   // Summa hali tayyor emas — skeleton (metricUzs balandligiga mos, layout siljimaydi).
   metricSkeleton: {
-    height: rs(18),
-    width: '68%',
-    borderRadius: rs(6),
-    backgroundColor: rd.color.surfaceAlt,
     marginTop: rs(7),
-    marginBottom: rs(3),
+    marginBottom: rs(1),
   },
+  subSkel: { marginTop: rs(3), marginBottom: rs(3) },
+  shimmerLight: { backgroundColor: '#e3e8f1' },
+  shimmerDark: { backgroundColor: 'rgba(255,255,255,0.28)' },
+  heroChipSkel: { marginBottom: rs(4) },
 
   // Modullar
   moduleCard: {
@@ -1287,7 +1420,6 @@ const styles = StyleSheet.create({
   opName: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
   opSub: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textTertiary, marginTop: 2 },
   opAmount: { fontFamily: rd.font.semibold, fontSize: rs(14) },
-  loadingRow: { paddingVertical: rs(6), alignItems: 'center' },
   opsEmpty: { alignItems: 'center', gap: rs(8), paddingVertical: rs(22) },
   opsEmptyText: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.textTertiary },
 

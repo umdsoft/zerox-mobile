@@ -95,6 +95,17 @@ const HomeReducer = createSlice({
     setAppState: (state, action) => {
       state.appState = action.payload.appState;
     },
+    // SS-DEV (2026-10-05): bosh sahifa MMKV keshidan darhol to'ldirish
+    // (stale-while-revalidate). Faqat redux BO'SH bo'lsa — jonli ma'lumot ustiga
+    // eski kesh yozilmaydi. Keyin HomeApi.fulfilled yangisini qo'yadi.
+    hydrateHome: (state, action) => {
+      const p = action.payload || {};
+      if ((state.user as any)?.data) return;
+      if (p.user) state.user = p.user;
+      if (p.home) state.home = p.home;
+      if (p.analytics) state.analytics = p.analytics;
+      if (Array.isArray(p.bild)) state.notification.bild = p.bild;
+    },
     setChangeEndDate: (state, action) => {
       state.contractInfo = {
         ...state.contractInfo,
@@ -210,5 +221,6 @@ export const {
   setEmptyUser,
   checkExpire,
   setChangeEndDate,
+  hydrateHome,
 } = HomeReducer.actions;
 export default HomeReducer.reducer;

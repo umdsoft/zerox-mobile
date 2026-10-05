@@ -24,6 +24,58 @@ export const clearFetchCache = () => {
 
 const cacheKey = (url: string, method: string) => `${method}:${url}`;
 
+// SS-DEV (2026-10-05): bitta (dedupe qilingan) so'rov — useFetch ham, prefetch ham
+// shu orqali ketadi, shuning uchun login/PIN vaqtidagi prefetch bosh sahifa
+// mount'idagi so'rov bilan ULASHILADI (ikki marta ketmaydi).
+const request = (url: string, m: string): Promise<any> => {
+  const key = cacheKey(url, m);
+  let p = inflight.get(key);
+  if (!p) {
+    const token = storage.getString('token');
+    p = axios({
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      url: url,
+      method: m,
+    })
+      .then(res => {
+        if (res.status === 200) cache.set(key, {data: res.data, ts: Date.now()});
+        return res;
+      })
+      .finally(() => {
+        inflight.delete(key);
+      });
+    inflight.set(key, p);
+  }
+  return p;
+};
+
+/** SS-DEV (2026-10-05): ekran ochilishidan OLDIN yuklashni boshlash (xatolar jim). */
+export const prefetchFetch = (url: string, method = 'GET') => {
+  if (!url) return;
+  const m = String(method).toUpperCase();
+  const hit = cache.get(cacheKey(url, m));
+  if (hit && Date.now() - hit.ts <= CACHE_TTL_MS) return;
+  request(url, m).catch(() => {});
+};
+
+/**
+ * SS-DEV (2026-10-05): doimiy (MMKV) keshdan xotira keshini to'ldirish — ekran
+ * darhol ko'rsatadi. ts=0 => "eskirgan" hisoblanadi, ya'ni useFetch baribir
+ * fonda yangilaydi (stale-while-revalidate). Mavjud yozuv ustiga yozilmaydi.
+ */
+export const primeFetchCache = (url: string, data: any, method = 'GET') => {
+  if (!url || data == null) return;
+  const key = cacheKey(url, String(method).toUpperCase());
+  if (!cache.has(key)) cache.set(key, {data, ts: 0});
+};
+
+/** SS-DEV (2026-10-05): xotira keshidagi javob (MMKV snapshot uchun). */
+export const peekFetchCache = (url: string, method = 'GET') =>
+  cache.get(cacheKey(url, String(method).toUpperCase()))?.data;
+
 export const useFetch = ({url, method}) => {
   const m = String(method || 'GET').toUpperCase();
   const initial = url ? cache.get(cacheKey(url, m)) : undefined;
@@ -54,26 +106,7 @@ export const useFetch = ({url, method}) => {
         }
         setError(false);
 
-        let p = inflight.get(key);
-        if (!p) {
-          const token = storage.getString('token');
-          p = axios({
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            url: url,
-            method: m,
-          })
-            .then(res => {
-              if (res.status === 200) cache.set(key, {data: res.data, ts: Date.now()});
-              return res;
-            })
-            .finally(() => {
-              inflight.delete(key);
-            });
-          inflight.set(key, p);
-        }
+        const p = request(url, m);
         const res = await p;
         // Bekor qilingan (unmount / url o'zgardi) — eski javobni yozmaymiz.
         if (signal?.aborted || !mounted.current) return;

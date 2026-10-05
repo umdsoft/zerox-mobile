@@ -22,6 +22,7 @@ import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
 import { storage } from '../../store/api/token/getToken';
+import { warmHome } from '../../helper/homeCache';
 // SS-SEC (2026-09-25): PIN ochiq matnda emas — salt+SHA-256 (pin.ts).
 import { hasPin, setPin, verifyPin } from '../../store/api/token/pin';
 import MainText from '../components/MainText';
@@ -329,6 +330,18 @@ const SetLocalPassword = () => {
   //     console.log('biometric not available');
   //   }
   // };
+
+  // SS-DEV (2026-10-05): PIN kiritilayotgan paytda bosh sahifa ma'lumotlarini
+  // OLDINDAN yuklaymiz (keshdan darhol + fonda tarmoq). PIN tasdiqlangach bosh
+  // sahifa spinner'siz, tayyor ma'lumot bilan ochiladi. Sessiya ichidagi qulfda
+  // (redux'da ma'lumot bor) qayta yuklanmaydi.
+  useEffect(() => {
+    try {
+      const { Store } = require('../../store/store/Store');
+      const hasUser = !!Store.getState()?.HomeReducer?.user?.data;
+      if (!hasUser) warmHome();
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const lockTime = storage.getNumber('time');

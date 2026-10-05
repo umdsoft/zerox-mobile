@@ -18,6 +18,7 @@ import { useDispatch } from 'react-redux';
 import Loading from '../components/Loading';
 import { LoginWithPhoneSendPasswordApi } from '../../store/api/auth';
 import { storage } from '../../store/api/token/getToken';
+import { warmHome } from '../../helper/homeCache';
 import Uzbekistan from '../../images/Uzbekistan';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
@@ -152,6 +153,10 @@ const LoginWithPhone = () => {
           }
           storage.set('phoneNumber', phone.replace(/\s/g, ''));
           storage.set('user_id', response.sad);
+          // SS-DEV (2026-10-05): login javobi kelishi bilan bosh sahifa
+          // so'rovlarini OLDINDAN (parallel) boshlaymiz + keshdan to'ldiramiz —
+          // bosh sahifa ochilganda ma'lumot tayyor bo'ladi (spinner yo'q).
+          warmHome();
           if (storage.getString('token').length > 0) {
             const is = storage.getString('isMust');
             if (is === undefined) {

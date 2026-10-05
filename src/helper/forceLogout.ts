@@ -57,6 +57,14 @@ export const forceLogout = (reason: ForceLogoutReason = 'revoked'): Promise<void
         require('../nativemodule/notificationBadge').NotificationBadgeModule?.setBadgeOnlyNumber?.(0);
       }
     } catch {}
+    // SS-DEV (2026-10-05): bosh sahifa keshi (MMKV, user_id bo'yicha) va
+    // davom etayotgan prefetch — keyingi foydalanuvchiga hech narsa o'tmasin.
+    try {
+      require('./homeCache').clearHomeCache?.();
+    } catch {}
+    try {
+      require('../store/api/home').resetHomeBundle?.();
+    } catch {}
     // 2) MMKV
     try {
       storage.clearAll();

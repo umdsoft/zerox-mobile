@@ -9,47 +9,70 @@ import { storage } from '../token/getToken';
 const isSameSession = (uidAtStart: string | undefined) =>
   storage.getString('user_id') === uidAtStart;
 
+// SS-DEV (2026-10-05): bosh sahifa so'rovlari DUBLIKATSIZ. Login/PIN vaqtida
+// boshlangan prefetch (warmHome) va bosh sahifa mount'idagi chaqiruv BITTA tarmoq
+// so'roviga ulanadi: `dedupe: true` bilan chaqirilsa, shu token+sahifa uchun
+// davom etayotgan (yoki <4s oldin tugagan) so'rov natijasi qayta ishlatiladi.
+// Pull-to-refresh va boshqa ekranlar (dedupe'siz) har doim yangidan yuklaydi.
+const HOME_DEDUPE_MS = 4000;
+let homeBundle: { key: string; p: Promise<any>; ts: number; done: boolean } | null =
+  null;
+export const resetHomeBundle = () => {
+  homeBundle = null;
+};
+const fetchHomeBundle = (token: string | undefined, page: number) => {
+  const auth = { headers: { Authorization: `Bearer ${token}` } };
+  // Barcha 5 ta so'rov PARALLEL (Promise.all).
+  return Promise.all([
+    axios.get(URL + '/user/me', auth),
+    axios.get(URL + '/home/my?type=debitor', auth),
+    axios.get(URL + '/home/my?type=creditor', auth),
+    axios.get(URL + `/notification/me?page=${page}&limit=500`, auth),
+    // /home/analytics — bosh sahifa dashboard'i (moliyaviy sog'liq ball,
+    // olingan/berilgan agregatlar, kontrakt statistikasi, ogohlantirishlar).
+    // Web bilan bir manba. Xato bo'lsa butun home buzilmasin → catch(null).
+    axios.get(URL + '/home/analytics', auth).catch(() => null),
+  ]);
+};
+const getHomeBundle = (
+  token: string | undefined,
+  page: number,
+  dedupe: boolean,
+) => {
+  const key = `${token}|${page}`;
+  const b = homeBundle;
+  if (
+    dedupe &&
+    b &&
+    b.key === key &&
+    (!b.done || Date.now() - b.ts < HOME_DEDUPE_MS)
+  ) {
+    return b.p;
+  }
+  const rec = { key, p: fetchHomeBundle(token, page), ts: Date.now(), done: false };
+  rec.p.then(
+    () => {
+      rec.done = true;
+      rec.ts = Date.now();
+    },
+    () => {
+      rec.done = true;
+      rec.ts = 0; // xato natija qayta ishlatilmaydi
+    },
+  );
+  homeBundle = rec;
+  return rec.p;
+};
+
 const HomeApi = createAsyncThunk(
   'get/home/user',
-  async (state, { rejectWithValue }) => {
+  async (state: any, { rejectWithValue }) => {
     const token = storage.getString('token');
     const uidAtStart = storage.getString('user_id');
 
     try {
       const [user_data, debitor, creditor, notification, analytics] =
-        await axios.all([
-          axios.get(URL + '/user/me', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          axios.get(URL + '/home/my?type=debitor', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          axios.get(URL + '/home/my?type=creditor', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          axios.get(
-            URL + `/notification/me?page=${state.page || 1}&limit=500`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          ),
-          // /home/analytics — bosh sahifa dashboard'i (moliyaviy sog'liq ball,
-          // olingan/berilgan agregatlar, kontrakt statistikasi, ogohlantirishlar).
-          // Web bilan bir manba. Xato bo'lsa butun home buzilmasin → catch(null).
-          axios
-            .get(URL + '/home/analytics', {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-            .catch(() => null),
-        ]);
+        await getHomeBundle(token, state?.page || 1, !!state?.dedupe);
 
       // Sessiya guard — javob eski foydalanuvchiники bo'lsa qabul qilmaymiz.
       if (!isSameSession(uidAtStart)) {
