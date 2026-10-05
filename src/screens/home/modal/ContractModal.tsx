@@ -664,15 +664,8 @@ const ContractModal = () => {
                   </Text>
                 </View>
               </TouchableOpacity>
-              {/* SS5: qancha qolganini ko'rsatamiz — aks holda darvoza
-                  sababsiz to'siq bo'lib ko'rinardi. */}
-              {needRead && (
-                <Text style={styles.readHint} allowFontScaling={false}>
-                  {allPage > 1
-                    ? `${t('Oxirigacha o‘qing')}: ${Math.min(maxPage, allPage)} / ${allPage}`
-                    : t('Oxirigacha o‘qing')}
-                </Text>
-              )}
+              {/* SS-DEV (2026-10-05): "Oxirigacha o'qing: x / y" yozuvi olib
+                  tashlandi (so'rov). Darvoza mantig'i (needRead/warnRead) qoladi. */}
               {/* SS5: tugma BOSILADI (disabled emas) — aks holda sababini
                   tushuntiruvchi ogohlantirish umuman chiqmasdi. */}
               <TouchableOpacity
@@ -810,19 +803,14 @@ const styles = StyleSheet.create({
     height: rs(20),
     width: rs(20),
   },
-  readHint: {
-    fontFamily: rd.font.medium,
-    fontSize: rs(11.5),
-    color: '#b45309',
-    marginTop: rs(6),
-    marginLeft: rs(4),
-  },
   checkText: {
     fontFamily: rd.font.medium,
     fontSize: rs(13),
     color: rd.color.textSecondary,
     marginLeft: rs(10),
-    maxWidth: '90%',
+    // SS-DEV (2026-10-05): matn bitta oqim — sig'masa tabiiy o'raladi.
+    flex: 1,
+    flexShrink: 1,
   },
   btn: {
     height: rs(52),
