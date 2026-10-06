@@ -2,6 +2,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Keyboard,
   Platform,
   ScrollView,
   StatusBar,
@@ -12,7 +13,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { style } from '../../theme/style';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Loading from '../components/Loading';
@@ -22,6 +23,7 @@ import axios from 'axios';
 import { storage } from '../../store/api/token/getToken';
 
 import DatePicker from 'react-native-date-picker';
+import { BIRTH_MIN_DATE, birthPickerDefault } from '../../helper/birthDate';
 import { useDispatch, useSelector } from 'react-redux';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { toastConfig } from '../components/ToastConfig';
@@ -70,8 +72,55 @@ const SearchUserScreen = () => {
   const [searchForm, setSearchForm] = useState(true);
   const [userID, setUserID] = useState('');
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
+  /**
+   * SS-DEV (2026-10-06, "Yangi mobil xatolar 06.10" 2-band): ILGARI `date` default'i
+   * BUGUN (2026) edi — tug'ilgan sana tanlagichi joriy yildan boshlanardi. Endi
+   * tanlanmagan holat `null` (maydonda "kk.oo.yyyy"), tanlagich esa 18 yil oldingi
+   * sanadan ochiladi. Backend'da yosh cheklovi yo'q (User.search faqat ID + sana
+   * mosligi) — shu bois maksimum = bugun.
+   */
+  const [date, setDate] = useState<Date | null>(null);
+  const pickerDefault = useMemo(() => birthPickerDefault(), []);
   const dispatch = useDispatch();
+  // SS-DEV (2026-10-06): tanlagichni ochish (klaviatura yopilgach — pastga qarang).
+  const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (openTimerRef.current) clearTimeout(openTimerRef.current);
+    },
+    [],
+  );
+  /**
+   * SS-DEV (2026-10-06, 06.10 2-band): ILDIZ — sana tanlanayotganda kartalar
+   * "siljib qaytardi". ID maydoni fokusda (klaviatura OCHIQ, Android
+   * `windowSoftInputMode=adjustResize` → oyna kichraygan, ScrollView fokuslangan
+   * maydonni ko'rsatish uchun surilgan) turib sana maydoni bosilardi:
+   * `keyboardShouldPersistTaps="handled"` klaviaturani yopmasdi, native sana
+   * dialogi oyna fokusini olgach IME yopilib oyna KATTALASHAR (kontent sakrardi),
+   * dialog yopilgach fokus yana ID maydoniga qaytib klaviatura QAYTA ochilar va
+   * kontent ikkinchi marta sakrardi. Endi: avval klaviatura yopiladi va ID maydoni
+   * fokusdan chiqariladi (Keyboard.dismiss), layout barqarorlashgach (keyboardDidHide
+   * yoki 300 ms zaxira) tanlagich ochiladi.
+   */
+  const openDatePicker = useCallback(() => {
+    if (openTimerRef.current) return;
+    if (!Keyboard.isVisible()) {
+      Keyboard.dismiss();
+      setOpen(true);
+      return;
+    }
+    let sub: { remove: () => void } | null = null;
+    const go = () => {
+      sub?.remove();
+      sub = null;
+      if (openTimerRef.current) clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+      setOpen(true);
+    };
+    sub = Keyboard.addListener('keyboardDidHide', go);
+    openTimerRef.current = setTimeout(go, 300);
+    Keyboard.dismiss();
+  }, []);
   // SS-DEV (2026-10-05): ID maydoni fokus holati (chegara rangi uchun).
   const [focused, setFocused] = useState(false);
   // SS-DEV (2026-10-05): yo'nalish rangi — berish: ko'k, olish: yashil.
@@ -103,7 +152,7 @@ const SearchUserScreen = () => {
           URL + '/user/search',
           {
             id: userID.replace('/', ''),
-            brithday: formatDate(date),
+            brithday: formatDate(date ?? new Date()),
             type: 1,
           },
           {
@@ -266,14 +315,14 @@ const SearchUserScreen = () => {
                 {t('213')}
               </Text>
               <TouchableOpacity
-                onPress={() => setOpen(!open)}
+                onPress={openDatePicker}
                 activeOpacity={0.8}
                 style={[styles.dateInput, open && { borderColor: accent.solid }]}
               >
                 <View style={[styles.fieldIcon, { backgroundColor: accent.tint }]}>
                   <CalendarIcon size={rs(18)} color={accent.solid} />
                 </View>
-                {settingDate(date) === settingDate(Date.now()) ? (
+                {!date ? (
                   <Text style={styles.datePlaceholder} allowFontScaling={false}>
                     {t('kk.oo.yyyy')}
                   </Text>
@@ -350,7 +399,7 @@ const SearchUserScreen = () => {
       )} */}
       <DatePicker
         open={open}
-        date={date}
+        date={date ?? pickerDefault}
         style={{
           backgroundColor: '#fff',
           alignSelf: 'center',
@@ -369,6 +418,7 @@ const SearchUserScreen = () => {
           setOpen(false);
         }}
         maximumDate={new Date()}
+        minimumDate={BIRTH_MIN_DATE}
       />
 
       {/* <Toast config={toastConfig} /> */}

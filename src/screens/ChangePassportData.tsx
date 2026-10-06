@@ -26,6 +26,7 @@ import {
   MyIdLocale,
   useMyId,
 } from 'react-native-nitro-myid';
+import { beginExternalFlow, endExternalFlow } from '../helper/externalFlow';
 
 const err2 = desc =>
   Toast.show({
@@ -142,6 +143,8 @@ const ChangePassportData = () => {
       locale: lang,
     };
     try {
+      // SS-DEV (2026-10-06, 06.10 1(b)): MyID davomida fon qulfi ishga tushmasin.
+      beginExternalFlow();
       start(cfg, {
         onSuccess: async d => {
           await postData(d);
@@ -150,6 +153,7 @@ const ChangePassportData = () => {
         onUserExited: () => {},
       });
     } catch (e) {
+      endExternalFlow();
       err2(t('Xatolik!'));
     }
   }, [getSession, i18n.language, postData, start]);

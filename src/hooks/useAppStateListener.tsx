@@ -5,6 +5,7 @@ import {DrawerActions, useNavigation} from '@react-navigation/native';
 
 import {setAppState} from '../store/reducers/HomeReducer';
 import {storage} from '../store/api/token/getToken';
+import {endExternalFlow, isExternalFlowActive} from '../helper/externalFlow';
 
 const LOCK_TIMEOUT = 30_000; // 30s
 
@@ -19,6 +20,15 @@ export default function useAppStateListener() {
 
         const lastTime = storage.getNumber('lastBackgroundTime');
         const token = storage.getString('token');
+
+        // SS-DEV (2026-10-06, 06.10 1(b)): tashqi oqimdan (MyID, Click/Payme
+        // brauzeri) qaytish — qulf YO'Q (helper/externalFlow.ts). Bayroq bir
+        // martalik: shu qaytishda iste'mol qilinadi.
+        if (isExternalFlowActive()) {
+          endExternalFlow();
+          storage.delete('lastBackgroundTime');
+          return;
+        }
 
         if (lastTime && token) {
           const diff = Date.now() - lastTime;

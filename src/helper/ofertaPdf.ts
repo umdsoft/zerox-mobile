@@ -23,6 +23,10 @@ export const ofertaDocLang = (lang?: string | null): OfertaDocLang => {
   return 'uz';
 };
 
+/** SS-DEV (2026-10-06): oferta PDF manzili (ContractModal va prefetch uchun bitta joy). */
+export const ofertaPdfUrl = (base: string, uid: string | number, lang: OfertaDocLang): string =>
+  `${base}?id=${uid}&lang=${lang}&download=0`;
+
 export const OFERTA_TIMEOUT_MS = 15000;
 /** Birinchi urinishdan keyingi 2 ta qayta urinish oldidan kutish (backoff). */
 export const OFERTA_RETRY_DELAYS_MS = [1500, 4000];
@@ -100,4 +104,77 @@ export const downloadOfertaPdf = async (
 
 export const removeOfertaFile = (path?: string | null) => {
   if (path) unlink(path);
+};
+
+/**
+ * SS-DEV (2026-10-06, "Yangi mobil xatolar 06.10" 1(a)-band): identifikatsiyadan
+ * keyin oferta 5–6 s spinner bilan ochilardi. ILDIZ: oyna ochilgandagina server
+ * PDF'i (pdf.zerox.uz, mPDF — 06.10 o'lchov: TTFB 0.6–1.5 s Mac/Wi-Fi'dan; mobil
+ * tarmoqda + TLS + 8 sahifa render ko'proq) yuklana boshlardi va tayyor bo'lguncha
+ * `docSrc='loading'` (katta spinner) turardi; bunga `isactivate` → `getMe` kutish va
+ * 0.8 s kechikish qo'shilardi.
+ * Endi: (1) PDF identifikatsiya muvaffaqiyatli bo'lgan ZAHOTI fonda oldindan
+ * yuklanadi (prefetch); (2) oyna ochilganda prefetch tayyor bo'lsa — darhol server
+ * nusxasi, aks holda DARHOL ilova ichidagi zaxira ko'rsatiladi va server nusxasi
+ * kelganda (foydalanuvchi hali 1-sahifada bo'lsa) almashtiriladi.
+ */
+type OfertaPrefetch = {
+  url: string;
+  at: number;
+  done: boolean;
+  path: string | null;
+  cancelled: boolean;
+  promise: Promise<string | null>;
+};
+/** Prefetch shu vaqtdan eski bo'lsa ishlatilmaydi (fayl/sessiya eskirgan). */
+export const OFERTA_PREFETCH_TTL_MS = 10 * 60_000;
+let prefetched: OfertaPrefetch | null = null;
+
+/** Oferta PDF'ini fonda oldindan yuklaydi (bir xil URL uchun takrorlanmaydi). */
+export const prefetchOfertaPdf = (url: string): void => {
+  const cur = prefetched;
+  if (
+    cur &&
+    cur.url === url &&
+    !cur.cancelled &&
+    Date.now() - cur.at < OFERTA_PREFETCH_TTL_MS &&
+    (!cur.done || cur.path)
+  ) {
+    return;
+  }
+  if (cur && cur.url !== url) {
+    cur.cancelled = true;
+    if (cur.done) removeOfertaFile(cur.path);
+  }
+  const entry = {
+    url,
+    at: Date.now(),
+    done: false,
+    path: null,
+    cancelled: false,
+  } as OfertaPrefetch;
+  entry.promise = downloadOfertaPdf(url, () => entry.cancelled).then(p => {
+    entry.done = true;
+    entry.path = p;
+    return p;
+  });
+  prefetched = entry;
+};
+
+/**
+ * Prefetch natijasini oladi (bir martalik — keyingi chaqiruv null). URL mos
+ * kelmasa yoki eskirgan bo'lsa — null.
+ */
+export const takePrefetchedOferta = (
+  url: string,
+): { done: boolean; path: string | null; promise: Promise<string | null> } | null => {
+  const cur = prefetched;
+  if (!cur || cur.cancelled || cur.url !== url) return null;
+  prefetched = null;
+  if (Date.now() - cur.at >= OFERTA_PREFETCH_TTL_MS) {
+    cur.cancelled = true;
+    if (cur.done) removeOfertaFile(cur.path);
+    return null;
+  }
+  return { done: cur.done, path: cur.path, promise: cur.promise };
 };

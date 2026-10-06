@@ -39,12 +39,14 @@ describe('ofertaAfterId', () => {
     expect(consumeOfertaAfterIdentification(fresh)).toBe(false);
   });
 
-  test('eski (is_active=0) ma’lumotda navbat KUTADI, o‘chmaydi', () => {
+  // SS-DEV (2026-10-06): 04.10 dan beri navbat faqat isactivate MUVAFFAQIYATLI bo'lgach
+  // yoziladi — eski Redux (is_active=0) bilan ham oyna OCHILADI (kutmaydi). Test shunga moslandi.
+  test('eski (is_active=0) ma’lumotda ham ochiladi; user yo‘q bo‘lsa kutadi', () => {
     markOfertaAfterIdentification(7);
-    expect(consumeOfertaAfterIdentification({ ...fresh, is_active: 0 })).toBe(false);
     expect(consumeOfertaAfterIdentification(undefined)).toBe(false);
     expect(hasOfertaAfterIdentification()).toBe(true);
-    expect(consumeOfertaAfterIdentification(fresh)).toBe(true);
+    expect(consumeOfertaAfterIdentification({ ...fresh, is_active: 0 })).toBe(true);
+    expect(hasOfertaAfterIdentification()).toBe(false);
   });
 
   test('oferta allaqachon tasdiqlangan — ochilmaydi, navbat o‘chadi', () => {

@@ -41,7 +41,9 @@ import {
 import {
   downloadOfertaPdf,
   ofertaDocLang,
+  ofertaPdfUrl,
   removeOfertaFile,
+  takePrefetchedOferta,
 } from '../../../helper/ofertaPdf';
 import { bundledOfertaSource } from '../../../helper/ofertaBundled';
 
@@ -51,7 +53,11 @@ type DocSource =
   | { kind: 'remote'; path: string }
   | { kind: 'bundled' };
 // 03.10: identifikatsiyadan keyingi oyna — ekran o'tish animatsiyasi tugagach.
-const OFERTA_AFTER_ID_DELAY_MS = 800;
+// SS-DEV (2026-10-06, 06.10 1(a)): 800 → 250 ms (popTo animatsiyasi ~350 ms; Paper
+// Modal navigator USTIDA chiziladi — to'liq tugashini kutish shart emas).
+const OFERTA_AFTER_ID_DELAY_MS = 250;
+const nowMs = () =>
+  (globalThis as any).performance?.now ? (globalThis as any).performance.now() : Date.now();
 // SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
 const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (03.10: 1 sahifali hujjatga — 0)
 const PER_PAGE_MS = 1500; // har bir KEYINGI sahifa uchun eng kam vaqt: (n-1)*1.5 s
@@ -331,6 +337,10 @@ const ContractModal = () => {
   const uid = user?.data?.uid;
   const uidRef = useRef(uid);
   uidRef.current = uid;
+  // SS-DEV (2026-10-06): rozilik belgisining sinxron nusxasi — server nusxasi kech
+  // kelganda zaxirani almashtirish mumkinmi (foydalanuvchi hali o'qishni boshlamagan).
+  const checkRef = useRef(false);
+  checkRef.current = check;
   useEffect(() => {
     if (!contract) return;
     const seq = ++loadSeqRef.current;
@@ -339,19 +349,46 @@ const ContractModal = () => {
     if (prev.kind === 'remote') removeOfertaFile(prev.path);
     setPdfErr(false);
     resetGate();
-    setSource({ kind: 'loading' });
+    const t0 = nowMs();
     const id = uidRef.current;
     if (!id) {
       setSource({ kind: 'bundled' });
     } else {
-      const url = `${PDF_OFERTA_URL}?id=${id}&lang=${docLang}&download=0`;
-      downloadOfertaPdf(url, cancelled, task => {
-        dlTaskRef.current = task;
-      }).then(path => {
-        dlTaskRef.current = null;
-        if (cancelled()) return;
-        setSource(path ? { kind: 'remote', path } : { kind: 'bundled' });
-      });
+      /**
+       * SS-DEV (2026-10-06, 06.10 1(a)): ILGARI `docSrc='loading'` (katta spinner)
+       * server PDF to'liq yuklanguncha turardi (skrinshot: 5–6 s). Endi:
+       *  - identifikatsiyadan keyin boshlangan prefetch TAYYOR bo'lsa — darhol server nusxasi;
+       *  - aks holda DARHOL ilova ichidagi zaxira; server nusxasi kelganda foydalanuvchi
+       *    hali 1-sahifada va rozilik belgilanmagan bo'lsa — almashtiriladi.
+       */
+      const url = ofertaPdfUrl(PDF_OFERTA_URL, id, docLang);
+      const pre = takePrefetchedOferta(url);
+      if (pre?.done && pre.path) {
+        setSource({ kind: 'remote', path: pre.path });
+        if (__DEV__) console.log(`[oferta] server PDF (prefetch) ${Math.round(nowMs() - t0)} ms`);
+      } else {
+        setSource({ kind: 'bundled' });
+        if (__DEV__) console.log(`[oferta] zaxira PDF darhol ${Math.round(nowMs() - t0)} ms`);
+        const p = pre
+          ? pre.promise
+          : downloadOfertaPdf(url, cancelled, task => {
+              dlTaskRef.current = task;
+            });
+        p.then(path => {
+          dlTaskRef.current = null;
+          if (!path) return;
+          const untouched =
+            docSrcRef.current.kind === 'bundled' &&
+            maxPageRef.current <= 1 &&
+            !checkRef.current;
+          if (cancelled() || !untouched) {
+            removeOfertaFile(path);
+            return;
+          }
+          if (__DEV__) console.log(`[oferta] server PDF almashtirildi ${Math.round(nowMs() - t0)} ms`);
+          setSource({ kind: 'remote', path });
+        });
+      }
     }
     return () => {
       loadSeqRef.current += 1;

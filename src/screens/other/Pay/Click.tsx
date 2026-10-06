@@ -25,6 +25,7 @@ import {URL} from '../../constants';
 import {storage} from '../../../store/api/token/getToken';
 import Loading from '../../components/Loading';
 import axios from 'axios';
+import { beginExternalFlow } from '../../../helper/externalFlow';
 
 const Pay = () => {
   const navigation = useNavigation();
@@ -52,6 +53,8 @@ const Pay = () => {
         }
       } else {
         if (type === 0) {
+          // SS-DEV (2026-10-06, 06.10 1(b)): to'lov brauzeridan qaytishda PIN qulfi yo'q.
+          beginExternalFlow();
           Linking.openURL(
             `https://my.click.uz/services/pay?service_id=24899&merchant_id=17375&amount=${nums}&transaction_param=${user.data.uid}&return_url=zeroxuz://UserMoneyResult`,
           );
@@ -77,6 +80,7 @@ const Pay = () => {
                 .map(([k, v]) => `${k}=${v}`)
                 .join(';'),
             )}`;
+            beginExternalFlow();
             Linking.openURL(url);
           }
         }

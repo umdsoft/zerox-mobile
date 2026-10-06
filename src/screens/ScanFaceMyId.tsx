@@ -23,13 +23,14 @@ import { AnimatedIconCircle } from '../images/debtActionIcons';
 import { storage } from '../store/api/token/getToken';
 import axios from 'axios';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { HomeApi, getMe } from '../store/api/home';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { useTranslation } from 'react-i18next';
-import Loading from './components/Loading';
 import { t } from 'i18next';
-import { URL } from './constants';
+import { URL, PDF_OFERTA_URL } from './constants';
+import { beginExternalFlow, endExternalFlow } from '../helper/externalFlow';
+import { ofertaDocLang, ofertaPdfUrl, prefetchOfertaPdf } from '../helper/ofertaPdf';
 import { useMyIdSession } from '../hooks/useMyIdSession';
 import { needsOferta } from '../helper/ofertaGate';
 import { markOfertaAfterIdentification } from '../helper/ofertaAfterId';
@@ -165,8 +166,11 @@ const ScanFaceMyId = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { i18n } = useTranslation();
-  const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
+  // SS-DEV (2026-10-06): oferta prefetch / navbat uchun joriy foydalanuvchi (Redux).
+  const meNow = useSelector((state: any) => state.HomeReducer.user?.data);
+  const meNowRef = React.useRef<any>(meNow);
+  meNowRef.current = meNow;
 
   // V-012: MyID (yuz/passport) ekranida screenshot/record himoyasi — faqat shu ekranda
   // (chiqishda qaytariladi, QrCode ViewShot va boshqa ekranlar buzilmaydi).
@@ -192,6 +196,8 @@ const ScanFaceMyId = () => {
   const Indentificator = useCallback(
     async data => {
       let token = storage.getString('token');
+      // SS-DEV (2026-10-06): isactivate davomida tugma spinneri (to'liq ekran Loading o'rniga).
+      setLoading2(true);
       try {
         const response = await axios.post(
           URL + '/user/isactivate',
@@ -207,43 +213,55 @@ const ScanFaceMyId = () => {
         );
 
         if (response.data.success) {
-          setLoading(true);
+          /**
+           * SS-DEV (2026-10-06, "Yangi mobil xatolar 06.10" 1-band): identifikatsiya
+           * tugashi bilan oferta DARHOL ochilsin.
+           * ILGARI: `setLoading(true)` → getMe() javobini KUTISH (to'liq ekran
+           * spinner) → navbat → popTo → ContractModal 0.8 s → oferta PDF'i shundan
+           * keyingina serverdan yuklana boshlardi (yana spinner). MyID'dan qaytishda
+           * esa fon qulfi (30 s) PIN ekranini oldinga chiqarardi (endi
+           * helper/externalFlow.ts bilan o'chirilgan).
+           * ENDI: navbat + PDF prefetch + popTo DARHOL; getMe/HomeApi fonda.
+           * Navbat (ofertaAfterId) iste'molda `needsOferta` ni yangi user bilan
+           * qayta tekshiradi — oferta allaqachon tasdiqlangan bo'lsa ochilmaydi.
+           */
+          const t0 = (globalThis as any).performance?.now?.() ?? Date.now();
+          const cached = meNowRef.current;
+          if (needsOferta({ ...(cached || {}), is_active: 1 })) {
+            markOfertaAfterIdentification(cached?.id);
+            if (cached?.uid) {
+              prefetchOfertaPdf(
+                ofertaPdfUrl(
+                  PDF_OFERTA_URL,
+                  cached.uid,
+                  ofertaDocLang(storage.getString('lang')),
+                ),
+              );
+            }
+          }
           dispatch(getMe()).then(val => {
-            setLoading(false);
             const me = val?.payload?.user?.data;
             if (me?.is_contract !== 1) {
               dispatch(HomeApi({ page: 1 }));
             }
-            /**
-             * 01.10 (mobil hujjat, 4-band): "ro'yxatdan o'tish → identifikatsiya → oferta".
-             * Oferta oynasi BIR MARTA avtomatik ochiladi, lekin MAJBURIY EMAS — "orqaga"
-             * bilan tasdiqlamasdan chiqib, ilovaning qolgan bo'limlaridan foydalanish
-             * mumkin; Qarz shartnomasida qarz berish/olishda yana ochiladi (useOfertaGuard).
-             * is_active: identifikatsiya hozirgina MUVAFFAQIYATLI — getMe javobi kechiksa
-             * (stale-guard) ham foydalanuvchi faol deb hisoblanadi.
-             *
-             * 03.10 (mobil hujjat, 1-band): 01.10 dagi `setTimeout(openOferta, 800)`
-             * ishlamasdi — ILDIZ helper/ofertaAfterId.ts da (MyID kamerasidan qaytishda
-             * ilova PIN bilan qulflanib, stek qayta tiklanardi). Endi oyna "navbat"
-             * orqali ochiladi: ContractModal uni foydalanuvchi oddiy ekranga tushganda
-             * (qulf ochilgandan keyin ham) iste'mol qiladi.
-             */
-            if (needsOferta({ ...(me || {}), is_active: 1 })) {
-              markOfertaAfterIdentification(me?.id);
+            if (__DEV__) {
+              const dt = ((globalThis as any).performance?.now?.() ?? Date.now()) - t0;
+              console.log(`[oferta] getMe (fonda) ${Math.round(dt)} ms`);
             }
-            // 03.10: MyID davomida ilova qulflangan bo'lsa (stek PIN ekraniga reset
-            // qilingan) — bu ekran stekda yo'q; eski `navigation` bilan o'tish PIN'ni
-            // chetlab o'tardi. Qulfdan keyin identifikatsiya ekraniga QAYTMASLIK uchun
-            // saqlangan stekni o'chiramiz → PIN'dan so'ng bosh sahifa ochiladi.
-            const curRoute = (navigationRef.current as any)?.getCurrentRoute?.()?.name;
-            if (curRoute === 'SetLocalPassword' && storage.getBoolean('appLocked')) {
-              storage.delete('preLockNavState');
-              return;
-            }
-            // 03.10: v7'da `navigate` stekdagi bosh sahifaga QAYTMAYDI, ustiga yangisini
-            // qo'shardi (orqaga bosilsa yana identifikatsiya ekrani) — popTo.
-            navigation.dispatch(StackActions.popTo('BottomTabNavigator'));
           });
+          // 03.10: MyID davomida ilova qulflangan bo'lsa (stek PIN ekraniga reset
+          // qilingan) — bu ekran stekda yo'q; eski `navigation` bilan o'tish PIN'ni
+          // chetlab o'tardi. Qulfdan keyin identifikatsiya ekraniga QAYTMASLIK uchun
+          // saqlangan stekni o'chiramiz → PIN'dan so'ng bosh sahifa ochiladi.
+          // (06.10: externalFlow bilan bu holat amalda bo'lmasligi kerak — himoya qoladi.)
+          const curRoute = (navigationRef.current as any)?.getCurrentRoute?.()?.name;
+          if (curRoute === 'SetLocalPassword' && storage.getBoolean('appLocked')) {
+            storage.delete('preLockNavState');
+            return;
+          }
+          // 03.10: v7'da `navigate` stekdagi bosh sahifaga QAYTMAYDI, ustiga yangisini
+          // qo'shardi (orqaga bosilsa yana identifikatsiya ekrani) — popTo.
+          navigation.dispatch(StackActions.popTo('BottomTabNavigator'));
         } else {
           response.data.msg === 'user-is-active'
             ? Toast.show({
@@ -271,6 +289,8 @@ const ScanFaceMyId = () => {
         }
       } catch (err) {
         returnMessage(err.response);
+      } finally {
+        setLoading2(false);
       }
     },
     [dispatch, navigation],
@@ -311,6 +331,9 @@ const ScanFaceMyId = () => {
     };
     if (sessionId) {
       try {
+        // SS-DEV (2026-10-06, 06.10 1(b)): MyID (Android'da alohida Activity) davomida
+        // ilova fonda — qaytishda PIN qulfi ishga tushmasin (helper/externalFlow.ts).
+        beginExternalFlow();
         start(prod, {
           onSuccess: async data => {
             await Indentificator(data);
@@ -342,15 +365,12 @@ const ScanFaceMyId = () => {
           },
         });
       } catch (error) {
+        endExternalFlow();
         Alert.alert('Response catch myid', JSON.stringify(error));
         console.error(error, 'face error');
       }
     }
   }, [Indentificator, getSession, i18n.language, start]);
-
-  if (loading) {
-    return <Loading />;
-  }
 
   return (
     <View style={styles.root}>

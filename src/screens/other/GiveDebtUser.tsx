@@ -10,7 +10,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackGroundIcon } from '../../helper/homeIcon';
 import { style } from '../../theme/style';
 
@@ -70,6 +70,9 @@ const GiveDebtUser = () => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [usdd, setUsdd] = useState('');
+  // SS-DEV (2026-10-06): yagona double-submit himoyasi — so'rov ketayotganda ikkinchi
+  // bosish e'tiborsiz (state'dan farqli — bir xil kadrdagi ikki bosishni ham ushlaydi).
+  const submittingRef = useRef(false);
   //type 0 bulsa qarz olmoq
   //type 1 bulsa qarz bermoq
   useEffect(() => {
@@ -93,22 +96,16 @@ const GiveDebtUser = () => {
       setTimeout(() => navigation.navigate('BottomTabNavigator'), 300);
     }, 1400);
   };
-  // success=false javoblarni chiройли ko'rsatamiz. `msg:"ex"` = 2 daqiqa dublikat
-  // himoyasi: shartnoma ALLAQACHON yaratilgan va qarshi tomonga yuborilgan
-  // (Notification+FCM insert bo'lgan) -> xato emas, Home'ga qaytamiz.
+  // success=false javoblarni chiройли ko'rsatamiz.
+  // SS-DEV (2026-10-06, "Yangi mobil xatolar 06.10" 3-band): ILDIZ — backend
+  // `Contract.create` 2 DAQIQA ichida bir xil (debitor, creditor, summa, valyuta)
+  // shartnomani `end_date`ga QARAMAY `msg:"ex"` bilan rad etardi (shartnoma
+  // yaratilmasdi), bu yerda esa yashil "So'rov allaqachon yuborilgan" chiqardi.
+  // Backend endi faqat 5 s double-click'ni ushlaydi va `success:true` qaytaradi.
+  // Eski server (deploy'gacha) `ex` qaytarsa — yolg'on "yuborilgan" emas, aniq xato:
+  // muvaffaqiyat toast'i FAQAT `success:true` da.
   const showFail = (data: any) => {
     const msg = data?.msg;
-    if (msg === 'ex') {
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 2000,
-        position: 'bottom',
-        type: 'omad',
-        props: { desc: t('So‘rov allaqachon yuborilgan') },
-      });
-      goHomeSoon();
-      return;
-    }
     const map: Record<string, string> = {
       'user-bir': t('O‘zingiz bilan qarz shartnomasi tuzib bo‘lmaydi'),
       date: t('Qaytarish muddati noto‘g‘ri'),
@@ -172,6 +169,15 @@ const GiveDebtUser = () => {
 
   // console.log(user);
   const fetchData = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await submitContract();
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+  const submitContract = async () => {
     let a;
     if (active) {
       if (Number(amount.replace(/\s/g, '')) >= 100000000) {
@@ -291,6 +297,9 @@ const GiveDebtUser = () => {
 
 
         if (data.msg === 'deb_expiry_date' && data.success === false) {
+          // SS-DEV (2026-10-06): ilgari bu yerda loading o'chirilmasdi — ekran
+          // abadiy spinner'da qolardi.
+          setLoading(false);
           Toast.show({
             autoHide: true,
             position: 'bottom',
