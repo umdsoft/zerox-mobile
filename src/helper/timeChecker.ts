@@ -90,13 +90,15 @@ export const checkPhoneTime = async (): Promise<boolean> => {
     const diff = Math.abs(deviceDate.getTime() - serverDate.getTime());
     const isTimeValid = diff <= MAX_ALLOWED_DIFF_MS;
     if (!isTimeValid) {
+      // 08.10: vaqt tafovuti — o'z kaliti (ilgari "Serverga ulanishda xatolik" kaliti shu matnga
+      // tarjima qilingan edi, natijada oddiy server xatolarida ham vaqt xabari chiqardi).
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
         position: 'top',
         type: 'error2',
         props: {
-          desc: t('Serverga ulanishda xatolik yuz berdi'),
+          desc: t("Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing."),
         },
       });
       return false;

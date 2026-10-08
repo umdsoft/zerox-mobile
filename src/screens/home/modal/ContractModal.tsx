@@ -58,10 +58,21 @@ type DocSource =
 const OFERTA_AFTER_ID_DELAY_MS = 250;
 const nowMs = () =>
   (globalThis as any).performance?.now ? (globalThis as any).performance.now() : Date.now();
+// 08.10 (5-band): server javobidagi odam o'qiy oladigan xabar (`message`, yoki bo'shliqli
+// `msg`); "error" / "unauthorized" kabi texnik kodlar ko'rsatilmaydi.
+const serverMsg = (body: any): string => {
+  const m = body?.message;
+  if (typeof m === 'string' && m.trim()) return m.trim();
+  const s = body?.msg;
+  if (typeof s === 'string' && s.trim().includes(' ')) return s.trim();
+  return '';
+};
 // SS-DEV (2026-09-24, 3-tuzatish): oferta o'qish darvozasi sozlamalari.
 const MIN_READ_MS = 3000; // yuklangandan keyin eng kam o'qish vaqti (03.10: 1 sahifali hujjatga — 0)
-const PER_PAGE_MS = 1500; // har bir KEYINGI sahifa uchun eng kam vaqt: (n-1)*1.5 s
-const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi
+// 08.10: (n-1)*1.5 s endi FAQAT zaxira yo'li uchun (ko'ruvchi sahifa hodisasini
+// bermasa) — oxirgi sahifa ko'ringanda MIN_READ_MS yetarli.
+const PER_PAGE_MS = 1500;
+const SETTLE_MS = 1000; // yuklangandan keyingi "spurious" sahifa hodisalari oynasi (teginishsiz)
 // Hujjat UMUMAN yuklanmasa (onLoadComplete ham, onPageChanged ham kelmasa) —
 // foydalanuvchi abadiy qamalib qolmasin. YUKLANGAN hujjat uchun bu taymer
 // ISHLAMAYDI (pastga qarang). 27.09 (1-band): taymer endi darvozani OCHMAYDI —
@@ -103,10 +114,27 @@ const ContractModal = () => {
     setDocSrc(s);
   }, []);
   const loadedAtRef = useRef<number | null>(null);
-  // Sinxron nusxa — ketma-ket sahifa tekshiruvi (p === maxPage + 1) uchun.
+  // Sinxron nusxa — eng uzoq borilgan sahifa.
   const maxPageRef = useRef(1);
   const readTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * 08.10 (5-band): "oxirigacha o'qildi" holati — BIR MARTA yetilsa QAYTA
+   * NOLLANMAYDI (faqat yangi ochilish / hujjat almashishi / "Qayta urinish"da).
+   *  - reached: oxirgi sahifa ko'rindi (onPageChanged / onPageSingleTap: p === n);
+   *  - fallbackOk: ko'ruvchi sahifa hodisalarini bermadi, lekin foydalanuvchi
+   *    hujjatni varaqlab chiqdi (teginishlar soni + vaqt) — pastda checkReadFallback.
+   */
+  const [reached, setReached] = useState(false);
+  const reachedRef = useRef(false);
+  const [fallbackOk, setFallbackOk] = useState(false);
+  const allPageRef = useRef(0);
+  // Yuklangandan keyingi teginishlar (varaqlash imo-ishoralari) soni.
+  const gesturesRef = useRef(0);
+  // maxPage oxirgi marta oshgandagi teginishlar soni.
+  const gesturesAtMaxRef = useRef(0);
+  // Hisobga olingan (p > 1) sahifa hodisalari soni.
+  const pageEventsRef = useRef(0);
 
   /**
    * SS-DEV (2026-09-24, 3-tuzatish): "Oferta oxirigacha o'qilmaguncha
@@ -137,8 +165,25 @@ const ContractModal = () => {
    * Har ochilishda holat NOLLANADI (useEffect quyida); `check` darvoza
    * yopiq bo'lsa hech qachon true bo'lolmaydi (pastdagi effekt).
    */
-  const reachedLast = allPage > 0 && (allPage === 1 || maxPage >= allPage);
-  const readToEnd = !pdfErr && allPage > 0 && readTimerDone && reachedLast;
+  /**
+   * 08.10 (5-band) ILDIZ: foydalanuvchi ofertani OXIRIGACHA o'qidi (oxirgi sahifa
+   * ekranda), lekin belgini qo'ya olmadi — "oxirigacha o'qing" toast'i chiqaverdi.
+   * Eski darvozada "oxirgi sahifaga yetildi" faqat QAT'IY KETMA-KET hodisalar
+   * (p === maxPage + 1) bilan hisoblanardi VA yuklangandan keyingi 1 s ichidagi
+   * hodisalar TASHLAB yuborilardi. Bitta hodisa tushib qolsa (hujjat tayyor/prefetch
+   * bo'lib, foydalanuvchi darhol varaqlasa — 2-sahifa hodisasi SETTLE oynasiga
+   * tushadi; tez varaqlashda sahifa "sakrasa"; zaxira → server nusxasi almashgan
+   * payt), keyingi har bir hodisa p ≠ maxPage + 1 bo'lib, maxPage ABADIY qotib
+   * qolardi — oxirgi sahifada ham darvoza ochilmasdi. Ustiga (n-1)×1.5 s
+   * (8 sahifa → 10.5 s) o'qish vaqti ham talab qilinardi.
+   * Endi: oxirgi sahifa ko'rinishi (p === n, har qanday yo'l bilan) yoki eng uzoq
+   * sahifa ≥ n — "o'qildi" (bir marta yetilsa saqlanadi) + yuklangandan 3 s;
+   * ko'ruvchi sahifa hodisasini bermasa — zaxira (checkReadFallback).
+   */
+  const reachedLast =
+    allPage > 0 && (allPage === 1 || reached || maxPage >= allPage);
+  const readToEnd =
+    !pdfErr && allPage > 0 && ((readTimerDone && reachedLast) || fallbackOk);
   const needRead = !pdfErr && !readToEnd;
 
   const clearTimers = useCallback(() => {
@@ -156,6 +201,14 @@ const ContractModal = () => {
     clearTimers();
     loadedAtRef.current = null;
     maxPageRef.current = 1;
+    // 08.10: yangi holat maydonlari ham shu yerda (va faqat shu yerda) nollanadi.
+    allPageRef.current = 0;
+    reachedRef.current = false;
+    gesturesRef.current = 0;
+    gesturesAtMaxRef.current = 0;
+    pageEventsRef.current = 0;
+    setReached(false);
+    setFallbackOk(false);
     setCheck(false);
     setMaxPage(1);
     setAllPage(0);
@@ -204,6 +257,7 @@ const ContractModal = () => {
       fallbackTimerRef.current = null;
     }
     const n = Math.max(1, Number(numberOfPages) || 1);
+    if (Number(numberOfPages) > 0) allPageRef.current = n;
     if (readTimerRef.current) clearTimeout(readTimerRef.current);
     // 03.10 (mobil hujjat, 1-band): ekranga to'liq sig'adigan (1 sahifali) hujjat
     // yuklanishi bilan "oxirigacha ko'rilgan" hisoblanadi — aylantiradigan joy yo'q.
@@ -211,9 +265,66 @@ const ContractModal = () => {
       setReadTimerDone(true);
       return;
     }
-    const minMs = Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS);
-    readTimerRef.current = setTimeout(() => setReadTimerDone(true), minMs);
+    // 08.10: ilgari max(3 s, (n-1)×1.5 s) — oxirgi sahifaga tez yetgan foydalanuvchi
+    // 10 s gacha "oxirigacha o'qing" toast'ini ko'rardi. Endi 3 s.
+    readTimerRef.current = setTimeout(() => setReadTimerDone(true), MIN_READ_MS);
   }, []);
+
+  /**
+   * 08.10 (5-band): sahifa hodisasi (onPageChanged / onPageSingleTap). Ketma-ketlik
+   * shart EMAS — eng uzoq sahifa saqlanadi; p === n bo'lsa "o'qildi" (bir marta).
+   * Yuklangandan keyingi SETTLE_MS ichida faqat foydalanuvchi PDF'ga TEGINGAN bo'lsa
+   * hisoblanadi (Android'dagi o'lchov paytidagi soxta "oxirgi sahifa" hodisasi).
+   */
+  const notePage = useCallback((p: number, numberOfPages?: number) => {
+    const loadedAt = loadedAtRef.current;
+    if (!loadedAt) return;
+    const n = Number(numberOfPages) > 0 ? Number(numberOfPages) : allPageRef.current;
+    if (!(p >= 1) || (n > 0 && p > n)) return;
+    if (gesturesRef.current === 0 && Date.now() - loadedAt < SETTLE_MS) return;
+    if (p > 1) pageEventsRef.current += 1;
+    if (p > maxPageRef.current) {
+      maxPageRef.current = p;
+      gesturesAtMaxRef.current = gesturesRef.current;
+      setMaxPage(p);
+    }
+    if (n > 0 && p >= n && !reachedRef.current) {
+      reachedRef.current = true;
+      setReached(true);
+    }
+  }, []);
+
+  /**
+   * 08.10 (5-band): zaxira — ko'ruvchi sahifalarni xabar qilmasa (hech bir p > 1
+   * hodisasi yo'q, lekin foydalanuvchi ≥ n-1 marta varaqladi) yoki oxirgi sahifa
+   * hodisasi kelmasa (n-1 sahifaga yetilgan va undan keyin yana varaqlangan) —
+   * yuklangandan keyin max(3 s, (n-1)×1.5 s) o'tgach "o'qildi" hisoblanadi.
+   * Belgi / "Tasdiqlash" bosilganda va har teginish oxirida tekshiriladi.
+   */
+  const checkReadFallback = useCallback((): boolean => {
+    const loadedAt = loadedAtRef.current;
+    const n = allPageRef.current;
+    if (!loadedAt || n <= 1) return false;
+    if (Date.now() - loadedAt < Math.max(MIN_READ_MS, (n - 1) * PER_PAGE_MS)) {
+      return false;
+    }
+    const g = gesturesRef.current;
+    const noPageReports = pageEventsRef.current === 0 && g >= n - 1;
+    const lastNotReported =
+      maxPageRef.current >= n - 1 && g > gesturesAtMaxRef.current;
+    if (!noPageReports && !lastNotReported) return false;
+    setFallbackOk(true);
+    return true;
+  }, []);
+
+  // 08.10: PDF ustidagi teginishlar (onTouchStart — JS responder tizimi native
+  // PDF ko'ruvchi ustida ham chaqiradi; varaqlashni o'g'irlamaydi).
+  const onPdfTouchStart = useCallback(() => {
+    if (loadedAtRef.current) gesturesRef.current += 1;
+  }, []);
+  const onPdfTouchEnd = useCallback(() => {
+    checkReadFallback();
+  }, [checkReadFallback]);
 
   /**
    * SS-DEV (2026-09-29, 29.09 doc2 3-rasm): oyna endi bosh sahifada MAJBURAN
@@ -377,9 +488,12 @@ const ContractModal = () => {
         p.then(path => {
           dlTaskRef.current = null;
           if (!path) return;
+          // 08.10: "oxirigacha o'qildi" holatiga yetilgan bo'lsa — almashtirilmaydi
+          // (almashtirish darvozani nollaydi).
           const untouched =
             docSrcRef.current.kind === 'bundled' &&
             maxPageRef.current <= 1 &&
+            !reachedRef.current &&
             !checkRef.current;
           if (cancelled() || !untouched) {
             removeOfertaFile(path);
@@ -516,20 +630,25 @@ const ContractModal = () => {
           setTimeout(runPendingOfertaAction, 350);
         }
 
+        // 08.10 (5-band): boshqa `success:false` javobi ilgari JIM o'tib ketardi
+        // (oyna ochiq qolar, hech narsa bo'lmasdi) — endi server xabari ko'rsatiladi.
+        if (data?.success === false && data?.msg !== 'is_contract_true') {
+          warn(serverMsg(data) || t('Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.'));
+        }
+
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         setLoading(false);
-        Toast.show({
-          autoHide: true,
-          visibilityTime: 3000,
-          position: 'bottom',
-          type: 'error2',
-          props: { desc: "Amalga oxshirib bo'lmadi " },
-        });
+        // 08.10 (5-band): ilgari qattiq yozilgan "Amalga oxshirib bo'lmadi" — endi
+        // server xabari (403/401/400 javobidagi message/msg), bo'lmasa umumiy matn.
+        warn(
+          serverMsg(error?.response?.data) ||
+            t('Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.'),
+        );
       }
     }
     // SS-AUDIT (2026-09-25): bo'sh `else { console.log('red') }` olib tashlandi.
-  }, [check, dispatch, t]);
+  }, [check, dispatch, t, warn]);
 
   return (
     <Modal
@@ -601,6 +720,13 @@ const ContractModal = () => {
                 <ActivityIndicator size="large" color={rd.color.primary} />
               </View>
             ) : (
+              // 08.10 (5-band): teginishlarni sanash uchun o'rov (varaqlashga xalaqit
+              // bermaydi — faqat kuzatadi). Zaxira yo'li: checkReadFallback.
+              <View
+                style={styles.pdfWrap}
+                onTouchStart={onPdfTouchStart}
+                onTouchEnd={onPdfTouchEnd}
+                onTouchCancel={onPdfTouchEnd}>
               <Pdf
                 key={`${reloadKey}-${docSrc.kind}`}
                 trustAllCerts={false}
@@ -637,6 +763,7 @@ const ContractModal = () => {
                 }}
                 onPageChanged={(p, allpage) => {
                   if (allpage > 0) {
+                    allPageRef.current = allpage;
                     setAllPage(allpage);
                   }
                   // SS-DEV (2026-09-24): onLoadComplete kelmagan bo'lsa ham
@@ -646,23 +773,16 @@ const ContractModal = () => {
                     markLoaded(allpage);
                     return;
                   }
-                  // Yuklangandan keyingi birinchi SETTLE_MS ichidagi hodisalar —
-                  // Android'dagi soxta "oxirgi sahifa" hodisasi; hisobga olinmaydi.
-                  if (Date.now() - loadedAtRef.current < SETTLE_MS) {
-                    return;
-                  }
-                  if (p < 1 || (allpage > 0 && p > allpage)) return;
-                  // SS-DEV (2026-09-24, 3-tuzatish): faqat KETMA-KET oldinga
-                  // siljish (p === maxPage + 1) hisoblanadi — havola/jumpTo
-                  // orqali oxirgi sahifaga SAKRASH "o'qildi" degani emas.
+                  // 08.10 (5-band): KETMA-KETLIK sharti va SETTLE oynasida hodisani
+                  // butunlay tashlab yuborish olib tashlandi (ILDIZ — yuqorida).
                   // Orqaga qaytish maxPage'ni kamaytirmaydi.
-                  if (p === maxPageRef.current + 1) {
-                    maxPageRef.current = p;
-                    setMaxPage(p);
-                  }
+                  notePage(p, allpage);
                 }}
+                // 08.10: sahifaga bosilganda ham joriy sahifa keladi (qo'shimcha signal).
+                onPageSingleTap={(p: number) => notePage(p)}
                 style={styles.pdf}
               />
+              </View>
             )}
             <View style={styles.footer}>
               {/* So'rov: oferta TASDIQLASH ishlashi kerak. IKKI muammo bor edi:
@@ -677,7 +797,9 @@ const ContractModal = () => {
                 activeOpacity={0.8}
                 onPress={() => {
                   if (pdfErr) return;
-                  if (needRead) {
+                  // 08.10: zaxira sharti shu zahoti tekshiriladi (ko'ruvchi sahifa
+                  // hodisasini bermagan holat) — bajarilsa belgi darhol qo'yiladi.
+                  if (needRead && !checkReadFallback()) {
                     warnRead();
                     return;
                   }
@@ -707,7 +829,7 @@ const ContractModal = () => {
                   tushuntiruvchi ogohlantirish umuman chiqmasdi. */}
               <TouchableOpacity
                 onPress={() => {
-                  if (needRead) {
+                  if (needRead && !checkReadFallback()) {
                     warnRead();
                     return;
                   }
@@ -795,6 +917,11 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     backgroundColor: rd.color.surface,
+  },
+  // 08.10: PDF o'rovi (teginishlarni sanash) — PDF bilan bir xil maydon.
+  pdfWrap: {
+    flex: 1,
+    width: '100%',
   },
   indicator: {
     flex: 1,

@@ -10,6 +10,7 @@ import axios from 'axios';
 import { Linking, Platform } from 'react-native';
 import { getVersion } from 'react-native-device-info';
 import { URL } from '../screens/constants';
+import { storage } from '../store/api/token/getToken';
 
 /** iOS App Store ID — loyihadagi mavjud havoladan (apps.apple.com/uz/app/zerox/id6446497826). */
 export const IOS_APP_STORE_ID = '6446497826';
@@ -47,6 +48,52 @@ export const compareVersions = (a: string, b: string): number => {
 
 const VERSION_RE = /^\d+(\.\d+){0,3}$/;
 
+/**
+ * 08.10: serverdan kelgan do'kon havolasi faqat RASMIY do'konlarga ochiladi (boshqa
+ * har qanday sxema/domen — standart havola). Linking.openURL'ga ishonchsiz URL bermaymiz.
+ */
+const STORE_URL_RE =
+  /^(market:\/\/details\?id=|itms-apps:\/\/apps\.apple\.com\/|https:\/\/play\.google\.com\/store\/apps\/details\?id=|https:\/\/apps\.apple\.com\/)/;
+const safeStoreUrl = (value: unknown, fallback: string): string => {
+  const s = typeof value === 'string' ? value.trim() : '';
+  return STORE_URL_RE.test(s) ? s : fallback;
+};
+
+/**
+ * 08.10: oxirgi muvaffaqiyatli siyosat MMKV'da — ilova OFLAYN ishga tushsa ham eski versiya
+ * bloklangan qoladi (ilgari faqat xotirada edi: oflayn sovuq start = blok yo'q).
+ * Yangilangandan keyin getVersion() >= min_version -> blok o'zi yo'qoladi.
+ */
+const POLICY_STORAGE_KEY = 'forceUpdate.policy';
+
+const normalizePolicy = (d: any): VersionPolicy | null => {
+  const min = String(d?.min_version || '');
+  if (!VERSION_RE.test(min)) return null;
+  const latest = String(d?.latest_version || '');
+  return {
+    min_version: min,
+    latest_version: VERSION_RE.test(latest) ? latest : min,
+    store_url: safeStoreUrl(d?.store_url, DEFAULT_STORE.store_url),
+    store_web_url: safeStoreUrl(d?.store_web_url, DEFAULT_STORE.store_web_url),
+  };
+};
+
+
+export const loadCachedPolicy = (): VersionPolicy | null => {
+  try {
+    const raw = storage.getString(POLICY_STORAGE_KEY);
+    return raw ? normalizePolicy(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveCachedPolicy = (policy: VersionPolicy): void => {
+  try {
+    storage.set(POLICY_STORAGE_KEY, JSON.stringify(policy));
+  } catch {}
+};
+
 /** Siyosatni oladi; xato/noto'g'ri javobda `null` (bloklamaslik). */
 export const fetchVersionPolicy = async (): Promise<VersionPolicy | null> => {
   try {
@@ -55,15 +102,9 @@ export const fetchVersionPolicy = async (): Promise<VersionPolicy | null> => {
       params: { platform, current: getVersion() },
       timeout: 8000,
     });
-    const d = res?.data?.data;
-    const min = String(d?.min_version || '');
-    if (!VERSION_RE.test(min)) return null;
-    return {
-      min_version: min,
-      latest_version: String(d?.latest_version || min),
-      store_url: String(d?.store_url || DEFAULT_STORE.store_url),
-      store_web_url: String(d?.store_web_url || DEFAULT_STORE.store_web_url),
-    };
+    const policy = normalizePolicy(res?.data?.data);
+    if (policy) saveCachedPolicy(policy);
+    return policy;
   } catch {
     return null;
   }

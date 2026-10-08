@@ -23,6 +23,7 @@ import {
   VersionPolicy,
   fetchVersionPolicy,
   isUpdateRequired,
+  loadCachedPolicy,
   openStore,
 } from '../../helper/forceUpdate';
 import { SmartphoneIcon } from '../home/redesign/icons';
@@ -31,8 +32,10 @@ const MIN_INTERVAL_MS = 30 * 1000;
 
 const ForceUpdateGate = () => {
   const { t } = useTranslation();
-  const [policy, setPolicy] = useState<VersionPolicy | null>(null);
-  const [blocked, setBlocked] = useState(false);
+  // 08.10: oxirgi saqlangan siyosatdan boshlaymiz — oflayn sovuq startda ham eski versiya
+  // darhol bloklanadi (tarmoq javobini kutmasdan); serverdan yangisi kelsa yangilanadi.
+  const [policy, setPolicy] = useState<VersionPolicy | null>(loadCachedPolicy);
+  const [blocked, setBlocked] = useState<boolean>(() => isUpdateRequired(loadCachedPolicy()));
   const lastCheck = useRef(0);
   const inFlight = useRef(false);
 

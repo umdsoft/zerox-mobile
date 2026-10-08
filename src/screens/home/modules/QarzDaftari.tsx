@@ -361,7 +361,16 @@ const DebtSumCard = ({
   </TouchableOpacity>
 );
 
-type Row = { id: any; name: string; end: string; amount: number; currency: string };
+// 08.10: qator endi mijoz sahifasini ochadi — mijoz_id + turi ham kerak.
+type Row = {
+  id: any;
+  mijozId: any;
+  turi: 'berish' | 'olish';
+  name: string;
+  end: string;
+  amount: number;
+  currency: string;
+};
 
 // F) Muddati yaqin qarzlar jadvali (UZS/USD toggle bilan).
 const DueTable = ({
@@ -373,7 +382,7 @@ const DueTable = ({
   title: string;
   accent: string;
   rows: any[];
-  onRow: (id: any) => void;
+  onRow: (row: Row) => void;
 }) => {
   const { t } = useTranslation();
   const [cur, setCur] = React.useState<'UZS' | 'USD'>('UZS');
@@ -381,6 +390,8 @@ const DueTable = ({
     .filter(r => String(r?.currency || 'UZS').toUpperCase() === cur)
     .map(r => ({
       id: r?.qarz_id,
+      mijozId: r?.mijoz_id,
+      turi: r?.turi === 'olish' ? 'olish' : 'berish',
       name: titleCase(r?.mijoz_fish),
       end: r?.end_date,
       amount: Number(r?.residual_amount || 0),
@@ -431,7 +442,7 @@ const DueTable = ({
             <TouchableOpacity
               key={i}
               activeOpacity={0.7}
-              onPress={() => onRow(row.id)}
+              onPress={() => onRow(row)}
               style={styles.tr}
             >
               <View style={styles.colDate2}>
@@ -623,7 +634,19 @@ const QarzDaftari = () => {
     setPendingTuri(turi);
     setShopPicker(true);
   };
-  const goQarz = (id: any) => id && nav('QarzDaftariQarz', { id });
+  /**
+   * 08.10 (3-band): "Muddati yaqin" qatori ilgari "Qarz tafsiloti"ni
+   * (QarzDaftariQarz) ochardi. So'rov: "Qarz oluvchi/beruvchi" — MIJOZ sahifasi
+   * (QarzDaftariMijoz) ochilsin, xuddi "Berilgan/Olingan qarz" ro'yxatidagidek
+   * (QarzDaftariQarzlar: { id: mijoz_id, turi, fish }). mijoz_id bo'lmasa (eski
+   * javob) — avvalgidek qarz sahifasi.
+   */
+  const goNearRow = (row: Row) => {
+    if (row?.mijozId) {
+      return nav('QarzDaftariMijoz', { id: row.mijozId, turi: row.turi, fish: row.name });
+    }
+    return row?.id && nav('QarzDaftariQarz', { id: row.id });
+  };
 
   if (dashboard.loading && nearExp.loading) {
     return <Loading />;
@@ -765,13 +788,13 @@ const QarzDaftari = () => {
           title={t('Muddati yaqin berilgan qarzlar')}
           accent={BLUE}
           rows={nearBerilgan}
-          onRow={goQarz}
+          onRow={goNearRow}
         />
         <DueTable
           title={t('Muddati yaqin olingan qarzlar')}
           accent={GREEN}
           rows={nearOlingan}
-          onRow={goQarz}
+          onRow={goNearRow}
         />
 
         {/* SS5-3 (2026-09-21): KALENDAR + kunlik/haftalik/oylik hisobot.

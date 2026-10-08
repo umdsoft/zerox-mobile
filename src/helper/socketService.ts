@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
 import { onTokenRefreshed } from '../store/api/authInterceptor';
 import { forceLogout } from './forceLogout';
+import { isOwnPasswordChangeActive } from './passwordChangeSession';
 import { getDeviceUserAgent } from './userAgent';
 import { SOCKET_URL } from '../screens/constants';
 import { Store } from '../store/store/Store';
@@ -239,6 +240,9 @@ class SocketService {
     // family socketiga yuboradi). Darhol majburiy chiqamiz; server socketni
     // o'zi uzadi — qayta ulanmaslik uchun oldindan o'zimiz uzamiz.
     this.socket.on('session_revoked', () => {
+      // 08.10: foydalanuvchi O'Z parolini o'zgartirmoqda — bekor qilinish kutilgan,
+      // socket uzilmaydi (yangi token kelgach onTokenRefreshed orqali qayta ulanadi).
+      if (isOwnPasswordChangeActive()) return;
       try {
         this.disconnect();
       } catch {}

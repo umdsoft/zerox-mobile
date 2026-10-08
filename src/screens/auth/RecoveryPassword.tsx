@@ -29,6 +29,14 @@ import NewPasswordIllustration from '../../images/NewPassword';
 import { URL } from '../constants';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
+// 08.10: o'z parolini o'zgartirgandan keyin sessiyani jim davom ettirish.
+import {
+  OWN_PASSWORD_CHANGE_PATH,
+  beginOwnPasswordChange,
+  cancelOwnPasswordChange,
+  resumeSessionAfterPasswordChange,
+} from '../../helper/passwordChangeSession';
+import { forceLogout, isSessionRevokedError } from '../../helper/forceLogout';
 
 const PasswordInput = React.memo(
   ({
@@ -236,9 +244,13 @@ const RecoveryPassword = () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
 
+      // 08.10: backend muvaffaqiyatda BARCHA sessiyalarni (shu qurilmani ham) bekor
+      // qiladi. So'rovdan OLDIN bayroq — parallel so'rovlarning 401 SESSION_REVOKED
+      // javobi "Sessiya boshqa qurilmadan tugatildi" deb chiqarib yubormasin.
+      beginOwnPasswordChange();
       // axios (fetch emas) — token eskirsa authInterceptor avto-refresh qiladi.
       const response = await axios.post(
-        `${URL}/user/edit/password`,
+        `${URL}${OWN_PASSWORD_CHANGE_PATH}`,
         {
           newPass: state.password,
           prevPass: state.prevPassword,
@@ -251,10 +263,28 @@ const RecoveryPassword = () => {
         },
       );
 
+      if (response.data?.code === 2) {
+        // 08.10: yangi tokenlar (javobda bo'lsa) yoki yangi parol bilan jim qayta login.
+        // Bo'lmasa — neytral "Parol o'zgartirildi..." bilan login ekraniga (forceLogout).
+        const resumed = await resumeSessionAfterPasswordChange(
+          response.data,
+          state.password,
+        );
+        if (!resumed) return;
+      } else {
+        cancelOwnPasswordChange();
+      }
       setState(prev => ({ ...prev, loading: false }));
       handleResponse(response.data);
     } catch (error) {
+      cancelOwnPasswordChange();
       setState(prev => ({ ...prev, loading: false }));
+      // 08.10: sessiya parol o'zgartirishdan OLDIN haqiqatan bekor qilingan bo'lsa
+      // (oqim bayrog'i forceLogout'ni to'xtatib turgan edi) — odatdagi chiqish.
+      if (isSessionRevokedError(error)) {
+        forceLogout('revoked');
+        return;
+      }
       // Server xato javob tanasini qaytargan bo'lsa (masalan noto'g'ri joriy parol) —
       // uni handleResponse'ga uzatamiz (fetch xulqi bilan bir xil). Aks holda (tarmoq
       // xatosi) umumiy toast.

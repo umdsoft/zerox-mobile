@@ -466,7 +466,7 @@
     "eslatma": "Напоминание",
     "eslatma1": "У вас есть договоры займа с приближающимся сроком погашения.",
     "Ushbu shartnoma bo'yicha qarzdorlik mavjud emas": "Задолженность по этому договору отсутствует.",
-    "Serverga ulanishda xatolik yuz berdi": "Между сервером и вашим устройством имеется расхождение во времени. Пожалуйста, включите автоматический режим установки даты и времени на вашем устройстве.",
+    "Serverga ulanishda xatolik yuz berdi": "Ошибка подключения к серверу",
     "time": "Попробуйте еще раз проверить время на вашем телефоне.",
     "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.": "Регистрация заблокирована на 1 час из-за ограниченного количества попыток. Пожалуйста, попробуйте позже.",
     "tez": "Скоро он будет запущен.",
@@ -1499,6 +1499,7 @@
     "📍 Joriy joylashuvim": "📍 Моё текущее местоположение",
     "dollar": "доллар",
     "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.": "Пожалуйста, прочитайте публичную оферту до конца и подтвердите.",
+    "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.": "Не удалось подтвердить оферту. Попробуйте ещё раз.",
     "Oxirigacha o‘qing": "Прочитайте до конца",
     "To‘lov grafigi": "График платежей",
     "Bu shartnoma yopilgan — qaytarishni talab qilib bo‘lmaydi.": "Этот договор закрыт — требовать возврат нельзя.",
@@ -1741,6 +1742,11 @@
     "Talabnoma yuborilsinmi?": "Отправить требование?",
     "Talabnoma matni": "Текст требования",
     "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Доступна новая версия приложения. Пожалуйста, обновите приложение.",
+    "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring.": "Пароль изменён. Пожалуйста, войдите с новым паролем.",
+    "Sana va vaqt noto'g'ri": "Неверные дата и время",
+    "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Время на вашем устройстве расходится со временем сервера. Пожалуйста, включите автоматическую настройку даты и времени на устройстве.",
+    "Sozlamalarni ochish": "Открыть настройки",
+    "Qayta tekshirish": "Проверить снова",
     "Yangilash": "Обновить"
   }
 }

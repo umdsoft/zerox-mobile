@@ -465,7 +465,7 @@
     "eslatma": "Эслатма",
     "eslatma1": "Сизда қайтариш муддати яқинлашаётган қарз шартномалари мавжуд.",
     "Ushbu shartnoma bo'yicha qarzdorlik mavjud emas": "Ушбу шартнома бўйича қарздорлик мавжуд эмас.",
-    "Serverga ulanishda xatolik yuz berdi": "Сервер ва қурилмангиз ўртасида вақт тафовути мавжуд. Илтимос, қурилмангизда сана ва вақтни автоматик созлаш режимини ёқинг.",
+    "Serverga ulanishda xatolik yuz berdi": "Серверга уланишда хатолик юз берди",
     "time": "Илтимос телефонингиздаги вақтни текширинг ва қайта уриниб кўринг.",
     "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.": "Уринишлар сони чекланганлиги сабабли рўйхатдан ўтиш 1 соатга блокланди. Илтимос, кейинроқ уриниб кўринг.",
     "tez": "Тез орада ишга тушади.",
@@ -1498,6 +1498,7 @@
     "📍 Joriy joylashuvim": "📍 Жорий жойлашувим",
     "dollar": "доллар",
     "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.": "Илтимос, оммавий офертани охиригача ўқиб чиқинг ва тасдиқланг.",
+    "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.": "Офертани тасдиқлаб бўлмади. Қайта уриниб кўринг.",
     "Oxirigacha o‘qing": "Охиригача ўқинг",
     "To‘lov grafigi": "Тўлов графиги",
     "Bu shartnoma yopilgan — qaytarishni talab qilib bo‘lmaydi.": "Бу шартнома ёпилган — қайтаришни талаб қилиб бўлмайди.",
@@ -1740,6 +1741,11 @@
     "Talabnoma yuborilsinmi?": "Талабнома юборилсинми?",
     "Talabnoma matni": "Талабнома матни",
     "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Илованинг янги версияси мавжуд. Илтимос, иловани янгиланг.",
+    "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring.": "Парол ўзгартирилди. Илтимос, янги парол билан киринг.",
+    "Sana va vaqt noto'g'ri": "Сана ва вақт нотўғри",
+    "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Сервер ва қурилмангиз ўртасида вақт тафовути мавжуд. Илтимос, қурилмангизда сана ва вақтни автоматик созлаш режимини ёқинг.",
+    "Sozlamalarni ochish": "Созламаларни очиш",
+    "Qayta tekshirish": "Қайта текшириш",
     "Yangilash": "Янгилаш"
   }
 }

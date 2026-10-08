@@ -466,7 +466,7 @@
     "eslatma": "Reminder",
     "eslatma1": "You have loan agreements whose repayment due date is approaching.",
     "Ushbu shartnoma bo'yicha qarzdorlik mavjud emas": "There is no debt under this agreement.",
-    "Serverga ulanishda xatolik yuz berdi": "There is a time discrepancy between the server and your device. Please enable automatic date and time settings on your device.",
+    "Serverga ulanishda xatolik yuz berdi": "Error connecting to the server",
     "time": "Please check the time on your phone and try again.",
     "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.": "Due to the limit on the number of attempts, registration has been blocked for 1 hour. Please try again later.",
     "tez": "Coming soon.",
@@ -1498,6 +1498,7 @@
     "📍 Joriy joylashuvim": "📍 My current location",
     "dollar": "dollar",
     "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.": "Please read the public offer to the end and confirm.",
+    "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.": "Could not confirm the offer. Please try again.",
     "Oxirigacha o‘qing": "Read to the end",
     "To‘lov grafigi": "Payment schedule",
     "Bu shartnoma yopilgan — qaytarishni talab qilib bo‘lmaydi.": "This contract is closed — repayment cannot be demanded.",
@@ -1740,6 +1741,11 @@
     "Talabnoma yuborilsinmi?": "Send the demand notice?",
     "Talabnoma matni": "Demand notice text",
     "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "A new version of the app is available. Please update the app.",
+    "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring.": "Your password has been changed. Please sign in with your new password.",
+    "Sana va vaqt noto'g'ri": "Incorrect date and time",
+    "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Your device's time differs from the server time. Please turn on automatic date and time on your device.",
+    "Sozlamalarni ochish": "Open settings",
+    "Qayta tekshirish": "Check again",
     "Yangilash": "Update"
   }
 }

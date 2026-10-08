@@ -17,6 +17,7 @@
     "To‘lov havolasi": "To‘lov havolasi",
     "Qarz to‘landi": "Qarz to‘landi",
     "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.": "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.",
+    "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.": "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.",
     "Oxirigacha o‘qing": "Oxirigacha o‘qing",
     "Oferta hujjatini yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Oferta hujjatini yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.",
     "Batafsil": "Batafsil",
@@ -475,7 +476,7 @@
     "eslatma": "Eslatma",
     "eslatma1": "Sizda qaytarish muddati yaqinlashayotgan qarz shartnomalari mavjud.",
     "Ushbu shartnoma bo'yicha qarzdorlik mavjud emas": "Ushbu shartnoma bo‘yicha qarzdorlik mavjud emas.",
-    "Serverga ulanishda xatolik yuz berdi": "Server va qurilmangiz o‘rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.",
+    "Serverga ulanishda xatolik yuz berdi": "Serverga ulanishda xatolik yuz berdi",
     "time": "Iltimos telefoningizdagi vaqtni tekshiring va qayta urinib ko‘ring.",
     "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.": "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.",
     "tez": "Tez orada ishga tushadi.",
@@ -898,6 +899,11 @@
     "Talabnoma yuborilsinmi?": "Talabnoma yuborilsinmi?",
     "Talabnoma matni": "Talabnoma matni",
     "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.",
+    "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring.": "Parol o‘zgartirildi. Iltimos, yangi parol bilan kiring.",
+    "Sana va vaqt noto'g'ri": "Sana va vaqt noto‘g‘ri",
+    "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Server va qurilmangiz o‘rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.",
+    "Sozlamalarni ochish": "Sozlamalarni ochish",
+    "Qayta tekshirish": "Qayta tekshirish",
     "Yangilash": "Yangilash"
   }
 }

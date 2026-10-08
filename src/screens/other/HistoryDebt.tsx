@@ -105,12 +105,13 @@ const HistoryDebt = () => {
           {...LIST_PERF_PROPS}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => {
-            const name =
-              item.type === 2
-                ? titleCase(
-                    `${item?.last_name} ${item.first_name} ${item.middle_name}`,
-                  )
-                : titleCase(item?.company);
+            // 08.10 (4-band): FISH kesilardi ("Boltayev Bunyodbek Jum…"). Endi
+            // 1-qator — familiya + ism, 2-qator (kichikroq, kulrang) — sharif.
+            const isPerson = item.type === 2;
+            const name = isPerson
+              ? titleCase(`${item?.last_name || ''} ${item?.first_name || ''}`)
+              : titleCase(item?.company);
+            const sharif = isPerson ? titleCase(item?.middle_name) : '';
             return (
               <TouchableOpacity
                 key={item.id}
@@ -126,13 +127,24 @@ const HistoryDebt = () => {
                 <View style={styles.avatar}>
                   <UserIcon size={rs(22)} color={rd.color.primary} />
                 </View>
-                <Text
-                  style={styles.name}
-                  numberOfLines={1}
-                  allowFontScaling={false}
-                >
-                  {name}
-                </Text>
+                <View style={styles.nameBox}>
+                  <Text
+                    style={styles.name}
+                    numberOfLines={2}
+                    allowFontScaling={false}
+                  >
+                    {name}
+                  </Text>
+                  {!!sharif && (
+                    <Text
+                      style={styles.sharif}
+                      numberOfLines={2}
+                      allowFontScaling={false}
+                    >
+                      {sharif}
+                    </Text>
+                  )}
+                </View>
                 <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
               </TouchableOpacity>
             );
@@ -191,10 +203,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: rs(12),
   },
-  name: {
+  // 08.10: ism bloki (familiya+ism / sharif) — chevron bilan yonma-yon.
+  nameBox: {
     flex: 1,
+    marginRight: rs(8),
+  },
+  name: {
     fontSize: rs(15),
     fontFamily: rd.font.semibold,
     color: rd.color.text,
+  },
+  sharif: {
+    marginTop: rs(2),
+    fontSize: rs(13),
+    fontFamily: rd.font.medium,
+    color: rd.color.textSecondary,
   },
 });

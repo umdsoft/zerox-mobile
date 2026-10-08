@@ -24,8 +24,19 @@ import RdHeader from '../home/redesign/RdHeader';
 
 const Contract = () => {
   const [loading, setLoading] = useState(true);
-  const { url, title } = useRoute().params;
+  const { url: rawUrl, title } = useRoute().params;
   const user = useSelector(state => state.HomeReducer.user);
+  /**
+   * 08.10 (5-band): tasdiqlangan oferta PDF'iga server (pdf.zerox.uz) endi QR ostiga
+   * "Ommaviy oferta FISH tomonidan … da tasdiqlangan." muhrini qo'shadi. Oraliq
+   * (HTTP/ OS) keshdagi ESKI nusxa (muhrsiz) ko'rinmasligi uchun har ochilishda
+   * keshni chetlab o'tuvchi parametr qo'shiladi (server uni e'tiborsiz qoldiradi).
+   */
+  const [url] = useState(() =>
+    rawUrl
+      ? `${rawUrl}${String(rawUrl).includes('?') ? '&' : '?'}_ts=${Date.now()}`
+      : rawUrl,
+  );
 
   // SS-AUDIT (2026-09-25): progress faqat console'ga yozilardi — endi no-op.
   const downloadProgress = () => {};
@@ -122,6 +133,9 @@ const Contract = () => {
             source={{
               uri: url,
               method: 'GET',
+              // 08.10: react-native-pdf o'z keshini ishlatmasin (har safar serverdan).
+              cache: false,
+              headers: { 'Cache-Control': 'no-cache' },
             }}
             onLoadComplete={() => {
               setLoading(false);

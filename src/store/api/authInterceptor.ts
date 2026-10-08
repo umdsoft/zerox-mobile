@@ -22,6 +22,11 @@ import axios, { AxiosInstance } from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { forceLogout, isSessionRevokedError } from '../../helper/forceLogout';
+import {
+  OWN_PASSWORD_CHANGE_PATH,
+  isOwnPasswordChangeActive,
+  waitForOwnPasswordChange,
+} from '../../helper/passwordChangeSession';
 import { getDeviceUserAgent } from '../../helper/userAgent';
 import {
   installOfertaToastGuard,
@@ -45,6 +50,31 @@ export const onTokenRefreshed = (cb: Listener): (() => void) => {
   };
 };
 
+/**
+ * 08.10: yangi sessiya tokenlarini saqlash (login bilan bir xil MMKV kalitlari: 'token',
+ * 'refreshToken') va tinglovchilarni (socket) xabardor qilish. Refresh va parol
+ * o'zgartirishdan keyingi jim tiklash (helper/passwordChangeSession) shu yagona yo'ldan.
+ */
+export const applySessionTokens = (token: string, refreshToken?: string | null): void => {
+  storage.set('token', token);
+  if (refreshToken) storage.set('refreshToken', refreshToken);
+  listeners.forEach(l => {
+    try {
+      l(token);
+    } catch {}
+  });
+};
+
+const setAuthHeader = (config: any, token: string): void => {
+  // SS-AUDIT (2026-09-25): AxiosHeaders bo'lsa `set` — xom yozuv boshqa
+  // registrdagi ('authorization') kalit bilan IKKI header yuborishi mumkin edi.
+  if (config.headers && typeof config.headers.set === 'function') {
+    config.headers.set('Authorization', `Bearer ${token}`);
+  } else {
+    config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` };
+  }
+};
+
 // refreshToken bilan yangi access token olamiz. Muvaffaqiyatsiz bo'lsa null.
 export const refreshAccessToken = (): Promise<string | null> => {
   if (refreshPromise) return refreshPromise;
@@ -66,17 +96,11 @@ export const refreshAccessToken = (): Promise<string | null> => {
     .then(res => {
       const newToken = res?.data?.token as string | undefined;
       if (newToken) {
-        storage.set('token', newToken);
         // Backend refresh tokenni ROTATSIYA qiladi (har refresh'da yangi refreshToken).
         // Uni ham saqlaymiz -> 7 kunlik oyna "sirg'aluvchi" bo'ladi: foydalanuvchi
         // ilovadan 7 kundan kam tanaffus bilan foydalansa qayta login talab qilinmaydi.
         const newRefresh = res?.data?.refreshToken as string | undefined;
-        if (newRefresh) storage.set('refreshToken', newRefresh);
-        listeners.forEach(l => {
-          try {
-            l(newToken);
-          } catch {}
-        });
+        applySessionTokens(newToken, newRefresh);
         return newToken;
       }
       return null;
@@ -121,6 +145,20 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
       // backend 401 + code:'SESSION_REVOKED'. Refresh urinib o'tirmaymiz (u ham
       // shu sessiyada, baribir rad etiladi) — darhol majburiy chiqamiz.
       if (isSessionRevokedError(error)) {
+        // 08.10: foydalanuvchi O'Z parolini o'zgartirdi — backend barcha sessiyalarni
+        // (shu qurilmani ham) bekor qildi. "Boshqa qurilmadan" deb chiqarmaymiz: jim
+        // tiklash natijasini kutamiz va so'rovni yangi token bilan BIR MARTA qaytaramiz.
+        // Parol o'zgartirish so'rovining O'Z javobi kutmaydi (o'zini kutib qotib qolmasin).
+        const isOwnChangeRequest = String(original?.url || '').includes(OWN_PASSWORD_CHANGE_PATH);
+        if (isOwnPasswordChangeActive() && !isOwnChangeRequest) {
+          const fresh = await waitForOwnPasswordChange();
+          if (fresh && original && !original._pwRetry) {
+            original._pwRetry = true;
+            setAuthHeader(original, fresh);
+            return instance(original);
+          }
+          return Promise.reject(error);
+        }
         if (requestUsesCurrentToken(error)) forceLogout('revoked');
         return Promise.reject(error);
       }
@@ -135,13 +173,7 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
         original._retry = true;
         const newToken = await refreshAccessToken();
         if (newToken) {
-          // SS-AUDIT (2026-09-25): AxiosHeaders bo'lsa `set` — xom yozuv boshqa
-          // registrdagi ('authorization') kalit bilan IKKI header yuborishi mumkin edi.
-          if (original.headers && typeof original.headers.set === 'function') {
-            original.headers.set('Authorization', `Bearer ${newToken}`);
-          } else {
-            original.headers = { ...(original.headers || {}), Authorization: `Bearer ${newToken}` };
-          }
+          setAuthHeader(original, newToken);
           return instance(original);
         }
       }

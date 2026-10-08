@@ -466,7 +466,7 @@
     "eslatma": "Eslatpa",
     "eslatma1": "Sizde qaytarıw múddeti jaqınlasıp atırǵan qarız shártnamaları bar.",
     "Ushbu shartnoma bo'yicha qarzdorlik mavjud emas": "Bul shártnama boyınsha qarızdarlıq joq.",
-    "Serverga ulanishda xatolik yuz berdi": "Server hám qurılmańız arasında waqıt parqı bar. Iltimas, qurılmańızda sáne hám waqıttı avtomatik sazlaw rejimin qosıń.",
+    "Serverga ulanishda xatolik yuz berdi": "Serverge baylanısıwda qátelik júz berdi",
     "time": "Iltimas, telefonıńızdaǵı waqıttı tekseriń hám qayta urınıp kóriń.",
     "Urinishlar soni cheklanganligi sababli ro'yxatdan o'tish 1 soatga bloklandi. Iltimos, keyinroq urinib ko'ring.": "Urınıslar sanı sheklengeni sebepli dizimnen ótiw 1 saatqa bloklandı. Iltimas, keyinirek urınıp kóriń.",
     "tez": "Tez arada iske túsedi.",
@@ -1498,6 +1498,7 @@
     "📍 Joriy joylashuvim": "📍 Házirgi jaylasıwım",
     "dollar": "dollar",
     "Iltimos, ommaviy ofertani oxirigacha o‘qib chiqing va tasdiqlang.": "Ótinish, ommaviy offertanı aqırına shekem oqıp shıǵıń hám tastıyıqlań.",
+    "Ofertani tasdiqlab bo‘lmadi. Qayta urinib ko‘ring.": "Offertanı tastıyıqlap bolmadı. Qaytadan urınıp kóriń.",
     "Oxirigacha o‘qing": "Aqırına shekem oqıń",
     "To‘lov grafigi": "Tólem grafigi",
     "Bu shartnoma yopilgan — qaytarishni talab qilib bo‘lmaydi.": "Bul shártnama jabılǵan — qaytarıwdı talap etiwge bolmaydı.",
@@ -1740,6 +1741,11 @@
     "Talabnoma yuborilsinmi?": "Talapnama jiberilsin be?",
     "Talabnoma matni": "Talapnama teksti",
     "Ilovaning yangi versiyasi mavjud. Iltimos, ilovani yangilang.": "Qosımshanıń jańa versiyası bar. Iltimas, qosımshanı jańalań.",
+    "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring.": "Parol ózgertildi. Iltimas, jańa parol menen kiriń.",
+    "Sana va vaqt noto'g'ri": "Sáne hám waqıt nadurıs",
+    "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Server menen qurılmańız arasında waqıt parqı bar. Iltimas, qurılmańızda sáne hám waqıttı avtomat sazlaw rejimin qosıń.",
+    "Sozlamalarni ochish": "Sazlawlardı ashıw",
+    "Qayta tekshirish": "Qayta tekseriw",
     "Yangilash": "Jańalaw"
   }
 }

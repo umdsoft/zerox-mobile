@@ -25,6 +25,7 @@ import { getMe } from './src/store/api/home';
 import useAppStateListener from './src/hooks/useAppStateListener';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import ForceUpdateGate from './src/screens/components/ForceUpdateGate'; // SS-DEV (2026-10-04)
+import ClockSkewGate from './src/screens/components/ClockSkewGate'; // 08.10: vaqt tafovuti
 import DeviceInfo from 'react-native-device-info';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
@@ -262,6 +263,8 @@ const App: React.FC = () => {
         <NoInternet onChangeIntenet={onChangeIntenet} />
         {/* <UpdateModal /> */}
         <ExpirePassportModal />
+        {/* 08.10: server/qurilma vaqti tafovuti — bloklovchi oyna (login ekranlari ham). */}
+        <ClockSkewGate />
         {/* SS-DEV (2026-10-04): majburiy yangilanish — eng OXIRIDA (boshqa oynalar ustida). */}
         <ForceUpdateGate />
       </I18nextProvider>
