@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useRoute } from '@react-navigation/native';
 import DownloadIcon from '../../images/home/download.svg';
@@ -20,10 +20,21 @@ import { t } from 'i18next';
 import { useSelector } from 'react-redux';
 
 import { rd, rs } from '../../theme/rd';
+import { downloadOfertaPdf, removeOfertaFile } from '../../helper/ofertaPdf';
 import RdHeader from '../home/redesign/RdHeader';
 
 const Contract = () => {
   const [loading, setLoading] = useState(true);
+  /**
+   * 09.10 (2-band): PDF endi O'ZIMIZ yuklaymiz (timeout + HTTP holati/turi
+   * tekshiruvi + qayta urinish) — ilgari react-native-pdf URL'ni o'zi ochardi,
+   * `onError` yo'q edi va xato javobda (masalan uid=0 -> HTTP 400) spinner
+   * ABADIY aylanardi.
+   */
+  const [pdfPath, setPdfPath] = useState<string | null>(null);
+  const [loadErr, setLoadErr] = useState(false);
+  const pathRef = useRef<string | null>(null);
+  const cancelRef = useRef(false);
   const { url: rawUrl, title } = useRoute().params;
   const user = useSelector(state => state.HomeReducer.user);
   /**
@@ -37,6 +48,34 @@ const Contract = () => {
       ? `${rawUrl}${String(rawUrl).includes('?') ? '&' : '?'}_ts=${Date.now()}`
       : rawUrl,
   );
+
+  const load = useCallback(async () => {
+    cancelRef.current = false;
+    setLoadErr(false);
+    setLoading(true);
+    const path = url ? await downloadOfertaPdf(url, () => cancelRef.current) : null;
+    if (cancelRef.current) {
+      removeOfertaFile(path);
+      return;
+    }
+    if (!path) {
+      setLoading(false);
+      setLoadErr(true);
+      return;
+    }
+    removeOfertaFile(pathRef.current);
+    pathRef.current = path;
+    setPdfPath(path);
+  }, [url]);
+
+  useEffect(() => {
+    load();
+    return () => {
+      cancelRef.current = true;
+      removeOfertaFile(pathRef.current);
+      pathRef.current = null;
+    };
+  }, [load]);
 
   // SS-AUDIT (2026-09-25): progress faqat console'ga yozilardi — endi no-op.
   const downloadProgress = () => {};
@@ -119,29 +158,46 @@ const Contract = () => {
         </TouchableOpacity>
 
         <View style={styles.pdfCard}>
-          {loading && (
+          {loading && !loadErr && (
             <View style={styles.loaderOverlay}>
               <ActivityIndicator size={'large'} color={rd.color.primary} />
             </View>
           )}
-          <Pdf
-            trustAllCerts={false}
-            enablePaging={true}
-            renderActivityIndicator={() => (
-              <ActivityIndicator size={'large'} color={rd.color.primary} />
-            )}
-            source={{
-              uri: url,
-              method: 'GET',
-              // 08.10: react-native-pdf o'z keshini ishlatmasin (har safar serverdan).
-              cache: false,
-              headers: { 'Cache-Control': 'no-cache' },
-            }}
-            onLoadComplete={() => {
-              setLoading(false);
-            }}
-            style={styles.pdf}
-          />
+          {loadErr ? (
+            // 09.10: xato — abadiy spinner o'rniga tushunarli xabar va qayta urinish.
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText} allowFontScaling={false}>
+                {t('Oferta hujjatini yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.')}
+              </Text>
+              <TouchableOpacity
+                onPress={load}
+                activeOpacity={0.85}
+                style={styles.retryBtn}
+              >
+                <Text style={styles.retryText} allowFontScaling={false}>
+                  {t('Qayta urinish')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : pdfPath ? (
+            <Pdf
+              trustAllCerts={false}
+              enablePaging={true}
+              renderActivityIndicator={() => (
+                <ActivityIndicator size={'large'} color={rd.color.primary} />
+              )}
+              // Fayl allaqachon tekshirilib yuklangan (keshda) — tarmoq yo'q.
+              source={{ uri: `file://${pdfPath}`, cache: false }}
+              onLoadComplete={() => {
+                setLoading(false);
+              }}
+              onError={() => {
+                setLoading(false);
+                setLoadErr(true);
+              }}
+              style={styles.pdf}
+            />
+          ) : null}
         </View>
       </View>
     </View>
@@ -193,6 +249,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: rd.color.border,
     overflow: 'hidden',
+  },
+  errorBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: rs(24),
+    gap: rs(14),
+  },
+  errorText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    lineHeight: rs(19),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    height: rs(44),
+    paddingHorizontal: rs(26),
+    borderRadius: rd.radius.pill,
+    backgroundColor: rd.color.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryText: {
+    color: rd.color.onPrimary,
+    fontSize: rs(14),
+    fontFamily: rd.font.semibold,
   },
   pdf: {
     flex: 1,
