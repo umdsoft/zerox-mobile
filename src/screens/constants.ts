@@ -7,8 +7,8 @@ import { t } from 'i18next';
 //   Test:        https://tb.zerox.uz
 //   Production:  https://app.zerox.uz
 // Server almashtirish uchun FAQAT shu HOST qatorini o'zgartiring.
-const HOST = 'https://tb.zerox.uz';
-// const HOST = 'https://app.zerox.uz'; // PRODUCTION
+const HOST = 'https://app.zerox.uz';
+// const HOST = 'https://tb.zerox.uz'; // TEST
 
 const URL = `${HOST}/api/v1`;
 export const SOCKET_URL = HOST;
