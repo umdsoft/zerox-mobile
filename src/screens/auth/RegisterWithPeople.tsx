@@ -16,7 +16,7 @@ import Loading from '../components/Loading';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
-import { URL } from '../constants';
+import { SUPPORT_TG_URL, URL } from '../constants';
 import { storage } from '../../store/api/token/getToken';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
@@ -274,8 +274,8 @@ const RegisterWithPeople = () => {
             <TouchableOpacity
               style={styles.supportBtn}
               onPress={() => {
-                // 03.10: bot nomi — @ZeroXuzbot (sayt bilan bir xil).
-                Linking.openURL('https://t.me/ZeroXuzbot');
+                // 10.10: qo'llab-quvvatlash — @zeroxuz_bot (funksiyalar boti @ZeroXuzbot emas).
+                Linking.openURL(SUPPORT_TG_URL);
               }}
               activeOpacity={0.6}
             >

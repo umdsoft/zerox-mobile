@@ -62,6 +62,7 @@ import ExpirePassport from './notifications/all/Expire_Passport';
 import GapTaklif from './notifications/all/GapTaklif';
 // SS20: Shaxsiy moliya faolsizlik eslatmasi (3 kun kiritilmadi).
 import MoliyaEslatma from './notifications/all/MoliyaEslatma';
+import QarzDaftariEslatma from './notifications/all/QarzDaftariEslatma'; // 10.10
 // SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
 // ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
 import Shikoyat from './notifications/all/Shikoyat';
@@ -889,6 +890,9 @@ const Bildrishnoma = () => {
       // SS20: Shaxsiy moliya — 3 kun daromad/xarajat kiritilmadi.
       case 41:
         return <MoliyaEslatma item={item} okay={okay} navigation={navigation} />;
+      // 10.10: Qarz daftari — belgilangan vaqtda qarz kiritilmagan (do'kon eslatmasi).
+      case 44:
+        return <QarzDaftariEslatma item={item} okay={okay} navigation={navigation} />;
       // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
       case 42:
       case 43:

@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import React, { useMemo, useState } from 'react';
+import { SUPPORT_TG_URL } from '../constants';
 import { useNavigation } from '@react-navigation/native';
 import { MaskedTextInput } from 'react-native-advanced-input-mask';
 
@@ -393,7 +394,7 @@ const LoginWithPhone = () => {
               kirishда muammo bo'lsa Telegram botga murojaat. */}
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => Linking.openURL('https://t.me/ZeroXuzbot') /* 03.10: bot nomi — @ZeroXuzbot */}
+            onPress={() => Linking.openURL(SUPPORT_TG_URL) /* 10.10: qo'llab-quvvatlash — @zeroxuz_bot */}
             style={styles.supportBtn}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >

@@ -38,16 +38,17 @@ import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDown,
+  BellIcon,
   CheckIcon,
   ChevronRight,
   IdCardIcon,
-  InfoIcon,
   LocationIcon,
   StorefrontIcon,
   UsersIcon,
   WarningIcon,
 } from '../redesign/icons';
 import RegionPickerModal from './RegionPickerModal';
+import { repeatLabel } from './reminderDays';
 
 const BLUE = '#2f6fed';
 const VIOLET = '#5a4fe4';
@@ -80,6 +81,7 @@ const QarzDaftariFaoliyatEdit = () => {
   const [errorMsg, setErrorMsg] = React.useState('');
   const [cardLast4, setCardLast4] = React.useState('');
   const [staffCount, setStaffCount] = React.useState<number | null>(null);
+  const [reminder, setReminder] = React.useState<{ enabled: boolean; time: string; days: number[] } | null>(null);
   const [picker, setPicker] = React.useState<null | 'region' | 'district'>(null);
 
   const current = snapOf(nomi, region, district);
@@ -120,6 +122,13 @@ const QarzDaftariFaoliyatEdit = () => {
       setStaffCount(Array.isArray(rows) ? rows.length : 0);
     } catch {
       setStaffCount(null);
+    }
+    // 10.10: qarz kiritish eslatmasi holati (karta ustida ko'rsatiladi).
+    try {
+      const r = await axios.get(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`, authHeaders());
+      if (r.data?.data) setReminder(r.data.data);
+    } catch {
+      setReminder(null);
     }
   }, [faoliyatId, t]);
 
@@ -233,7 +242,7 @@ const QarzDaftariFaoliyatEdit = () => {
     return unsub;
   }, [navigation, settle]);
 
-  const goManage = async (screen: 'QarzDaftariXodimlar' | 'QarzDaftariKarta') => {
+  const goManage = async (screen: 'QarzDaftariXodimlar' | 'QarzDaftariKarta' | 'QarzDaftariEslatma') => {
     if (!(await settle())) return;
     navigation.navigate(screen, { faoliyat_id: faoliyatId, faoliyat_nomi: stateRef.current.saved.nomi || nomi });
   };
@@ -251,11 +260,9 @@ const QarzDaftariFaoliyatEdit = () => {
     }
   })();
 
-  const notes = [
-    t('Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.'),
-    t('Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.'),
-    t('Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.'),
-  ];
+  const reminderStatus = reminder?.enabled
+    ? `${t('Yoqilgan')} · ${reminder.time} · ${repeatLabel(reminder.days || [], t)}`
+    : t('O‘chirilgan');
 
   if (loading) return <Loading />;
 
@@ -387,21 +394,23 @@ const QarzDaftariFaoliyatEdit = () => {
             </TouchableOpacity>
           </View>
 
-          {/* 4) Eslatma */}
-          <View style={styles.note}>
-            <View style={styles.noteHead}>
-              <View style={styles.noteIcon}>
-                <InfoIcon size={rs(15)} color="#b45309" />
-              </View>
-              <Text style={styles.noteTitle}>{t('Eslatma')}</Text>
+          {/* 4) Eslatma — qarz kiritishni eslatish (10.10, 2-rasm): bosilganda sozlama ekrani */}
+          <TouchableOpacity activeOpacity={0.8} style={[styles.card, styles.remCard]} onPress={() => goManage('QarzDaftariEslatma')}>
+            <View style={[styles.tileIcon, { backgroundColor: '#fef3c7' }]}>
+              <BellIcon size={rs(20)} color="#b45309" />
             </View>
-            {notes.map(n => (
-              <View key={n} style={styles.noteRow}>
-                <View style={styles.noteBullet} />
-                <Text style={styles.noteText}>{n}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{t('Eslatma')}</Text>
+              <Text style={styles.cardSub} numberOfLines={2}>{t('Belgilangan vaqtda qarz kiritishni eslatish')}</Text>
+              <View style={styles.tileStatus}>
+                <View style={[styles.dot, { backgroundColor: reminder?.enabled ? '#d97706' : rd.color.border }]} />
+                <Text style={[styles.tileStatusText, { color: reminder?.enabled ? '#b45309' : rd.color.textTertiary }]} numberOfLines={2}>
+                  {reminder ? reminderStatus : '…'}
+                </Text>
               </View>
-            ))}
-          </View>
+            </View>
+            <ChevronRight size={rs(16)} color={rd.color.textTertiary} />
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -499,25 +508,5 @@ const styles = StyleSheet.create({
   tileStatus: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(6), marginTop: rs(12) },
   dot: { width: rs(6), height: rs(6), borderRadius: rs(3), marginTop: rs(5) },
   tileStatusText: { flex: 1, fontFamily: rd.font.medium, fontSize: rs(11) },
-  note: {
-    backgroundColor: '#fffbeb',
-    borderRadius: rs(20),
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    padding: rs(16),
-    gap: rs(8),
-  },
-  noteHead: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginBottom: rs(2) },
-  noteIcon: {
-    width: rs(26),
-    height: rs(26),
-    borderRadius: rs(13),
-    backgroundColor: '#fef3c7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noteTitle: { fontFamily: rd.font.semibold, fontSize: rs(14), color: '#78350f' },
-  noteRow: { flexDirection: 'row', gap: rs(8), paddingLeft: rs(4) },
-  noteBullet: { width: rs(5), height: rs(5), borderRadius: rs(3), backgroundColor: '#f59e0b', marginTop: rs(7) },
-  noteText: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(12), lineHeight: rs(18), color: '#78350f' },
+  remCard: { flexDirection: 'row', alignItems: 'center', gap: rs(12) },
 });

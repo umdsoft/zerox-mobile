@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SUPPORT_TG_URL } from '../constants';
 import { normalize, style } from '../../theme/style';
 
 import {
@@ -422,8 +423,8 @@ const SetLocalPassword = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {
-              // 03.10: bot nomi — @ZeroXuzbot (sayt bilan bir xil).
-              Linking.openURL('https://t.me/ZeroXuzbot');
+              // 10.10: qo'llab-quvvatlash — @zeroxuz_bot (funksiyalar boti @ZeroXuzbot emas).
+              Linking.openURL(SUPPORT_TG_URL);
             }}
           >
             <MainText

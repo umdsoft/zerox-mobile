@@ -116,6 +116,7 @@ import QarzDaftariQarzlar from '../screens/home/modules/QarzDaftariQarzlar';
 import QarzDaftariMijozlar from '../screens/home/modules/QarzDaftariMijozlar';
 import QarzDaftariXodimlar from '../screens/home/modules/QarzDaftariXodimlar';
 import QarzDaftariKarta from '../screens/home/modules/QarzDaftariKarta';
+import QarzDaftariEslatmaScreen from '../screens/home/modules/QarzDaftariEslatma'; // 10.10
 import FinancePayoutCard from '../screens/home/modules/FinancePayoutCard';
 import QarzDaftariXodimYangi from '../screens/home/modules/QarzDaftariXodimYangi';
 import QarzDaftariMijozYangi from '../screens/home/modules/QarzDaftariMijozYangi';
@@ -318,6 +319,7 @@ const AllNavigators = [
   { name: 'QarzDaftariMijozlar', component: QarzDaftariMijozlar },
   { name: 'QarzDaftariXodimlar', component: QarzDaftariXodimlar },
   { name: 'QarzDaftariKarta', component: QarzDaftariKarta },
+  { name: 'QarzDaftariEslatma', component: QarzDaftariEslatmaScreen }, // 10.10: qarz kiritish eslatmasi
   { name: 'FinancePayoutCard', component: FinancePayoutCard },
   { name: 'QarzDaftariXodimYangi', component: QarzDaftariXodimYangi },
   { name: 'QarzDaftariMijozYangi', component: QarzDaftariMijozYangi },

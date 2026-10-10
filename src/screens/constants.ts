@@ -17,6 +17,9 @@ export const SOCKET_URL = HOST;
 // Ilovadagi sayt havolalari (masalan Maxfiylik siyosati) shu orqali quriladi: ilgari doim
 // zerox.uz (prod) edi, u yerda /privacy-policy hali eski oferta matni bo'lgani uchun
 // "Maxfiylik siyosati" bosilganda oferta ochilardi.
+// 10.10: QO'LLAB-QUVVATLASH boti — @zeroxuz_bot (faqat yordam uchun). Funksiyalar boti (shartnoma,
+// qarz daftari, shaxsiy qarz, moliya) — @ZeroXuzbot; @Zeroxlbot hech qayerda ishlatilmaydi.
+export const SUPPORT_TG_URL = 'https://t.me/zeroxuz_bot';
 export const WEB_URL = HOST.includes('tb.zerox.uz') ? 'https://test.zerox.uz' : 'https://zerox.uz';
 
 // PDF xizmati (pdf.zerox.uz) HAM prod, HAM test'ga xizmat qiladi, lekin har biri

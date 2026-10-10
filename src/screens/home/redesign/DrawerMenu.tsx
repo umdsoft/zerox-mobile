@@ -20,6 +20,7 @@ import i18n from '../../../i18n';
 import { Linking, Platform, Share } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '../../../store/reducers/HomeReducer';
+import { SUPPORT_TG_URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import { sortText } from '../../components/StatisticCard';
 // Eski ilovadagi logotip + shior — shior SVG'ning O'ZIDA, tilga qarab
@@ -82,6 +83,7 @@ type Item = {
   gated?: boolean; // is_active tekshiruvi + {user} param (aks holda modal)
   needsUser?: boolean; // {user} param kerak, lekin is_active gate'siz (har doim ochiladi)
   action?: 'share'; // navigatsiya emas, amal (masalan ilovani ulashish)
+  url?: string; // 10.10: tashqi havola (masalan qo'llab-quvvatlash boti) — ekran emas
   active?: boolean;
   soon?: boolean; // "Tez kunda" — bosilmaydi, o'ngda badge
 };
@@ -100,7 +102,8 @@ const MENU: Item[] = [
   // So'rov SS6: "Ulangan qurilmalar" chap menyudan OLINDI — endi shaxsiy
   // kabinet > Xavfsizlik bo'limida (Security.tsx).
   { key: 'share', label: 'Ilovani ulashish', Icon: ShareIcon, action: 'share' },
-  { key: 'support', label: "Qo'llab-quvvatlash xizmati", Icon: MessageIcon, route: 'Support' },
+  // 10.10: oraliq "Qo'llab-quvvatlash" sahifasisiz — to'g'ridan-to'g'ri @zeroxuz_bot.
+  { key: 'support', label: "Qo'llab-quvvatlash xizmati", Icon: MessageIcon, url: SUPPORT_TG_URL },
   // Tariflar `Types` ekrani tarif PDF'ini (pdf.zerox.uz/tarif_<til>.pdf) ochadi.
   { key: 'tariflar', label: 'Tariflar', Icon: CoinIcon, route: 'Types' },
   { key: 'about', label: 'Ilova haqida', Icon: InfoIcon, route: 'AboutMe' },
@@ -145,6 +148,10 @@ const DrawerMenu = () => {
     // Amal (navigatsiya emas) — masalan ilovani ulashish.
     if (item.action === 'share') {
       onShare();
+      return;
+    }
+    if (item.url) {
+      Linking.openURL(item.url);
       return;
     }
     // Pastki tab (masalan Statistika) — BottomTabNavigator ichidagi ekranga o'tamiz.
