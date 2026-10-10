@@ -904,6 +904,21 @@
     "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Server va qurilmangiz o‘rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.",
     "Sozlamalarni ochish": "Sozlamalarni ochish",
     "Qayta tekshirish": "Qayta tekshirish",
-    "Yangilash": "Yangilash"
+    "Yangilash": "Yangilash",
+    "Do‘kon rekvizitlari": "Do‘kon rekvizitlari",
+    "Nomi va joylashgan manzili": "Nomi va joylashgan manzili",
+    "Saqlangan": "Saqlangan",
+    "O‘zgartirilmoqda": "O‘zgartirilmoqda",
+    "Saqlanmadi": "Saqlanmadi",
+    "Saqlab bo‘lmadi": "Saqlab bo‘lmadi",
+    "{{n}} ta xodim": "{{n}} ta xodim",
+    "Hali xodim qo‘shilmagan": "Hali xodim qo‘shilmagan",
+    "Ulangan": "Ulangan",
+    "Karta ulanmagan": "Karta ulanmagan",
+    "Eslatma": "Eslatma",
+    "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.": "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.",
+    "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.": "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.",
+    "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.": "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.",
+    "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?": "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?"
   }
 }
