@@ -124,7 +124,8 @@ const buildTalabPreview = (q: QarzTalabTarget, card: DemandCard | null): string 
   if (num && tg) {
     return `${store}dagi ${a} ${cw} qarzni qaytarishingiz talab qilinmoqda. Pulni ${num} ga o'tkazib, ${tg} ga telegramda xabar yuboring.`;
   }
-  return `Sizning ${store}dan bo'lgan ${a} ${cw} qarzingizni qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring`;
+  // 10.10 (09.10 hujjati): "{Do'kon}dagi ... qarzingizni bugun qaytarish talab qilinmoqda."
+  return `Sizning ${store}dagi ${a} ${cw} qarzingizni bugun qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring.`;
 };
 
 /**
