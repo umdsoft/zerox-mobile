@@ -1746,6 +1746,21 @@
     "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Your device's time differs from the server time. Please turn on automatic date and time on your device.",
     "Sozlamalarni ochish": "Open settings",
     "Qayta tekshirish": "Check again",
-    "Yangilash": "Update"
+    "Yangilash": "Update",
+    "Do‘kon rekvizitlari": "Shop details",
+    "Nomi va joylashgan manzili": "Name and location",
+    "Saqlangan": "Saved",
+    "O‘zgartirilmoqda": "Editing",
+    "Saqlanmadi": "Not saved",
+    "Saqlab bo‘lmadi": "Could not save",
+    "{{n}} ta xodim": "{{n}} employee(s)",
+    "Hali xodim qo‘shilmagan": "No employees yet",
+    "Ulangan": "Linked",
+    "Karta ulanmagan": "No card linked",
+    "Eslatma": "Note",
+    "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.": "The shop name appears in SMS messages sent to borrowers — that is why only Latin letters are allowed.",
+    "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.": "If a card is linked, the due-date and demand SMS messages include the card number and the Telegram number.",
+    "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.": "Changes to the shop details are saved automatically.",
+    "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?": "Changes to the shop details were not saved. Leave anyway?"
   }
 }

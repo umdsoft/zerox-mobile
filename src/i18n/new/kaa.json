@@ -1746,6 +1746,21 @@
     "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Server menen qurılmańız arasında waqıt parqı bar. Iltimas, qurılmańızda sáne hám waqıttı avtomat sazlaw rejimin qosıń.",
     "Sozlamalarni ochish": "Sazlawlardı ashıw",
     "Qayta tekshirish": "Qayta tekseriw",
-    "Yangilash": "Jańalaw"
+    "Yangilash": "Jańalaw",
+    "Do‘kon rekvizitlari": "Dúkan rekvizitleri",
+    "Nomi va joylashgan manzili": "Atı hám mánzili",
+    "Saqlangan": "Saqlanǵan",
+    "O‘zgartirilmoqda": "Ózgertilmekte",
+    "Saqlanmadi": "Saqlanbadı",
+    "Saqlab bo‘lmadi": "Saqlap bolmadı",
+    "{{n}} ta xodim": "{{n}} xızmetker",
+    "Hali xodim qo‘shilmagan": "Ele xızmetker qosılmaǵan",
+    "Ulangan": "Jalǵanǵan",
+    "Karta ulanmagan": "Karta jalǵanbaǵan",
+    "Eslatma": "Eskertpe",
+    "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.": "Dúkan atı qarız alıwshılarǵa jiberiletuǵın SMS xabarlarda kórsetiledi — sonlıqtan tek latın háripleri qollanıladı.",
+    "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.": "Karta jalǵanǵan bolsa, qarızdı qaytarıw kúni hám talap SMS xabarlarında karta nomeri hám Telegram nomeri kórsetiledi.",
+    "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.": "Rekvizitlerdegi ózgerisler avtomat túrde saqlanadı.",
+    "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?": "Dúkan rekvizitlerindegi ózgerisler saqlanbadı. Bári bir shıǵılsın ba?"
   }
 }

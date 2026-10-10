@@ -1747,6 +1747,21 @@
     "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Время на вашем устройстве расходится со временем сервера. Пожалуйста, включите автоматическую настройку даты и времени на устройстве.",
     "Sozlamalarni ochish": "Открыть настройки",
     "Qayta tekshirish": "Проверить снова",
-    "Yangilash": "Обновить"
+    "Yangilash": "Обновить",
+    "Do‘kon rekvizitlari": "Реквизиты магазина",
+    "Nomi va joylashgan manzili": "Название и адрес",
+    "Saqlangan": "Сохранено",
+    "O‘zgartirilmoqda": "Изменяется",
+    "Saqlanmadi": "Не сохранено",
+    "Saqlab bo‘lmadi": "Не удалось сохранить",
+    "{{n}} ta xodim": "Сотрудников: {{n}}",
+    "Hali xodim qo‘shilmagan": "Сотрудников пока нет",
+    "Ulangan": "Привязана",
+    "Karta ulanmagan": "Карта не привязана",
+    "Eslatma": "Примечание",
+    "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.": "Название магазина указывается в SMS, которые получают должники, — поэтому используются только латинские буквы.",
+    "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.": "Если карта привязана, в SMS о сроке возврата и о требовании указываются номер карты и номер Telegram.",
+    "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.": "Изменения реквизитов сохраняются автоматически.",
+    "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?": "Изменения реквизитов магазина не сохранены. Всё равно выйти?"
   }
 }

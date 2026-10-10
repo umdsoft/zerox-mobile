@@ -1746,6 +1746,21 @@
     "Server va qurilmangiz o'rtasida vaqt tafovuti mavjud. Iltimos, qurilmangizda sana va vaqtni avtomatik sozlash rejimini yoqing.": "Сервер ва қурилмангиз ўртасида вақт тафовути мавжуд. Илтимос, қурилмангизда сана ва вақтни автоматик созлаш режимини ёқинг.",
     "Sozlamalarni ochish": "Созламаларни очиш",
     "Qayta tekshirish": "Қайта текшириш",
-    "Yangilash": "Янгилаш"
+    "Yangilash": "Янгилаш",
+    "Do‘kon rekvizitlari": "Дўкон реквизитлари",
+    "Nomi va joylashgan manzili": "Номи ва жойлашган манзили",
+    "Saqlangan": "Сақланган",
+    "O‘zgartirilmoqda": "Ўзгартирилмоқда",
+    "Saqlanmadi": "Сақланмади",
+    "Saqlab bo‘lmadi": "Сақлаб бўлмади",
+    "{{n}} ta xodim": "{{n}} та ходим",
+    "Hali xodim qo‘shilmagan": "Ҳали ходим қўшилмаган",
+    "Ulangan": "Уланган",
+    "Karta ulanmagan": "Карта уланмаган",
+    "Eslatma": "Эслатма",
+    "Do‘kon nomi qarz oluvchilarga yuboriladigan SMS xabarlarda ko‘rsatiladi — shuning uchun faqat lotin harflari ishlatiladi.": "Дўкон номи қарз олувчиларга юбориладиган SMS хабарларда кўрсатилади — шунинг учун фақат лотин ҳарфлари ишлатилади.",
+    "Karta ulangan bo‘lsa, qarzni qaytarish kuni va talab SMS xabarlarida karta raqami hamda Telegram raqami ko‘rsatiladi.": "Карта уланган бўлса, қарзни қайтариш куни ва талаб SMS хабарларида карта рақами ҳамда Telegram рақами кўрсатилади.",
+    "Rekvizitlardagi o‘zgarishlar avtomatik saqlanadi.": "Реквизитлардаги ўзгаришлар автоматик сақланади.",
+    "Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?": "Дўкон реквизитларидаги ўзгаришлар сақланмади. Барибир чиқилсинми?"
   }
 }
