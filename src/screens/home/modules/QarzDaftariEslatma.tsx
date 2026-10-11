@@ -8,6 +8,10 @@
  * GET/PUT /qarz-daftari/savdo-faoliyat/:id/eslatma  { enabled, time:'HH:MM', days:[0..6] } (0 = Yakshanba).
  * O'zgarishlar AVTOMATIK saqlanadi (do'konni tahrirlash ekrani bilan bir xil); chiqishda kutib turgan
  * saqlash yakunlanadi.
+ *
+ * 11.10 ("Yangi mobil xatolar 11.10", 6-rasm): xuddi shu ekran SHAXSIY QARZ eslatmasi uchun ham
+ * (marshrut `FinanceDebtEslatma`): GET/PUT /finance/debt-reminder; eslatma faqat so'nggi 2 hafta ichida
+ * bitta ham shaxsiy qarz kiritilmagan bo'lsa yuboriladi.
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
@@ -46,6 +50,8 @@ const QarzDaftariEslatma = () => {
   const { t } = useTranslation();
   const faoliyatId = route.params?.faoliyat_id;
   const shopName = route.params?.faoliyat_nomi || '';
+  const personal = route.name === 'FinanceDebtEslatma';
+  const endpoint = personal ? `${URL}/finance/debt-reminder` : `${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`;
 
   const [loading, setLoading] = React.useState(true);
   const [form, setForm] = React.useState<Settings>({ enabled: false, time: '21:00', days: [0, 1, 2, 3, 4, 5, 6] });
@@ -63,7 +69,7 @@ const QarzDaftariEslatma = () => {
   React.useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`, authHeaders());
+        const res = await axios.get(endpoint, authHeaders());
         const d = res.data?.data;
         if (d) {
           const s = { enabled: !!d.enabled, time: String(d.time || '21:00'), days: Array.isArray(d.days) ? d.days : [] };
@@ -76,12 +82,12 @@ const QarzDaftariEslatma = () => {
         setLoading(false);
       }
     })();
-  }, [faoliyatId, t]);
+  }, [endpoint, t]);
 
   const save = React.useCallback(async (s: Settings): Promise<boolean> => {
     setStatus('saving');
     try {
-      const res = await axios.put(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`, s, authHeaders());
+      const res = await axios.put(endpoint, s, authHeaders());
       if (!res.data?.success) throw { response: res };
       setSaved(s);
       setStatus('saved');
@@ -91,7 +97,7 @@ const QarzDaftariEslatma = () => {
       Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || t('Xatolik') } });
       return false;
     }
-  }, [faoliyatId, t]);
+  }, [endpoint, t]);
 
   const flush = React.useCallback(async (): Promise<boolean> => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -147,7 +153,9 @@ const QarzDaftariEslatma = () => {
             <BellIcon size={rs(26)} color={BLUE} />
           </View>
           <Text style={styles.heroText}>
-            {t('Belgilangan kunlarda va vaqtda «{{shop}}» do‘koniga qarzlarni kiritishni eslatamiz. Eslatma faqat o‘sha kuni bitta ham qarz kiritilmagan bo‘lsa yuboriladi.', { shop: shopName })}
+            {personal
+              ? t('Belgilangan kunlarda va vaqtda shaxsiy qarzlaringizni kiritishni eslatamiz. Eslatma faqat so‘nggi 2 hafta ichida bitta ham shaxsiy qarz kiritilmagan bo‘lsa yuboriladi.')
+              : t('Belgilangan kunlarda va vaqtda «{{shop}}» do‘koniga qarzlarni kiritishni eslatamiz. Eslatma faqat o‘sha kuni bitta ham qarz kiritilmagan bo‘lsa yuboriladi.', { shop: shopName })}
           </Text>
         </View>
 

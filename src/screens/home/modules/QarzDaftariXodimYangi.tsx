@@ -88,13 +88,17 @@ const QarzDaftariXodimYangi = () => {
    * kontaktlaridan tanlash. Tanlangach raqam +998 formatiga keltiriladi va
    * F.I.Sh bo'sh bo'lsa kontakt nomi bilan to'ldiriladi (do'kon egasi keyin
    * tahrirlashi mumkin). Mijoz formasidagi bilan AYNAN bir xil oqim.
+   *
+   * 11.10 ("Yangi mobil xatolar 11.10", 7-rasm): noto'g'ri kontakt tanlanib, so'ng TO'G'RI kontakt qayta
+   * tanlansa F.I.Sh birinchi kontakt nomida qolib ketardi (faqat bo'sh bo'lganda to'ldirilardi). Endi har
+   * yangi tanlovda F.I.Sh tanlangan kontakt nomi bilan yangilanadi (nomsiz kontakt — F.I.Sh o'zgarmaydi).
    */
   const canPickContact = isContactPickerAvailable();
   const onPickContact = async () => {
     const picked = await pickContact();
     if (!picked) return; // bekor qilindi
     if (picked.phone9) setPhone(picked.phone9);
-    if (!fish.trim() && picked.name) setFish(picked.name);
+    if (picked.name) setFish(picked.name);
     if (picked.phone9 && picked.phone9.length !== 9) {
       Toast.show({
         type: 'error2',

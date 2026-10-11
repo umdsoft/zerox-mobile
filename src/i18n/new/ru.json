@@ -1779,6 +1779,12 @@
     "Yoqilgan": "Включено",
     "Qarz daftari eslatmasi": "Напоминание: книга долгов",
     "«{{shop}}» do‘koni uchun bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "Сегодня в магазине «{{shop}}» ещё не внесено ни одного долга. Внесите сегодняшние долги.",
-    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "Сегодня ещё не внесено ни одного долга. Внесите сегодняшние долги."
+    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "Сегодня ещё не внесено ни одного долга. Внесите сегодняшние долги.",
+    "Belgilangan kunlarda va vaqtda shaxsiy qarzlaringizni kiritishni eslatamiz. Eslatma faqat so‘nggi 2 hafta ichida bitta ham shaxsiy qarz kiritilmagan bo‘lsa yuboriladi.": "В выбранные дни и время мы напомним внести ваши личные долги. Напоминание отправляется, только если за последние 2 недели не внесено ни одного личного долга.",
+    "Belgilangan vaqtda shaxsiy qarz kiritishni eslatish": "Напоминать о внесении личных долгов в выбранное время",
+    "Shaxsiy qarz eslatmasi": "Напоминание: личные долги",
+    "So‘nggi 2 hafta ichida shaxsiy qarz kiritilmadi. Bergan va olgan qarzlaringizni kiritib qo‘ying.": "За последние 2 недели не внесено ни одного личного долга. Внесите выданные и взятые долги.",
+    "Manzil kiritilmagan": "Адрес не указан",
+    "Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Не удалось загрузить инструкцию. Проверьте подключение к интернету и попробуйте снова."
   }
 }

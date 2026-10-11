@@ -1,11 +1,16 @@
-import {
-  StatusBar,
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  Platform,
-} from 'react-native';
-import React, { useState } from 'react';
+/**
+ * UseTerm.tsx — "Foydalanish yo'riqnomasi" (menyu).
+ *
+ * 11.10 ("Yangi mobil xatolar 11.10", 4-rasm): menyudan kirilganda yo'riqnoma OCHILMASDI — spinner abadiy.
+ * ILDIZ: PDF'ni react-native-pdf o'zi tarmoqdan yuklardi (pdf.zerox.uz/yoriqnoma.pdf, 3.6 MB, timeout yo'q);
+ * yuklash yiqilsa `onError` faqat console'ga yozardi, `loading` hech qachon false bo'lmasdi.
+ * Endi: (1) YANGI yo'riqnoma (qarz shartnomasi, qarz daftari, shaxsiy qarz, shaxsiy moliya va boshqalar) —
+ * GUIDE_PDF_URL; (2) PDF'ni o'zimiz yuklaymiz (helper/ofertaPdf: timeout + holat/tur tekshiruvi + qayta
+ * urinish) va lokal fayldan ko'rsatamiz; (3) xato bo'lsa — tushunarli xabar va "Qayta urinish".
+ * "Yuklab olish" — PDF'ni telefon xotirasiga (Download) saqlab, ochadi.
+ */
+import { StatusBar, StyleSheet, View, ActivityIndicator, Platform, Text } from 'react-native';
+import React from 'react';
 import Pdf from 'react-native-pdf';
 import { t } from 'i18next';
 import FileViewer from 'react-native-file-viewer';
@@ -16,97 +21,89 @@ import { rd, rs } from '../../../../theme/rd';
 import RdHeader from '../../redesign/RdHeader';
 import Button from '../../../components/Button';
 import DownloadIcon from '../../../../images/home/download.svg';
-import { storage } from '../../../../store/api/token/getToken';
+import { downloadOfertaPdf, removeOfertaFile } from '../../../../helper/ofertaPdf';
+import { GUIDE_PDF_URL } from '../../../constants';
+import { WarningIcon } from '../../redesign/icons';
+
+const GUIDE_FILE_NAME = 'ZeroX-yoriqnoma.pdf';
+
+type DocState = { kind: 'loading' } | { kind: 'ready'; path: string } | { kind: 'error' };
 
 const UseTerm = () => {
-  const [loading, setLoading] = useState(true);
-  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [doc, setDoc] = React.useState<DocState>({ kind: 'loading' });
+  const [downloading, setDownloading] = React.useState(false);
+  const pathRef = React.useRef<string | null>(null);
+  const cancelledRef = React.useRef(false);
 
+  const load = React.useCallback(async () => {
+    setDoc({ kind: 'loading' });
+    const path = await downloadOfertaPdf(GUIDE_PDF_URL, () => cancelledRef.current);
+    if (cancelledRef.current) {
+      removeOfertaFile(path);
+      return;
+    }
+    if (!path) {
+      setDoc({ kind: 'error' });
+      return;
+    }
+    removeOfertaFile(pathRef.current);
+    pathRef.current = path;
+    setDoc({ kind: 'ready', path });
+  }, []);
+
+  React.useEffect(() => {
+    cancelledRef.current = false;
+    load();
+    return () => {
+      cancelledRef.current = true;
+      removeOfertaFile(pathRef.current);
+    };
+  }, [load]);
+
+  /**
+   * Yo'riqnomani telefon xotirasiga saqlash va ochish (allaqachon yuklangan nusxadan).
+   * Android 10+ — MediaStore orqali Download/Zerox (csvExport bilan bir xil naqsh); boshqa holatda —
+   * ilova papkasidagi nusxa PDF ko'ruvchida ochiladi (u yerdan ulashish/saqlash mumkin).
+   */
   const onDownload = async () => {
+    if (doc.kind !== 'ready') return;
+    setDownloading(true);
     try {
-      const lang = storage.getString('lang');
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'omad',
-        props: { desc: t('789') + '...' },
-      });
-
-      const filePath =
-        Platform.OS === 'android'
-          ? `${ReactNativeBlobUtil.fs.dirs.DownloadDir}${setNameByLang(lang!)}`
-          : `${ReactNativeBlobUtil.fs.dirs.DocumentDir}${setNameByLang(lang!)}`;
-
-      // Check if the file exists
-      const fileExists = await ReactNativeBlobUtil.fs.exists(filePath);
-
-      // Delete the existing file if overwrite is true
-      if (fileExists) {
-        await ReactNativeBlobUtil.fs.unlink(filePath);
+      let saved = false;
+      if (Platform.OS === 'android' && Number(Platform.Version) >= 29) {
+        try {
+          await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+            { name: GUIDE_FILE_NAME, parentFolder: 'Zerox', mimeType: 'application/pdf' },
+            'Download',
+            doc.path,
+          );
+          saved = true;
+        } catch {
+          // keshdagi nusxa baribir ochiladi
+        }
       }
-      setDownloadLoading(true);
-      const res = await ReactNativeBlobUtil.config({
-        appendExt: 'pdf',
-        overwrite: true,
-        addAndroidDownloads: {
-          notification: true,
-          title: setNameByLang(lang!).slice(1),
-          mediaScannable: false,
-          mime: 'application/pdf',
-          useDownloadManager: true,
-          path: ReactNativeBlobUtil.fs.dirs.DownloadDir + setNameByLang(lang!),
-        },
-        path:
-          Platform.OS === 'android'
-            ? ReactNativeBlobUtil.fs.dirs.DownloadDir + setNameByLang(lang!)
-            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
-      }).fetch('GET', `https://pdf.zerox.uz/yoriqnoma.pdf`);
-      if (
-        !(await ReactNativeBlobUtil.fs.exists(
-          Platform.OS === 'android'
-            ? ReactNativeBlobUtil.fs.dirs.DownloadDir
-            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
-        ))
-      ) {
-        await ReactNativeBlobUtil.fs.cp(
-          res.data,
-          Platform.OS === 'android'
-            ? ReactNativeBlobUtil.fs.dirs.DownloadDir
-            : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
-        );
+      const target = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${GUIDE_FILE_NAME}`;
+      if (await ReactNativeBlobUtil.fs.exists(target)) await ReactNativeBlobUtil.fs.unlink(target);
+      await ReactNativeBlobUtil.fs.cp(doc.path, target);
+      if (saved) {
+        Toast.show({
+          type: 'omad',
+          position: 'bottom',
+          visibilityTime: 2500,
+          props: { title: t('Yuklab olindi'), desc: t('Download/Zerox papkasiga saqlandi') },
+        });
       }
-      await FileViewer.open(
-        Platform.OS === 'android'
-          ? ReactNativeBlobUtil.fs.dirs.DownloadDir
-          : ReactNativeBlobUtil.fs.dirs.DocumentDir + setNameByLang(lang!),
-      );
-      setDownloadLoading(false);
+      await FileViewer.open(target, { showOpenWithDialog: true }).catch(() => {});
     } catch (e) {
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
         position: 'bottom',
         type: 'error2',
-        props: {
-          desc: t('Yuklab olish amalga oshmadi'),
-        },
+        props: { desc: t('Yuklab olish amalga oshmadi') },
       });
-      setDownloadLoading(false);
-      console.error(e);
-    }
-  };
-
-  const setNameByLang = (lang: string) => {
-    switch (lang) {
-      case 'uz':
-        return `/Yo‘riqnoma.pdf`;
-      case 'ru':
-        return `/Инструкция.pdf`;
-      case 'kr':
-        return `/Йўриқнома.pdf`;
-      default:
-        return `/Yo‘riqnoma.pdf`;
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -120,37 +117,37 @@ const UseTerm = () => {
         <Button
           title={t('126')}
           onPress={onDownload}
-          loading={downloadLoading}
-          disabled={downloadLoading}
+          loading={downloading}
+          disabled={downloading || doc.kind !== 'ready'}
           fullWidth={false}
           leftIcon={<DownloadIcon width={rs(18)} height={rs(18)} />}
           style={styles.download}
         />
 
         <View style={styles.card}>
-          {loading && (
-            <View style={styles.indicator}>
+          {doc.kind === 'loading' && (
+            <View style={styles.center}>
               <ActivityIndicator size={'large'} color={rd.color.primary} />
             </View>
           )}
-          <Pdf
-            trustAllCerts={false}
-            enablePaging={true}
-            renderActivityIndicator={() => (
-              <ActivityIndicator size={'small'} color={rd.color.primary} />
-            )}
-            source={{
-              uri: `https://pdf.zerox.uz/yoriqnoma.pdf`,
-              method: 'GET',
-            }}
-            onLoadComplete={() => {
-              setLoading(false);
-            }}
-            onError={error => {
-              console.error(error.message);
-            }}
-            style={styles.pdf}
-          />
+          {doc.kind === 'error' && (
+            <View style={styles.center}>
+              <WarningIcon size={rs(28)} color={rd.color.warning} />
+              <Text style={styles.errorText}>
+                {t('Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.')}
+              </Text>
+              <Button title={t('Qayta urinish')} onPress={load} fullWidth={false} style={styles.retry} />
+            </View>
+          )}
+          {doc.kind === 'ready' && (
+            <Pdf
+              enablePaging={false}
+              source={{ uri: Platform.OS === 'android' ? `file://${doc.path}` : doc.path }}
+              renderActivityIndicator={() => <ActivityIndicator size={'small'} color={rd.color.primary} />}
+              onError={() => setDoc({ kind: 'error' })}
+              style={styles.pdf}
+            />
+          )}
         </View>
       </View>
     </View>
@@ -184,11 +181,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: rd.color.border,
   },
-  indicator: {
-    ...StyleSheet.absoluteFillObject,
+  center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
+    gap: rs(12),
+    paddingHorizontal: rs(24),
+  },
+  errorText: {
+    fontFamily: rd.font.regular,
+    fontSize: rs(13),
+    lineHeight: rs(19),
+    color: rd.color.textSecondary,
+    textAlign: 'center',
+  },
+  retry: {
+    paddingHorizontal: rs(24),
+    height: rs(42),
   },
   pdf: {
     flex: 1,

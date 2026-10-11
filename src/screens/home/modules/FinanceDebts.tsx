@@ -71,6 +71,7 @@ import {
   upcomingTarget,
 } from './financeDebtGroups';
 import { useAllPersonalDebts } from './useAllPersonalDebts';
+import PersonalDebtReminderCard from './PersonalDebtReminderCard';
 
 const AMBER = '#f59e0b';
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
@@ -473,6 +474,10 @@ const FinanceDebts = () => {
           onGiven={() => navigation.navigate('FinanceDebtReport', { side: 'given' })}
           onTaken={() => navigation.navigate('FinanceDebtReport', { side: 'taken' })}
         />
+
+        {/* 11.10 (6-rasm): Eslatma — shaxsiy qarz kiritishni eslatish (Qarz daftaridagi kabi);
+            bosilganda sozlama ekrani (FinanceDebtEslatma). */}
+        <PersonalDebtReminderCard />
 
         {/* SS7/SS8: tavsiyaviy eslatma ("Tushundim" — kun oxirigacha yopiladi).
             02.10 (2-band): Yakunlangan qarzlar bo'limining TAGIGA ko'chirildi. */}

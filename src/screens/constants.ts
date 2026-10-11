@@ -35,6 +35,9 @@ export const PDF_INDEX_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'index_test.php' : 'in
 // (admin_zerox_test) chaqirilmasa, test user "Hujjat topilmadi" (404) oladi va
 // oferta ochilmaydi -> tasdiqlab bo'lmaydi. Toggle bilan tuzatildi.
 export const PDF_OFERTA_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'oferta_test.php' : 'oferta.php'}`;
+// 11.10: YANGI "Foydalanish yo'riqnomasi" — backend statik /docs (git'da, deploy bilan birga yangilanadi).
+// Eski pdf.zerox.uz/yoriqnoma.pdf (2025) eskirgan va 10 yillik kesh sarlavhasi bilan berilardi.
+export const GUIDE_PDF_URL = `${HOST}/docs/zerox-yoriqnoma.pdf`;
 
 const createStatus = 201;
 const errorStatus = 400;

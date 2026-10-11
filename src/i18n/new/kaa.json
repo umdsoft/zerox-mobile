@@ -1778,6 +1778,12 @@
     "Yoqilgan": "Qosılǵan",
     "Qarz daftari eslatmasi": "Qarız dápteri eskertpesi",
     "«{{shop}}» do‘koni uchun bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "«{{shop}}» dúkanı ushın búgin ele qarız kiritilmedi. Búgingi qarızlardı kiritip qoyıń.",
-    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "Búgin ele qarız kiritilmedi. Búgingi qarızlardı kiritip qoyıń."
+    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "Búgin ele qarız kiritilmedi. Búgingi qarızlardı kiritip qoyıń.",
+    "Belgilangan kunlarda va vaqtda shaxsiy qarzlaringizni kiritishni eslatamiz. Eslatma faqat so‘nggi 2 hafta ichida bitta ham shaxsiy qarz kiritilmagan bo‘lsa yuboriladi.": "Belgilengen kúnlerde hám waqıtta jeke qarızlarıńızdı kiritiwdi eskertemiz. Eskertpe tek sońǵı 2 hápte ishinde birde-bir jeke qarız kiritilmegen bolsa jiberiledi.",
+    "Belgilangan vaqtda shaxsiy qarz kiritishni eslatish": "Belgilengen waqıtta jeke qarız kiritiwdi eskertiw",
+    "Shaxsiy qarz eslatmasi": "Jeke qarız eskertpesi",
+    "So‘nggi 2 hafta ichida shaxsiy qarz kiritilmadi. Bergan va olgan qarzlaringizni kiritib qo‘ying.": "Sońǵı 2 hápte ishinde jeke qarız kiritilmedi. Bergen hám alǵan qarızlarıńızdı kiritip qoyıń.",
+    "Manzil kiritilmagan": "Mánzil kiritilmegen",
+    "Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Qollanbanı júklep bolmadı. Internet baylanısın tekserip, qaytadan urınıp kóriń."
   }
 }

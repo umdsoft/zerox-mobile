@@ -63,6 +63,7 @@ import GapTaklif from './notifications/all/GapTaklif';
 // SS20: Shaxsiy moliya faolsizlik eslatmasi (3 kun kiritilmadi).
 import MoliyaEslatma from './notifications/all/MoliyaEslatma';
 import QarzDaftariEslatma from './notifications/all/QarzDaftariEslatma'; // 10.10
+import ShaxsiyQarzEslatma from './notifications/all/ShaxsiyQarzEslatma'; // 11.10
 // SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
 // ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
 import Shikoyat from './notifications/all/Shikoyat';
@@ -893,6 +894,9 @@ const Bildrishnoma = () => {
       // 10.10: Qarz daftari — belgilangan vaqtda qarz kiritilmagan (do'kon eslatmasi).
       case 44:
         return <QarzDaftariEslatma item={item} okay={okay} navigation={navigation} />;
+      // 11.10: Shaxsiy qarz — 2 hafta shaxsiy qarz kiritilmagan (belgilangan kun/vaqtda).
+      case 45:
+        return <ShaxsiyQarzEslatma item={item} okay={okay} navigation={navigation} />;
       // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
       case 42:
       case 43:

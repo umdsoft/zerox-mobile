@@ -66,6 +66,7 @@ const TABS: {
  */
 const SHAXSIY_QARZ_SCREENS = new Set([
   'FinanceDebts',
+  'FinanceDebtEslatma', // 11.10
   'FinanceDebtAdd',
   'FinanceDebtDetail',
   'FinanceDebtors',

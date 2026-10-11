@@ -1778,6 +1778,12 @@
     "Yoqilgan": "On",
     "Qarz daftari eslatmasi": "Debt book reminder",
     "«{{shop}}» do‘koni uchun bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "No debts have been entered for «{{shop}}» today. Please add today's debts.",
-    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "No debts have been entered today. Please add today's debts."
+    "Bugun hali qarz kiritilmadi. Bugungi qarzlarni kiritib qo‘ying.": "No debts have been entered today. Please add today's debts.",
+    "Belgilangan kunlarda va vaqtda shaxsiy qarzlaringizni kiritishni eslatamiz. Eslatma faqat so‘nggi 2 hafta ichida bitta ham shaxsiy qarz kiritilmagan bo‘lsa yuboriladi.": "On the selected days and time we will remind you to enter your personal debts. The reminder is sent only if no personal debt has been entered in the last 2 weeks.",
+    "Belgilangan vaqtda shaxsiy qarz kiritishni eslatish": "Remind to enter personal debts at the set time",
+    "Shaxsiy qarz eslatmasi": "Personal debt reminder",
+    "So‘nggi 2 hafta ichida shaxsiy qarz kiritilmadi. Bergan va olgan qarzlaringizni kiritib qo‘ying.": "No personal debts have been entered in the last 2 weeks. Please add the debts you gave and took.",
+    "Manzil kiritilmagan": "Address not set",
+    "Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Could not load the guide. Check your internet connection and try again."
   }
 }
