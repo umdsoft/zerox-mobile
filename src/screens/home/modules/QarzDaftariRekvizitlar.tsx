@@ -1,12 +1,12 @@
 /**
  * QarzDaftariRekvizitlar.tsx — "Do'kon rekvizitlari" (11.10, "Yangi mobil xatolar 11.10", 5-rasm).
  *
- * Do'konni tahrirlash sahifasidagi "Do'kon rekvizitlari" kartasi endi ALOHIDA bosiladigan karta; bosilganda
- * shu sahifa ochiladi: Do'kon nomi, Viloyat, Tuman / shahar (10.10 dagi kabi AVTOMATIK saqlanadi).
+ * Do'konni tahrirlash sahifasidagi "Do'kon rekvizitlari" kartasi ALOHIDA bosiladigan karta; bosilganda
+ * shu sahifa ochiladi: Do'kon nomi, Viloyat, Tuman / shahar.
  *
- * Avto-saqlash: o'zgarishdan AUTOSAVE_DELAY_MS keyin PUT /qarz-daftari/savdo-faoliyat/:id;
- * ma'lumot yaroqsiz bo'lsa (nom xato, tuman tanlanmagan) — saqlanmaydi, holat "Saqlanmadi".
- * Ekrandan chiqishda kutib turgan saqlash avval yakunlanadi.
+ * 13.10 ("Yangi mobil xatolar 12.10", 4-rasm): sahifa OXIRIDA «Bekor qilish» va «Saqlash» tugmalari —
+ * avto-saqlash o'rniga aniq saqlash: «Saqlash» → PUT /qarz-daftari/savdo-faoliyat/:id va orqaga;
+ * «Bekor qilish» — o'zgarishlar saqlanmasdan orqaga. Saqlanmagan o'zgarish bilan orqaga chiqilsa — so'raladi.
  */
 import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
@@ -35,21 +35,12 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
-import {
-  ArrowDown,
-  CheckIcon,
-  LocationIcon,
-  StorefrontIcon,
-  WarningIcon,
-} from '../redesign/icons';
+import { ArrowDown, LocationIcon, StorefrontIcon } from '../redesign/icons';
 import RegionPickerModal from './RegionPickerModal';
 
 const BLUE = '#2f6fed';
-const AUTOSAVE_DELAY_MS = 800;
-const JUST_SAVED_MS = 2500;
 
 type Snap = { nomi: string; region: string; district: string };
-type Status = 'idle' | 'pending' | 'saving' | 'saved' | 'invalid' | 'error';
 
 const authHeaders = () => ({ headers: { Authorization: `Bearer ${storage.getString('token')}` } });
 const snapOf = (nomi: string, region: string, district: string): Snap => ({
@@ -70,21 +61,19 @@ const QarzDaftariRekvizitlar = () => {
   const [region, setRegion] = React.useState('');
   const [district, setDistrict] = React.useState('');
   const [saved, setSaved] = React.useState<Snap>({ nomi: '', region: '', district: '' });
-  const [status, setStatus] = React.useState<Status>('idle');
+  const [saving, setSaving] = React.useState(false);
+  const [tried, setTried] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState('');
   const [picker, setPicker] = React.useState<null | 'region' | 'district'>(null);
 
   const current = snapOf(nomi, region, district);
   const dirty = !sameSnap(current, saved);
-  const nameErrKey = dirty ? shopNameErrorKey(nomi) : null;
+  const nameErrKey = dirty || tried ? shopNameErrorKey(nomi) : null;
   const invalid = !!shopNameErrorKey(nomi) || !region || !district;
 
-  // Taymer/so'rov holatini render'lar orasida ushlab turish (yopilishda kerak).
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const justSavedRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inflightRef = React.useRef<Promise<boolean> | null>(null);
-  const stateRef = React.useRef({ current, saved, invalid });
-  stateRef.current = { current, saved, invalid };
+  const stateRef = React.useRef({ dirty });
+  stateRef.current = { dirty };
+  const leavingRef = React.useRef(false);
 
   /** Do'kon rekvizitlarini yuklash. */
   const loadShop = React.useCallback(async () => {
@@ -119,105 +108,51 @@ const QarzDaftariRekvizitlar = () => {
     }
   }, [faoliyatId, navigation]);
 
-  const save = React.useCallback(async (snap: Snap): Promise<boolean> => {
-    setStatus('saving');
+  const leave = React.useCallback(() => {
+    leavingRef.current = true;
+    navigation.goBack();
+  }, [navigation]);
+
+  /** «Saqlash»: tekshiruv → PUT → orqaga. O'zgarish bo'lmasa — shunchaki orqaga. */
+  const onSave = async () => {
+    setTried(true);
     setErrorMsg('');
+    if (!dirty) { leave(); return; }
+    if (invalid) return;
+    setSaving(true);
     try {
-      const res = await axios.put(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}`, snap, authHeaders());
+      const res = await axios.put(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}`, current, authHeaders());
       if (!res.data?.success) throw { response: res };
-      setSaved(snap);
-      propagateName(snap.nomi);
-      setStatus('saved');
-      if (justSavedRef.current) clearTimeout(justSavedRef.current);
-      justSavedRef.current = setTimeout(() => setStatus(s => (s === 'saved' ? 'idle' : s)), JUST_SAVED_MS);
-      return true;
+      setSaved(current);
+      propagateName(current.nomi);
+      Toast.show({ type: 'omad', props: { desc: t('Saqlandi') } });
+      leave();
     } catch (e: any) {
-      setStatus('error');
       setErrorMsg(e?.response?.data?.message || t('Xatolik'));
-      return false;
+    } finally {
+      setSaving(false);
     }
-  }, [faoliyatId, propagateName, t]);
+  };
 
-  /**
-   * Kutib turgan o'zgarishni DARHOL saqlash.
-   * @returns saqlanmagan o'zgarish qolmadimi
-   */
-  const flush = React.useCallback(async (): Promise<boolean> => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-    if (inflightRef.current) await inflightRef.current;
-    const st = stateRef.current;
-    if (sameSnap(st.current, st.saved)) return true;
-    if (st.invalid) { setStatus('invalid'); return false; }
-    inflightRef.current = save(st.current);
-    try { return await inflightRef.current; } finally { inflightRef.current = null; }
-  }, [save]);
-
-  // Har o'zgarishda: yaroqli — kechiktirib saqlash; yaroqsiz — "Saqlanmadi".
+  // Saqlanmagan o'zgarish bilan orqaga (sarlavha tugmasi / tizim "back") — so'raladi.
   React.useEffect(() => {
-    if (loading) return;
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-    if (!dirty) {
-      setStatus(s => (s === 'saved' || s === 'saving' ? s : 'idle'));
-      return;
-    }
-    if (invalid) { setStatus('invalid'); return; }
-    setStatus(s => (s === 'saving' ? s : 'pending'));
-    timerRef.current = setTimeout(() => { flush(); }, AUTOSAVE_DELAY_MS);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current.nomi, current.region, current.district, loading]);
-
-  React.useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (justSavedRef.current) clearTimeout(justSavedRef.current);
-  }, []);
-
-  /** Chiqishdan oldin: saqlab ko'radi; saqlab bo'lmasa — foydalanuvchidan so'raydi. */
-  const settle = React.useCallback(async (): Promise<boolean> => {
-    const ok = await flush();
-    const st = stateRef.current;
-    if (ok || sameSnap(st.current, st.saved)) return true;
-    return new Promise<boolean>(resolve => {
+    const unsub = navigation.addListener('beforeRemove', (e: any) => {
+      if (leavingRef.current || !stateRef.current.dirty) return;
+      e.preventDefault();
       Alert.alert(
         t('Do‘kon rekvizitlari'),
         t('Do‘kon rekvizitlaridagi o‘zgarishlar saqlanmadi. Baribir chiqilsinmi?'),
         [
-          { text: t('Bekor qilish'), style: 'cancel', onPress: () => resolve(false) },
-          { text: t('Chiqish'), style: 'destructive', onPress: () => resolve(true) },
+          { text: t('Bekor qilish'), style: 'cancel' },
+          { text: t('Chiqish'), style: 'destructive', onPress: () => { leavingRef.current = true; navigation.dispatch(e.data.action); } },
         ],
-        { cancelable: true, onDismiss: () => resolve(false) },
+        { cancelable: true },
       );
     });
-  }, [flush, t]);
-
-  // Orqaga (sarlavha tugmasi yoki tizim "back") — avval saqlash yakunlansin.
-  const leavingRef = React.useRef(false);
-  React.useEffect(() => {
-    const unsub = navigation.addListener('beforeRemove', (e: any) => {
-      if (leavingRef.current) return;
-      const st = stateRef.current;
-      if (sameSnap(st.current, st.saved) && !inflightRef.current) return;
-      e.preventDefault();
-      settle().then(ok => {
-        if (!ok) return;
-        leavingRef.current = true;
-        navigation.dispatch(e.data.action);
-      });
-    });
     return unsub;
-  }, [navigation, settle]);
+  }, [navigation, t]);
 
   const districts = React.useMemo(() => REGIONS.find(x => x.name === region)?.districts || [], [region]);
-
-  const chip = (() => {
-    switch (status) {
-      case 'pending': return { label: t('O‘zgartirilmoqda'), bg: rd.color.primaryTint, fg: BLUE, icon: 'dot' };
-      case 'saving': return { label: t('Saqlanmoqda...'), bg: rd.color.primaryTint, fg: BLUE, icon: 'spin' };
-      case 'saved': return { label: t('Saqlandi'), bg: rd.color.successBg, fg: rd.color.success, icon: 'check' };
-      case 'invalid': return { label: t('Saqlanmadi'), bg: rd.color.warningBg, fg: rd.color.warning, icon: 'warn' };
-      case 'error': return { label: t('Saqlab bo‘lmadi'), bg: rd.color.errorBg, fg: rd.color.error, icon: 'warn' };
-      default: return { label: t('Saqlangan'), bg: rd.color.surfaceAlt, fg: rd.color.textTertiary, icon: 'check' };
-    }
-  })();
 
   if (loading) return <Loading />;
 
@@ -242,13 +177,6 @@ const QarzDaftariRekvizitlar = () => {
                 <Text style={styles.cardTitle}>{t('Do‘kon rekvizitlari')}</Text>
                 <Text style={styles.cardSub}>{t('Nomi va joylashgan manzili')}</Text>
               </View>
-              <View style={[styles.chip, { backgroundColor: chip.bg }]} accessibilityLiveRegion="polite">
-                {chip.icon === 'spin' && <ActivityIndicator size="small" color={chip.fg} style={styles.chipSpin} />}
-                {chip.icon === 'check' && <CheckIcon size={rs(12)} color={chip.fg} />}
-                {chip.icon === 'warn' && <WarningIcon size={rs(12)} color={chip.fg} />}
-                {chip.icon === 'dot' && <View style={[styles.chipDot, { backgroundColor: chip.fg }]} />}
-                <Text style={[styles.chipText, { color: chip.fg }]}>{chip.label}</Text>
-              </View>
             </View>
 
             <Text style={styles.label}>{t('Do‘kon nomi')}</Text>
@@ -257,7 +185,6 @@ const QarzDaftariRekvizitlar = () => {
                 style={styles.input}
                 value={nomi}
                 onChangeText={txt => setNomi(sanitizeShopNameInput(txt))}
-                onBlur={() => { flush(); }}
                 placeholder={t('Masalan: Best Market')}
                 placeholderTextColor={rd.color.textTertiary}
                 maxLength={SHOP_NAME_MAX_LEN}
@@ -285,7 +212,7 @@ const QarzDaftariRekvizitlar = () => {
               style={[
                 styles.selectBox,
                 !region && styles.selectDisabled,
-                dirty && !!region && !district ? styles.selectWarn : null,
+                (dirty || tried) && !!region && !district ? styles.selectWarn : null,
               ]}
               disabled={!region}
               onPress={() => setPicker('district')}
@@ -301,16 +228,29 @@ const QarzDaftariRekvizitlar = () => {
               <ArrowDown size={rs(18)} color={rd.color.textTertiary} />
             </TouchableOpacity>
 
-            {status === 'error' && (
+            {tried && !region && <Text style={styles.fieldErr}>{t('Viloyat va tumanni tanlang')}</Text>}
+            {!!errorMsg && (
               <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{errorMsg || t('Xatolik')}</Text>
-                <TouchableOpacity onPress={() => { flush(); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.retry}>{t('Qayta urinish')}</Text>
-                </TouchableOpacity>
+                <Text style={styles.errorText}>{errorMsg}</Text>
               </View>
             )}
           </View>
 
+          {/* 13.10 (4-rasm): sahifa oxirida — Bekor qilish / Saqlash */}
+          <View style={styles.btnRow}>
+            <TouchableOpacity activeOpacity={0.85} style={styles.cancelBtn} disabled={saving} onPress={leave}>
+              <Text style={styles.cancelText}>{t('Bekor qilish')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+              disabled={saving}
+              onPress={onSave}
+              accessibilityRole="button"
+            >
+              {saving ? <ActivityIndicator color={rd.color.onPrimary} /> : <Text style={styles.saveText}>{t('Saqlash')}</Text>}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -350,17 +290,6 @@ const styles = StyleSheet.create({
   headIcon: { width: rs(40), height: rs(40), borderRadius: rs(12), alignItems: 'center', justifyContent: 'center' },
   cardTitle: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.text },
   cardSub: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary, marginTop: rs(2) },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: rs(4),
-    paddingHorizontal: rs(9),
-    paddingVertical: rs(5),
-    borderRadius: rd.radius.pill,
-  },
-  chipSpin: { transform: [{ scale: 0.6 }], width: rs(12), height: rs(12) },
-  chipDot: { width: rs(6), height: rs(6), borderRadius: rs(3) },
-  chipText: { fontFamily: rd.font.semibold, fontSize: rs(11) },
   label: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text, marginBottom: rs(8) },
   inputBox: {
     backgroundColor: rd.color.surface,
@@ -400,5 +329,26 @@ const styles = StyleSheet.create({
     paddingVertical: rs(10),
   },
   errorText: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.error },
-  retry: { fontFamily: rd.font.semibold, fontSize: rs(12), color: rd.color.error },
+  fieldErr: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: rd.color.warning, marginTop: rs(8) },
+  btnRow: { flexDirection: 'row', gap: rs(12), marginTop: rs(20) },
+  cancelBtn: {
+    flex: 1,
+    height: rs(50),
+    borderRadius: rd.radius.lg,
+    borderWidth: 1.5,
+    borderColor: rd.color.border,
+    backgroundColor: rd.color.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: rd.color.textSecondary },
+  saveBtn: {
+    flex: 1,
+    height: rs(50),
+    borderRadius: rd.radius.lg,
+    backgroundColor: BLUE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveText: { fontFamily: rd.font.bold, fontSize: rs(14.5), color: rd.color.onPrimary },
 });

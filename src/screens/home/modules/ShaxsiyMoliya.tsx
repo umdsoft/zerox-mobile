@@ -61,6 +61,7 @@ import {
   num,
 } from './financeMoney';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import PersonalDebtReminderCard from './PersonalDebtReminderCard'; // 13.10: moliya kunlik eslatmasi kartasi
 
 // Dizayn tizimidan tashqari literal ranglar (gradient/bar/kategoriya).
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
@@ -677,6 +678,15 @@ const ShaxsiyMoliya = () => {
               </TouchableOpacity>
             );
           })}
+        </View>
+        {/* 13.10 ("Shaxsiy moliya yangi sayt 12.10", 1–2-rasm): Eslatma — belgilangan vaqtda, o'sha kuni
+            daromad/xarajat kiritilmagan bo'lsa Telegram bot va ilova orqali eslatish. */}
+        <View style={{ marginTop: rs(12) }}>
+          <PersonalDebtReminderCard
+            endpoint="/finance/daily-reminder"
+            route="FinanceEslatma"
+            subtitle={t('Belgilangan vaqtda daromad va xarajat kiritishni eslatish')}
+          />
         </View>
 
 

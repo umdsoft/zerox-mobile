@@ -323,6 +323,7 @@ const AllNavigators = [
   { name: 'QarzDaftariEslatma', component: QarzDaftariEslatmaScreen }, // 10.10: qarz kiritish eslatmasi
   { name: 'QarzDaftariRekvizitlar', component: QarzDaftariRekvizitlar }, // 11.10: do'kon rekvizitlari (nom, viloyat, tuman)
   { name: 'FinanceDebtEslatma', component: QarzDaftariEslatmaScreen }, // 11.10: shaxsiy qarz kiritish eslatmasi (o'sha ekran)
+  { name: 'FinanceEslatma', component: QarzDaftariEslatmaScreen }, // 13.10: shaxsiy moliya kunlik eslatmasi (o'sha ekran)
   { name: 'FinancePayoutCard', component: FinancePayoutCard },
   { name: 'QarzDaftariXodimYangi', component: QarzDaftariXodimYangi },
   { name: 'QarzDaftariMijozYangi', component: QarzDaftariMijozYangi },

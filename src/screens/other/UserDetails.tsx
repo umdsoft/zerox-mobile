@@ -10,7 +10,7 @@ import ScreenLayout from '../components/ScreenLayout';
 import { t } from 'i18next';
 import { normalize } from '../../theme/style';
 import { rd, rs } from '../../theme/rd';
-import { ArrowDown, ArrowUp, AvatarPersonIcon, CopyIcon, StarIcon } from '../home/redesign/icons';
+import { ArrowDown, ArrowUp, AvatarFemaleIcon, AvatarPersonIcon, CopyIcon, StarIcon } from '../home/redesign/icons';
 import { useFetch } from '../../hooks/useFetch';
 import { URL } from '../constants';
 
@@ -101,7 +101,12 @@ const UserDetails = () => {
       {/* Sarlavha kartasi — avatar + FISH (2 qator) + reyting. */}
       <View style={styles.headerCard}>
         <View style={styles.avatar}>
-          <AvatarPersonIcon size={rs(46)} color={rd.color.primary} />
+          {/* 13.10 ("Yangi mobil xatolar 12.10", 3-rasm): ayol foydalanuvchida (gender = 2) — ayol avatari */}
+          {Number(user?.data?.gender) === 2 ? (
+            <AvatarFemaleIcon size={rs(46)} color={rd.color.primary} />
+          ) : (
+            <AvatarPersonIcon size={rs(46)} color={rd.color.primary} />
+          )}
         </View>
         <Text allowFontScaling={false} numberOfLines={1} style={styles.headerName}>
           {line1}

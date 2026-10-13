@@ -894,6 +894,9 @@ const Bildrishnoma = () => {
       // 10.10: Qarz daftari — belgilangan vaqtda qarz kiritilmagan (do'kon eslatmasi).
       case 44:
         return <QarzDaftariEslatma item={item} okay={okay} navigation={navigation} />;
+      // 13.10: Shaxsiy moliya — kunlik eslatma (belgilangan vaqtda, bugun daromad/xarajat kiritilmagan).
+      case 46:
+        return <MoliyaEslatma daily item={item} okay={okay} navigation={navigation} />;
       // 11.10: Shaxsiy qarz — 2 hafta shaxsiy qarz kiritilmagan (belgilangan kun/vaqtda).
       case 45:
         return <ShaxsiyQarzEslatma item={item} okay={okay} navigation={navigation} />;

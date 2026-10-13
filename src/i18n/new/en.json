@@ -1784,6 +1784,10 @@
     "Shaxsiy qarz eslatmasi": "Personal debt reminder",
     "So‘nggi 2 hafta ichida shaxsiy qarz kiritilmadi. Bergan va olgan qarzlaringizni kiritib qo‘ying.": "No personal debts have been entered in the last 2 weeks. Please add the debts you gave and took.",
     "Manzil kiritilmagan": "Address not set",
-    "Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Could not load the guide. Check your internet connection and try again."
+    "Yo‘riqnomani yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring.": "Could not load the guide. Check your internet connection and try again.",
+    "Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.": "No income or expense has been entered today. Please add today's income and expenses.",
+    "Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.": "On the selected days and time we will remind you to enter the day's income and expenses — via the Telegram bot and the mobile app. The reminder is sent only if no income or expense has been entered that day.",
+    "Belgilangan vaqtda daromad va xarajat kiritishni eslatish": "Remind to enter income and expenses at the set time",
+    "Viloyat va tumanni tanlang": "Select the region and district"
   }
 }

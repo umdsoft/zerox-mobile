@@ -18,6 +18,7 @@ import {
   HelpIcon,
   LogOutIcon,
   CoinIcon,
+  AvatarFemaleIcon,
   AvatarPersonIcon,
   CheckIcon, MonitorIcon,} from '../home/redesign/icons';
 
@@ -119,7 +120,12 @@ const UserScreen = () => {
         <View style={styles.profileCard}>
           {/* Neytral to'ldirilgan odam avatari (so'rov bo'yicha — bitta ikona). */}
           <View style={styles.avatar}>
-            <AvatarPersonIcon size={rs(52)} color={rd.color.primary} />
+            {/* 13.10 ("Yangi mobil xatolar 12.10", 3-rasm): ayol foydalanuvchida (gender = 2) — ayol avatari */}
+            {Number(user?.data?.gender) === 2 ? (
+              <AvatarFemaleIcon size={rs(52)} color={rd.color.primary} />
+            ) : (
+              <AvatarPersonIcon size={rs(52)} color={rd.color.primary} />
+            )}
           </View>
           <View style={styles.profileMeta}>
             <Text style={styles.profileName} numberOfLines={1}>

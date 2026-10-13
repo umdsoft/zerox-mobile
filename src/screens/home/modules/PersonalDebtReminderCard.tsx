@@ -19,7 +19,18 @@ type Reminder = { enabled: boolean; time: string; days: number[] };
 
 const AMBER = '#b45309';
 
-const PersonalDebtReminderCard = () => {
+type Props = {
+  /** 13.10: Shaxsiy moliya sahifasida ham — o'z endpoint'i, sozlama ekrani va izohi bilan */
+  endpoint?: string;
+  route?: string;
+  subtitle?: string;
+};
+
+const PersonalDebtReminderCard = ({
+  endpoint = '/finance/debt-reminder',
+  route = 'FinanceDebtEslatma',
+  subtitle,
+}: Props) => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
   const [reminder, setReminder] = React.useState<Reminder | null>(null);
@@ -29,7 +40,7 @@ const PersonalDebtReminderCard = () => {
     React.useCallback(() => {
       let alive = true;
       axios
-        .get(`${URL}/finance/debt-reminder`, { headers: { Authorization: `Bearer ${storage.getString('token')}` } })
+        .get(`${URL}${endpoint}`, { headers: { Authorization: `Bearer ${storage.getString('token')}` } })
         .then(res => {
           const d = res.data?.data;
           if (!alive || !d) return;
@@ -38,7 +49,7 @@ const PersonalDebtReminderCard = () => {
         })
         .catch(() => { if (alive) setFailed(true); });
       return () => { alive = false; };
-    }, []),
+    }, [endpoint]),
   );
 
   const status = reminder?.enabled
@@ -49,7 +60,7 @@ const PersonalDebtReminderCard = () => {
     <TouchableOpacity
       activeOpacity={0.8}
       style={styles.card}
-      onPress={() => navigation.navigate('FinanceDebtEslatma')}
+      onPress={() => navigation.navigate(route)}
       accessibilityRole="button"
     >
       <View style={styles.icon}>
@@ -57,7 +68,7 @@ const PersonalDebtReminderCard = () => {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>{t('Eslatma')}</Text>
-        <Text style={styles.sub} numberOfLines={2}>{t('Belgilangan vaqtda shaxsiy qarz kiritishni eslatish')}</Text>
+        <Text style={styles.sub} numberOfLines={2}>{subtitle || t('Belgilangan vaqtda shaxsiy qarz kiritishni eslatish')}</Text>
         <View style={styles.status}>
           <View style={[styles.dot, { backgroundColor: reminder?.enabled ? '#d97706' : rd.color.border }]} />
           <Text style={[styles.statusText, { color: reminder?.enabled ? AMBER : rd.color.textTertiary }]} numberOfLines={2}>

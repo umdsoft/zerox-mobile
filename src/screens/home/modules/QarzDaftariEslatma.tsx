@@ -51,7 +51,13 @@ const QarzDaftariEslatma = () => {
   const faoliyatId = route.params?.faoliyat_id;
   const shopName = route.params?.faoliyat_nomi || '';
   const personal = route.name === 'FinanceDebtEslatma';
-  const endpoint = personal ? `${URL}/finance/debt-reminder` : `${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`;
+  // 13.10 ("Shaxsiy moliya yangi sayt 12.10", 1–2-rasm): Shaxsiy moliya kunlik eslatmasi ham shu ekran.
+  const finance = route.name === 'FinanceEslatma';
+  const endpoint = finance
+    ? `${URL}/finance/daily-reminder`
+    : personal
+    ? `${URL}/finance/debt-reminder`
+    : `${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/eslatma`;
 
   const [loading, setLoading] = React.useState(true);
   const [form, setForm] = React.useState<Settings>({ enabled: false, time: '21:00', days: [0, 1, 2, 3, 4, 5, 6] });
@@ -153,7 +159,9 @@ const QarzDaftariEslatma = () => {
             <BellIcon size={rs(26)} color={BLUE} />
           </View>
           <Text style={styles.heroText}>
-            {personal
+            {finance
+              ? t('Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.')
+              : personal
               ? t('Belgilangan kunlarda va vaqtda shaxsiy qarzlaringizni kiritishni eslatamiz. Eslatma faqat so‘nggi 2 hafta ichida bitta ham shaxsiy qarz kiritilmagan bo‘lsa yuboriladi.')
               : t('Belgilangan kunlarda va vaqtda «{{shop}}» do‘koniga qarzlarni kiritishni eslatamiz. Eslatma faqat o‘sha kuni bitta ham qarz kiritilmagan bo‘lsa yuboriladi.', { shop: shopName })}
           </Text>

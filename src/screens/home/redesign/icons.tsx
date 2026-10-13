@@ -294,6 +294,25 @@ export const AvatarPersonIcon = (p: IconProps) => {
   );
 };
 
+/**
+ * 13.10 ("Yangi mobil xatolar 12.10", 3-rasm): AYOL avatari — AvatarPersonIcon bilan bir xil uslub
+ * (to'ldirilgan siluet): yuzni o'rab turgan soch + yelkalar. Yuz — oq (avatar foni och rangda).
+ */
+export const AvatarFemaleIcon = (p: IconProps) => {
+  const c = p.color ?? '#2f6fed';
+  const s = p.size ?? 24;
+  return (
+    <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2.6c-3.1 0-5.3 2.4-5.3 5.5 0 2.2-.4 3.6-1.1 4.6-.3.4 0 1 .5 1 1.6.1 3-.3 4-1h3.8c1 .7 2.4 1.1 4 1 .5 0 .8-.6.5-1-.7-1-1.1-2.4-1.1-4.6 0-3.1-2.2-5.5-5.3-5.5Z"
+        fill={c}
+      />
+      <Circle cx="12" cy="8.5" r="3.1" fill="#ffffff" />
+      <Path d="M12 14.3c-3.9 0-6.9 2.3-7.2 5.6L4.7 21h14.6l-.1-1.1c-.3-3.3-3.3-5.6-7.2-5.6Z" fill={c} />
+    </Svg>
+  );
+};
+
 export const ArrowDown = (p: IconProps) => (
   <Base {...p}>
     <Line x1="12" y1="5" x2="12" y2="19" />

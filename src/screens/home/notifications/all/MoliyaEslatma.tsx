@@ -17,7 +17,9 @@ import { ArrowDownLeft, ArrowUpRight, WalletIcon } from '../../redesign/icons';
 const RED = '#dc2626';
 const GREEN = '#16a34a';
 
-const MoliyaEslatma = ({ item, okay, navigation }: any) => (
+// 13.10: `daily` — SHAXSIY MOLIYA kunlik eslatmasi (type 46: foydalanuvchi belgilagan vaqtda, bugun daromad /
+// xarajat kiritilmagan bo'lsa). Karta va tugmalar bir xil, faqat matn boshqa.
+const MoliyaEslatma = ({ item, okay, navigation, daily }: any) => (
   <View style={styles.card}>
     <View style={styles.head}>
       <View style={styles.icon}>
@@ -28,10 +30,16 @@ const MoliyaEslatma = ({ item, okay, navigation }: any) => (
       </Text>
     </View>
 
-    <Text allowFontScaling={false} style={styles.sub}>
-      Bir necha kundan beri daromad va xarajatlaringizni kiritmadingiz. Hisobot
-      to‘liq bo‘lishi uchun o‘tkazib yuborilgan kunlarni kiritib qo‘ying.
-    </Text>
+    {daily ? (
+      <Text allowFontScaling={false} style={styles.sub}>
+        {t('Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.')}
+      </Text>
+    ) : (
+      <Text allowFontScaling={false} style={styles.sub}>
+        Bir necha kundan beri daromad va xarajatlaringizni kiritmadingiz. Hisobot
+        to‘liq bo‘lishi uchun o‘tkazib yuborilgan kunlarni kiritib qo‘ying.
+      </Text>
+    )}
 
     <View style={styles.btnRow}>
       <TouchableOpacity
