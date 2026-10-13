@@ -125,7 +125,7 @@ const buildTalabPreview = (q: QarzTalabTarget, card: DemandCard | null): string 
     return `${store}dagi ${a} ${cw} qarzni qaytarishingiz talab qilinmoqda. Pulni ${num} ga o'tkazib, ${tg} ga telegramda xabar yuboring.`;
   }
   // 10.10 (09.10 hujjati): "{Do'kon}dagi ... qarzingizni bugun qaytarish talab qilinmoqda."
-  return `Sizning ${store}dagi ${a} ${cw} qarzingizni bugun qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring.`;
+  return `Sizning ${store}dan bo'lgan ${a} ${cw} qarzingizni bugun qaytarish talab qilinmoqda. ZeroX bilan qarzlarni oson boshqaring.`;
 };
 
 /**
@@ -183,7 +183,10 @@ export const useQarzTalab = ({ t, navigation, plan }: TalabArgs) => {
             return_on_save: true,
             edit: true,
           }),
-    allowWithoutCard: staff,
+    // 13.10 ("Yangi mobil xatolar 13.10"): karta ulanmagan do'kon EGASI ham talab qila oladi — karta formasi
+    // majburan ochilmaydi, darhol tasdiq oynasi: SMS kartasiz matn bilan ketadi ("Sizning {do'kon}dan bo'lgan
+    // ... qarzingizni bugun qaytarish talab qilinmoqda..."). Karta qo'shish — oynadagi ixtiyoriy tugma.
+    allowWithoutCard: true,
     noCardText: t('Talab SMS’ida karta ko‘rsatilishi uchun plastik karta raqamini kiriting.'),
     buildPreview: buildTalabPreview,
     loadPreview: loadTalabPreview,
