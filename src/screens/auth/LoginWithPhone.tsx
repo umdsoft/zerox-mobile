@@ -38,6 +38,7 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { LockIcon, MessageIcon } from '../home/redesign/icons';
+import { setAnalyticsUser, trackEvent } from '../../helper/analytics';
 
 const LoginWithPhone = () => {
   const dispatch = useDispatch();
@@ -154,6 +155,9 @@ const LoginWithPhone = () => {
           }
           storage.set('phoneNumber', phone.replace(/\s/g, ''));
           storage.set('user_id', response.sad);
+          // 16.10: Firebase Analytics — faqat ichki id (telefon/ism yuborilmaydi)
+          setAnalyticsUser(response.sad);
+          trackEvent('login', { method: 'phone' });
           // SS-DEV (2026-10-05): login javobi kelishi bilan bosh sahifa
           // so'rovlarini OLDINDAN (parallel) boshlaymiz + keshdan to'ldiramiz —
           // bosh sahifa ochilganda ma'lumot tayyor bo'ladi (spinner yo'q).

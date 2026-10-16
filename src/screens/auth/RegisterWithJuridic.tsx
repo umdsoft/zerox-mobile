@@ -23,6 +23,7 @@ import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {useTranslation} from 'react-i18next';
 import {rd, rs} from '../../theme/rd';
 import {ChevronLeft, FingerprintIcon} from '../home/redesign/icons';
+import {setAnalyticsUser, trackEvent} from '../../helper/analytics';
 
 const Register = () => {
   const navigation = useNavigation();
@@ -66,6 +67,9 @@ const Register = () => {
           }
           // Sessiya-guard uchun user_id — javobda bo'lsa yozamiz, aks holda eski
           // qiymat qolmasin (RESET_STORE Redux'ni tozalaydi, MMKV user_id'ni yangilaymiz).
+          // 16.10: Firebase Analytics — yuridik shaxs ERI orqali kirish/ro'yxatdan o'tish
+          setAnalyticsUser(data?.sad ?? data?.id ?? null);
+          trackEvent('sign_up', {method: 'juridic_eri'});
           if (data?.sad ?? data?.id) {
             storage.set('user_id', String(data?.sad ?? data?.id));
           } else {

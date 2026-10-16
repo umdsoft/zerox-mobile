@@ -7,7 +7,7 @@ import 'react-native-get-random-values';
 import React, {useEffect, useState} from 'react';
 import App from './App';
 import {name as appName} from './app.json';
-import {initSecureStorage} from './src/store/api/token/getToken';
+import {initSecureStorage, storage} from './src/store/api/token/getToken';
 import {Provider} from 'react-redux';
 import {Store} from './src/store/store/Store';
 import messaging from '@react-native-firebase/messaging';
@@ -20,6 +20,8 @@ import {setFbNotificationId} from './src/store/reducers/HomeReducer';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Appearance, AppRegistry, LogBox} from 'react-native';
 import crashlytics from '@react-native-firebase/crashlytics';
+// 16.10: Firebase Analytics — ekranlar avtomatik (onReady/onStateChange)
+import {setAnalyticsUser, trackScreen} from './src/helper/analytics';
 import {logDebug, logError} from './src/log';
 import {isUpdateNotification, SCREENS} from './src/constants';
 
@@ -107,7 +109,12 @@ const MainApp = () => {
   // (pastda) — shu sabab "ZeroX has not been registered" xatosi bo'lmaydi.
   const [storageReady, setStorageReady] = useState(false);
   useEffect(() => {
-    initSecureStorage().finally(() => setStorageReady(true));
+    initSecureStorage().finally(() => {
+      // 16.10: allaqachon kirgan foydalanuvchi — Analytics'ga ichki id (ilova ochilganda)
+      // user_id login'da RAQAM sifatida saqlanadi (response.sad = user.id) — getString uni o'qimaydi
+      setAnalyticsUser(storage.getString('user_id') || storage.getNumber('user_id') || null);
+      setStorageReady(true);
+    });
   }, []);
 
   if (!storageReady) {
@@ -115,7 +122,11 @@ const MainApp = () => {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} linking={linking}>
+    <NavigationContainer
+      ref={navigationRef}
+      linking={linking}
+      onReady={() => trackScreen(navigationRef.current?.getCurrentRoute?.()?.name)}
+      onStateChange={() => trackScreen(navigationRef.current?.getCurrentRoute?.()?.name)}>
       <SafeAreaProvider>
         <Provider store={Store}>
           <App />

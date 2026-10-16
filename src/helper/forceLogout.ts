@@ -29,6 +29,7 @@ import i18next from 'i18next';
 import { Platform } from 'react-native';
 import { storage } from '../store/api/token/getToken';
 import { isOwnPasswordChangeActive } from './passwordChangeSession';
+import { setAnalyticsUser } from './analytics';
 
 // 08.10: 'password-changed' — foydalanuvchi O'Z parolini o'zgartirgan va sessiyani jim
 // tiklab bo'lmagan holat: neytral xabar ("boshqa qurilmadan" EMAS).
@@ -84,6 +85,8 @@ export const forceLogout = (reason: ForceLogoutReason = 'revoked'): Promise<void
     try {
       storage.clearAll();
     } catch {}
+    // 16.10: Analytics — keyingi foydalanuvchi hodisalari oldingisiga bog'lanmasin
+    setAnalyticsUser(null);
     // SS-PERF (2026-09-25): useFetch keshini tozalaymiz — keyingi foydalanuvchi
     // oldingi akkaunt javoblarini (30s kesh) ko'rmasin.
     try {
