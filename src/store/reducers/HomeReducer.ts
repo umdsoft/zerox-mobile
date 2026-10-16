@@ -98,6 +98,10 @@ const HomeReducer = createSlice({
     // SS-DEV (2026-10-05): bosh sahifa MMKV keshidan darhol to'ldirish
     // (stale-while-revalidate). Faqat redux BO'SH bo'lsa — jonli ma'lumot ustiga
     // eski kesh yozilmaydi. Keyin HomeApi.fulfilled yangisini qo'yadi.
+    // 16.10: bosh sahifa fokusida /home/analytics jim yangilanadi (moliyaviy sog'liq real vaqtda).
+    setAnalytics: (state, action) => {
+      if (action.payload) state.analytics = action.payload;
+    },
     hydrateHome: (state, action) => {
       const p = action.payload || {};
       if ((state.user as any)?.data) return;
@@ -222,5 +226,6 @@ export const {
   checkExpire,
   setChangeEndDate,
   hydrateHome,
+  setAnalytics,
 } = HomeReducer.actions;
 export default HomeReducer.reducer;

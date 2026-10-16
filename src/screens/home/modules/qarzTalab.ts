@@ -22,7 +22,9 @@
  * Backend endi 428 `no-card` QAYTARMAYDI (karta bo'lmasa umumiy matn) — eski javob uchun
  * `no-card` tarmog'i saqlangan.
  */
+import React from 'react';
 import axios from 'axios';
+import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
@@ -156,20 +158,56 @@ type TalabArgs = {
   t: (k: string, o?: any) => string;
   navigation: { navigate: (name: string, params?: object) => void };
   plan: PlanState | null;
+  /** 16.10: do'kon — talab ruxsati EGASINING tarifi bo'yicha (xodim rejimida ham). */
+  faoliyatId?: number | null;
+};
+
+type TalabRuxsat = { allowed: boolean; expired: boolean };
+
+/**
+ * 16.10 ("Yangi mobil xatolar 15.10", 5–6-rasm): Free tarifdagi do'konda "Talab qilish" qulflanmasdi —
+ * xodim rejimida ilova egasining tarifini bilmasdi. GET /savdo-faoliyat/:id/talab-ruxsat — egasi tarifi
+ * (talab endpointi bilan bir xil qoida). Har FOKUSda: Tariflar sahifasida tarif olib qaytganda qulf ochiladi.
+ * Xato/yuklanmagan → null (qulf `plan` bo'yicha, oxirgi so'z — server 403).
+ */
+const useTalabRuxsat = (faoliyatId?: number | null): TalabRuxsat | null => {
+  const [state, setState] = React.useState<TalabRuxsat | null>(null);
+  useFocusEffect(
+    React.useCallback(() => {
+      let alive = true;
+      if (!faoliyatId) return undefined;
+      axios
+        .get(`${URL}/qarz-daftari/savdo-faoliyat/${faoliyatId}/talab-ruxsat`, authHeaders())
+        .then(r => {
+          const d = r?.data?.data;
+          if (alive && d && typeof d.allowed === 'boolean') setState({ allowed: d.allowed, expired: !!d.expired });
+        })
+        .catch(() => {
+          // jim: noma'lum → `plan` bo'yicha (egasi) yoki server hal qiladi
+        });
+      return () => {
+        alive = false;
+      };
+    }, [faoliyatId]),
+  );
+  return state;
 };
 
 /**
  * 03.10: "Qaytarishni talab qilish" — QarzDaftariMijoz va QarzDaftariQarz uchun YAGONA oqim.
  * Hook — ekranning har qanday erta `return` idan OLDIN chaqirilishi shart.
  */
-export const useQarzTalab = ({ t, navigation, plan }: TalabArgs) => {
+export const useQarzTalab = ({ t, navigation, plan, faoliyatId }: TalabArgs) => {
   const staff = isQarzStaffContext();
-  // Tarif — do'kon EGASINIKI: xodim kontekstida o'z tarifimiz bo'yicha qulflamaymiz.
-  const locked = !staff && isFeatureLocked(plan, 'manual_sms_send');
+  const ruxsat = useTalabRuxsat(faoliyatId);
+  // 16.10: tarif — do'kon EGASINIKI. Server javobi bo'lsa (egasi + xodim) shu; bo'lmasa egasi o'z
+  // tarifi bo'yicha (xodim kontekstida o'z tarifimiz bo'yicha qulflamaymiz).
+  const locked = ruxsat ? !ruxsat.allowed : !staff && isFeatureLocked(plan, 'manual_sms_send');
+  const lockExpired = ruxsat ? ruxsat.expired : plan?.expired;
   const flow = useDemandFlow<QarzTalabTarget>({
     locked,
     // 03.10: toast + jim navigatsiya EMAS — sababi yozilgan "Tarif cheklovi" oynasi.
-    lockedText: () => planRequiredText({ expired: plan?.expired }, t),
+    lockedText: () => planRequiredText({ expired: lockExpired }, t),
     onUpgrade: () => navigation.navigate('Types'),
     loadCard: loadShopCard,
     // Xodim karta ekraniga kira olmaydi (backend `denyXodim`).

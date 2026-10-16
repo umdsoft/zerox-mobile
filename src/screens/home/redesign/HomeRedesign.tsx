@@ -24,7 +24,9 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import Toast from 'react-native-toast-message';
+import axios from 'axios';
 import { HomeApi, getNotificationWithPage } from '../../../store/api/home';
+import { setAnalytics } from '../../../store/reducers/HomeReducer';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import { compactMoney, fmtUZS, fmtUSD } from '../../../helper/money';
@@ -767,6 +769,12 @@ const HomeRedesign = () => {
   // Bo'limda qarz qo'shilgach bosh sahifaga qaytilganda karta ESKIRMASIN:
   // har fokusda (birinchisidan tashqari) va pull-to-refresh'da jim yangilanadi.
   const refreshDebtStats = debtStats.onRefresh;
+  // 16.10 ("Yangi mobil xatolar 15.10", 3-4-rasm): ILDIZ - `/qarz-daftari/dashboard` (Qarz daftari,
+  // Qarz shartnomasi va yuqoridagi Berilgan/Olingan kartalari) FAQAT mount'da yuklanardi. Bosh sahifa
+  // pastki menyuda doim mount bo'lib turgani uchun Qarz daftarida voz kechish / yopish / yangi qarzdan
+  // keyin qaytilganda eski summa (300K) qolardi. Endi shaxsiy qarz statistikasi bilan BIRGA har fokusda
+  // jim yangilanadi (kesh tufayli skeleton/sakrash yo'q).
+  const refreshDaftariDash = daftariDash.onRefresh;
   const debtStatsFirstFocus = React.useRef(true);
   useFocusEffect(
     React.useCallback(() => {
@@ -775,11 +783,22 @@ const HomeRedesign = () => {
         return;
       }
       refreshDebtStats({});
-    }, [refreshDebtStats]),
+      refreshDaftariDash({});
+      // Moliyaviy sog'liq bahosi va agregatlar (/home/analytics) - HomeApi'siz (loading/skeleton yo'q).
+      axios
+        .get(`${URL}/home/analytics`, { headers: { Authorization: `Bearer ${storage.getString('token')}` } })
+        .then(r => {
+          const a = r?.data?.data;
+          if (a) dispatch(setAnalytics(a));
+        })
+        .catch(() => {});
+    }, [refreshDebtStats, refreshDaftariDash, dispatch]),
   );
   React.useEffect(() => {
-    if (refreshing) refreshDebtStats({});
-  }, [refreshing, refreshDebtStats]);
+    if (!refreshing) return;
+    refreshDebtStats({});
+    refreshDaftariDash({});
+  }, [refreshing, refreshDebtStats, refreshDaftariDash]);
   const dashFresh: any = (daftariDash.data as any)?.data || daftariDash.data || {};
   // Yangi javob TO'LIQ kelgan bo'lsa keshni yangilaymiz; aks holda (remount'da
   // bo'sh bo'lganda) oldingi keshdan foydalanamiz -> summalar sakramaydi.

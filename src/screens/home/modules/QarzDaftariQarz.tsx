@@ -170,7 +170,8 @@ const QarzDaftariQarz = () => {
   // ⚠️ Hook — `if (loading) return` DAN OLDIN bo'lishi shart.
   const plan = usePlanFeatures();
   // 03.10: SMS darhol ketmaydi — karta tekshiruvi + "Talab SMS yuborilsinmi?" (qarzTalab.useQarzTalab).
-  const talab = useQarzTalab({ t, navigation, plan });
+  // 16.10: talab ruxsati — do'kon EGASINING tarifi (xodim rejimida ham qulf to'g'ri)
+  const talab = useQarzTalab({ t, navigation, plan, faoliyatId: (data as any)?.data?.savdo_faoliyat_id });
   const talabLocked = talab.locked;
   const talabLoading = talab.demanding;
 
