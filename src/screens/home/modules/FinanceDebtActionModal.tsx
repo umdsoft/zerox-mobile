@@ -35,7 +35,14 @@ import Svg, { Circle, Line } from 'react-native-svg';
 import { rd, rs } from '../../../theme/rd';
 import { CheckIcon, HandCoinReturnIcon, LockIcon } from '../redesign/icons';
 import { allocatePayment, Allocation } from './debtAllocation';
-import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOverdue, num } from './financeMoney';
+import { fDate, fMoney, isDebtOverdue, num } from './financeMoney';
+import {
+  exceedsAmount,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  sanitizeAmountInput,
+} from '../../../helper/money';
 
 export type DebtActionMode = 'close' | 'pay' | 'forgive';
 // 03.10: `sms` — to'lov haqida qarama-qarshi tomonga SMS (faqat yopish/qaytarishda).
@@ -111,8 +118,10 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
   const allSelected = debts.length > 0 && debts.every(d => selected.includes(debtKey(d)));
   const totalOf = (cur: string) =>
     selectedDebts.filter(d => curOf(d) === cur).reduce((s, d) => s + num(d?.remaining_amount), 0);
-  const amountOf = (cur: string) => num(amountToRaw(amounts[cur]));
-  const isOver = (cur: string) => amountOf(cur) > 0 && amountOf(cur) > totalOf(cur) + 0.0001;
+  // amounts[cur] — KANONIK xom satr ("655.77"); USD da tsentlar, UZS butun.
+  const amountOf = (cur: string) => parseAmount(amounts[cur], isUsd(cur));
+  // Tsentlarda taqqoslash (float xatosiz: 0.1+0.2 > 0.3 muammosi yo'q).
+  const isOver = (cur: string) => amountOf(cur) > 0 && exceedsAmount(amountOf(cur), totalOf(cur));
 
   // Tanlovdan chiqqan valyutaning summasi saqlanib qolmasin.
   const pruneAmounts = (nextSel: string[]) => {
@@ -305,10 +314,12 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
                           <View style={[styles.inputWrap, isOver(cur) && { borderColor: '#f87171' }]}>
                             <TextInput
                               allowFontScaling={false}
-                              value={amounts[cur] || ''}
-                              onChangeText={v => setAmounts(prev => ({ ...prev, [cur]: amountToDisplay(v) }))}
-                              keyboardType="number-pad"
-                              placeholder={amountToDisplay(String(Math.round(totalOf(cur))))}
+                              value={formatAmountInput(amounts[cur], isUsd(cur))}
+                              onChangeText={v =>
+                                setAmounts(prev => ({ ...prev, [cur]: sanitizeAmountInput(v, isUsd(cur)) }))
+                              }
+                              keyboardType={isUsd(cur) ? 'decimal-pad' : 'number-pad'}
+                              placeholder={formatAmountInput(String(totalOf(cur)), isUsd(cur))}
                               placeholderTextColor={rd.color.textTertiary}
                               style={styles.input}
                             />

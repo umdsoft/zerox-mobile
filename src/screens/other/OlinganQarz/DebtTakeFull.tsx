@@ -9,7 +9,7 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { URL } from '../../constants';
 import { toastConfig } from '../../components/ToastConfig';
 
-import { sortText } from '../../components/StatisticCard';
+import { groupMoney, round2 } from '../../../helper/money';
 import CheckBox from '@react-native-community/checkbox';
 import TextBold from '../../components/TextBold';
 import axios from 'axios';
@@ -56,7 +56,7 @@ const DebtTakeFull = () => {
           reciver: item.debitor,
           end_date: item.end_date,
           old_amount: Number(item.residual_amount),
-          inc: Number(item.residual_amount) + Number(item.inc),
+          inc: round2(Number(item.residual_amount) + Number(item.inc)),
           ntype: 2,
           refundable_amount: item.residual_amount,
           residual_amount: 0,
@@ -154,7 +154,7 @@ const DebtTakeFull = () => {
                         start: settingDate(item.created_at),
                         end: item.number,
                         sum: `${
-                          sortText(item.amount - item.inc) + ' ' + item.currency
+                          groupMoney(Number(item.amount) - Number(item.inc)) + ' ' + item.currency
                         }`,
                         id: item.number,
                         // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.

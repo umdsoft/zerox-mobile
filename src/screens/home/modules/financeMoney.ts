@@ -8,6 +8,7 @@
  */
 
 import { t } from 'i18next';
+import { fmtAmountByCurrency } from '../../../helper/money';
 
 export const num = (v: any): number => {
   const n = Number(v);
@@ -15,11 +16,9 @@ export const num = (v: any): number => {
 };
 
 // "1 500 000 UZS" — to'liq mingtalik (probel) + valyuta kodi.
-export const fMoney = (v: any, cur: string = 'UZS'): string => {
-  const n = Math.round(num(v));
-  const s = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return `${s} ${cur}`;
-};
+// USD da tsentlar ko'rinadi: "655,77 USD" (2026-10-18); UZS — butun.
+export const fMoney = (v: any, cur: string = 'UZS'): string =>
+  `${fmtAmountByCurrency(num(v), cur)} ${cur}`;
 
 // KOMPAKT B/M/K (so'rov: Shaxsiy moliyada barcha summalar Mlrd→B, mln→M, ming→K):
 // "68,2 M UZS", "684,2 K UZS", "5,9 B UZS". Kichik summalar (<100 ming) to'liq
@@ -35,7 +34,7 @@ export const fCompact = (v: any, cur?: string): string => {
   if (abs >= 1e9) s = `${unit(1e9)} B`;
   else if (abs >= 1e6) s = `${unit(1e6)} M`;
   else if (abs >= 1e4) s = `${unit(1e3)} K`;
-  else s = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  else s = fmtAmountByCurrency(n, cur); // USD: 15,84 (tsentlar yo'qolmaydi)
   return cur ? `${s} ${cur}` : s;
 };
 

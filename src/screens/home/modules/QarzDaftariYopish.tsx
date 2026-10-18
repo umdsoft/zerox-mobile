@@ -5,6 +5,13 @@
  * GET  /qarz-daftari/qarz/:id          → qarz obyekti (mijoz, qoldiq, valyuta).
  * POST /qarz-daftari/qarz/:id/yopish   → to'lovni qabul qilish.
  *
+ * 18.10 (egasining hujjati): `mode: 'mijoz'` — mijoz kartasidagi «Qarzni yopish».
+ * Ekran oxirgi qarzning qoldig'ini EMAS, mijozning shu do'kon + turi + valyuta bo'yicha
+ * JAMI qoldig'ini ko'rsatadi (Maksimal, 25/50/75/Hammasi ham jamiga nisbatan):
+ *   GET  /qarz-daftari/mijozlar/:id/yopish-info?turi=…  → { mijoz, qoldiqlar:[{valyuta,qoldiq,soni}] }
+ *   POST /qarz-daftari/mijozlar/:id/yopish             → summa aktiv qarzlar bo'ylab taqsimlanadi.
+ * Mijozda UZS va USD qarz bo'lsa — valyuta tanlagichi.
+ *
  * Aksent — YASHIL (to'lov / yopish).
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -27,6 +34,17 @@ import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
+import {
+  amountToInput,
+  exceedsAmount,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  percentOfAmount,
+  round2,
+  sanitizeAmountInput,
+  toCents,
+} from '../../../helper/money';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import { ClockIcon, CoinIcon, UserIcon } from '../redesign/icons';
@@ -123,18 +141,37 @@ const QarzDaftariYopish = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
   const id = route.params?.id;
+  const isMijozMode = route.params?.mode === 'mijoz';
+  const mijozId = route.params?.mijoz_id;
+  const turi: 'berish' | 'olish' = route.params?.turi === 'olish' ? 'olish' : 'berish';
+  // Mijoz rejimida 30s keshni chetlab o'tamiz — eski jami (yopishdan oldingi) ko'rinmasin.
+  const [nonce] = React.useState(() => Date.now());
 
-  const { data, loading } = useFetch({
-    url: `${URL}/qarz-daftari/qarz/${id}`,
+  const { data, loading, error } = useFetch({
+    url: isMijozMode
+      ? `${URL}/qarz-daftari/mijozlar/${mijozId}/yopish-info?turi=${turi}&_=${nonce}`
+      : `${URL}/qarz-daftari/qarz/${id}`,
     method: 'GET',
   });
 
   const [raw, setRaw] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  const [cur, setCur] = React.useState<string | null>(route.params?.valyuta || null);
 
-  const qarz: any = (data as any)?.data;
+  const payload: any = (data as any)?.data;
+  // Mijoz rejimi: valyuta bo'yicha jami qoldiqlar; tanlangani (bo'lmasa birinchisi).
+  const qoldiqlar: { valyuta: string; qoldiq: number; soni: number }[] =
+    isMijozMode && Array.isArray(payload?.qoldiqlar) ? payload.qoldiqlar : [];
+  const tanlangan = qoldiqlar.find(q => q.valyuta === cur) || qoldiqlar[0];
+  const qarz: any = isMijozMode
+    ? payload?.mijoz && tanlangan
+      ? { mijoz: payload.mijoz, valyuta: tanlangan.valyuta, qoldiq: tanlangan.qoldiq }
+      : null
+    : payload;
 
-  if (loading) return <Loading />;
+  // useFetch birinchi renderda data=[] va loading=false — "Topilmadi" miltillamasin
+  // (xato bo'lsa — kutmaymiz, "Topilmadi").
+  if (loading || (Array.isArray(data) && !error)) return <Loading />;
 
   if (!qarz) {
     return (
@@ -154,16 +191,24 @@ const QarzDaftariYopish = () => {
   const valyuta = qarz?.valyuta || 'UZS';
   const qoldiq = Number(qarz?.qoldiq || 0);
 
-  const summa = Number(onlyDigits(raw) || 0);
-  const over = summa > qoldiq; // qoldiqdan oshib ketdi
-  const newQoldiq = Math.max(qoldiq - summa, 0);
-  const fullyClosed = summa > 0 && !over && qoldiq - summa === 0;
+  // USD — tsentlar (655,77), UZS — butun; taqqoslash TSENTLARDA (2026-10-18).
+  const usd = isUsd(valyuta);
+  const summa = parseAmount(raw, usd);
+  const over = exceedsAmount(summa, qoldiq); // qoldiqdan oshib ketdi
+  const newQoldiq = Math.max(round2(qoldiq - summa), 0);
+  const fullyClosed = summa > 0 && !over && toCents(qoldiq) === toCents(summa);
   const canSubmit = summa > 0 && !over && !submitting;
+
+  // Mijoz rejimi: valyuta almashtirilsa summa tozalanadi.
+  const pickCur = (v: string) => {
+    if (v === valyuta) return;
+    setCur(v);
+    setRaw('');
+  };
 
   // Tezkor summa chiplari.
   const setQuick = (pct: number) => {
-    const v = pct === 1 ? qoldiq : Math.round(qoldiq * pct);
-    setRaw(String(v));
+    setRaw(amountToInput(percentOfAmount(qoldiq, pct * 100, usd), usd));
   };
 
   // To'lovni qabul qilish (POST).
@@ -173,8 +218,12 @@ const QarzDaftariYopish = () => {
     try {
       const token = storage.getString('token');
       const res = await axios.post(
-        `${URL}/qarz-daftari/qarz/${id}/yopish`,
-        { summa: Number(onlyDigits(raw)), valyuta },
+        isMijozMode
+          ? `${URL}/qarz-daftari/mijozlar/${mijozId}/yopish`
+          : `${URL}/qarz-daftari/qarz/${id}/yopish`,
+        isMijozMode
+          ? { summa, valyuta, turi, savdo_faoliyat_id: qarz?.mijoz?.savdo_faoliyat_id }
+          : { summa, valyuta },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (res?.data?.success) {
@@ -220,6 +269,26 @@ const QarzDaftariYopish = () => {
               </Text>
             </View>
           </View>
+          {/* Mijoz rejimi: UZS va USD qarz bo'lsa — valyuta tanlagichi (har biri alohida yopiladi). */}
+          {qoldiqlar.length > 1 && (
+            <View style={[styles.chips, { marginTop: rs(14) }]}>
+              {qoldiqlar.map(q => {
+                const active = q.valyuta === valyuta;
+                return (
+                  <TouchableOpacity
+                    key={q.valyuta}
+                    activeOpacity={0.85}
+                    style={[styles.chip, active && { backgroundColor: GREEN }]}
+                    onPress={() => pickCur(q.valyuta)}
+                  >
+                    <Text style={[styles.chipText, active && { color: '#fff' }]} numberOfLines={1}>
+                      {`${sortMoneyText(q.qoldiq) || 0} ${q.valyuta}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* 2. To'lov ma'lumotlari */}
@@ -232,9 +301,9 @@ const QarzDaftariYopish = () => {
             <CoinIcon size={rs(18)} color={over ? RED : rd.color.textTertiary} />
             <TextInput
               style={styles.input}
-              value={formatThousands(raw)}
-              onChangeText={t => setRaw(onlyDigits(t))}
-              keyboardType="number-pad"
+              value={formatAmountInput(raw, usd)}
+              onChangeText={t => setRaw(sanitizeAmountInput(t, usd))}
+              keyboardType={usd ? 'decimal-pad' : 'number-pad'}
               placeholder="0"
               placeholderTextColor={rd.color.textTertiary}
             />

@@ -431,7 +431,15 @@ const QarzDaftariMijoz = () => {
       hint(t('Aktiv qarzlar yo‘q'));
       return;
     }
-    navigation.navigate('QarzDaftariYopish', { id: lastActiveQarz.id });
+    // 18.10: mijoz kartasidan — JAMI qoldiq bo'yicha yopish (oxirgi qarz qoldig'i EMAS).
+    // Server summani shu do'kon + turi + valyuta aktiv qarzlari bo'ylab taqsimlaydi.
+    navigation.navigate('QarzDaftariYopish', {
+      mode: 'mijoz',
+      mijoz_id: mijoz?.id || id,
+      turi,
+      valyuta: qoldiqUzs > 0 ? 'UZS' : qoldiqUsd > 0 ? 'USD' : lastActiveQarz.valyuta,
+      id: lastActiveQarz.id,
+    });
   };
   const onTalab = () => {
     if (!lastActiveQarz) {

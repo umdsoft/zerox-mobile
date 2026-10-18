@@ -38,6 +38,12 @@ import RadioButtonIcon from '../../images/radioButton';
 import OtherHeader from '../components/OtherHeader';
 import { Provider } from 'react-native-paper';
 import { settingDate } from '../../helper';
+import {
+  adaptAmountInputToCurrency,
+  formatAmountInput,
+  parseAmount,
+  sanitizeAmountInput,
+} from '../../helper/money';
 import MainText from '../components/MainText';
 import { font, fontSize } from '../../theme/font';
 import { colors } from '../../theme/colors';
@@ -70,18 +76,20 @@ const GiveDebtUser = () => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [usdd, setUsdd] = useState('');
+  // API/hisob uchun son: USD — 2 xona (tsentlar), UZS — butun.
+  const amountNum = parseAmount(amount, !active);
   // SS-DEV (2026-10-06): yagona double-submit himoyasi — so'rov ketayotganda ikkinchi
   // bosish e'tiborsiz (state'dan farqli — bir xil kadrdagi ikki bosishni ham ushlaydi).
   const submittingRef = useRef(false);
   //type 0 bulsa qarz olmoq
   //type 1 bulsa qarz bermoq
   useEffect(() => {
-    if (amount.replace(/\s/g, '').length > 0 && checked) {
+    if (amountNum > 0 && checked) {
       setDisabled(false);
     } else {
       setDisabled(true);
     }
-  }, [amount, checked, date]);
+  }, [amountNum, checked, date]);
 
   // Amaldan keyin Home'ga SILLIQ qaytish: `navigation.reset` (butun navigatorni
   // REMOUNT qilib "ekran oqarib qolishi"ni keltirib chiqarardi) O'RNIGA `navigate`
@@ -149,7 +157,7 @@ const GiveDebtUser = () => {
 
   // const toggleModal = useCallback(() => {
   //   navigation.navigate('Contract', {
-  //     url: `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid}&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid}&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=UZS&day=${formatDateMinus(date)}`,
+  //     url: `https://pdf.zerox.uz/free_contract.php?debitor=${type === 0 ? qarzoluvchi?.uid : user?.data?.uid}&creditor=${type !== 1 ? user?.data?.uid : qarzoluvchi?.uid}&download=0&amount=${amountNum}&currency=UZS&day=${formatDateMinus(date)}`,
   //     title: t('300'),
   //   });
   // }, [navigation]);
@@ -160,7 +168,7 @@ const GiveDebtUser = () => {
         type === 0 ? qarzoluvchi?.uid : user?.data?.uid
       }&creditor=${
         type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
-      }&download=0&amount=${Number(amount.replace(/\s/g, ''))}&currency=${
+      }&download=0&amount=${amountNum}&currency=${
         active ? 'UZS' : 'USD'
       }&day=${formatDateMinus(date)}&lang=${lang}`,
       title: t('306'),
@@ -180,24 +188,24 @@ const GiveDebtUser = () => {
   const submitContract = async () => {
     let a;
     if (active) {
-      if (Number(amount.replace(/\s/g, '')) >= 100000000) {
+      if (amountNum >= 100000000) {
         a = 100000;
       } else {
-        if (Number(amount.replace(/\s/g, '')) <= 1000000) {
+        if (amountNum <= 1000000) {
           a = 1000;
         } else {
-          a = Number(Number(amount.replace(/\s/g, '')) * 0.001).toFixed(0);
+          a = Number(amountNum * 0.001).toFixed(0);
         }
       }
     } else {
-      a = Number(Number(amount.replace(/\s/g, '')) * usdd * 0.001).toFixed(0);
+      a = Number(amountNum * usdd * 0.001).toFixed(0);
     }
 
     try {
       if (
         active
-          ? Number(amount.replace(/\s/g, '')) < 10000
-          : Number(amount.replace(/\s/g, '')) < 1
+          ? amountNum < 10000
+          : amountNum < 1
       ) {
         Toast.show({
           autoHide: true,
@@ -236,7 +244,7 @@ const GiveDebtUser = () => {
         const { data } = await axios.post(
           URL + '/contract/create',
           {
-            amount: Number(amount.replace(/\s/g, '')),
+            amount: amountNum,
             creditor: user?.data?.id,
             debitor: qarzoluvchi?.id,
             currency: active ? 'UZS' : 'USD',
@@ -277,7 +285,7 @@ const GiveDebtUser = () => {
         const { data } = await axios.post(
           URL + '/contract/create',
           {
-            amount: Number(amount.replace(/\s/g, '')),
+            amount: amountNum,
             creditor: qarzoluvchi?.id,
             debitor: user?.data?.id,
             currency: active ? 'UZS' : 'USD',
@@ -391,6 +399,8 @@ const GiveDebtUser = () => {
           activeOpacity={0.85}
           onPress={() => {
             setActive(true);
+            // USD -> UZS: tsentlar tashlanadi ("12.34" -> "12").
+            setAmount(v => adaptAmountInputToCurrency(v, false));
           }}
           style={[styles.currencyOption, active && styles.currencyOptionActive]}
         >
@@ -429,17 +439,15 @@ const GiveDebtUser = () => {
       <View style={{ flex: 1 }}>
         <TextInput
           allowFontScaling={false}
-          value={onValue(amount)}
+          // USD — tsentlar (655,77), UZS — butun (egasi hujjati 2026-10-18).
+          value={formatAmountInput(amount, !active)}
           placeholder={active ? 'UZS' : 'USD'}
           placeholderTextColor={rd.color.textTertiary}
-          keyboardType="numeric"
+          keyboardType={active ? 'numeric' : 'decimal-pad'}
           onChangeText={text => {
-            let a = Number(text.replace(/[^0-9]/g, ''));
-            if (a > 0) {
-              setAmount(a.toString());
-            } else {
-              setAmount('');
-            }
+            const raw = sanitizeAmountInput(text, !active);
+            // "0" / "0," / "0,0" — USD da yozish davom etmoqda, tozalanmaydi.
+            setAmount(raw === '0' && active ? '' : raw);
           }}
           style={styles.TextInput}
         />

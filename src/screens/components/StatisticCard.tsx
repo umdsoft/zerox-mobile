@@ -7,6 +7,7 @@ import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign/icons';
 import { parseApiDate } from '../../helper';
+import { groupMoney } from '../../helper/money';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -287,8 +288,9 @@ export const formatMln = (value: any): string => {
 };
 // Pul summasi — backend "550000.00" kabi o'nlik string qaytaradi; web'dagidek
 // butun songa yaxlitlab, mingliklarni bo'shliq bilan ajratamiz ("550 000").
-export const sortMoneyText = value =>
-  sortText(Math.round(Number(value) || 0));
+// 2026-10-18: kasr bo'lsa (USD tsentlari) 2 xona VERGUL bilan: "655,77";
+// butun summalar avvalgidek ("550 000").
+export const sortMoneyText = value => groupMoney(value);
 export const sortMoney = (money, currency) => {
   // Ming
   if (money >= 1000 && money <= 9999) {

@@ -3,7 +3,7 @@ import React, {useEffect, useState} from 'react';
 import { goHomeSmooth } from "../../../helper/finishAction";
 import {style} from '../../../theme/style';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {sortText} from '../../components/StatisticCard';
+import {groupMoney} from '../../../helper/money';
 
 import Loading from '../../components/Loading';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
@@ -158,7 +158,7 @@ const CharityDebt = () => {
                     i18nKey="381"
                     values={{
                       sum:
-                        sortText(info?.residual_amount) + ' ' + info?.currency,
+                        groupMoney(info?.residual_amount) + ' ' + info?.currency,
                       start: settingDate(info.created_at),
                       currancy: info?.currency,
                       id: info?.number,

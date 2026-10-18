@@ -27,6 +27,16 @@ import { toastAfterBack } from '../../../helper/finishAction';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
+import {
+  amountToInput,
+  exceedsAmount,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  percentOfAmount,
+  round2,
+  sanitizeAmountInput,
+} from '../../../helper/money';
 import { sortMoneyText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
@@ -48,12 +58,7 @@ const titleCase = (s?: string) =>
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ') || 'Noma’lum';
 
-// Faqat raqamlarni qoldiramiz (raw qiymat).
-const onlyDigits = (s: string) => (s || '').replace(/\D+/g, '');
-
-// Ming ajratgichli ko'rinish: "1000000" → "1 000 000".
-const groupThousands = (raw: string) =>
-  raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
+// Summa kiritish: helper/money (USD — tsentlar, UZS — butun; 2026-10-18).
 
 // ---------- Kichik komponentlar ----------
 const CircleIcon = ({
@@ -128,15 +133,16 @@ const QarzDaftariVozKechish = () => {
   const valyuta = qarz?.valyuta || 'UZS';
   const qoldiq = Number(qarz?.qoldiq || 0);
 
-  const summa = Number(summaRaw || 0);
-  const tooMuch = summa > qoldiq;
-  const yangiQoldiq = Math.max(qoldiq - summa, 0);
+  const usd = isUsd(valyuta);
+  const summa = parseAmount(summaRaw, usd);
+  // Tsentlarda taqqoslash (float xatosiz).
+  const tooMuch = exceedsAmount(summa, qoldiq);
+  const yangiQoldiq = Math.max(round2(qoldiq - summa), 0);
   const canSubmit = summa > 0 && !tooMuch && !submitting;
 
   // Tezkor chip: qoldiqning ulushi.
   const setChip = (pct: number) => {
-    const val = pct >= 100 ? qoldiq : Math.round((qoldiq * pct) / 100);
-    setSummaRaw(String(val));
+    setSummaRaw(amountToInput(percentOfAmount(qoldiq, pct, usd), usd));
   };
 
   // POST — summani voz kechish.
@@ -148,7 +154,7 @@ const QarzDaftariVozKechish = () => {
       await axios.post(
         `${URL}/qarz-daftari/qarz/${id}/voz-kechish`,
         {
-          summa: Number(summaRaw),
+          summa,
           valyuta,
         },
         { headers: { Authorization: `Bearer ${token}` } },
@@ -228,9 +234,9 @@ const QarzDaftariVozKechish = () => {
           >
             <TextInput
               style={styles.input}
-              value={groupThousands(summaRaw)}
-              onChangeText={t => setSummaRaw(onlyDigits(t))}
-              keyboardType="numeric"
+              value={formatAmountInput(summaRaw, usd)}
+              onChangeText={t => setSummaRaw(sanitizeAmountInput(t, usd))}
+              keyboardType={usd ? 'decimal-pad' : 'numeric'}
               placeholder="0"
               placeholderTextColor={rd.color.textTertiary}
             />

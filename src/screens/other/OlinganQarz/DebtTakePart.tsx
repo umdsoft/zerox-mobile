@@ -14,7 +14,16 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../../components/ToastConfig';
 import { URL } from '../../constants';
-import { sortText } from '../../components/StatisticCard';
+import {
+  exceedsAmount,
+  groupMoney,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  round2,
+  sanitizeAmountInput,
+  toCents,
+} from '../../../helper/money';
 
 import CheckBox from '@react-native-community/checkbox';
 
@@ -51,6 +60,9 @@ const DebtTakePart = () => {
   );
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  // USD — tsentlar (655,77), UZS — butun (egasi hujjati 2026-10-18).
+  const usd = isUsd(contractInfo?.currency);
+  const sumNum = parseAmount(sum, usd);
 
   const onPress = async () => {
     const token = storage.getString('token');
@@ -61,20 +73,14 @@ const DebtTakePart = () => {
         creditor: contractInfo.creditor,
         debitor: contractInfo.debitor,
         end_date: contractInfo.end_date,
-        inc: Number(sum.replace(/\s/g, '')) + Number(contractInfo.inc),
+        inc: round2(sumNum + Number(contractInfo.inc)),
         reciver: contractInfo.debitor,
-        refundable_amount: Number(sum.replace(/\s/g, '')),
+        refundable_amount: sumNum,
         old_amount: Number(contractInfo.residual_amount),
-        residual_amount:
-          Number(contractInfo.residual_amount) - Number(sum.replace(/\s/g, '')),
+        residual_amount: round2(Number(contractInfo.residual_amount) - sumNum),
         status: 0,
-        // type 1 bulgan
-        type:
-          Number(contractInfo.residual_amount) -
-            Number(sum.replace(/\s/g, '')) ===
-          0
-            ? 2
-            : 1,
+        // type 1 bulgan; 2 — to'liq (tsentlarda taqqoslanadi, float xatosiz)
+        type: toCents(contractInfo.residual_amount) === toCents(sumNum) ? 2 : 1,
         ntype: 1,
         sender: contractInfo.creditor,
         res: contractInfo.debitor,
@@ -153,18 +159,16 @@ const DebtTakePart = () => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onChangeText = text => {
-    if (Number(text.replace(/\s/g, '')) >= 1) {
-      if (
-        Number(text.replace(/\s/g, '')) <=
-        Number(contractInfo.amount - contractInfo.inc)
-      ) {
-        setSum(text);
-      } else {
-        setSum('');
-      }
-    } else {
+    // USD da "65,75" endi "6 575" bo'lib ketmaydi (o'nlik ajratgich saqlanadi).
+    const raw = sanitizeAmountInput(text, usd);
+    const n = parseAmount(raw, usd);
+    if (!raw || (!usd && n < 1)) {
       setSum('');
+      return;
     }
+    const maxLeft = Number(contractInfo.amount) - Number(contractInfo.inc);
+    // Qoldiqdan oshsa — avvalgidek tozalanadi (tsentlarda taqqoslash).
+    setSum(exceedsAmount(n, maxLeft) ? '' : raw);
   };
 
   const onValue = text => {
@@ -198,17 +202,17 @@ const DebtTakePart = () => {
         {/* Input tepasidagi "Summani kiriting" label OLIB TASHLANDI — placeholder'da
             allaqachon bor edi (dublikat, so'rov bo'yicha). */}
         <TextInput
-          value={onValue(sum)}
+          value={formatAmountInput(sum, usd)}
           placeholder={t('276')}
           placeholderTextColor={rd.color.textTertiary}
-          keyboardType="numeric"
+          keyboardType={usd ? 'decimal-pad' : 'numeric'}
           onChangeText={onChangeText}
           style={styles.amountInput}
           allowFontScaling={false}
         />
       </View>
     );
-  }, [onChangeText, sum]);
+  }, [onChangeText, sum, usd]);
 
   if (contractLoading) {
     return <Loading />;
@@ -235,7 +239,7 @@ const DebtTakePart = () => {
                         // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.
                         name: titleCase(contractInfo?.debitor_name),
                         sum: `${
-                          sortText(contractInfo.amount - contractInfo.inc) +
+                          groupMoney(Number(contractInfo.amount) - Number(contractInfo.inc)) +
                           ' ' +
                           contractInfo.currency
                         }`,
@@ -284,7 +288,7 @@ const DebtTakePart = () => {
                     navigation.navigate('Dalol', {
                       type: 5,
                       data: contractInfo,
-                      sum: sum.replace(/\s/g, ''),
+                      sum: String(sumNum),
                     });
                   }}
                   style={styles.linkText}
@@ -296,7 +300,7 @@ const DebtTakePart = () => {
             </View>
             {(() => {
               const btnDisabled =
-                !checked || Number(sum.replace(/\s/g, '')) <= 0 || loading;
+                !checked || sumNum <= 0 || loading;
               return (
                 <TouchableOpacity
                   activeOpacity={0.85}

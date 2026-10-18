@@ -49,7 +49,15 @@ import { useFinanceDemand } from './useDebtGroupActions';
 import DemandConfirmModal from '../../components/DemandConfirmModal';
 import { isFeatureLocked, showPlanRequired, usePlanFeatures } from './planGate';
 import { fmtCard4 } from '../../../helper/cardBin';
-import { amountToDisplay, amountToRaw, fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num } from './financeMoney';
+import { fDate, fMoney, isDebtOpen, isDebtOverdue, localDateKey, num } from './financeMoney';
+import {
+  exceedsAmount,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  sanitizeAmountInput,
+  toCents,
+} from '../../../helper/money';
 import { DateField } from './financeForm';
 import {
   ArrowDownLeft,
@@ -288,8 +296,10 @@ const FinanceDebtDetail = () => {
   })();
 
   const settleTitle = borrowed ? t('Qarzni qaytarish') : t('Qarzni yopish');
-  const payAmount = payFull ? remaining : num(amountToRaw(payVal));
-  const payOver = payAmount > remaining + 0.0001;
+  // USD — tsentlar (655,77), UZS — butun; taqqoslash TSENTLARDA (float xatosiz).
+  const payUsd = isUsd(d.currency);
+  const payAmount = payFull ? remaining : parseAmount(payVal, payUsd);
+  const payOver = exceedsAmount(payAmount, remaining);
 
   const openPay = () => {
     setPayFull(true);
@@ -353,7 +363,7 @@ const FinanceDebtDetail = () => {
         refresh({});
       }
       setShowPay(false);
-      const okMsg = payAmount + 0.0001 >= remaining ? t('Qarz yopildi') : t('To‘lov qayd etildi');
+      const okMsg = toCents(payAmount) >= toCents(remaining) ? t('Qarz yopildi') : t('To‘lov qayd etildi');
       Toast.show(
         planNote
           ? { type: 'omad', visibilityTime: 5000, props: { title: okMsg, desc: planNote } }
@@ -789,11 +799,11 @@ const FinanceDebtDetail = () => {
                 <View style={[styles.amountWrap, payOver && { borderColor: '#f87171' }, payFull && { backgroundColor: '#F9FAFB' }]}>
                   <TextInput
                     allowFontScaling={false}
-                    value={payFull ? amountToDisplay(String(Math.round(remaining))) : payVal}
+                    value={payFull ? formatAmountInput(String(remaining), payUsd) : formatAmountInput(payVal, payUsd)}
                     editable={!payFull}
-                    onChangeText={v => setPayVal(amountToDisplay(v))}
-                    keyboardType="number-pad"
-                    placeholder={amountToDisplay(String(Math.round(remaining)))}
+                    onChangeText={v => setPayVal(sanitizeAmountInput(v, payUsd))}
+                    keyboardType={payUsd ? 'decimal-pad' : 'number-pad'}
+                    placeholder={formatAmountInput(String(remaining), payUsd)}
                     placeholderTextColor={rd.color.textTertiary}
                     style={styles.amountInput}
                   />

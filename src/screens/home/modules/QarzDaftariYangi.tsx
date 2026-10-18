@@ -27,10 +27,17 @@ import {
 import Toast from 'react-native-toast-message';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { sortText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import DateModal from '../modal/DateModal';
-import { fmtUSD, fmtUZS } from '../../../helper/money';
+import {
+  adaptAmountInputToCurrency,
+  fmtAmountByCurrency,
+  fmtUSD,
+  fmtUZS,
+  formatAmountInput,
+  parseAmount,
+  sanitizeAmountInput,
+} from '../../../helper/money';
 import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDownLeft,
@@ -168,14 +175,25 @@ const QarzDaftariYangi = () => {
 
   const [submitting, setSubmitting] = React.useState(false);
 
-  const miqdor = Number(miqdorRaw || 0);
-  const boshlangich = Number(boshlangichRaw || 0);
+  // USD — tsentlar (655,77), UZS — butun (egasi hujjati 2026-10-18).
+  const isUsdVal = valyuta === 'USD';
+  const miqdor = parseAmount(miqdorRaw, isUsdVal);
+  const boshlangich = parseAmount(boshlangichRaw, isUsdVal);
   const oylarNum = Number(oylar || 0);
 
-  // Oylik to'lov — Math.ceil((miqdor - boshlangich) / oylar).
+  // Valyuta USD -> UZS ga almashsa, kiritilgan tsentlar tashlanadi.
+  React.useEffect(() => {
+    setMiqdorRaw(v => adaptAmountInputToCurrency(v, isUsdVal));
+    setBoshlangichRaw(v => adaptAmountInputToCurrency(v, isUsdVal));
+  }, [isUsdVal]);
+
+  // Oylik to'lov — Math.ceil((miqdor - boshlangich) / oylar); USD da tsentgacha
+  // (tsentlarda hisoblanadi — float xatosiz).
   const oylikTolov =
     bolibTolash && oylarNum >= 1
-      ? Math.ceil(Math.max(miqdor - boshlangich, 0) / oylarNum)
+      ? isUsdVal
+        ? Math.ceil(Math.max(Math.round((miqdor - boshlangich) * 100), 0) / oylarNum) / 100
+        : Math.ceil(Math.max(miqdor - boshlangich, 0) / oylarNum)
       : 0;
 
   const onOylarChange = (t: string) => {
@@ -211,14 +229,14 @@ const QarzDaftariYangi = () => {
       mijoz_id,
       turi,
       valyuta,
-      miqdor: Number(miqdorRaw),
+      miqdor,
       mahsulot_nomi: mahsulot,
       berilgan_sana: toApiDate(berilganSana),
       bolib_tolash: bolibTolash ? 1 : 0,
       qaytarish_sanasi:
         bolibTolash || !qaytarishSana ? null : toApiDate(qaytarishSana),
       oylar_soni: bolibTolash ? Number(oylar) : null,
-      boshlangich_tolov: bolibTolash ? Number(boshlangichRaw || 0) : 0,
+      boshlangich_tolov: bolibTolash ? boshlangich : 0,
     };
 
     try {
@@ -323,9 +341,9 @@ const QarzDaftariYangi = () => {
           <View style={styles.inputWrap}>
             <TextInput
               style={styles.input}
-              value={miqdorRaw ? String(sortText(miqdor)) : ''}
-              onChangeText={t => setMiqdorRaw(onlyDigits(t))}
-              keyboardType="numeric"
+              value={formatAmountInput(miqdorRaw, isUsdVal)}
+              onChangeText={t => setMiqdorRaw(sanitizeAmountInput(t, isUsdVal))}
+              keyboardType={isUsdVal ? 'decimal-pad' : 'numeric'}
               placeholder="0"
               placeholderTextColor={rd.color.textTertiary}
             />
@@ -391,9 +409,9 @@ const QarzDaftariYangi = () => {
               <View style={styles.inputWrap}>
                 <TextInput
                   style={styles.input}
-                  value={boshlangichRaw ? String(sortText(boshlangich)) : ''}
-                  onChangeText={t => setBoshlangichRaw(onlyDigits(t))}
-                  keyboardType="numeric"
+                  value={formatAmountInput(boshlangichRaw, isUsdVal)}
+                  onChangeText={t => setBoshlangichRaw(sanitizeAmountInput(t, isUsdVal))}
+                  keyboardType={isUsdVal ? 'decimal-pad' : 'numeric'}
                   placeholder="0"
                   placeholderTextColor={rd.color.textTertiary}
                 />
@@ -426,7 +444,7 @@ const QarzDaftariYangi = () => {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t('Qarz miqdori')}</Text>
               <Text style={styles.summaryValue}>
-                {`${sortText(miqdor) || 0} ${valyuta}`}
+                {`${fmtAmountByCurrency(miqdor, valyuta)} ${valyuta}`}
               </Text>
             </View>
 
@@ -442,14 +460,14 @@ const QarzDaftariYangi = () => {
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>{t('Boshlang‘ich to‘lov')}</Text>
                     <Text style={styles.summaryValue}>
-                      {`${sortText(boshlangich) || 0} ${valyuta}`}
+                      {`${fmtAmountByCurrency(boshlangich, valyuta)} ${valyuta}`}
                     </Text>
                   </View>
                 )}
                 <View style={[styles.summaryRow, styles.summaryTotalRow]}>
                   <Text style={styles.summaryTotalLabel}>{t('Oylik to‘lov')}</Text>
                   <Text style={[styles.summaryTotalValue, { color: accent }]}>
-                    {`${sortText(oylikTolov) || 0} ${valyuta}`}
+                    {`${fmtAmountByCurrency(oylikTolov, valyuta)} ${valyuta}`}
                   </Text>
                 </View>
               </>

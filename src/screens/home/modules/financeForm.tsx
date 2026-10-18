@@ -7,7 +7,13 @@ import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { rd, rs } from '../../../theme/rd';
-import { amountToDisplay, amountToRaw } from './financeMoney';
+import { amountToDisplay } from './financeMoney';
+import {
+  adaptAmountInputToCurrency,
+  formatAmountInput,
+  isUsd,
+  sanitizeAmountInput,
+} from '../../../helper/money';
 import { CalendarIcon, ChevronRight } from '../redesign/icons';
 
 const p2 = (n: number) => String(n).padStart(2, '0');
@@ -52,16 +58,26 @@ export const AmountField = ({
   onChange,
   currency,
 }: {
-  value: string; // xom raqamlar
+  value: string; // xom satr: raqamlar (+ USD da '.' va ≤2 kasr raqam)
   onChange: (raw: string) => void;
   currency: string;
-}) => (
+}) => {
+  const usd = isUsd(currency);
+  // Valyuta USD -> UZS ga almashsa, xom qiymatdagi tsentlar tashlanadi
+  // (aks holda ota-komponent `num("12.34")` ni UZS sifatida yuborardi).
+  React.useEffect(() => {
+    const adapted = adaptAmountInputToCurrency(value, usd);
+    if (adapted !== (value || '')) onChange(adapted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usd]);
+  return (
   <View style={styles.inputWrap}>
     <TextInput
       style={styles.input}
-      value={amountToDisplay(value)}
-      onChangeText={t => onChange(amountToRaw(t))}
-      keyboardType="number-pad"
+      // USD — tsentlar (655,77), UZS — butun (egasi hujjati 2026-10-18).
+      value={formatAmountInput(value, usd)}
+      onChangeText={t => onChange(sanitizeAmountInput(t, usd))}
+      keyboardType={usd ? 'decimal-pad' : 'number-pad'}
       placeholder="0"
       placeholderTextColor={rd.color.textTertiary}
       allowFontScaling={false}
@@ -70,7 +86,8 @@ export const AmountField = ({
       {currency}
     </Text>
   </View>
-);
+  );
+};
 
 // ── Tezkor summa chiplar ──
 const PRESETS: Record<string, number[]> = {

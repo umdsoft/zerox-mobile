@@ -28,7 +28,14 @@ import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
 import { getQarzShop } from '../../../store/api/token/qarzShop';
 import { rd, rs } from '../../../theme/rd';
-import { sortMoneyText, sortText } from '../../components/StatisticCard';
+import { sortMoneyText } from '../../components/StatisticCard';
+import {
+  amountToInput,
+  formatAmountInput,
+  isUsd,
+  parseAmount,
+  sanitizeAmountInput,
+} from '../../../helper/money';
 import RdHeader from '../redesign/RdHeader';
 import {
   ArrowDownLeft,
@@ -267,7 +274,7 @@ const QarzDaftariAmaliyot = () => {
    */
   const submitPay = React.useCallback(async () => {
     if (paying || !payRow) return;
-    const raw = Number(String(payVal).replace(/[^0-9.]/g, ''));
+    const raw = parseAmount(payVal, isUsd(qarz?.valyuta));
     if (!isFinite(raw) || raw <= 0) {
       Toast.show({ type: 'error2', props: { desc: t('Summani kiriting') } });
       return;
@@ -496,7 +503,7 @@ const QarzDaftariAmaliyot = () => {
           <Section title={t('Bo‘lib to‘lash')} Icon={CalendarIcon}>
             <Row label={t('Oylar soni')} value={`${oylar} ${t('oy')}`} />
             <Row label={t('Boshlang‘ich to‘lov')} value={money(boshlangich, qarz?.valyuta)} />
-            <Row label={t('Oylik to‘lov')} value={money(Math.round(oylik), qarz?.valyuta)} />
+            <Row label={t('Oylik to‘lov')} value={money(isUsd(qarz?.valyuta) ? oylik : Math.round(oylik), qarz?.valyuta)} />
 
             {/* SS4: TO'LOV GRAFIGI — har oyning holati bilan. */}
             {!!grafik.length && (
@@ -555,7 +562,7 @@ const QarzDaftariAmaliyot = () => {
                             style={styles.schPayBtn}
                             onPress={() => {
                               setPayRow(g);
-                              setPayVal(String(Math.round(Number(g?.summa) || 0)));
+                              setPayVal(amountToInput(g?.summa, isUsd(qarz?.valyuta)));
                             }}>
                             {/* SS-DEV (2026-09-23): tugma matni "To'landi" edi — holat
                                 belgisiga o'xshab, to'lanmagan oylar ham "to'landi" deb
@@ -595,9 +602,10 @@ const QarzDaftariAmaliyot = () => {
                   (`payVal`), ko'rinishda `sortText` bilan probel qo'yiladi. */}
               <TextInput
                 allowFontScaling={false}
-                value={payVal ? String(sortText(payVal)) : ''}
-                onChangeText={v => setPayVal(v.replace(/[^0-9]/g, ''))}
-                keyboardType="number-pad"
+                // USD — tsentlar (15,84), UZS — butun (2026-10-18).
+                value={formatAmountInput(payVal, isUsd(qarz?.valyuta))}
+                onChangeText={v => setPayVal(sanitizeAmountInput(v, isUsd(qarz?.valyuta)))}
+                keyboardType={isUsd(qarz?.valyuta) ? 'decimal-pad' : 'number-pad'}
                 style={styles.payInput}
                 placeholder="0"
                 placeholderTextColor={rd.color.textTertiary}
