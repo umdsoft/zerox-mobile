@@ -1,5 +1,12 @@
 {
   "translation": {
+    "Tayyor": "Готово",
+    "Kategoriyani o‘chirasizmi?": "Удалить категорию?",
+    "Avvalgi yozuvlar saqlanib qoladi.": "Прежние записи сохранятся.",
+    "Kategoriya o‘chirildi": "Категория удалена",
+    "Kontaktlarni ochib bo‘lmadi": "Не удалось открыть контакты",
+    "Maktab": "Школа",
+    "Bog‘cha": "Детский сад",
     "SMS boshqaruvi": "Управление SMS",
     "SMS paket, tarix va statistikangizni kuzating": "Отслеживайте SMS пакет, историю и статистику",
     "Qoldiq SMS": "Остаток SMS",
@@ -1789,6 +1796,28 @@
     "Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.": "Сегодня ещё не внесено ни одного дохода и расхода. Внесите сегодняшние доходы и расходы.",
     "Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.": "В выбранные дни и время мы напомним внести доходы и расходы за день — через Telegram-бот и мобильное приложение. Напоминание отправляется, только если в этот день не внесено ни одного дохода или расхода.",
     "Belgilangan vaqtda daromad va xarajat kiritishni eslatish": "Напоминать о вводе доходов и расходов в выбранное время",
-    "Viloyat va tumanni tanlang": "Выберите область и район"
+    "Viloyat va tumanni tanlang": "Выберите область и район",
+    "Gap yo‘q. \"Yangi qo‘shish\" orqali oching.": "Гапов нет. Создайте через «Добавить новое».",
+    "Maqsadlar yo‘q. \"Yangi qo‘shish\" orqali qo‘shing.": "Целей нет. Добавьте через «Добавить новое».",
+    "Siz ularning moliyasini ko‘rasiz": "Вы видите их финансы",
+    "Oila a’zosiga taklif yuboring — u qabul qilgach, uning moliyasini shu yerda ko‘rasiz.": "Отправьте приглашение члену семьи — после того как он его примет, его финансы появятся здесь.",
+    "Javob kutilmoqda": "Ожидается ответ",
+    "Ular sizning moliyangizni ko‘radi": "Они видят ваши финансы",
+    "Hech kim sizning daromad va xarajatlaringizni ko‘rmayapti. Ishongan odamingizga kirish huquqini berishingiz mumkin.": "Никто не видит ваши доходы и расходы. Вы можете дать доступ человеку, которому доверяете.",
+    "Kuzatuvchi qo‘shish": "Добавить наблюдателя",
+    "Taklifni bekor qilish": "Отменить приглашение",
+    "Bu yerda siz moliyasini kuzatayotgan oila a’zolari ko‘rsatiladi.": "Здесь показаны члены семьи, за финансами которых вы наблюдаете.",
+    "A’zo taklifingizni qabul qilgach, uning daromad, xarajat va boshqa bo‘limlarini ko‘ra olasiz.": "После того как участник примет приглашение, вы сможете видеть его доходы, расходы и другие разделы.",
+    "Ma’lumotlar faqat ko‘rish uchun — siz ularni o‘zgartira olmaysiz.": "Данные доступны только для просмотра — изменить их вы не можете.",
+    "Nimalarni ko‘rishingizni a’zoning o‘zi belgilaydi. Ruxsat bersa, unga oylik limit ham qo‘ya olasiz.": "Что именно вы видите, решает сам участник. Если он разрешит, вы сможете установить ему месячный лимит.",
+    "Bu yerda sizning daromad va xarajatlaringizni ko‘ra oladigan odamlar ko‘rsatiladi.": "Здесь показаны люди, которые могут видеть ваши доходы и расходы.",
+    "Ular nimani ko‘rishini siz belgilaysiz — qalamcha tugmasi orqali ruxsatlarni o‘zgartiring.": "Что они видят, решаете вы — меняйте права кнопкой с карандашом.",
+    "Ular ma’lumotlaringizni faqat ko‘radi, o‘zgartira olmaydi.": "Они только просматривают ваши данные и не могут их изменить.",
+    "Kirish huquqini istalgan vaqtda bekor qilishingiz mumkin — aloqani uzing.": "Вы можете отозвать доступ в любой момент — просто разорвите связь.",
+    "Bu bo‘lim haqida": "Об этом разделе",
+    "Ko‘rish uchun bosing": "Нажмите, чтобы посмотреть",
+    "Sizni kuzatmoqda": "Наблюдает за вами",
+    "Limitdan oshgan": "Лимит превышен",
+    "Limit belgilangan": "Лимит установлен"
   }
 }

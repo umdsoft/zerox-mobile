@@ -748,3 +748,11 @@ export const FingerprintIcon = (p: IconProps) => (
     <Path d="M21.8 16c.2-2 .131-5.354 0-6" />
   </Base>
 );
+
+// Ko'z — "kuzatish / ko'rish" (Oila moliyasi: "Men kuzatayotganlar").
+export const EyeIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+    <Circle cx="12" cy="12" r="3" />
+  </Base>
+);

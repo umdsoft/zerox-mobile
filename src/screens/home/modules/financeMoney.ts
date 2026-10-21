@@ -207,6 +207,9 @@ const CAT_UZ: Record<string, string> = {
   kiyim_xaridlar: 'Kiyim/Xaridlar',
   qarz_ehson: 'Qarz/Ehson',
   boshqalar: 'Boshqalar',
+  // 21.10: tizimdan olib tashlangan (is_active=0) — faqat eski yozuvlar nomi uchun
+  maktab: 'Maktab',
+  bogcha: 'Bog‘cha',
   // daromad kategoriyalari
   salary: 'Oylik',
   business: 'Biznes',

@@ -10,6 +10,9 @@
  *   onAdd({name, icon})   — ota API create qiladi (yoki lokal)
  *   placeholder, loading
  *   labelFn?    — nom -> ko'rsatish (default catLabel)
+ *   onDelete?(c) — 21.10: berilsa, sheet'da "Tahrirlash" rejimi (🗑) + uzoq bosish orqali
+ *                 o'chirish (tasdiq bilan). Ota API'ni chaqiradi; true = muvaffaqiyatli.
+ *                 Fallback "Boshqalar" (default 'boshqalar' / 'other_income') o'chirilmaydi.
  */
 import React from 'react';
 import { t } from 'i18next';
@@ -24,13 +27,30 @@ import {
 } from 'react-native';
 import { rd, rs } from '../../../theme/rd';
 import { catLabel } from './financeMoney';
-import { CheckIcon, ChevronRight, CloseIcon, PlusIcon, SearchIcon } from '../redesign/icons';
+import {
+  CheckIcon,
+  ChevronRight,
+  CloseIcon,
+  PlusIcon,
+  SearchIcon,
+  TrashIcon,
+} from '../redesign/icons';
 
 const EMOJIS = [
   '🛒', '🍔', '🏠', '🚗', '✈️', '💊', '👕', '📱', '💡', '💧', '🎓', '🎁',
   '🏦', '💼', '💰', '📈', '🎬', '🎵', '⚽', '🏋️', '🐶', '☕', '🧾', '🔧',
   '📚', '💳', '🎯', '🌴', '🍼', '🛠️',
 ];
+
+const DANGER = '#EF4444';
+// Fallback kategoriyalar (backend ham 400 qaytaradi): kategoriyasiz/Gap yozuvlari shularga tushadi.
+const PROTECTED_DEFAULTS = ['boshqalar', 'other_income'];
+
+export const isCategoryDeletable = (c: any): boolean => {
+  if (!c || c.id == null) return false;
+  const isDefault = c.is_default === true || Number(c.is_default) === 1;
+  return !(isDefault && PROTECTED_DEFAULTS.includes(String(c.name)));
+};
 
 const FinanceCategorySelect = ({
   value,
@@ -41,6 +61,7 @@ const FinanceCategorySelect = ({
   placeholder,
   loading,
   labelFn = catLabel,
+  onDelete,
 }: {
   value: any;
   categories: any[];
@@ -50,12 +71,16 @@ const FinanceCategorySelect = ({
   placeholder?: string;
   loading?: boolean;
   labelFn?: (name?: string) => string;
+  onDelete?: (c: any) => Promise<boolean> | boolean;
 }) => {
   const [open, setOpen] = React.useState(false);
   const [q, setQ] = React.useState('');
   const [adding, setAdding] = React.useState(false);
   const [newName, setNewName] = React.useState('');
   const [newIcon, setNewIcon] = React.useState('');
+  const [editing, setEditing] = React.useState(false);
+  const [pendingDelete, setPendingDelete] = React.useState<any>(null);
+  const [deleting, setDeleting] = React.useState(false);
 
   const selected = (categories || []).find(c => String(c?.id) === String(value));
   const filtered = (categories || []).filter(c =>
@@ -68,6 +93,21 @@ const FinanceCategorySelect = ({
     setNewName('');
     setNewIcon('');
     setQ('');
+    setEditing(false);
+    setPendingDelete(null);
+  };
+
+  const canDelete = (c: any) => !!onDelete && isCategoryDeletable(c);
+
+  const confirmDelete = async () => {
+    if (!onDelete || !pendingDelete || deleting) return;
+    setDeleting(true);
+    try {
+      const ok = await onDelete(pendingDelete);
+      if (ok) setPendingDelete(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const submitAdd = () => {
@@ -100,9 +140,25 @@ const FinanceCategorySelect = ({
             <Text allowFontScaling={false} style={styles.sheetTitle}>
               {placeholder || 'Kategoriyani tanlang'}
             </Text>
-            <TouchableOpacity onPress={close} style={styles.closeBtn}>
-              <CloseIcon size={rs(18)} color={rd.color.textSecondary} />
-            </TouchableOpacity>
+            <View style={styles.headActions}>
+              {onDelete && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditing(e => !e);
+                    setPendingDelete(null);
+                    setAdding(false);
+                  }}
+                  accessibilityRole="button"
+                  style={[styles.editBtn, editing && { backgroundColor: accent + '14' }]}>
+                  <Text allowFontScaling={false} style={[styles.editBtnText, { color: accent }]}>
+                    {editing ? t('Tayyor') : t('Tahrirlash')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={close} style={styles.closeBtn}>
+                <CloseIcon size={rs(18)} color={rd.color.textSecondary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Qidiruv */}
@@ -127,14 +183,21 @@ const FinanceCategorySelect = ({
             ) : (
               filtered.map((c, i) => {
                 const active = String(c?.id) === String(value);
+                const deletable = canDelete(c);
                 return (
                   <TouchableOpacity
                     key={c?.id ?? i}
                     activeOpacity={0.7}
                     onPress={() => {
+                      if (editing) {
+                        if (deletable) setPendingDelete(c);
+                        return;
+                      }
                       onSelect(c.id);
                       close();
                     }}
+                    onLongPress={deletable ? () => setPendingDelete(c) : undefined}
+                    delayLongPress={350}
                     style={[styles.row, active && { backgroundColor: accent + '12' }]}>
                     <Text allowFontScaling={false} style={styles.rowIcon}>
                       {c?.icon || '📦'}
@@ -145,15 +208,58 @@ const FinanceCategorySelect = ({
                       numberOfLines={1}>
                       {labelFn(c?.name)}
                     </Text>
-                    {active && <CheckIcon size={rs(16)} color={accent} />}
+                    {editing ? (
+                      deletable && (
+                        <TouchableOpacity
+                          onPress={() => setPendingDelete(c)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('O‘chirish')}
+                          style={styles.trashBtn}>
+                          <TrashIcon size={rs(16)} color={DANGER} />
+                        </TouchableOpacity>
+                      )
+                    ) : (
+                      active && <CheckIcon size={rs(16)} color={accent} />
+                    )}
                   </TouchableOpacity>
                 );
               })
             )}
           </ScrollView>
 
+          {/* 21.10: o'chirish tasdig'i — ichki Modal EMAS (iOS'da Modal ustida Modal ochilmaydi). */}
+          {pendingDelete && (
+            <View style={styles.confirmBox}>
+              <Text allowFontScaling={false} style={styles.confirmTitle}>
+                {`${pendingDelete.icon ? pendingDelete.icon + '  ' : ''}${labelFn(pendingDelete.name)}`}
+              </Text>
+              <Text allowFontScaling={false} style={styles.confirmText}>
+                {`${t('Kategoriyani o‘chirasizmi?')} ${t('Avvalgi yozuvlar saqlanib qoladi.')}`}
+              </Text>
+              <View style={styles.confirmRow}>
+                <TouchableOpacity
+                  disabled={deleting}
+                  onPress={() => setPendingDelete(null)}
+                  style={[styles.confirmBtn, styles.confirmCancel]}>
+                  <Text allowFontScaling={false} style={styles.confirmCancelText}>
+                    {t('Bekor qilish')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={deleting}
+                  onPress={confirmDelete}
+                  style={[styles.confirmBtn, styles.confirmDelete, deleting && styles.dim]}>
+                  <Text allowFontScaling={false} style={styles.confirmDeleteText}>
+                    {t('O‘chirish')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* Inline qo'shish */}
-          {onAdd &&
+          {onAdd && !pendingDelete && !editing &&
             (adding ? (
               <View style={styles.addBox}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.emojiRow}>
@@ -245,6 +351,51 @@ const styles = StyleSheet.create({
     marginBottom: rs(12),
   },
   sheetTitle: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
+  headActions: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
+  editBtn: {
+    paddingHorizontal: rs(12),
+    height: rs(32),
+    borderRadius: rs(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13.5) },
+  trashBtn: {
+    width: rs(32),
+    height: rs(32),
+    borderRadius: rs(16),
+    backgroundColor: DANGER + '14',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmBox: {
+    marginTop: rs(10),
+    padding: rs(14),
+    borderRadius: rs(14),
+    backgroundColor: rd.color.surface,
+    borderWidth: 1.5,
+    borderColor: DANGER + '40',
+  },
+  confirmTitle: { fontFamily: rd.font.bold, fontSize: rs(14.5), color: rd.color.text },
+  confirmText: {
+    marginTop: rs(4),
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    lineHeight: rs(18),
+    color: rd.color.textSecondary,
+  },
+  confirmRow: { flexDirection: 'row', gap: rs(8), marginTop: rs(12) },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: rs(12),
+    paddingVertical: rs(11),
+    alignItems: 'center',
+  },
+  confirmCancel: { backgroundColor: rd.color.surfaceAlt },
+  confirmDelete: { backgroundColor: DANGER },
+  dim: { opacity: 0.6 },
+  confirmCancelText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: rd.color.text },
+  confirmDeleteText: { fontFamily: rd.font.bold, fontSize: rs(13.5), color: '#fff' },
   closeBtn: {
     width: rs(32),
     height: rs(32),

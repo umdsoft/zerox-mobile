@@ -1,5 +1,12 @@
 {
   "translation": {
+    "Tayyor": "Тайёр",
+    "Kategoriyani o‘chirasizmi?": "Категорияни ўчирасизми?",
+    "Avvalgi yozuvlar saqlanib qoladi.": "Аввалги ёзувлар сақланиб қолади.",
+    "Kategoriya o‘chirildi": "Категория ўчирилди",
+    "Kontaktlarni ochib bo‘lmadi": "Контактларни очиб бўлмади",
+    "Maktab": "Мактаб",
+    "Bog‘cha": "Боғча",
     "SMS boshqaruvi": "SMS бошқаруви",
     "SMS paket, tarix va statistikangizni kuzating": "SMS пакет, тарих ва статистикангизни кузатинг",
     "Qoldiq SMS": "Қолдиқ SMS",
@@ -1788,6 +1795,28 @@
     "Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.": "Бугун ҳали даромад ва харажат киритилмади. Бугунги даромад ва харажатларингизни киритиб қўйинг.",
     "Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.": "Белгиланган кунларда ва вақтда кунлик даромад ва харажатларингизни киритишни эслатамиз — Telegram бот ва мобил илова орқали. Эслатма фақат ўша куни битта ҳам даромад ёки харажат киритилмаган бўлса юборилади.",
     "Belgilangan vaqtda daromad va xarajat kiritishni eslatish": "Белгиланган вақтда даромад ва харажат киритишни эслатиш",
-    "Viloyat va tumanni tanlang": "Вилоят ва туманни танланг"
+    "Viloyat va tumanni tanlang": "Вилоят ва туманни танланг",
+    "Gap yo‘q. \"Yangi qo‘shish\" orqali oching.": "Гап йўқ. \"Янги қўшиш\" орқали очинг.",
+    "Maqsadlar yo‘q. \"Yangi qo‘shish\" orqali qo‘shing.": "Мақсадлар йўқ. \"Янги қўшиш\" орқали қўшинг.",
+    "Siz ularning moliyasini ko‘rasiz": "Сиз уларнинг молиясини кўрасиз",
+    "Oila a’zosiga taklif yuboring — u qabul qilgach, uning moliyasini shu yerda ko‘rasiz.": "Оила аъзосига таклиф юборинг — у қабул қилгач, унинг молиясини шу ерда кўрасиз.",
+    "Javob kutilmoqda": "Жавоб кутилмоқда",
+    "Ular sizning moliyangizni ko‘radi": "Улар сизнинг молиянгизни кўради",
+    "Hech kim sizning daromad va xarajatlaringizni ko‘rmayapti. Ishongan odamingizga kirish huquqini berishingiz mumkin.": "Ҳеч ким сизнинг даромад ва харажатларингизни кўрмаяпти. Ишонган одамингизга кириш ҳуқуқини беришингиз мумкин.",
+    "Kuzatuvchi qo‘shish": "Кузатувчи қўшиш",
+    "Taklifni bekor qilish": "Таклифни бекор қилиш",
+    "Bu yerda siz moliyasini kuzatayotgan oila a’zolari ko‘rsatiladi.": "Бу ерда сиз молиясини кузатаётган оила аъзолари кўрсатилади.",
+    "A’zo taklifingizni qabul qilgach, uning daromad, xarajat va boshqa bo‘limlarini ko‘ra olasiz.": "Аъзо таклифингизни қабул қилгач, унинг даромад, харажат ва бошқа бўлимларини кўра оласиз.",
+    "Ma’lumotlar faqat ko‘rish uchun — siz ularni o‘zgartira olmaysiz.": "Маълумотлар фақат кўриш учун — сиз уларни ўзгартира олмайсиз.",
+    "Nimalarni ko‘rishingizni a’zoning o‘zi belgilaydi. Ruxsat bersa, unga oylik limit ham qo‘ya olasiz.": "Нималарни кўришингизни аъзонинг ўзи белгилайди. Рухсат берса, унга ойлик лимит ҳам қўя оласиз.",
+    "Bu yerda sizning daromad va xarajatlaringizni ko‘ra oladigan odamlar ko‘rsatiladi.": "Бу ерда сизнинг даромад ва харажатларингизни кўра оладиган одамлар кўрсатилади.",
+    "Ular nimani ko‘rishini siz belgilaysiz — qalamcha tugmasi orqali ruxsatlarni o‘zgartiring.": "Улар нимани кўришини сиз белгилайсиз — қаламча тугмаси орқали рухсатларни ўзгартиринг.",
+    "Ular ma’lumotlaringizni faqat ko‘radi, o‘zgartira olmaydi.": "Улар маълумотларингизни фақат кўради, ўзгартира олмайди.",
+    "Kirish huquqini istalgan vaqtda bekor qilishingiz mumkin — aloqani uzing.": "Кириш ҳуқуқини исталган вақтда бекор қилишингиз мумкин — алоқани узинг.",
+    "Bu bo‘lim haqida": "Бу бўлим ҳақида",
+    "Ko‘rish uchun bosing": "Кўриш учун босинг",
+    "Sizni kuzatmoqda": "Сизни кузатмоқда",
+    "Limitdan oshgan": "Лимитдан ошган",
+    "Limit belgilangan": "Лимит белгиланган"
   }
 }

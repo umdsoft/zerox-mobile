@@ -36,7 +36,7 @@ import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import { ContactBookIcon, PencilIcon, PlusIcon, UserIcon } from '../redesign/icons';
 import ClientRegisterAnimation from '../../../images/clientRegisterAnim';
-import { isContactPickerAvailable, pickContact } from '../../../nativemodule/contactPicker';
+import { isContactPickerAvailable, pickContactInto } from '../../../helper/pickContactInto';
 
 const BLUE = '#2f6fed'; // berish
 const GREEN = '#16a34a'; // olish
@@ -84,18 +84,11 @@ const QarzDaftariMijozYangi = () => {
   // Telefon kontaktlaridan tanlash (tizim tanlagichi — READ_CONTACTS ruxsatsiz).
   // Tanlangan raqam +998 formatiga keltiriladi; FISH bo'sh bo'lsa kontakt ismi
   // bilan to'ldiriladi (foydalanuvchi keyin tahrirlashi mumkin).
-  const onPickContact = async () => {
-    const picked = await pickContact();
-    if (!picked) return; // bekor qilindi
-    if (picked.phone9) setPhone(picked.phone9);
-    if (!fish.trim() && picked.name) setFish(picked.name);
-    if (picked.phone9 && picked.phone9.length !== 9) {
-      Toast.show({
-        type: 'error2',
-        props: { desc: t("Tanlangan raqam O‘zbekiston formatiga mos emas") },
-      });
-    }
-  };
+  const onPickContact = () =>
+    pickContactInto(picked => {
+      if (picked.phone9) setPhone(picked.phone9);
+      if (!fish.trim() && picked.name) setFish(picked.name);
+    });
 
   const fullPhone = phone ? `+998${phone}` : '';
   // So'rov SS5: telefon TO'LIQ (9 raqam) kiritilmaguncha Saqlash NOFAOL — xato

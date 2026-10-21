@@ -16,19 +16,24 @@ import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { fMoney, fCompact, num, catLabel } from './financeMoney';
-import { PlusIcon, TrashIcon, ChevronRight, PencilIcon } from '../redesign/icons';
+import { PlusIcon, TrashIcon, ChevronRight, PencilIcon, EyeIcon, ShieldIcon } from '../redesign/icons';
+import { FamilyInfo, FamilyInfoSheet, familyInitials, FamilyMemberRow, FamilyRowAction, FamilySectionCard } from './FinanceFamilySections';
 import Donut from '../redesign/Donut';
 
 const BLUE = rd.color.primary;
 const GREEN = '#16a34a';
 const RED = '#dc2626';
+// 21.10: bo'lim aksentlari — "Men kuzatayotganlar" (ko'k, ko'z) / "Meni kuzatayotganlar" (binafsha, qalqon).
+const WATCH_ACCENT = rd.color.primary;
+const WATCH_TINT = rd.color.primaryTint;
+const WATCHER_ACCENT = '#7c3aed';
+const WATCHER_TINT = '#f1eafe';
 
 // SS8: a'zolar bo'yicha halqa-diagramma ranglari (sayt bilan bir xil tartib).
 const MEMBER_COLORS = ['#2563eb', '#16a34a', '#f59e0b', '#a855f7', '#ec4899', '#14b8a6', '#ef4444', '#64748b'];
 const memberColor = (i: number) => MEMBER_COLORS[i % MEMBER_COLORS.length];
 
-const initials = (name?: string) =>
-  String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+const initials = familyInitials; // 21.10: yagona manba (FinanceFamilySections)
 
 // SS-AUDIT (2026-09-25): helper/phone.phoneDigits9 (yagona manba).
 const fmtPhone = phoneDigits9;
@@ -184,12 +189,42 @@ const FinanceFamily = () => {
 
   const personName = (it: any) => it.other_name || it.member_name || it.owner_name || 'Foydalanuvchi';
 
+  // 21.10: bo'sh holat CTA'si mos MAQOM bilan taklif oynasini ochadi.
+  const openInvite = (r: 'watched' | 'watcher') => { setRole(r); setInvite(true); };
+
+  // 21.10: "i" izohlari (backend semantikasi: watched — siz a'zoni ko'rasiz; watcher — u sizni).
+  const [infoSheet, setInfoSheet] = React.useState<FamilyInfo | null>(null);
+  const watchInfo: FamilyInfo = {
+    accent: WATCH_ACCENT,
+    tint: WATCH_TINT,
+    Icon: EyeIcon,
+    title: t('Men kuzatayotganlar'),
+    lead: t('Bu yerda siz moliyasini kuzatayotgan oila a’zolari ko‘rsatiladi.'),
+    points: [
+      t('A’zo taklifingizni qabul qilgach, uning daromad, xarajat va boshqa bo‘limlarini ko‘ra olasiz.'),
+      t('Ma’lumotlar faqat ko‘rish uchun — siz ularni o‘zgartira olmaysiz.'),
+      t('Nimalarni ko‘rishingizni a’zoning o‘zi belgilaydi. Ruxsat bersa, unga oylik limit ham qo‘ya olasiz.'),
+    ],
+  };
+  const watcherInfo: FamilyInfo = {
+    accent: WATCHER_ACCENT,
+    tint: WATCHER_TINT,
+    Icon: ShieldIcon,
+    title: t('Meni kuzatayotganlar'),
+    lead: t('Bu yerda sizning daromad va xarajatlaringizni ko‘ra oladigan odamlar ko‘rsatiladi.'),
+    points: [
+      t('Ular nimani ko‘rishini siz belgilaysiz — qalamcha tugmasi orqali ruxsatlarni o‘zgartiring.'),
+      t('Ular ma’lumotlaringizni faqat ko‘radi, o‘zgartira olmaydi.'),
+      t('Kirish huquqini istalgan vaqtda bekor qilishingiz mumkin — aloqani uzing.'),
+    ],
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Oila moliyasi')} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.addBtn} activeOpacity={0.85} onPress={() => setInvite(true)}>
+        <TouchableOpacity style={styles.addBtn} activeOpacity={0.85} onPress={() => openInvite('watched')}>
           <PlusIcon size={rs(18)} color="#fff" />
           <Text allowFontScaling={false} style={styles.addBtnText}>{t('Taklif yuborish')}</Text>
         </TouchableOpacity>
@@ -332,67 +367,97 @@ const FinanceFamily = () => {
           </View>
         )}
 
-        {/* Men kuzatayotganlar */}
-        <View style={styles.section}>
-          <Text allowFontScaling={false} style={styles.sectionTitle}>{t('Men kuzatayotganlar')}</Text>
-          {asViewer.length === 0 ? (
-            <Text style={styles.emptyText}>{t('Hech kim yo‘q.')}</Text>
-          ) : (
-            asViewer.map((it, i) => (
-              <TouchableOpacity key={it.id ?? i} style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('FinanceFamilyOverview', { id: it.id, name: personName(it) })}>
-                <View style={styles.cardTop}>
-                  <View style={[styles.avatar, { backgroundColor: GREEN + '14' }]}><Text style={[styles.avatarText, { color: GREEN }]}>{initials(personName(it))}</Text></View>
-                  <View style={{ flex: 1 }}>
-                    <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>{personName(it)}</Text>
-                    <Text allowFontScaling={false} style={styles.sub}>{it.relation_label || 'Ko‘rish uchun bosing'}</Text>
-                  </View>
-                  <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
-                  <TouchableOpacity onPress={() => setDelTarget(it)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ marginLeft: rs(8) }}>
-                    <TrashIcon size={rs(16)} color={RED} />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
+        {/* 21.10 redizayn: ikki bo'lim — alohida aksent/ikonka, soni, holat chipi,
+            "i" izohi va bo'sh holatda qisqa tushuntirish + tegishli rol bilan taklif CTA. */}
+        <FamilySectionCard
+          accent={WATCH_ACCENT}
+          tint={WATCH_TINT}
+          Icon={EyeIcon}
+          title={t('Men kuzatayotganlar')}
+          caption={t('Siz ularning moliyasini ko‘rasiz')}
+          count={asViewer.length}
+          onInfo={() => setInfoSheet(watchInfo)}
+          emptyTitle={t('Hech kim yo‘q.')}
+          emptyHint={t('Oila a’zosiga taklif yuboring — u qabul qilgach, uning moliyasini shu yerda ko‘rasiz.')}
+          ctaLabel={t('Taklif yuborish')}
+          onCta={() => openInvite('watched')}>
+          {asViewer.map((it, i) => {
+            const isPending = it.status === 'pending';
+            return (
+              <FamilyMemberRow
+                key={it.id ?? i}
+                isFirst={i === 0}
+                name={personName(it)}
+                sub={isPending ? t('Javob kutilmoqda') : it.relation_label || t('Ko‘rish uchun bosing')}
+                accent={WATCH_ACCENT}
+                tint={WATCH_TINT}
+                isPending={isPending}
+                // Overview faqat FAOL aloqa uchun (backend) — kutilayotganda ochilmaydi.
+                onPress={isPending ? undefined : () => navigation.navigate('FinanceFamilyOverview', { id: it.id, name: personName(it) })}
+                actions={
+                  <>
+                    <FamilyRowAction onPress={() => setDelTarget(it)} bg={rd.color.errorBg} label={t('Aloqani uzish')}>
+                      <TrashIcon size={rs(15)} color={RED} />
+                    </FamilyRowAction>
+                    {!isPending && <ChevronRight size={rs(18)} color={rd.color.textTertiary} />}
+                  </>
+                }
+              />
+            );
+          })}
+        </FamilySectionCard>
 
-        {/* Meni kuzatayotganlar */}
-        <View style={styles.section}>
-          <Text allowFontScaling={false} style={styles.sectionTitle}>{t('Meni kuzatayotganlar')}</Text>
-          {asTarget.length === 0 ? (
-            <Text style={styles.emptyText}>{t('Hech kim yo‘q.')}</Text>
-          ) : (
-            asTarget.map((it, i) => (
-              <View key={it.id ?? i} style={styles.card}>
-                <View style={styles.cardTop}>
-                  <View style={[styles.avatar, { backgroundColor: '#7c3aed14' }]}><Text style={[styles.avatarText, { color: '#7c3aed' }]}>{initials(personName(it))}</Text></View>
-                  <View style={{ flex: 1 }}>
-                    <Text allowFontScaling={false} style={styles.name} numberOfLines={1}>{personName(it)}</Text>
-                    <Text allowFontScaling={false} style={styles.sub}>{it.relation_label || 'Sizni kuzatmoqda'}</Text>
-                  </View>
-                  {/* So'rov: ushbu kuzatuvchiga berilgan RUXSATlarni tahrirlash. */}
-                  <TouchableOpacity onPress={() => openPermsEdit(it)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ marginRight: rs(10) }}>
-                    <PencilIcon size={rs(16)} color={rd.color.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setDelTarget(it)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <TrashIcon size={rs(16)} color={RED} />
-                  </TouchableOpacity>
-                </View>
-
-                {/* SS11c: limit BOR bo'lsa — "Batafsil" chipi, to'liq ko'rinish alohida modalda. */}
-                {(it.monthly_limit || (Array.isArray(it.category_limits) && it.category_limits.length > 0)) && (
-                  <TouchableOpacity style={styles.limitChip} activeOpacity={0.85} onPress={() => setLimitDetail(it)}>
-                    <View style={[styles.limitDot, { backgroundColor: it.over_limit ? RED : GREEN }]} />
-                    <Text allowFontScaling={false} style={[styles.limitChipText, it.over_limit && { color: RED }]}>
-                      {it.over_limit ? 'Limitdan oshgan' : 'Limit belgilangan'}
-                    </Text>
-                    <Text allowFontScaling={false} style={styles.limitChipMore}>{t('Batafsil ›')}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))
-          )}
-        </View>
+        <FamilySectionCard
+          accent={WATCHER_ACCENT}
+          tint={WATCHER_TINT}
+          Icon={ShieldIcon}
+          title={t('Meni kuzatayotganlar')}
+          caption={t('Ular sizning moliyangizni ko‘radi')}
+          count={asTarget.length}
+          onInfo={() => setInfoSheet(watcherInfo)}
+          emptyTitle={t('Hech kim yo‘q.')}
+          emptyHint={t('Hech kim sizning daromad va xarajatlaringizni ko‘rmayapti. Ishongan odamingizga kirish huquqini berishingiz mumkin.')}
+          ctaLabel={t('Kuzatuvchi qo‘shish')}
+          onCta={() => openInvite('watcher')}>
+          {asTarget.map((it, i) => {
+            const isPending = it.status === 'pending';
+            const hasLimit = !!(it.monthly_limit || (Array.isArray(it.category_limits) && it.category_limits.length > 0));
+            return (
+              <FamilyMemberRow
+                key={it.id ?? i}
+                isFirst={i === 0}
+                name={personName(it)}
+                sub={isPending ? t('Javob kutilmoqda') : it.relation_label || t('Sizni kuzatmoqda')}
+                accent={WATCHER_ACCENT}
+                tint={WATCHER_TINT}
+                isPending={isPending}
+                actions={
+                  <>
+                    {/* So'rov: ushbu kuzatuvchiga berilgan RUXSATlarni tahrirlash. */}
+                    <FamilyRowAction onPress={() => openPermsEdit(it)} bg={rd.color.primaryTint} label={t('Ruxsatlarni tahrirlash')}>
+                      <PencilIcon size={rs(15)} color={rd.color.primary} />
+                    </FamilyRowAction>
+                    <FamilyRowAction onPress={() => setDelTarget(it)} bg={rd.color.errorBg} label={t('Aloqani uzish')}>
+                      <TrashIcon size={rs(15)} color={RED} />
+                    </FamilyRowAction>
+                  </>
+                }
+                footer={
+                  // SS11c: limit BOR bo'lsa — "Batafsil" chipi, to'liq ko'rinish alohida modalda.
+                  hasLimit ? (
+                    <TouchableOpacity style={styles.limitChip} activeOpacity={0.85} onPress={() => setLimitDetail(it)}>
+                      <View style={[styles.limitDot, { backgroundColor: it.over_limit ? RED : GREEN }]} />
+                      <Text allowFontScaling={false} style={[styles.limitChipText, it.over_limit && { color: RED }]}>
+                        {it.over_limit ? t('Limitdan oshgan') : t('Limit belgilangan')}
+                      </Text>
+                      <Text allowFontScaling={false} style={styles.limitChipMore}>{t('Batafsil ›')}</Text>
+                    </TouchableOpacity>
+                  ) : null
+                }
+              />
+            );
+          })}
+        </FamilySectionCard>
         <View style={{ height: rs(20) }} />
       </ScrollView>
 
@@ -651,13 +716,16 @@ const FinanceFamily = () => {
         </View>
       </Modal>
 
+      {/* 21.10: bo'lim izohi ("i" tugmasi) */}
+      <FamilyInfoSheet info={infoSheet} onClose={() => setInfoSheet(null)} />
+
       {/* O'chirish tasdig'i */}
       <Modal visible={!!delTarget} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setDelTarget(null)}>
         <View style={styles.backdrop}>
           {/* SS5: oynadan tashqari bo‘sh joyga bosilganda ham yopiladi. */}
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setDelTarget(null)} />
           <View style={styles.confirmCard}>
-            <Text allowFontScaling={false} style={styles.sheetTitle}>{t('Aloqani uzish')}</Text>
+            <Text allowFontScaling={false} style={styles.sheetTitle}>{delTarget?.status === 'pending' ? t('Taklifni bekor qilish') : t('Aloqani uzish')}</Text>
             <Text allowFontScaling={false} style={styles.confirmText}>"{personName(delTarget || {})}" bilan oilaviy aloqani uzasizmi?</Text>
             <View style={styles.confirmBtns}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setDelTarget(null)}><Text style={styles.cancelText}>{t('Bekor qilish')}</Text></TouchableOpacity>

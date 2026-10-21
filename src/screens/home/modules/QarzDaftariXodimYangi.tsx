@@ -37,7 +37,7 @@ import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import { ContactBookIcon, UserPlusIcon } from '../redesign/icons';
 // SS21: tizim kontakt-tanlagichi (READ_CONTACTS ruxsatisiz — mijoz formasi bilan bir xil).
-import { isContactPickerAvailable, pickContact } from '../../../nativemodule/contactPicker';
+import { isContactPickerAvailable, pickContactInto } from '../../../helper/pickContactInto';
 
 const BLUE = '#2f6fed';
 
@@ -94,18 +94,11 @@ const QarzDaftariXodimYangi = () => {
    * yangi tanlovda F.I.Sh tanlangan kontakt nomi bilan yangilanadi (nomsiz kontakt — F.I.Sh o'zgarmaydi).
    */
   const canPickContact = isContactPickerAvailable();
-  const onPickContact = async () => {
-    const picked = await pickContact();
-    if (!picked) return; // bekor qilindi
-    if (picked.phone9) setPhone(picked.phone9);
-    if (picked.name) setFish(picked.name);
-    if (picked.phone9 && picked.phone9.length !== 9) {
-      Toast.show({
-        type: 'error2',
-        props: { desc: t('Tanlangan raqam O‘zbekiston formatiga mos emas') },
-      });
-    }
-  };
+  const onPickContact = () =>
+    pickContactInto(picked => {
+      if (picked.phone9) setPhone(picked.phone9);
+      if (picked.name) setFish(picked.name);
+    });
   const fullPhone = `+998${phone}`;
 
   const handleSave = async () => {

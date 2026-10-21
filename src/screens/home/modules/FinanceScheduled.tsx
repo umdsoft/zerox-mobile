@@ -31,8 +31,9 @@ import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeForm';
 import { amountToDisplay, amountToRaw, fDate, fMoney, localDateKey, num } from './financeMoney';
-import { PlusIcon, TrashIcon, PencilIcon } from '../redesign/icons';
+import { TrashIcon, PencilIcon } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import FinanceAddButton from './FinanceAddButton';
 
 const RED = '#f26464'; // SS13: "juda qizil"→sal ochiqroq (dc2626→f26464)
 const GREEN = '#16a34a';
@@ -228,13 +229,11 @@ const ScheduledList = ({ cfg }: { cfg: Cfg }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      <RdHeader title={t(cfg.title)} />
+      {/* 21.10: orqaga tugmasi "Yangi qo'shish" tugmasi bilan BIR XIL rangda (aksent). */}
+      <RdHeader title={t(cfg.title)} backColor={cfg.accent} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Qo'shish */}
-        <TouchableOpacity style={[styles.addBtn, { backgroundColor: cfg.accent }]} activeOpacity={0.85} onPress={openAdd}>
-          <PlusIcon size={rs(18)} color="#fff" />
-          <Text allowFontScaling={false} style={styles.addBtnText}>{t('Yangi qo‘shish')}</Text>
-        </TouchableOpacity>
+        <FinanceAddButton label={t('Yangi qo‘shish')} color={cfg.accent} onPress={openAdd} />
 
         {items.length === 0 ? (
           <View style={styles.empty}>
@@ -548,17 +547,6 @@ export const FinanceScheduledIncomes = () => (
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: rd.color.page },
   content: { paddingHorizontal: rs(16), paddingTop: rs(10), paddingBottom: rs(20) },
-
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(8),
-    height: rs(48),
-    borderRadius: rd.radius.md,
-    marginBottom: rs(14),
-  },
-  addBtnText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: '#fff' },
 
   empty: { alignItems: 'center', paddingVertical: rs(50) },
   emptyText: { fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.textTertiary, textAlign: 'center', paddingHorizontal: rs(30) },

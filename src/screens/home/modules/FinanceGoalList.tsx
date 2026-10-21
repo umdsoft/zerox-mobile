@@ -27,6 +27,7 @@ import { financeApi } from './financeApi';
 import { amountToDisplay, amountToRaw, fDate, fMoney, fShort, fTime, num } from './financeMoney';
 import { PlusIcon, TrashIcon } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import FinanceAddButton from './FinanceAddButton';
 
 const PURPLE = '#7c3aed';
 const GREEN = '#16a34a';
@@ -150,20 +151,11 @@ const FinanceGoalList = () => {
     }
   };
 
-  const addBtn = (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('FinanceGoalAdd')}
-      style={styles.addBtn}
-      activeOpacity={0.85}>
-      <PlusIcon size={rs(18)} color={rd.color.onPrimary} />
-    </TouchableOpacity>
-  );
-
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {/* SS2.2: orqaga tugmasi Maqsadlar bo'limi rangida (binafsha). */}
-      <RdHeader title={t('Maqsadlar')} right={addBtn} backColor={PURPLE} />
+      <RdHeader title={t('Maqsadlar')} backColor={PURPLE} />
 
       {goalsFetch.loading && !goals.length ? (
         <Loading />
@@ -172,6 +164,14 @@ const FinanceGoalList = () => {
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}>
+          {/* 21.10: sarlavhadagi dumaloq "+" o'rniga "Kutilayotgan daromadlar" kabi matnli tugma
+              (bo'lim rangida). marginBottom — content `gap` bilan takrorlanmasin. */}
+          <FinanceAddButton
+            label={t('Yangi qo‘shish')}
+            color={PURPLE}
+            onPress={() => navigation.navigate('FinanceGoalAdd')}
+            style={styles.addBtn}
+          />
           {/* Progress banner */}
           <View style={styles.banner}>
             <Text allowFontScaling={false} style={styles.bannerLabel}>
@@ -222,19 +222,12 @@ const FinanceGoalList = () => {
           {/* Maqsadlar */}
           {goals.length === 0 ? (
             <View style={styles.emptyBox}>
-              {/* 02.10: bo'sh holat — harakatli ikonka */}
-              <AnimatedEmpty variant="check" compact />
+              {/* 21.10: bo'sh holat — Gap va Kutilayotgan daromadlar bilan BIR XIL
+                  (soat animatsiyasi + matn). Qo'shish tugmasi endi tepada. */}
+              <AnimatedEmpty variant="time" compact />
               <Text allowFontScaling={false} style={styles.emptyText}>
-                {t('Maqsadlar yo‘q')}
+                {t('Maqsadlar yo‘q. "Yangi qo‘shish" orqali qo‘shing.')}
               </Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('FinanceGoalAdd')}
-                style={styles.emptyBtn}
-                activeOpacity={0.85}>
-                <Text allowFontScaling={false} style={styles.emptyBtnText}>
-                  {t('Birinchi maqsadni qo‘shish')}
-                </Text>
-              </TouchableOpacity>
             </View>
           ) : (
             goals.map((g, i) => {
@@ -496,14 +489,7 @@ export default FinanceGoalList;
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: rd.color.page },
   content: { paddingHorizontal: rs(16), paddingTop: rs(6), paddingBottom: rs(24), gap: rs(14) },
-  addBtn: {
-    width: rs(38),
-    height: rs(38),
-    borderRadius: rs(19),
-    backgroundColor: PURPLE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  addBtn: { marginBottom: 0 },
   // SS2: karta IXCHAMLASHTIRILDI (juda katta edi).
   banner: { backgroundColor: PURPLE, borderRadius: rs(18), padding: rs(14) },
   bannerLabel: { fontFamily: rd.font.medium, fontSize: rs(12), color: 'rgba(255,255,255,0.85)' },
@@ -615,18 +601,9 @@ const styles = StyleSheet.create({
   },
   delConfirmText: { fontFamily: rd.font.semibold, fontSize: rs(15), color: '#fff' },
 
-  emptyBox: { alignItems: 'center', gap: rs(12), paddingVertical: rs(50) },
-  emptyIcon: {
-    width: rs(56),
-    height: rs(56),
-    borderRadius: rs(28),
-    backgroundColor: rd.color.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: { fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.textTertiary },
-  emptyBtn: { backgroundColor: PURPLE, borderRadius: rd.radius.pill, paddingHorizontal: rs(20), paddingVertical: rs(12) },
-  emptyBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: '#fff' },
+  // 21.10: Gap / Kutilayotgan daromadlar bo'sh holati bilan bir xil o'lcham va matn uslubi.
+  emptyBox: { alignItems: 'center', paddingVertical: rs(50) },
+  emptyText: { fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.textTertiary, textAlign: 'center', paddingHorizontal: rs(30) },
 
   modalWrap: {
     flex: 1,

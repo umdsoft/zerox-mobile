@@ -78,6 +78,22 @@ const FinanceIncomeAdd = () => {
     })();
   }, [editId, isEdit, navigation]);
 
+  // 21.10: kategoriyani ro'yxatdan olib tashlash (default — faqat shu user uchun yashiriladi,
+  // custom — soft-delete). Avvalgi yozuvlar o'z kategoriya nomi bilan qoladi.
+  const onDeleteCategory = async (c: any): Promise<boolean> => {
+    try {
+      await financeApi.deleteIncomeCategory(c.id);
+      setCategories(prev => prev.filter(x => String(x?.id) !== String(c.id)));
+      setCategoryId((cur: any) => (String(cur) === String(c.id) ? null : cur));
+      Toast.show({ type: 'omad', props: { desc: t('Kategoriya o‘chirildi') } });
+      return true;
+    } catch (e: any) {
+      const msg = e?.response?.data?.message;
+      Toast.show({ type: 'error2', props: { desc: msg || t('Xatolik yuz berdi') } });
+      return false;
+    }
+  };
+
   const onAddCategory = async (c: { name: string; icon: string }) => {
     try {
       setCatLoading(true);
@@ -145,6 +161,7 @@ const FinanceIncomeAdd = () => {
         accent={GREEN}
         onSelect={setCategoryId}
         onAdd={onAddCategory}
+        onDelete={onDeleteCategory}
         loading={catLoading}
         placeholder={t('Kategoriyani tanlang')}
       />

@@ -1,5 +1,12 @@
 {
   "translation": {
+    "Tayyor": "Done",
+    "Kategoriyani o‘chirasizmi?": "Delete this category?",
+    "Avvalgi yozuvlar saqlanib qoladi.": "Existing records will be kept.",
+    "Kategoriya o‘chirildi": "Category deleted",
+    "Kontaktlarni ochib bo‘lmadi": "Could not open contacts",
+    "Maktab": "School",
+    "Bog‘cha": "Kindergarten",
     "SMS boshqaruvi": "SMS management",
     "SMS paket, tarix va statistikangizni kuzating": "Track your SMS package, history and statistics",
     "Qoldiq SMS": "Remaining SMS",
@@ -1788,6 +1795,28 @@
     "Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.": "No income or expense has been entered today. Please add today's income and expenses.",
     "Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.": "On the selected days and time we will remind you to enter the day's income and expenses — via the Telegram bot and the mobile app. The reminder is sent only if no income or expense has been entered that day.",
     "Belgilangan vaqtda daromad va xarajat kiritishni eslatish": "Remind to enter income and expenses at the set time",
-    "Viloyat va tumanni tanlang": "Select the region and district"
+    "Viloyat va tumanni tanlang": "Select the region and district",
+    "Gap yo‘q. \"Yangi qo‘shish\" orqali oching.": "No gaps yet. Create one via \"Add new\".",
+    "Maqsadlar yo‘q. \"Yangi qo‘shish\" orqali qo‘shing.": "No goals yet. Add one via \"Add new\".",
+    "Siz ularning moliyasini ko‘rasiz": "You can view their finances",
+    "Oila a’zosiga taklif yuboring — u qabul qilgach, uning moliyasini shu yerda ko‘rasiz.": "Send an invite to a family member — once they accept, you will see their finances here.",
+    "Javob kutilmoqda": "Awaiting response",
+    "Ular sizning moliyangizni ko‘radi": "They can view your finances",
+    "Hech kim sizning daromad va xarajatlaringizni ko‘rmayapti. Ishongan odamingizga kirish huquqini berishingiz mumkin.": "No one can see your income and expenses. You can grant access to someone you trust.",
+    "Kuzatuvchi qo‘shish": "Add observer",
+    "Taklifni bekor qilish": "Cancel invitation",
+    "Bu yerda siz moliyasini kuzatayotgan oila a’zolari ko‘rsatiladi.": "This section shows the family members whose finances you observe.",
+    "A’zo taklifingizni qabul qilgach, uning daromad, xarajat va boshqa bo‘limlarini ko‘ra olasiz.": "Once the member accepts your invite, you can view their income, expenses and other sections.",
+    "Ma’lumotlar faqat ko‘rish uchun — siz ularni o‘zgartira olmaysiz.": "The data is read-only — you cannot change it.",
+    "Nimalarni ko‘rishingizni a’zoning o‘zi belgilaydi. Ruxsat bersa, unga oylik limit ham qo‘ya olasiz.": "The member decides what you can see. If they allow it, you can also set a monthly limit for them.",
+    "Bu yerda sizning daromad va xarajatlaringizni ko‘ra oladigan odamlar ko‘rsatiladi.": "This section shows the people who can view your income and expenses.",
+    "Ular nimani ko‘rishini siz belgilaysiz — qalamcha tugmasi orqali ruxsatlarni o‘zgartiring.": "You decide what they can see — change permissions with the pencil button.",
+    "Ular ma’lumotlaringizni faqat ko‘radi, o‘zgartira olmaydi.": "They can only view your data — they cannot change it.",
+    "Kirish huquqini istalgan vaqtda bekor qilishingiz mumkin — aloqani uzing.": "You can revoke access at any time — just remove the connection.",
+    "Bu bo‘lim haqida": "About this section",
+    "Ko‘rish uchun bosing": "Tap to view",
+    "Sizni kuzatmoqda": "Observing you",
+    "Limitdan oshgan": "Limit exceeded",
+    "Limit belgilangan": "Limit set"
   }
 }

@@ -27,6 +27,8 @@ export const financeApi = {
   getExpenseCategories: () => axios.get(`${base}/expenses/categories`, auth()),
   createExpenseCategory: (body: { name: string; icon?: string }) =>
     axios.post(`${base}/expenses/categories`, body, auth()),
+  // 21.10: default — shu user uchun yashiriladi; custom — soft-delete. Eski yozuvlar saqlanadi.
+  deleteExpenseCategory: (id: any) => axios.delete(`${base}/expenses/categories/${id}`, auth()),
   createExpense: (body: any) => axios.post(`${base}/expenses`, { source: 'mobile', ...body }, auth()),
   // OFD chek QR'ini parse qilib xarajat prefill ma'lumotini qaytaradi (yozmaydi).
   // So'rov SS6: OFD API sekin bo'lsa mobil UZOQ MUZLAMASIN — client timeout 22s
@@ -44,6 +46,7 @@ export const financeApi = {
   getIncomeCategories: () => axios.get(`${base}/incomes/categories`, auth()),
   createIncomeCategory: (body: { name: string; icon?: string }) =>
     axios.post(`${base}/incomes/categories`, body, auth()),
+  deleteIncomeCategory: (id: any) => axios.delete(`${base}/incomes/categories/${id}`, auth()),
   createIncome: (body: any) => axios.post(`${base}/incomes`, { source: 'mobile', ...body }, auth()),
   getIncomeById: (id: any) => axios.get(`${base}/incomes/${id}`, auth()),
   updateIncome: (id: any, body: any) => axios.put(`${base}/incomes/${id}`, body, auth()),

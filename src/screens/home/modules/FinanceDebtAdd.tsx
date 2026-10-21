@@ -16,7 +16,7 @@ import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeFor
 import { localDateKey, num } from './financeMoney';
 // SS2 (2026-09-17): "Kimga berdingiz / Kimdan oldingiz" ni telefon kitobidan
 // to'g'ridan-to'g'ri tanlash — ism va raqam birga to'ldiriladi.
-import { isContactPickerAvailable, pickContact } from '../../../nativemodule/contactPicker';
+import { isContactPickerAvailable, pickContactInto } from '../../../helper/pickContactInto';
 import { ContactBookIcon } from '../redesign/icons';
 
 const RED = '#dc2626';
@@ -102,12 +102,12 @@ const FinanceDebtAdd = () => {
   // SS2: kontaktdan tanlash — ism va telefon BIRGA to'ldiriladi (foydalanuvchi
   // raqamni qo'lda ko'chirmasin; xato kiritish ham yo'qoladi).
   const canPickContact = isContactPickerAvailable();
-  const onPickContact = async () => {
-    const c = await pickContact();
-    if (!c) return;
-    if (c.name) setSourceName(c.name);
-    if (c.phone9) setPhone(c.phone9);
-  };
+  // 21.10: iOS'da ham ishlaydi; xorijiy raqam telefon maydonini buzmaydi (ogohlantirish).
+  const onPickContact = () =>
+    pickContactInto(c => {
+      if (c.name) setSourceName(c.name);
+      if (c.phone9) setPhone(c.phone9);
+    });
 
   const submit = async () => {
     if (saving) return;

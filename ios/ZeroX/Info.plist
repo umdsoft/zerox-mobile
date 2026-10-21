@@ -46,6 +46,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>Qarz oluvchi yoki beruvchini kontaktlaringizdan tanlash uchun: ism va telefon raqami formaga to‘ldiriladi.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>This app uses Face ID to securely authenticate you.</string>
 	<key>NSCameraUsageDescription</key>

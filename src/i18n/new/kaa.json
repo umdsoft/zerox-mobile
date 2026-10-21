@@ -1,5 +1,12 @@
 {
   "translation": {
+    "Tayyor": "Tayın",
+    "Kategoriyani o‘chirasizmi?": "Kategoriyanı óshiresiz be?",
+    "Avvalgi yozuvlar saqlanib qoladi.": "Aldıńǵı jazıwlar saqlanıp qaladı.",
+    "Kategoriya o‘chirildi": "Kategoriya óshirildi",
+    "Kontaktlarni ochib bo‘lmadi": "Kontaktlerdi ashıp bolmadı",
+    "Maktab": "Mektep",
+    "Bog‘cha": "Balalar baqshası",
     "SMS boshqaruvi": "SMS basqarıwı",
     "SMS paket, tarix va statistikangizni kuzating": "SMS paket, tariyx hám statistikańızdı baqlań",
     "Qoldiq SMS": "Qalǵan SMS",
@@ -1788,6 +1795,28 @@
     "Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.": "Búgin ele dáramat hám qárejet kiritilmedi. Búgingi dáramat hám qárejetlerińizdi kiritip qoyıń.",
     "Belgilangan kunlarda va vaqtda kunlik daromad va xarajatlaringizni kiritishni eslatamiz — Telegram bot va mobil ilova orqali. Eslatma faqat o‘sha kuni bitta ham daromad yoki xarajat kiritilmagan bo‘lsa yuboriladi.": "Belgilengen kúnlerde hám waqıtta kúndelikli dáramat hám qárejetlerińizdi kiritiwdi eskertemiz — Telegram bot hám mobil qosımsha arqalı. Eskertpe tek sol kúni birde-bir dáramat yamasa qárejet kiritilmegen bolsa jiberiledi.",
     "Belgilangan vaqtda daromad va xarajat kiritishni eslatish": "Belgilengen waqıtta dáramat hám qárejet kiritiwdi eskertiw",
-    "Viloyat va tumanni tanlang": "Wálayat hám rayondı saylań"
+    "Viloyat va tumanni tanlang": "Wálayat hám rayondı saylań",
+    "Gap yo‘q. \"Yangi qo‘shish\" orqali oching.": "Gap joq. \"Jańa qosıw\" arqalı ashıń.",
+    "Maqsadlar yo‘q. \"Yangi qo‘shish\" orqali qo‘shing.": "Maqsetler joq. \"Jańa qosıw\" arqalı qosıń.",
+    "Siz ularning moliyasini ko‘rasiz": "Siz olardıń qarjısın kóresiz",
+    "Oila a’zosiga taklif yuboring — u qabul qilgach, uning moliyasini shu yerda ko‘rasiz.": "Shańaraq aǵzasına usınıs jiberiń — ol qabıllaǵannan keyin, onıń qarjısın usı jerde kóresiz.",
+    "Javob kutilmoqda": "Juwap kútilmekte",
+    "Ular sizning moliyangizni ko‘radi": "Olar siziń qarjıńızdı kóredi",
+    "Hech kim sizning daromad va xarajatlaringizni ko‘rmayapti. Ishongan odamingizga kirish huquqini berishingiz mumkin.": "Hesh kim siziń dáramat hám qárejetlerińizdi kórmeydi. Isengen adamıńızǵa kiriw huqıqın bere alasız.",
+    "Kuzatuvchi qo‘shish": "Baqlawshı qosıw",
+    "Taklifni bekor qilish": "Usınıstı biykar etiw",
+    "Bu yerda siz moliyasini kuzatayotgan oila a’zolari ko‘rsatiladi.": "Bul jerde siz qarjısın baqlap atırǵan shańaraq aǵzaları kórsetiledi.",
+    "A’zo taklifingizni qabul qilgach, uning daromad, xarajat va boshqa bo‘limlarini ko‘ra olasiz.": "Aǵza usınısıńızdı qabıllaǵannan keyin, onıń dáramat, qárejet hám basqa bólimlerin kóre alasız.",
+    "Ma’lumotlar faqat ko‘rish uchun — siz ularni o‘zgartira olmaysiz.": "Maǵlıwmatlar tek kóriw ushın — siz olardı ózgerte almaysız.",
+    "Nimalarni ko‘rishingizni a’zoning o‘zi belgilaydi. Ruxsat bersa, unga oylik limit ham qo‘ya olasiz.": "Neni kóriwińizdi aǵzanıń ózi belgileydi. Ruxsat berse, oǵan aylıq limit te qoya alasız.",
+    "Bu yerda sizning daromad va xarajatlaringizni ko‘ra oladigan odamlar ko‘rsatiladi.": "Bul jerde siziń dáramat hám qárejetlerińizdi kóre alatuǵın adamlar kórsetiledi.",
+    "Ular nimani ko‘rishini siz belgilaysiz — qalamcha tugmasi orqali ruxsatlarni o‘zgartiring.": "Olardıń neni kóriwin siz belgileysiz — qálemshe túymesi arqalı ruxsatlardı ózgertiń.",
+    "Ular ma’lumotlaringizni faqat ko‘radi, o‘zgartira olmaydi.": "Olar maǵlıwmatlarıńızdı tek kóredi, ózgerte almaydı.",
+    "Kirish huquqini istalgan vaqtda bekor qilishingiz mumkin — aloqani uzing.": "Kiriw huqıqın qálegen waqıtta biykar ete alasız — baylanıstı úziń.",
+    "Bu bo‘lim haqida": "Bul bólim haqqında",
+    "Ko‘rish uchun bosing": "Kóriw ushın basıń",
+    "Sizni kuzatmoqda": "Sizdi baqlap atır",
+    "Limitdan oshgan": "Limitten asqan",
+    "Limit belgilangan": "Limit belgilengen"
   }
 }

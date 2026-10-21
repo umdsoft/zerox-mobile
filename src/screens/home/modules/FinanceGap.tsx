@@ -15,8 +15,8 @@ import RdHeader from '../redesign/RdHeader';
 import { financeApi } from './financeApi';
 import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeForm';
 import { fDate, fMoney, num } from './financeMoney';
-import { PlusIcon } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import FinanceAddButton from './FinanceAddButton';
 
 const TEAL = '#0d9488';
 
@@ -103,19 +103,14 @@ const FinanceGap = () => {
     }
   };
 
-  // SS13.2: "Yangi Gap" endi SARLAVHADAGI "+" tugmasi (Maqsadlar bo'limi kabi).
-  const addBtn = (
-    <TouchableOpacity onPress={() => setModal(true)} style={styles.headerAdd} activeOpacity={0.85}>
-      <PlusIcon size={rs(18)} color="#fff" />
-    </TouchableOpacity>
-  );
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       {/* SS13.1: orqaga tugmasi Gap bo'limi rangida (teal). */}
-      <RdHeader title={t('Gap (Чёрная касса)')} right={addBtn} backColor={TEAL} />
+      <RdHeader title={t('Gap (Чёрная касса)')} backColor={TEAL} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* 21.10: sarlavhadagi dumaloq "+" o'rniga "Kutilayotgan daromadlar" kabi matnli tugma. */}
+        <FinanceAddButton label={t('Yangi qo‘shish')} color={TEAL} onPress={() => setModal(true)} />
         {/* SS10: Faol / Tugallangan / Barchasi filtr tablari (Maqsadlar kabi). */}
         <View style={styles.filterTabs}>
           {([['active', 'Faol'], ['completed', 'Tugallangan'], ['all', 'Barchasi']] as const).map(([k, lbl]) => {
@@ -133,7 +128,7 @@ const FinanceGap = () => {
         </View>
 
         {gaps.length === 0 ? (
-          <View style={styles.empty}><AnimatedEmpty variant="time" compact /><Text style={styles.emptyText}>{t('Gap yo‘q. "Yangi gap" orqali oching.')}</Text></View>
+          <View style={styles.empty}><AnimatedEmpty variant="time" compact /><Text style={styles.emptyText}>{t('Gap yo‘q. "Yangi qo‘shish" orqali oching.')}</Text></View>
         ) : (
           gaps.map((g, i) => {
             const sm = statusMeta(g.status);
@@ -228,10 +223,6 @@ export default FinanceGap;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: rd.color.page },
   content: { paddingHorizontal: rs(16), paddingTop: rs(10), paddingBottom: rs(20) },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: rs(8), height: rs(48), borderRadius: rd.radius.md, backgroundColor: TEAL, marginBottom: rs(14) },
-  addBtnText: { fontFamily: rd.font.semibold, fontSize: rs(14.5), color: '#fff' },
-  // SS13.2: sarlavhadagi "+" tugmasi (Maqsadlar kabi)
-  headerAdd: { width: rs(38), height: rs(38), borderRadius: rs(19), backgroundColor: TEAL, alignItems: 'center', justifyContent: 'center' },
   empty: { alignItems: 'center', paddingVertical: rs(50) },
   emptyText: { fontFamily: rd.font.medium, fontSize: rs(14), color: rd.color.textTertiary, textAlign: 'center', paddingHorizontal: rs(30) },
 
