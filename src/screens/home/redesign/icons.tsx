@@ -756,3 +756,10 @@ export const EyeIcon = (p: IconProps) => (
     <Circle cx="12" cy="12" r="3" />
   </Base>
 );
+
+// 21.10: Telegram (qog'oz samolyot, chiziqli) — "Telegram botga o'tish" havolasi uchun.
+export const TelegramPlaneIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M21.5 4.5 2.5 11.8l6.3 2.3m12.7-9.6-3.4 15.5-6.6-5.1m10-10.4L8.8 14.1m0 0 .9 5.4 2.2-4.2" />
+  </Base>
+);

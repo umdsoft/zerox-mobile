@@ -4,7 +4,8 @@
  *
  * REAL backend:
  *   GET /finance/dashboard → incomes/expenses/goals/budget/daily_series/debts
- *   GET /finance/health    → moliyaviy sog'liq (score/status/factors)
+ *   (21.10: "Moliyaviy sog'liq" bu sahifadan olib tashlandi — endi bosh sahifada,
+ *    BARCHA modullar bo'yicha: GET /home/financial-health → FinancialHealth ekrani)
  *
  * Tuzilma (yuqoridan pastga):
  *   1) 4 tezkor tugma (Xarajat/Daromad/Maqsad/Tahlil)
@@ -44,7 +45,6 @@ import {
   BulbIcon,
   HomeIcon,
   IconProps,
-  ShieldIcon,
   StarIcon,
   UsersIcon,
   WalletIcon,
@@ -57,7 +57,6 @@ import {
   fMoney,
   fCompact,
   fShort,
-  healthStatusUz,
   num,
 } from './financeMoney';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
@@ -333,14 +332,12 @@ const ShaxsiyMoliya = () => {
   const isTab = !!route?.params?.tab;
 
   const dashboard = useFetch({ url: `${URL}/finance/dashboard`, method: 'GET' });
-  const health = useFetch({ url: `${URL}/finance/health`, method: 'GET' });
 
   // Ekranga qayta fokuslanganda (xarajat/daromad/maqsad qo'shib qaytganda) yangilash.
   // MUHIM: barqaror onRefresh funksiyalariga bog'laymiz — butun `dashboard`/`health`
   // obyektlari har render'da yangi bo'lib, [dashboard, health] cheksiz refetch loop hosil
   // qilardi (birinchi fetch ba'zan loopdan oldin tugab qolardi, lekin ishonchsiz).
   const refreshDash = dashboard.onRefresh;
-  const refreshHealth = health.onRefresh;
   const firstFocus = React.useRef(true);
   useFocusEffect(
     React.useCallback(() => {
@@ -349,12 +346,10 @@ const ShaxsiyMoliya = () => {
         return;
       }
       refreshDash({});
-      refreshHealth({});
-    }, [refreshDash, refreshHealth]),
+    }, [refreshDash]),
   );
 
   const d: any = (dashboard.data as any)?.data || {};
-  const h: any = (health.data as any)?.data || {};
 
   const incomes: any = d?.incomes || {};
   const expenses: any = d?.expenses || {};
@@ -387,10 +382,6 @@ const ShaxsiyMoliya = () => {
   const debtUpcoming = Array.isArray(debts?.upcoming) ? debts.upcoming.length : num(debts?.upcoming);
   const hasDebtData = debtBorrowed > 0 || debtLent > 0 || debtBorrowedCur.length > 0 || debtLentCur.length > 0;
 
-  const score = h?.score ?? 0;
-  const status = h?.status ?? 'poor';
-  const debtLevel = num(h?.factors?.debt_level);
-  const overdueCount = h?.factors?.overdue_debts ?? 0;
   // SS2: "Qoldiq" — UMUMIY balans (butun tarix daromad − xarajat, UZS). Backend
   // `balance` bermasa, joriy oy sofiga qaytamiz (regressiyasiz).
   const balance =
@@ -438,7 +429,7 @@ const ShaxsiyMoliya = () => {
     { key: 'analytics', route: 'FinanceAnalytics', Icon: BarChartIcon, accent: '#4f46e5', tint: '#eef0fe', title: t('Tahlil'), sub: t('Daromad va xarajat') },
   ];
 
-  if (dashboard.loading && health.loading) {
+  if (dashboard.loading && !(dashboard.data as any)?.data) {
     return (
       <View style={styles.screen}>
         <RdHeader title={t('Shaxsiy moliya')} showBack={!isTab} />
@@ -478,36 +469,23 @@ const ShaxsiyMoliya = () => {
         <View style={styles.fmHero}>
           <Grad id="fmHero" colors={GRAD_BRAND} />
 
-          {/* Holat: sog'liq bali + tavsiya tugmasi + qoldiq */}
-          <View style={styles.healthTopRow}>
-            <View style={styles.healthLabelRow}>
-              <ShieldIcon size={rs(15)} color={rd.color.onPrimary} />
-              <Text allowFontScaling={false} style={styles.healthLabel}>
-                {t('Moliyaviy sog‘liq')}
-              </Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('FinanceAdvice')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={styles.healthAdviceBtn}>
-              <BulbIcon size={rs(15)} color={rd.color.onPrimary} />
-            </TouchableOpacity>
-          </View>
+          {/* 21.10 (egasi hujjati): "Moliyaviy sog'liq" + "80/100 · Yaxshi" OLIB TASHLANDI —
+              ball endi bosh sahifada (barcha modullar). O'rniga shior; tavsiya tugmasi va
+              qoldiq joyida qoladi. */}
           <View style={styles.healthBottomRow}>
-            <View style={styles.healthScoreInline}>
-              <Text allowFontScaling={false} style={styles.healthScore2}>
-                {score}
-              </Text>
-              <Text allowFontScaling={false} style={styles.healthScoreMax2}>
-                /100
-              </Text>
-              <Text allowFontScaling={false} style={styles.healthStatusInline} numberOfLines={1}>
-                {'  ·  '}
-                {healthStatusUz(status)}
-              </Text>
-            </View>
+            <Text allowFontScaling={false} style={styles.fmHeroSlogan} numberOfLines={3}>
+              {t('ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.')}
+            </Text>
             <View style={styles.healthQoldiq}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('FinanceAdvice')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel={t('Tavsiyalar')}
+                style={[styles.healthAdviceBtn, styles.fmHeroAdvice]}>
+                <BulbIcon size={rs(15)} color={rd.color.onPrimary} />
+              </TouchableOpacity>
               <Text allowFontScaling={false} style={styles.healthQoldiqLabel}>
                 {t('Qoldiq')}
               </Text>
@@ -917,6 +895,16 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   healthQoldiq: { alignItems: 'flex-end', maxWidth: '46%' },
+  // 21.10: sog'liq bali o'rnidagi shior (ko'k kartada)
+  fmHeroSlogan: {
+    flex: 1,
+    marginRight: rs(12),
+    fontFamily: rd.font.semibold,
+    fontSize: rs(14.5),
+    lineHeight: rs(20),
+    color: rd.color.onPrimary,
+  },
+  fmHeroAdvice: { marginBottom: rs(8) },
   healthQoldiqLabel: {
     fontFamily: rd.font.medium,
     fontSize: rs(11),

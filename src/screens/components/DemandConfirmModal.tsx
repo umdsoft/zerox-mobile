@@ -26,6 +26,7 @@ import { rd, rs } from '../../theme/rd';
 import { cardDigits, localBrand } from '../../helper/cardBin';
 import { fmtPhoneUzFull } from '../../helper/phone';
 import {
+  CheckIcon,
   CloseIcon,
   InfoIcon,
   MessageIcon,
@@ -37,6 +38,12 @@ import PlanLimitModal from '../home/drawer/drawerScreens/PlanLimitModal';
 type Props = DemandModalState & {
   /** Karta yo'q bo'lganda (masalan xodim) — nima bo'lishini tushuntiruvchi matn. */
   noCardNote?: string;
+  /** 21.10: karta yo'q eslatmasi ostida "Boshqa ko'rsatilmasin" (Qarz daftari, do'kon egasi). */
+  snoozeable?: boolean;
+  /** 21.10: eslatma 30 kunga o'chirilgan — sariq izoh va "Karta qo'shish" ko'rsatilmaydi. */
+  hideCardReminder?: boolean;
+  /** 21.10: belgilangan holda oyna yopildi/yuborildi — 30 kunlik muddatni saqlash. */
+  onSnooze?: () => void;
 };
 
 const BACKDROP = 'rgba(15,23,42,0.45)';
@@ -114,9 +121,33 @@ const DemandConfirmModal = ({
   onChangeCard,
   plan,
   noCardNote,
+  snoozeable,
+  hideCardReminder,
+  onSnooze,
 }: Props) => {
   const { t } = useTranslation();
   const bank = card ? localBrand(card.number) : '';
+  // 21.10: "Boshqa ko'rsatilmasin" — har ochilishda belgisiz boshlanadi
+  const [dontShow, setDontShow] = React.useState(false);
+  React.useEffect(() => {
+    if (visible) setDontShow(false);
+  }, [visible]);
+  const showReminder = !card && !hideCardReminder;
+  const showSnooze = !!snoozeable && showReminder;
+  const showCardBtn = canChangeCard && (!!card || !hideCardReminder);
+  const snoozeIfChecked = () => {
+    if (showSnooze && dontShow && onSnooze) onSnooze();
+  };
+  const handleClose = () => {
+    if (busy) return;
+    snoozeIfChecked();
+    onClose();
+  };
+  const handleConfirm = () => {
+    if (busy) return;
+    snoozeIfChecked();
+    onConfirm();
+  };
 
   return (
     <>
@@ -132,16 +163,16 @@ const DemandConfirmModal = ({
         transparent
         animationType="fade"
         statusBarTranslucent
-        onRequestClose={onClose}
+        onRequestClose={handleClose}
       >
         <Pressable
           style={styles.backdrop}
-          onPress={onClose}
+          onPress={handleClose}
           accessibilityLabel={t('Yopish')}
         >
           <Pressable style={styles.sheet} onPress={() => undefined}>
             <TouchableOpacity
-              onPress={onClose}
+              onPress={handleClose}
               disabled={busy}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityRole="button"
@@ -159,8 +190,8 @@ const DemandConfirmModal = ({
               style={styles.title}
               accessibilityRole="header"
             >
-              {/* SS-DEV (2026-10-04): "Talab SMS yuborilsinmi?" -> "Talabnoma yuborilsinmi?" */}
-              {t('Talabnoma yuborilsinmi?')}
+              {/* SS-DEV (2026-10-04): "Talab SMS yuborilsinmi?" -> "Talabnoma yuborilsinmi?"; 21.10 -> "SMS xabarnoma yuborilsinmi?" */}
+              {t('SMS xabarnoma yuborilsinmi?')}
             </Text>
             <Text allowFontScaling={false} style={styles.subtitle}>
               {card
@@ -193,19 +224,19 @@ const DemandConfirmModal = ({
                     </View>
                   )}
                 </>
-              ) : (
+              ) : showReminder ? (
                 <View style={styles.noteBox}>
                   <InfoIcon size={rs(16)} color={rd.color.warning} />
                   <Text allowFontScaling={false} style={styles.noteText}>
                     {noCardNote || t('Plastik karta kiritilmagan.')}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
               {(!!preview || !!previewLoading) && (
                 <View style={styles.previewBox}>
                   <Text allowFontScaling={false} style={styles.previewLabel}>
-                    {t('Talabnoma matni')}
+                    {t('SMS xabarnoma matni')}
                   </Text>
                   {previewLoading && !preview ? (
                     <ActivityIndicator
@@ -224,7 +255,7 @@ const DemandConfirmModal = ({
 
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={onConfirm}
+              onPress={handleConfirm}
               disabled={busy}
               accessibilityRole="button"
               style={[styles.primaryBtn, busy && styles.btnBusy]}
@@ -237,7 +268,7 @@ const DemandConfirmModal = ({
                 </Text>
               )}
             </TouchableOpacity>
-            {canChangeCard && (
+            {showCardBtn && (
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={onChangeCard}
@@ -248,6 +279,24 @@ const DemandConfirmModal = ({
                 <PencilIcon size={rs(14)} color={rd.color.primary} />
                 <Text allowFontScaling={false} style={styles.secondaryText}>
                   {card ? t('Kartani o‘zgartirish') : t('Karta qo‘shish')}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {showSnooze && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setDontShow(v => !v)}
+                disabled={busy}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: dontShow, disabled: busy }}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                style={styles.snoozeRow}
+              >
+                <View style={[styles.checkbox, dontShow && styles.checkboxOn]}>
+                  {dontShow && <CheckIcon size={rs(12)} color={rd.color.onPrimary} />}
+                </View>
+                <Text allowFontScaling={false} style={styles.snoozeText}>
+                  {t('Boshqa ko‘rsatilmasin')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -457,5 +506,32 @@ const styles = StyleSheet.create({
     fontFamily: rd.font.semibold,
     fontSize: rs(14),
     color: rd.color.primary,
+  },
+  snoozeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: rs(8),
+    marginTop: rs(12),
+    paddingVertical: rs(4),
+  },
+  checkbox: {
+    width: rs(18),
+    height: rs(18),
+    borderRadius: rs(5),
+    borderWidth: 1.5,
+    borderColor: rd.color.textTertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rd.color.surface,
+  },
+  checkboxOn: {
+    borderColor: rd.color.primary,
+    backgroundColor: rd.color.primary,
+  },
+  snoozeText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.textSecondary,
   },
 });

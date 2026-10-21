@@ -20,6 +20,10 @@ export const SOCKET_URL = HOST;
 // 10.10: QO'LLAB-QUVVATLASH boti — @zeroxuz_bot (faqat yordam uchun). Funksiyalar boti (shartnoma,
 // qarz daftari, shaxsiy qarz, moliya) — @ZeroXuzbot; @Zeroxlbot hech qayerda ishlatilmaydi.
 export const SUPPORT_TG_URL = 'https://t.me/zeroxuz_bot';
+// 21.10: funksiyalar boti @ZeroXuzbot — Qarz daftari hero'sidagi "Telegram botga o'tish" (avval ilova: tg://, zaxira: t.me)
+export const BOT_TG_USERNAME = 'ZeroXuzbot';
+export const BOT_TG_APP_URL = `tg://resolve?domain=${BOT_TG_USERNAME}`;
+export const BOT_TG_URL = `https://t.me/${BOT_TG_USERNAME}`;
 export const WEB_URL = HOST.includes('tb.zerox.uz') ? 'https://test.zerox.uz' : 'https://zerox.uz';
 
 // PDF xizmati (pdf.zerox.uz) HAM prod, HAM test'ga xizmat qiladi, lekin har biri

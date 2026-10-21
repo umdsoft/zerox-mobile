@@ -53,6 +53,7 @@ import AnimatedEmpty from '../../components/AnimatedEmpty';
 // 03.10: amal tugmalari — Shaxsiy qarzdagi (FinanceDebtGroup/Detail) YAGONA pastel tugma.
 import DebtActionButton, { pastelFg } from './DebtActionButton';
 import { BanIcon } from './FinanceDebtActionModal';
+import QarzMijozTavsiyaCard from './QarzMijozTavsiyaCard'; // 21.10: Tavsiya kartasi (sayt bilan bir xil)
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish / berilgan
@@ -740,6 +741,8 @@ const QarzDaftariMijoz = () => {
           )}
         </View>
 
+        {/* 21.10: sahifa oxirida "Tavsiya" — saytdagi mijoz sahifasi bilan bir xil (GET .../mijozlar/:id/tavsiya). */}
+        <QarzMijozTavsiyaCard mijozId={id} />
       </ScrollView>
 
       {/* SS-DEV (2026-09-29): SMS ikonkasi → avval tayyor shablonlar oynasi. */}
@@ -750,10 +753,8 @@ const QarzDaftariMijoz = () => {
         templates={smsTemplates}
       />
       {/* 03.10: "Talab SMS yuborilsinmi?" — OK yuboradi, X yubormaydi, kartani o'zgartirish. */}
-      <DemandConfirmModal
-        {...talab.modal}
-        noCardNote={t('Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.')}
-      />
+      {/* 21.10: karta yo'q izohi (egasi/xodim) va "Boshqa ko'rsatilmasin" (30 kun) — talab.modal ichida (qarzTalab.ts). */}
+      <DemandConfirmModal {...talab.modal} />
     </View>
   );
 };

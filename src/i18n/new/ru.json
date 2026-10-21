@@ -1,5 +1,15 @@
 {
   "translation": {
+    "ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.": "Контролируйте свои доходы и расходы с ZeroX.",
+    "Ma’lumot yetarli emas": "Недостаточно данных",
+    "Vazn": "Вес",
+    "Bo‘limga o‘tish": "Перейти в раздел",
+    "Ma’lumotni yuklab bo‘lmadi": "Не удалось загрузить данные",
+    "Ball barcha modullar bo‘yicha hisoblanadi.": "Балл рассчитывается по всем модулям.",
+    "Ball qanday hisoblanadi": "Как считается балл",
+    "Har bir modul o‘z vazniga ega (30 / 20 / 20 / 30). Ma’lumoti yo‘q modul hisobga olinmaydi — qolganlarining vazni 100 ballga qayta taqsimlanadi.": "У каждого модуля свой вес (30 / 20 / 20 / 30). Модули без данных не учитываются — их вес перераспределяется на остальные до 100 баллов.",
+    "Modullar bo‘yicha tafsilot": "Детали по модулям",
+    "Ballni oshirish uchun": "Как повысить балл",
     "Tayyor": "Готово",
     "Kategoriyani o‘chirasizmi?": "Удалить категорию?",
     "Avvalgi yozuvlar saqlanib qoladi.": "Прежние записи сохранятся.",
@@ -1640,6 +1650,11 @@
     "subCell.left.head": "Осталось",
     "subCell.left.tail": "дней",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Автоматическое SMS должнику при оформлении долга",
+    "Qarz va to‘lovlarni yuritish": "Учёт долгов и платежей",
+    "Shaxsiy moliyani yuritish": "Ведение личных финансов",
+    "Avtomatik eslatma, talab va to‘lov SMS": "Автонапоминания, SMS-требования и SMS о платеже",
+    "Batafsil SMS ro‘yxati va qidiruv": "Подробный список SMS и поиск",
+    "Qarzlar tahlili va Excel": "Аналитика долгов и Excel",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Пожалуйста, чтобы подтвердить оферту, прочитайте её до конца.",
     "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Пожалуйста, отметьте, что вы ознакомились с публичной офертой.",
     "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Срок тарифа истёк. Чтобы пользоваться этой функцией, продлите тариф.",
@@ -1818,6 +1833,16 @@
     "Ko‘rish uchun bosing": "Нажмите, чтобы посмотреть",
     "Sizni kuzatmoqda": "Наблюдает за вами",
     "Limitdan oshgan": "Лимит превышен",
-    "Limit belgilangan": "Лимит установлен"
+    "Limit belgilangan": "Лимит установлен",
+    "SMS xabarnoma yuborilsinmi?": "Отправить SMS-уведомление?",
+    "SMS xabarnoma matni": "Текст SMS-уведомления",
+    "Boshqa ko‘rsatilmasin": "Больше не показывать",
+    "Do‘konga plastik karta ulanmagan. Shu sababli talabnoma quyidagi matn tarzida yuboriladi. Xohlasangiz, kartani qo‘shishingiz mumkin.": "К магазину не привязана пластиковая карта. Поэтому требование будет отправлено в виде текста ниже. При желании можно добавить карту.",
+    "Telegram botga o‘tish": "Перейти в Telegram-бот",
+    "Ishonchli mijoz": "Надёжный клиент",
+    "Qarzlarini o‘z vaqtida qaytargan.": "Возвращал долги вовремя.",
+    "Ba’zan kechiktirgan.": "Иногда задерживал.",
+    "Tarix yo‘q.": "Истории нет.",
+    "o‘rtacha kechikish: {{n}} kun": "средняя задержка: {{n}} дн."
   }
 }

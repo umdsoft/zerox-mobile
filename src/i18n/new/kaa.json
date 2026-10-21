@@ -1,5 +1,15 @@
 {
   "translation": {
+    "ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.": "ZeroX arqalı dáramatlarıńız hám qárejetlerińizdi qadaǵalań.",
+    "Ma’lumot yetarli emas": "Maǵlıwmat jetkiliksiz",
+    "Vazn": "Salmaq",
+    "Bo‘limga o‘tish": "Bólimge ótiw",
+    "Ma’lumotni yuklab bo‘lmadi": "Maǵlıwmattı júklep bolmadı",
+    "Ball barcha modullar bo‘yicha hisoblanadi.": "Ball barlıq modullar boyınsha esaplanadı.",
+    "Ball qanday hisoblanadi": "Ball qalay esaplanadı",
+    "Har bir modul o‘z vazniga ega (30 / 20 / 20 / 30). Ma’lumoti yo‘q modul hisobga olinmaydi — qolganlarining vazni 100 ballga qayta taqsimlanadi.": "Hár bir moduldıń óz salmaǵı bar (30 / 20 / 20 / 30). Maǵlıwmatı joq modul esapqa alınbaydı — qalǵanlarınıń salmaǵı 100 ballǵa qayta bólistiriledi.",
+    "Modullar bo‘yicha tafsilot": "Modullar boyınsha tolıq maǵlıwmat",
+    "Ballni oshirish uchun": "Ballıdı arttırıw ushın",
     "Tayyor": "Tayın",
     "Kategoriyani o‘chirasizmi?": "Kategoriyanı óshiresiz be?",
     "Avvalgi yozuvlar saqlanib qoladi.": "Aldıńǵı jazıwlar saqlanıp qaladı.",
@@ -1639,6 +1649,11 @@
     "subCell.left.head": "Qalǵan",
     "subCell.left.tail": "kún",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Qarız qayd etilgende qarızdarǵa avtomatikalıq SMS",
+    "Qarz va to‘lovlarni yuritish": "Qarız hám tólemlerdi júrgiziw",
+    "Shaxsiy moliyani yuritish": "Jeke qarjını júrgiziw",
+    "Avtomatik eslatma, talab va to‘lov SMS": "Avtomat eskertpe, talap hám tólem SMS",
+    "Batafsil SMS ro‘yxati va qidiruv": "Tolıq SMS dizimi hám izlew",
+    "Qarzlar tahlili va Excel": "Qarızlar analizi hám Excel",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Iltimas, offertanı tastıyıqlaw ushın onı aqırına shekem oqıp shıǵıń.",
     "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Iltimas, ǵalabalıq oferta menen tanısqanıńızdı belgileń.",
     "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Tarif múddeti tawsıldı. Bul imkaniyattan paydalanıw ushın tarifti uzaytıń.",
@@ -1817,6 +1832,16 @@
     "Ko‘rish uchun bosing": "Kóriw ushın basıń",
     "Sizni kuzatmoqda": "Sizdi baqlap atır",
     "Limitdan oshgan": "Limitten asqan",
-    "Limit belgilangan": "Limit belgilengen"
+    "Limit belgilangan": "Limit belgilengen",
+    "SMS xabarnoma yuborilsinmi?": "SMS xabarnama jiberilsinbe?",
+    "SMS xabarnoma matni": "SMS xabarnama teksti",
+    "Boshqa ko‘rsatilmasin": "Basqa kórsetilmesin",
+    "Do‘konga plastik karta ulanmagan. Shu sababli talabnoma quyidagi matn tarzida yuboriladi. Xohlasangiz, kartani qo‘shishingiz mumkin.": "Dúkanǵa plastik karta baylanbaǵan. Sol sebepli talapnama tómendegi tekst túrinde jiberiledi. Qáleseńiz, kartanı qosıwıńız múmkin.",
+    "Telegram botga o‘tish": "Telegram botqa ótiw",
+    "Ishonchli mijoz": "Isenimli klient",
+    "Qarzlarini o‘z vaqtida qaytargan.": "Qarızların óz waqtında qaytarǵan.",
+    "Ba’zan kechiktirgan.": "Geyde keshiktirgen.",
+    "Tarix yo‘q.": "Tariyx joq.",
+    "o‘rtacha kechikish: {{n}} kun": "ortasha keshigiw: {{n}} kún"
   }
 }

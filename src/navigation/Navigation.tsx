@@ -93,6 +93,8 @@ import FinanceGoalList from '../screens/home/modules/FinanceGoalList';
 import FinanceAnalytics from '../screens/home/modules/FinanceAnalytics';
 import FinanceBudget from '../screens/home/modules/FinanceBudget';
 import FinanceAdvice from '../screens/home/modules/FinanceAdvice';
+// 21.10: "Moliyaviy sog'liq" — barcha modullar bo'yicha ball tafsiloti (bosh sahifadan)
+import FinancialHealth from '../screens/home/modules/FinancialHealth';
 import {
   FinanceScheduledPayments,
   FinanceScheduledIncomes,
@@ -302,6 +304,7 @@ const AllNavigators = [
   { name: 'FinanceAnalytics', component: FinanceAnalytics },
   { name: 'FinanceBudget', component: FinanceBudget },
   { name: 'FinanceAdvice', component: FinanceAdvice },
+  { name: 'FinancialHealth', component: FinancialHealth },
   { name: 'FinanceScheduledPayments', component: FinanceScheduledPayments },
   { name: 'FinanceScheduledIncomes', component: FinanceScheduledIncomes },
   { name: 'FinanceDebts', component: FinanceDebts },

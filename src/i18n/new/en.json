@@ -1,5 +1,15 @@
 {
   "translation": {
+    "ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.": "Track your income and expenses with ZeroX.",
+    "Ma’lumot yetarli emas": "Not enough data",
+    "Vazn": "Weight",
+    "Bo‘limga o‘tish": "Open section",
+    "Ma’lumotni yuklab bo‘lmadi": "Could not load data",
+    "Ball barcha modullar bo‘yicha hisoblanadi.": "The score covers all modules.",
+    "Ball qanday hisoblanadi": "How the score is calculated",
+    "Har bir modul o‘z vazniga ega (30 / 20 / 20 / 30). Ma’lumoti yo‘q modul hisobga olinmaydi — qolganlarining vazni 100 ballga qayta taqsimlanadi.": "Each module has a weight (30 / 20 / 20 / 30). Modules without data are excluded and the remaining weights are rescaled to 100 points.",
+    "Modullar bo‘yicha tafsilot": "Breakdown by module",
+    "Ballni oshirish uchun": "How to improve your score",
     "Tayyor": "Done",
     "Kategoriyani o‘chirasizmi?": "Delete this category?",
     "Avvalgi yozuvlar saqlanib qoladi.": "Existing records will be kept.",
@@ -1639,6 +1649,11 @@
     "subCell.left.head": "Days",
     "subCell.left.tail": "left",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Automatic SMS to the debtor when a debt is recorded",
+    "Qarz va to‘lovlarni yuritish": "Debt and payment tracking",
+    "Shaxsiy moliyani yuritish": "Personal finance management",
+    "Avtomatik eslatma, talab va to‘lov SMS": "Auto reminders, demand and payment SMS",
+    "Batafsil SMS ro‘yxati va qidiruv": "Detailed SMS list and search",
+    "Qarzlar tahlili va Excel": "Debt analytics and Excel",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Please read the offer to the end to confirm it.",
     "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Please confirm that you have read the public offer.",
     "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Your plan has expired. Renew your plan to use this feature.",
@@ -1817,6 +1832,16 @@
     "Ko‘rish uchun bosing": "Tap to view",
     "Sizni kuzatmoqda": "Observing you",
     "Limitdan oshgan": "Limit exceeded",
-    "Limit belgilangan": "Limit set"
+    "Limit belgilangan": "Limit set",
+    "SMS xabarnoma yuborilsinmi?": "Send the SMS notification?",
+    "SMS xabarnoma matni": "SMS notification text",
+    "Boshqa ko‘rsatilmasin": "Don't show again",
+    "Do‘konga plastik karta ulanmagan. Shu sababli talabnoma quyidagi matn tarzida yuboriladi. Xohlasangiz, kartani qo‘shishingiz mumkin.": "No bank card is linked to the shop. Therefore the demand will be sent as the text below. You can add a card if you wish.",
+    "Telegram botga o‘tish": "Open the Telegram bot",
+    "Ishonchli mijoz": "Reliable customer",
+    "Qarzlarini o‘z vaqtida qaytargan.": "Repaid debts on time.",
+    "Ba’zan kechiktirgan.": "Sometimes repaid late.",
+    "Tarix yo‘q.": "No history.",
+    "o‘rtacha kechikish: {{n}} kun": "average delay: {{n}} days"
   }
 }

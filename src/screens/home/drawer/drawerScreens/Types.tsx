@@ -41,6 +41,34 @@ const VIOLET_TINT = '#efe9fd';
 // 01.10 (mobil hujjat, 2-band): "N SMS kiritilgan" endi badge tagida emas — imkoniyatlar
 // ro'yxatining BIRINCHI qatori. "Ro'yxatga olish SMS (tizim)" ma'nosiz edi — aslida qarz
 // qayd etilganda tizim qarzdorga avtomatik SMS yuboradi; matn shunga moslab yozildi.
+// 21.10 (mobil hujjat): ro'yxat sayt shartlariga moslandi (frontend/utils/pricingPlans.js —
+// Qarz daftari + Shaxsiy qarz + Shaxsiy moliya), lekin modullarga BO'LINMAGAN — har tarifda
+// bitta ixcham ro'yxat (o'xshash bandlar birlashtirildi). Cheklovlar backend PLAN_FEATURES /
+// smsPolicy bilan bir xil: Free — qarz/to'lov yuritish, ro'yxatga olish SMS'i, shaxsiy moliya;
+// Start+ — avto eslatma, talab va to'lov SMS'i (auto_sms_reminder, manual_sms_send), SMS tarixi;
+// Premium — batafsil SMS ro'yxati (sms_list), qarzlar tahlili va Excel (analytics, excel_export).
+type TariffFeature = { label: string; on: boolean };
+
+/** Har tarif uchun yagona tartib; `level` — band qaysi tarifdan boshlab mavjud. */
+const PLAN_LEVEL: Record<string, number> = { free: 0, start: 1, premium: 2 };
+const FEATURE_ROWS: { label: string; level: number }[] = [
+  { label: 'Qarz va to‘lovlarni yuritish', level: 0 },
+  { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', level: 0 },
+  { label: 'Shaxsiy moliyani yuritish', level: 0 },
+  { label: 'Avtomatik eslatma, talab va to‘lov SMS', level: 1 },
+  { label: 'SMS tarixi va statistika', level: 1 },
+  { label: 'Batafsil SMS ro‘yxati va qidiruv', level: 2 },
+  { label: 'Qarzlar tahlili va Excel', level: 2 },
+];
+
+function planFeatures(planKey: string, smsLabel: string): TariffFeature[] {
+  const level = PLAN_LEVEL[planKey] ?? 0;
+  return [
+    { label: smsLabel, on: true },
+    ...FEATURE_ROWS.map((r) => ({ label: r.label, on: r.level <= level })),
+  ];
+}
+
 const DAFTARI_TARIFFS = [
   {
     key: 'free',
@@ -50,16 +78,7 @@ const DAFTARI_TARIFFS = [
     accent: rd.color.textTertiary,
     tint: rd.color.surfaceAlt,
     current: true,
-    features: [
-      { label: '100 SMS kiritilgan', on: true },
-      { label: 'Qarz qo‘shish', on: true },
-      { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
-      { label: 'Avtomatik SMS eslatma', on: false },
-      { label: 'Qo‘lda SMS yuborish', on: false },
-      { label: 'SMS tarixi va statistika', on: false },
-      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: false },
-    ],
+    features: planFeatures('free', '100 SMS kiritilgan'),
   },
   {
     key: 'start',
@@ -72,17 +91,7 @@ const DAFTARI_TARIFFS = [
     accent: rd.color.primary,
     tint: rd.color.primaryTint,
     highlight: true,
-    features: [
-      { label: '500 SMS kiritilgan', on: true },
-      { label: 'Qarz qo‘shish', on: true },
-      { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
-      { label: 'Avtomatik SMS eslatma', on: true },
-      { label: 'Qo‘lda SMS yuborish', on: true },
-      { label: 'SMS tarixi va statistika', on: true },
-      // 29.09: SMS xabarlar ro'yxati — FAQAT Premium (backend sms_list, sayt tariflari bilan bir xil).
-      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: false },
-    ],
+    features: planFeatures('start', '500 SMS kiritilgan'),
   },
   {
     key: 'premium',
@@ -91,16 +100,7 @@ const DAFTARI_TARIFFS = [
     price: '199 000',
     accent: VIOLET,
     tint: VIOLET_TINT,
-    features: [
-      { label: '1 100 SMS kiritilgan', on: true },
-      { label: 'Qarz qo‘shish', on: true },
-      { label: 'To‘lovlarni qayd etish', on: true },
-      { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', on: true },
-      { label: 'Avtomatik SMS eslatma', on: true },
-      { label: 'Qo‘lda SMS yuborish', on: true },
-      { label: 'SMS tarixi va statistika', on: true },
-      { label: 'SMS xabarlar ro‘yxati (batafsil, qidiruv)', on: true },
-    ],
+    features: planFeatures('premium', '1 100 SMS kiritilgan'),
   },
 ];
 

@@ -29,7 +29,7 @@ import Toast from 'react-native-toast-message';
 import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
 import { handlePlanRequiredError, isFeatureLocked, isQarzStaffContext, PlanState, planRequiredText } from './planGate';
-import { DemandCard, useDemandFlow } from './useDemandFlow';
+import { DemandCard, DemandModalState, useDemandFlow } from './useDemandFlow';
 
 type Ctx = {
   t: (k: string) => string;
@@ -154,6 +154,50 @@ const loadShopCard = async (q: QarzTalabTarget): Promise<DemandCard | null> => {
   return { number, holder: String(shop?.karta_egasi || '').trim(), telegramPhone: tg };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 21.10: "Boshqa ko'rsatilmasin" — karta yo'q eslatmasini 30 kunga o'chirish (sayt qarzTalabMixin bilan bir xil)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
+const SNOOZE_PREFIX = 'zx_talab_nocard_snooze';
+
+/** MMKV kaliti: foydalanuvchi + do'kon (savdo_faoliyat_id); aniqlanmasa '' (eslatma doim ko'rinadi). */
+const snoozeKey = (faoliyatId?: number | string | null): string => {
+  const uid = storage?.getString('user_id');
+  if (!uid || faoliyatId == null || faoliyatId === '') return '';
+  return `${SNOOZE_PREFIX}_${uid}_${faoliyatId}`;
+};
+
+/** Eslatma hozir o'chirilganmi — saqlangan muddat (ms) hali o'tmagan. Muddati o'tgani o'chiriladi. */
+const isSnoozed = (key: string): boolean => {
+  if (!key) return false;
+  try {
+    const until = Number(storage.getString(key)) || 0;
+    if (until > Date.now()) return true;
+    if (until) storage.delete(key);
+  } catch {
+    // MMKV o'qilmadi — eslatma ko'rsatilaveradi
+  }
+  return false;
+};
+
+const saveSnooze = (key: string): void => {
+  if (!key) return;
+  try {
+    storage.set(key, String(Date.now() + SNOOZE_MS));
+  } catch {
+    // saqlab bo'lmadi — keyingi safar eslatma yana ko'rinadi
+  }
+};
+
+/** Qarz daftari talab oynasi — umumiy holat + karta yo'q izohi va "Boshqa ko'rsatilmasin". */
+export type QarzTalabModalState = DemandModalState & {
+  noCardNote: string;
+  snoozeable: boolean;
+  hideCardReminder: boolean;
+  onSnooze: () => void;
+};
+
 type TalabArgs = {
   t: (k: string, o?: any) => string;
   navigation: { navigate: (name: string, params?: object) => void };
@@ -204,6 +248,9 @@ export const useQarzTalab = ({ t, navigation, plan, faoliyatId }: TalabArgs) => 
   // tarifi bo'yicha (xodim kontekstida o'z tarifimiz bo'yicha qulflamaymiz).
   const locked = ruxsat ? !ruxsat.allowed : !staff && isFeatureLocked(plan, 'manual_sms_send');
   const lockExpired = ruxsat ? ruxsat.expired : plan?.expired;
+  // 21.10: joriy talabning do'koni (eslatma kaliti) va eslatma o'chirilganmi
+  const snoozeFidRef = React.useRef<number | string | null | undefined>(faoliyatId);
+  const [snoozed, setSnoozed] = React.useState(false);
   const flow = useDemandFlow<QarzTalabTarget>({
     locked,
     // 03.10: toast + jim navigatsiya EMAS — sababi yozilgan "Tarif cheklovi" oynasi.
@@ -240,5 +287,24 @@ export const useQarzTalab = ({ t, navigation, plan, faoliyatId }: TalabArgs) => 
       }
     },
   });
-  return { ...flow, locked, staff };
+  // 21.10: oyna ochilishidan OLDIN shu foydalanuvchi + do'kon uchun 30 kunlik o'chirish tekshiriladi
+  const start = (target: QarzTalabTarget) => {
+    const fid = target?.faoliyatId ?? faoliyatId;
+    snoozeFidRef.current = fid;
+    setSnoozed(isSnoozed(snoozeKey(fid)));
+    return flow.start(target);
+  };
+  // Karta yo'q va kartani qo'sha oladigan (EGASI) — eslatma + "Boshqa ko'rsatilmasin"; xodim — umumiy izoh.
+  const ownerNoCard = !flow.modal.card && flow.modal.canChangeCard;
+  const modal: QarzTalabModalState = {
+    ...flow.modal,
+    noCardNote: ownerNoCard
+      ? t('Do‘konga plastik karta ulanmagan. Shu sababli talabnoma quyidagi matn tarzida yuboriladi. Xohlasangiz, kartani qo‘shishingiz mumkin.')
+      : t('Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.'),
+    snoozeable: ownerNoCard,
+    hideCardReminder: ownerNoCard && snoozed,
+    // Faqat saqlanadi — joriy oyna o'zgarmaydi (yuborilayotganda eslatma "sakramasin"); keyingi ochilishda amal qiladi.
+    onSnooze: () => saveSnooze(snoozeKey(snoozeFidRef.current)),
+  };
+  return { ...flow, start, modal, locked, staff };
 };

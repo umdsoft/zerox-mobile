@@ -72,6 +72,9 @@ const GRAD = {
   brand: ['#2f6fed', '#5a4fe4'] as const, // primary → binafsha
   green: ['#22c55e', '#0d9488'] as const, // kreditor (menga qarzdor)
   rose: ['#fb7185', '#e11d48'] as const, // debitor (men qarzdor)
+  // 21.10: tepadagi JAMI kartalar — to'qroq to'liq gradient (oq matn o'qilishi uchun AA kontrast)
+  totalGreen: ['#16a34a', '#0f766e'] as const,
+  totalRose: ['#e11d48', '#9f1239'] as const,
 };
 
 const contracts = {
@@ -240,11 +243,13 @@ const HeroBanner = ({
   score,
   status,
   loading,
+  onHealthPress,
 }: {
   name: string;
-  score: number;
+  score: number | null;
   status: string;
   loading?: boolean;
+  onHealthPress?: () => void;
 }) => {
   const { t } = useTranslation();
   return (
@@ -261,13 +266,20 @@ const HeroBanner = ({
         {/* SS-DEV (2026-10-04): 04.10 hujjat, 3-band — yangi shior (5 tilda). */}
         {t('Qarz munosabatlari va shaxsiy moliyani ZeroX bilan boshqaring.')}
       </Text>
-      <View style={styles.heroChips}>
+      {/* 21.10: ball/holat bosilsa — "Moliyaviy sog'liq" sahifasi (ball nima uchun shunday). */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={styles.heroChips}
+        onPress={onHealthPress}
+        disabled={!onHealthPress}
+        accessibilityRole="button"
+        accessibilityLabel={t('Moliyaviy sog‘liq')}>
         <View style={styles.heroChip}>
           {loading ? (
             <Shimmer width={rs(44)} height={rs(20)} onDark style={styles.heroChipSkel} />
           ) : (
             <Text style={styles.heroChipValue} numberOfLines={1} allowFontScaling={false}>
-              {score}
+              {score == null ? '—' : score}
             </Text>
           )}
           <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
@@ -286,7 +298,7 @@ const HeroBanner = ({
             {t('Holat')}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -303,6 +315,7 @@ const MetricCard = ({
   comingSoon,
   loading,
   onPress,
+  total,
 }: {
   accent: string;
   accentBg: string;
@@ -314,8 +327,44 @@ const MetricCard = ({
   comingSoon?: boolean;
   loading?: boolean;
   onPress?: () => void;
+  /** 21.10: barcha modullar JAMI kartasi — to'liq gradient fon + oq matn + "Jami" belgisi. */
+  total?: { id: string; colors: readonly string[] };
 }) => {
   const { t } = useTranslation();
+  if (total && !comingSoon) {
+    return (
+      <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={[styles.metricCard, styles.totalCard]}>
+        <Grad id={total.id} colors={total.colors} />
+        <View style={styles.totalGlow} />
+        <View style={styles.metricHead}>
+          <CircleIcon size={rs(32)} bg="rgba(255,255,255,0.22)">
+            <Icon size={rs(17)} color={rd.color.onPrimary} />
+          </CircleIcon>
+          <Text style={[styles.metricLabelInline, styles.totalLabel]} numberOfLines={2}>
+            {t(label)}
+          </Text>
+          <View style={styles.totalBadge}>
+            <Text style={styles.totalBadgeText} allowFontScaling={false}>
+              {t('Jami')}
+            </Text>
+          </View>
+        </View>
+        {loading ? (
+          <>
+            <Shimmer width="68%" height={rs(18)} onDark style={styles.metricSkeleton} />
+            <Shimmer width="40%" height={rs(14)} onDark style={styles.metricSkeleton} />
+          </>
+        ) : (
+          <>
+            <Text style={[styles.metricUzs, styles.totalUzs]} numberOfLines={1} adjustsFontSizeToFit>
+              {uzs}
+            </Text>
+            {usd ? <Text style={[styles.metricUsd, styles.totalUsd]}>{usd}</Text> : null}
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  }
   return (
     <TouchableOpacity
       activeOpacity={comingSoon ? 1 : 0.85}
@@ -883,6 +932,7 @@ const HomeRedesign = () => {
     good: 'Yaxshi',
     fair: 'O‘rtacha',
     poor: 'Past',
+    no_data: 'Ma’lumot yetarli emas',
   };
   const localScore =
     cTotal === 0
@@ -891,14 +941,20 @@ const HomeRedesign = () => {
           0,
           Math.round(100 - (cExpired / cTotal) * 63 - (cNear / cTotal) * 20),
         );
-  const healthScore = analytics?.health?.score ?? localScore;
+  // 21.10: backend endi BARCHA modullar bo'yicha hisoblaydi; ma'lumot yo'q bo'lsa score=null
+  // (status 'no_data') — bu holatda mahalliy taxmin EMAS, "—" ko'rsatiladi.
+  const hasServerHealth = !!analytics?.health;
+  const healthScore: number | null = hasServerHealth
+    ? analytics.health.score ?? null
+    : localScore;
   const healthStatus =
     (analytics?.health?.status && STATUS_UZ[analytics.health.status]) ||
-    (healthScore >= 85
+    (healthScore == null ? STATUS_UZ.no_data : '') ||
+    ((healthScore ?? 0) >= 85
       ? 'A’lo'
-      : healthScore >= 70
+      : (healthScore ?? 0) >= 70
       ? 'Yaxshi'
-      : healthScore >= 50
+      : (healthScore ?? 0) >= 50
       ? 'O‘rtacha'
       : 'Past');
 
@@ -977,6 +1033,7 @@ const HomeRedesign = () => {
           score={healthScore}
           status={healthStatus}
           loading={firstLoad && !analytics}
+          onHealthPress={() => nav('FinancialHealth')}
         />
 
         {/* Sarlavhasiz: kartalarning o'zi nimani ko'rsatayotganini aytadi,
@@ -988,6 +1045,7 @@ const HomeRedesign = () => {
             accentBg={rd.color.successBg}
             Icon={ArrowUpRight}
             label="Berilgan qarz"
+            total={{ id: 'totDebGrad', colors: GRAD.totalGreen }}
             uzs={uzsText(totDebUZS)}
             usd={usdText(totDebUSD)}
             loading={dashLoading}
@@ -1001,6 +1059,7 @@ const HomeRedesign = () => {
             accentBg={rd.color.errorBg}
             Icon={ArrowDownLeft}
             label="Olingan qarz"
+            total={{ id: 'totCredGrad', colors: GRAD.totalRose }}
             uzs={uzsText(totCredUZS)}
             usd={usdText(totCredUSD)}
             loading={dashLoading}
@@ -1182,6 +1241,35 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   metricCardSoon: { opacity: 0.75 },
+  // 21.10: tepadagi JAMI kartalar (modul kartalaridan ajralib tursin)
+  totalCard: {
+    borderWidth: 0,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  totalGlow: {
+    position: 'absolute',
+    width: rs(110),
+    height: rs(110),
+    borderRadius: rs(55),
+    right: -rs(36),
+    top: -rs(46),
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  totalLabel: { color: 'rgba(255,255,255,0.95)' },
+  totalBadge: {
+    marginLeft: rs(6),
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: rd.radius.pill,
+    paddingHorizontal: rs(8),
+    paddingVertical: rs(2),
+  },
+  totalBadgeText: { fontFamily: rd.font.bold, fontSize: rs(10), color: rd.color.onPrimary },
+  totalUzs: { color: rd.color.onPrimary },
+  totalUsd: { color: 'rgba(255,255,255,0.82)' },
   metricAccent: {
     position: 'absolute',
     top: 0,

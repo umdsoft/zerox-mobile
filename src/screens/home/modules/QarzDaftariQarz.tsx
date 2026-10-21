@@ -438,10 +438,8 @@ const QarzDaftariQarz = () => {
         )}
       </ScrollView>
       {/* 03.10: "Talab SMS yuborilsinmi?" — OK yuboradi, X yubormaydi, kartani o'zgartirish. */}
-      <DemandConfirmModal
-        {...talab.modal}
-        noCardNote={t('Do‘kon kartasi kiritilmagan — SMS umumiy matnda yuboriladi.')}
-      />
+      {/* 21.10: karta yo'q izohi (egasi/xodim) va "Boshqa ko'rsatilmasin" (30 kun) — talab.modal ichida (qarzTalab.ts). */}
+      <DemandConfirmModal {...talab.modal} />
     </View>
   );
 };

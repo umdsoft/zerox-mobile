@@ -1,5 +1,15 @@
 {
   "translation": {
+    "ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.": "ZeroX орқали даромадлар ва харажатларингизни назорат қилинг.",
+    "Ma’lumot yetarli emas": "Маълумот етарли эмас",
+    "Vazn": "Вазн",
+    "Bo‘limga o‘tish": "Бўлимга ўтиш",
+    "Ma’lumotni yuklab bo‘lmadi": "Маълумотни юклаб бўлмади",
+    "Ball barcha modullar bo‘yicha hisoblanadi.": "Балл барча модуллар бўйича ҳисобланади.",
+    "Ball qanday hisoblanadi": "Балл қандай ҳисобланади",
+    "Har bir modul o‘z vazniga ega (30 / 20 / 20 / 30). Ma’lumoti yo‘q modul hisobga olinmaydi — qolganlarining vazni 100 ballga qayta taqsimlanadi.": "Ҳар бир модул ўз вазнига эга (30 / 20 / 20 / 30). Маълумоти йўқ модул ҳисобга олинмайди — қолганларининг вазни 100 баллга қайта тақсимланади.",
+    "Modullar bo‘yicha tafsilot": "Модуллар бўйича тафсилот",
+    "Ballni oshirish uchun": "Баллни ошириш учун",
     "Tayyor": "Тайёр",
     "Kategoriyani o‘chirasizmi?": "Категорияни ўчирасизми?",
     "Avvalgi yozuvlar saqlanib qoladi.": "Аввалги ёзувлар сақланиб қолади.",
@@ -1639,6 +1649,11 @@
     "subCell.left.head": "Қолган",
     "subCell.left.tail": "кун",
     "Qarz qayd etilganda qarzdorga avtomatik SMS": "Қарз қайд этилганда қарздорга автоматик СМС",
+    "Qarz va to‘lovlarni yuritish": "Қарз ва тўловларни юритиш",
+    "Shaxsiy moliyani yuritish": "Шахсий молияни юритиш",
+    "Avtomatik eslatma, talab va to‘lov SMS": "Автоматик эслатма, талаб ва тўлов СМС",
+    "Batafsil SMS ro‘yxati va qidiruv": "Батафсил СМС рўйхати ва қидирув",
+    "Qarzlar tahlili va Excel": "Қарзлар таҳлили ва Excel",
     "Iltimos, ofertani tasdiqlash uchun uni oxirigacha o‘qib chiqing.": "Илтимос, офертани тасдиқлаш учун уни охиригача ўқиб чиқинг.",
     "Iltimos, ommaviy oferta bilan tanishganingizni belgilang.": "Илтимос, оммавий оферта билан танишганингизни белгиланг.",
     "Tarif muddati tugagan. Bu imkoniyatdan foydalanish uchun tarifni uzaytiring.": "Тариф муддати тугаган. Бу имкониятдан фойдаланиш учун тарифни узайтиринг.",
@@ -1817,6 +1832,16 @@
     "Ko‘rish uchun bosing": "Кўриш учун босинг",
     "Sizni kuzatmoqda": "Сизни кузатмоқда",
     "Limitdan oshgan": "Лимитдан ошган",
-    "Limit belgilangan": "Лимит белгиланган"
+    "Limit belgilangan": "Лимит белгиланган",
+    "SMS xabarnoma yuborilsinmi?": "SMS хабарнома юборилсинми?",
+    "SMS xabarnoma matni": "SMS хабарнома матни",
+    "Boshqa ko‘rsatilmasin": "Бошқа кўрсатилмасин",
+    "Do‘konga plastik karta ulanmagan. Shu sababli talabnoma quyidagi matn tarzida yuboriladi. Xohlasangiz, kartani qo‘shishingiz mumkin.": "Дўконга пластик карта уланмаган. Шу сабабли талабнома қуйидаги матн тарзида юборилади. Хоҳласангиз, картани қўшишингиз мумкин.",
+    "Telegram botga o‘tish": "Телеграм ботга ўтиш",
+    "Ishonchli mijoz": "Ишончли мижоз",
+    "Qarzlarini o‘z vaqtida qaytargan.": "Қарзларини ўз вақтида қайтарган.",
+    "Ba’zan kechiktirgan.": "Баъзан кечиктирган.",
+    "Tarix yo‘q.": "Тарих йўқ.",
+    "o‘rtacha kechikish: {{n}} kun": "ўртача кечикиш: {{n}} кун"
   }
 }

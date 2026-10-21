@@ -22,6 +22,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FlatList,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -45,7 +46,7 @@ import {
   syncQarzShopWithList,
   useQarzShop,
 } from '../../../store/api/token/qarzShop';
-import { URL } from '../../constants';
+import { BOT_TG_APP_URL, BOT_TG_URL, URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import QarzDaftariKalendar from './QarzDaftariKalendar';
 import Loading from '../../components/Loading';
@@ -63,6 +64,7 @@ import {
   StorefrontIcon,
   IconProps,
   ShieldIcon,
+  TelegramPlaneIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 
@@ -157,6 +159,18 @@ const CircleIcon = ({
 // B) Hero banner — ko'k gradient. O'lcham/shrift va IKKI amal tugmasi QARZ SHARTNOMASI
 // hero'si bilan BIR XIL (so'rov bo'yicha): "Qarz berish" (oq) + "Qarz olish" (yashil).
 // Alohida "Tezkor amallar" bo'limi olib tashlangani uchun bu amallar endi shu kartada.
+/**
+ * 21.10: @ZeroXuzbot — avval Telegram ilovasi (tg://), o'rnatilmagan/ochilmasa brauzerda t.me.
+ * canOpenURL Android 11+ da <queries> talab qiladi — shuning uchun to'g'ridan-to'g'ri openURL + zaxira.
+ */
+const openTelegramBot = () => {
+  Linking.openURL(BOT_TG_APP_URL).catch(() => {
+    Linking.openURL(BOT_TG_URL).catch(() => {
+      // ochib bo'lmadi — jim (havola hech narsani buzmaydi)
+    });
+  });
+};
+
 const Hero = ({ onBer, onOl }: { onBer: () => void; onOl: () => void }) => {
   const { t } = useTranslation();
   return (
@@ -189,6 +203,17 @@ const Hero = ({ onBer, onOl }: { onBer: () => void; onOl: () => void }) => {
         </Text>
       </TouchableOpacity>
     </View>
+    {/* 21.10: Shaxsiy qarz hero'sidagi "Plastik karta ma'lumotlari" uslubida — Telegram bot havolasi. */}
+    <TouchableOpacity
+      activeOpacity={0.8}
+      style={styles.heroLink}
+      onPress={openTelegramBot}
+      accessibilityRole="link"
+    >
+      <TelegramPlaneIcon size={rs(15)} color={rd.color.onPrimary} />
+      <Text style={styles.heroLinkText} numberOfLines={1}>{t('Telegram botga o‘tish')}</Text>
+      <ChevronRight size={rs(14)} color={rd.color.onPrimary} />
+    </TouchableOpacity>
   </View>
   );
 };
@@ -1071,6 +1096,21 @@ const styles = StyleSheet.create({
   },
   heroBtnLight: { backgroundColor: rd.color.surface },
   heroBtnText: { fontFamily: rd.font.semibold, fontSize: rs(12.5) },
+  // 21.10: FinanceDebts heroLink bilan bir xil
+  heroLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: rs(6),
+    marginTop: rs(12),
+    paddingVertical: rs(4),
+  },
+  heroLinkText: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.onPrimary,
+    textDecorationLine: 'underline',
+  },
 
   // Generic card
   card: {
