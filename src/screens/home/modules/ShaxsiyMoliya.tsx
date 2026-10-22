@@ -45,6 +45,7 @@ import {
   BulbIcon,
   HomeIcon,
   IconProps,
+  ShieldIcon,
   StarIcon,
   UsersIcon,
   WalletIcon,
@@ -427,6 +428,8 @@ const ShaxsiyMoliya = () => {
     { key: 'gap', route: 'FinanceGap', Icon: WalletIcon, accent: '#0d9488', tint: '#d8f5f0', title: t('Gap'), sub: 'Чёрная касса' },
     { key: 'goals', route: 'FinanceGoalList', Icon: StarIcon, accent: '#7c3aed', tint: '#f4efff', title: t('Maqsadlar'), sub: t('Jamg‘arma') },
     { key: 'analytics', route: 'FinanceAnalytics', Icon: BarChartIcon, accent: '#4f46e5', tint: '#eef0fe', title: t('Tahlil'), sub: t('Daromad va xarajat') },
+    // 22.10: "Qarzdan chiqish" — qarz to'lash rejasi (7-plitka, to'liq kenglikda).
+    { key: 'debt_plan', route: 'DebtPlan', Icon: ShieldIcon, accent: '#059669', tint: '#e8f8f1', title: t('Qarzdan chiqish'), sub: t('Qarz to‘lash rejasi') },
   ];
 
   if (dashboard.loading && !(dashboard.data as any)?.data) {

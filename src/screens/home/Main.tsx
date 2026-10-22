@@ -163,7 +163,9 @@ const Main = () => {
             });
           } else {
             // Directly go to notification screen
-            navigation.navigate('Notification');
+            // 22.10: type 47 — "Qarzdan chiqish" to'lov eslatmasi → reja paneli.
+            if (String(remoteMessage?.data?.type) === '47') (navigation as any).navigate('DebtPlan');
+            else navigation.navigate('Notification');
             dispatch(getNotifications({ page: 1 }));
           }
           // navigation.navigate('Notification');
@@ -188,7 +190,9 @@ const Main = () => {
             routes: [{ name: 'SetLocalPassword' }],
           });
         } else {
-          navigation.navigate('Notification');
+          // 22.10: type 47 — "Qarzdan chiqish" to'lov eslatmasi → reja paneli.
+          if (String(remoteMessage?.data?.type) === '47') (navigation as any).navigate('DebtPlan');
+          else navigation.navigate('Notification');
           dispatch(getNotifications({ page: 1 }));
         }
       }

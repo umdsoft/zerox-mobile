@@ -64,6 +64,7 @@ import GapTaklif from './notifications/all/GapTaklif';
 import MoliyaEslatma from './notifications/all/MoliyaEslatma';
 import QarzDaftariEslatma from './notifications/all/QarzDaftariEslatma'; // 10.10
 import ShaxsiyQarzEslatma from './notifications/all/ShaxsiyQarzEslatma'; // 11.10
+import DebtPlanEslatma from './notifications/all/DebtPlanEslatma'; // 22.10: type 47
 // SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
 // ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
 import Shikoyat from './notifications/all/Shikoyat';
@@ -900,6 +901,9 @@ const Bildrishnoma = () => {
       // 11.10: Shaxsiy qarz — 2 hafta shaxsiy qarz kiritilmagan (belgilangan kun/vaqtda).
       case 45:
         return <ShaxsiyQarzEslatma item={item} okay={okay} navigation={navigation} />;
+      // 22.10: "Qarzdan chiqish" — to'lov kuni eslatmasi ("To'ladim" + reja paneli).
+      case 47:
+        return <DebtPlanEslatma item={item} okay={okay} navigation={navigation} />;
       // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
       case 42:
       case 43:

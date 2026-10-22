@@ -47,6 +47,7 @@ import {
 // SS13: bosh sahifa summalari TANLANGAN do'konga bo'ysunadi.
 import { ownShopQuery, useQarzShop } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
+import DebtPlanHomeRow from '../modules/debtPlan/DebtPlanHomeRow';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -1111,6 +1112,8 @@ const HomeRedesign = () => {
           loading={personalLoading}
           onPress={() => nav('FinanceDebts')}
         />
+        {/* 22.10: "Qarzdan chiqish" — reja sozlangan bo'lsa bir qatorli progress (/home/analytics.debtPlan). */}
+        <DebtPlanHomeRow data={analytics?.debtPlan} onPress={() => nav('DebtPlan')} style={{ marginTop: -rs(8) }} />
       </ScrollView>
     </View>
   );

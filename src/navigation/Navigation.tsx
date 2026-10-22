@@ -95,6 +95,12 @@ import FinanceBudget from '../screens/home/modules/FinanceBudget';
 import FinanceAdvice from '../screens/home/modules/FinanceAdvice';
 // 21.10: "Moliyaviy sog'liq" — barcha modullar bo'yicha ball tafsiloti (bosh sahifadan)
 import FinancialHealth from '../screens/home/modules/FinancialHealth';
+// 22.10: "Qarzdan chiqish" (qarz to'lash rejasi) moduli
+import DebtPlan from '../screens/home/modules/debtPlan/DebtPlan';
+import DebtPlanSetup from '../screens/home/modules/debtPlan/DebtPlanSetup';
+import DebtPlanDebt from '../screens/home/modules/debtPlan/DebtPlanDebt';
+import DebtPlanCompare from '../screens/home/modules/debtPlan/DebtPlanCompare';
+import DebtPlanCalculator from '../screens/home/modules/debtPlan/DebtPlanCalculator';
 import {
   FinanceScheduledPayments,
   FinanceScheduledIncomes,
@@ -305,6 +311,11 @@ const AllNavigators = [
   { name: 'FinanceBudget', component: FinanceBudget },
   { name: 'FinanceAdvice', component: FinanceAdvice },
   { name: 'FinancialHealth', component: FinancialHealth },
+  { name: 'DebtPlan', component: DebtPlan },
+  { name: 'DebtPlanSetup', component: DebtPlanSetup },
+  { name: 'DebtPlanDebt', component: DebtPlanDebt },
+  { name: 'DebtPlanCompare', component: DebtPlanCompare },
+  { name: 'DebtPlanCalculator', component: DebtPlanCalculator },
   { name: 'FinanceScheduledPayments', component: FinanceScheduledPayments },
   { name: 'FinanceScheduledIncomes', component: FinanceScheduledIncomes },
   { name: 'FinanceDebts', component: FinanceDebts },
