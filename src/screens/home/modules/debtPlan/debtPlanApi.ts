@@ -482,14 +482,14 @@ export const buildPlanBody = (st: PlanSettings, incomes: PlanIncome[], setupDone
 export const buildDebtPlanPatch = (d: PlanDebt) => ({
   debt_kind: d.kind,
   min_payment: d.minPayment,
-  term_months: d.termMonths,
+  term_months: d.termMonths || null, // 23.10: 0 = kiritilmagan (server 0 ni rad etardi)
   card_min_pct: d.cardMinPct,
   card_min_abs: d.cardMinAbs,
   prepay_fee_pct: d.prepayFeePct || 0,
   prepay_mode: d.prepayMode,
   penalty_pct: d.penaltyPct || 0,
-  payment_day: d.paymentDay,
-  plan_priority: d.priority,
+  payment_day: d.paymentDay || null, // 23.10: 0 = kiritilmagan (server 0 ni rad etardi)
+  plan_priority: d.priority || null, // 23.10: 0 = kiritilmagan (server 0 ni rad etardi)
   plan_excluded: d.excluded,
   received_amount: d.receivedAmount,
   interest_rate: d.apr,
