@@ -34,6 +34,7 @@ import {useTranslation} from 'react-i18next';
 import { PDF_OFERTA_URL } from '../constants';
 import {expire_passport_check} from '../../helper/timeChecker';
 import {forceLogout} from '../../helper/forceLogout';
+import {unsyncedCount} from '../../offline/hooks';
 import {storage} from '../../store/api/token/getToken';
 
 const UserScreen = () => {
@@ -272,6 +273,9 @@ const ExitModal = ({hide, setHide}) => {
     setLoading(false);
   }, [dispatch, setHide]);
 
+  // 23.10: oyna ochilganda — yuborilmagan oflayn amallar soni (navbat logout'da o'chmaydi).
+  const unsynced = hide ? unsyncedCount() : 0;
+
   return (
     <RNModal
       visible={hide}
@@ -294,6 +298,12 @@ const ExitModal = ({hide, setHide}) => {
               <Text allowFontScaling={false} style={styles.exitDesc}>
                 {t('675')}
               </Text>
+              {/* 23.10 (oflayn rejim): yuborilmagan Qarz daftari amallari haqida ogohlantirish. */}
+              {unsynced > 0 ? (
+                <Text allowFontScaling={false} style={styles.exitWarn}>
+                  {t('{{n}} ta Qarz daftari amali hali serverga yuborilmagan. Ular telefonda shifrlangan holda saqlanadi va shu akkauntga qayta kirganingizda yuboriladi.', { n: unsynced })}
+                </Text>
+              ) : null}
               <View style={styles.exitBtns}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -508,6 +518,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: rs(20),
     marginBottom: rs(22),
+  },
+  exitWarn: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(13),
+    color: rd.color.warning,
+    backgroundColor: rd.color.warningBg,
+    borderRadius: rd.radius.md,
+    paddingHorizontal: rs(12),
+    paddingVertical: rs(10),
+    textAlign: 'center',
+    lineHeight: rs(19),
+    marginTop: rs(-10),
+    marginBottom: rs(18),
   },
   exitBtns: {
     flexDirection: 'row',

@@ -73,9 +73,10 @@ const GRAD = {
   brand: ['#2f6fed', '#5a4fe4'] as const, // primary → binafsha
   green: ['#22c55e', '#0d9488'] as const, // kreditor (menga qarzdor)
   rose: ['#fb7185', '#e11d48'] as const, // debitor (men qarzdor)
-  // 21.10: tepadagi JAMI kartalar — to'qroq to'liq gradient (oq matn o'qilishi uchun AA kontrast)
-  totalGreen: ['#16a34a', '#0f766e'] as const,
-  totalRose: ['#e11d48', '#9f1239'] as const,
+  // 21.10: tepadagi JAMI kartalar. 22.10: juda yorqin edi — yumshoqroq, kamroq
+  // to'yingan tuslar (oq qalin matn hali ham o'qiladi, modul kartalaridan ajralib turadi).
+  totalGreen: ['#3fa97c', '#2e8b82'] as const,
+  totalRose: ['#e2667b', '#c24d63'] as const,
 };
 
 const contracts = {
@@ -341,12 +342,14 @@ const MetricCard = ({
           <CircleIcon size={rs(32)} bg="rgba(255,255,255,0.22)">
             <Icon size={rs(17)} color={rd.color.onPrimary} />
           </CircleIcon>
-          <Text style={[styles.metricLabelInline, styles.totalLabel]} numberOfLines={2}>
-            {t(label)}
-          </Text>
-          <View style={styles.totalBadge}>
-            <Text style={styles.totalBadgeText} allowFontScaling={false}>
+          {/* 22.10: "Jami" — doirasiz oddiy kichik matn, sarlavha USTIDA (ilgari o'ng
+              burchakdagi pill "Berilgan qarz" yozuvini kesib qo'yardi). */}
+          <View style={styles.totalTitleCol}>
+            <Text style={styles.totalEyebrow} numberOfLines={1}>
               {t('Jami')}
+            </Text>
+            <Text style={[styles.totalLabel]} numberOfLines={2}>
+              {t(label)}
             </Text>
           </View>
         </View>
@@ -1248,10 +1251,10 @@ const styles = StyleSheet.create({
   totalCard: {
     borderWidth: 0,
     shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   totalGlow: {
     position: 'absolute',
@@ -1262,15 +1265,19 @@ const styles = StyleSheet.create({
     top: -rs(46),
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
-  totalLabel: { color: 'rgba(255,255,255,0.95)' },
-  totalBadge: {
-    marginLeft: rs(6),
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: rd.radius.pill,
-    paddingHorizontal: rs(8),
-    paddingVertical: rs(2),
+  totalTitleCol: { flex: 1, marginLeft: rs(8), minWidth: 0 },
+  totalEyebrow: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(10.5),
+    lineHeight: rs(13),
+    color: 'rgba(255,255,255,0.8)',
   },
-  totalBadgeText: { fontFamily: rd.font.bold, fontSize: rs(10), color: rd.color.onPrimary },
+  totalLabel: {
+    fontFamily: rd.font.semibold,
+    fontSize: rs(12),
+    lineHeight: rs(15),
+    color: rd.color.onPrimary,
+  },
   totalUzs: { color: rd.color.onPrimary },
   totalUsd: { color: 'rgba(255,255,255,0.82)' },
   metricAccent: {

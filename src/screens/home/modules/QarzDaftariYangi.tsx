@@ -8,7 +8,6 @@
  * POST /qarz-daftari/qarz — yangi qarz yozuvini saqlaydi.
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -25,9 +24,7 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { URL } from '../../constants';
 import DateModal from '../modal/DateModal';
 import {
   adaptAmountInputToCurrency,
@@ -39,6 +36,12 @@ import {
   sanitizeAmountInput,
 } from '../../../helper/money';
 import RdHeader from '../redesign/RdHeader';
+// 23.10: oflayn rejim
+import { submitQarzOp } from '../../../offline/submit';
+import { OutboxFullError } from '../../../offline/outbox';
+import { NewOp, QarzCreateBody } from '../../../offline/types';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import { showQueuedToast } from '../../../offline/ui/queuedToast';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -154,7 +157,6 @@ const QarzDaftariYangi = () => {
   const headerTitle = isOlish ? t('Qarzga olish') : t('Qarzga berish');
   const AccentIcon = isOlish ? ArrowDownLeft : ArrowUpRight;
 
-  const token = storage.getString('token');
 
   // --- Forma holati ---
   const [valyuta, setValyuta] = React.useState<'UZS' | 'USD'>('UZS');
@@ -224,9 +226,9 @@ const QarzDaftariYangi = () => {
       return;
     }
 
-    const body = {
-      savdo_faoliyat_id: faoliyat_id,
-      mijoz_id,
+    const body: QarzCreateBody = {
+      savdo_faoliyat_id: Number(faoliyat_id),
+      mijoz_id: Number(mijoz_id),
       turi,
       valyuta,
       miqdor,
@@ -241,16 +243,35 @@ const QarzDaftariYangi = () => {
 
     try {
       setSubmitting(true);
-      const res = await axios.post(`${URL}/qarz-daftari/qarz`, body, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data?.success) {
+      // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
+      // berilgan_sana — foydalanuvchi tanlagan ASL sana (sinxron kechiksa ham SMS/hisobotda to'g'ri sana).
+      const out = await submitQarzOp({
+        kind: 'qarz.create',
+        payload: { body },
+        deps: body.mijoz_id < 0 ? [body.mijoz_id] : [],
+        meta: {
+          fish,
+          mijozId: body.mijoz_id,
+          faoliyatId: body.savdo_faoliyat_id,
+          turi,
+          valyuta,
+          summa: miqdor,
+        },
+      } as NewOp);
+      if (out.status === 'queued') {
+        navigation.goBack();
+        showQueuedToast(t('Qarz oflayn saqlandi — internet tiklanganda yuboriladi'));
+      } else if (out.data?.success) {
         Toast.show({ type: 'omad', props: { desc: t('Qarz saqlandi') } });
         navigation.goBack();
       } else {
         Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
       }
     } catch (error: any) {
+      if (error instanceof OutboxFullError) {
+        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+        return;
+      }
       const code = error?.response?.data?.code;
       const msg =
         code === 'no-sms-package'
@@ -268,6 +289,7 @@ const QarzDaftariYangi = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={headerTitle} />
+      <OfflineBanner />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}

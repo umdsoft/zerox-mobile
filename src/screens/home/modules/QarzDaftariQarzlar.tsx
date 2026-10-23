@@ -18,7 +18,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge, { BadgeKind, offlineKindOf } from '../../../offline/ui/PendingBadge';
 import { shopQuery } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
@@ -53,6 +56,8 @@ type Group = {
   lastDate: number;
   hasOverdue: boolean;
   hasActive: boolean;
+  /** 23.10: guruhda sinxronlanmagan / rad etilgan amal bormi (nishon uchun). */
+  pending: BadgeKind;
 };
 
 const isOverdue = (q: any) =>
@@ -82,7 +87,7 @@ const QarzDaftariQarzlar = () => {
     .filter(Boolean)
     .join('&');
 
-  const { data, loading } = useFetch({
+  const { data, loading } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarzlar${qs ? `?${qs}` : ''}`,
     method: 'GET',
   });
@@ -124,9 +129,12 @@ const QarzDaftariQarzlar = () => {
           lastDate: 0,
           hasOverdue: false,
           hasActive: false,
+          pending: null,
         };
         map.set(key, g);
       }
+      const pk = offlineKindOf(q);
+      if (pk === 'failed' || (pk && !g.pending)) g.pending = pk;
       g.count += 1;
       if (q?.status === 'aktiv') {
         g.activeCount += 1;
@@ -202,6 +210,7 @@ const QarzDaftariQarzlar = () => {
             <Text style={styles.rowMeta} numberOfLines={1}>
               {g.telefon || '—'}
             </Text>
+            <PendingBadge kind={g.pending} style={{ marginTop: rs(4) }} />
           </View>
           <ChevronRight size={rs(18)} color={rd.color.textTertiary} />
         </TouchableOpacity>
@@ -221,6 +230,7 @@ const QarzDaftariQarzlar = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={title} />
+      <OfflineBanner />
 
       <FlatList
         style={styles.scroll}

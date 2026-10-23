@@ -139,6 +139,8 @@ import QarzDaftariKvitansiya from '../screens/home/modules/QarzDaftariKvitansiya
 import QarzDaftariAmaliyotlar from '../screens/home/modules/QarzDaftariAmaliyotlar';
 // SS9-2: bitta amaliyot (tranzaksiya) tafsiloti ekrani.
 import QarzDaftariAmaliyot from '../screens/home/modules/QarzDaftariAmaliyot';
+// 23.10: Qarz daftari oflayn rejimi — navbat va sinxron sahifasi.
+import QarzDaftariSinxron from '../screens/home/modules/QarzDaftariSinxron';
 
 const Stack = createNativeStackNavigator();
 
@@ -350,6 +352,7 @@ const AllNavigators = [
   { name: 'QarzDaftariKvitansiya', component: QarzDaftariKvitansiya },
   { name: 'QarzDaftariAmaliyotlar', component: QarzDaftariAmaliyotlar },
   { name: 'QarzDaftariAmaliyot', component: QarzDaftariAmaliyot },
+  { name: 'QarzDaftariSinxron', component: QarzDaftariSinxron }, // 23.10: oflayn rejim
 ];
 const StackNavigator = () => {
   const is = hasPin() ? 'set' : undefined;

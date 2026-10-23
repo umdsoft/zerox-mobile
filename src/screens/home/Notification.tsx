@@ -65,6 +65,7 @@ import MoliyaEslatma from './notifications/all/MoliyaEslatma';
 import QarzDaftariEslatma from './notifications/all/QarzDaftariEslatma'; // 10.10
 import ShaxsiyQarzEslatma from './notifications/all/ShaxsiyQarzEslatma'; // 11.10
 import DebtPlanEslatma from './notifications/all/DebtPlanEslatma'; // 22.10: type 47
+import FamilyInviteTaklif from './notifications/all/FamilyInviteTaklif'; // 23.10: type 48
 // SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
 // ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
 import Shikoyat from './notifications/all/Shikoyat';
@@ -904,6 +905,9 @@ const Bildrishnoma = () => {
       // 22.10: "Qarzdan chiqish" — to'lov kuni eslatmasi ("To'ladim" + reja paneli).
       case 47:
         return <DebtPlanEslatma item={item} okay={okay} navigation={navigation} />;
+      // 23.10: Oila moliyasi taklifi — «Ruxsat berish» / «Rad etish».
+      case 48:
+        return <FamilyInviteTaklif item={item} okay={okay} navigation={navigation} />;
       // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
       case 42:
       case 43:

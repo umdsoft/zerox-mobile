@@ -250,6 +250,14 @@ const DebtPlan = () => {
             style={{ flex: 1 }}
           />
         </View>
+        {/* 23.10: rejani tahrirlash — sarlavhadagi qalam ikonkasi ko'zga tashlanmasdi;
+            ko'rinadigan tugma ham (o'sha sozlash ustasi, edit rejimi, qiymatlar to'ldirilgan). */}
+        <GhostButton
+          label={t('Rejani tahrirlash')}
+          Icon={PencilIcon}
+          onPress={() => navigation.navigate('DebtPlanSetup', { mode: 'edit' })}
+          style={{ marginBottom: rs(8) }}
+        />
 
         {r && r.order.length > 0 ? (
           <>

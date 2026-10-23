@@ -15,7 +15,6 @@
  * Aksent — YASHIL (to'lov / yopish).
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,9 +28,14 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
-import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
+// 23.10: oflayn rejim
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { submitQarzOp } from '../../../offline/submit';
+import { OutboxFullError } from '../../../offline/outbox';
+import { NewOp, Turi, Valyuta } from '../../../offline/types';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import { showQueuedToast } from '../../../offline/ui/queuedToast';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import {
@@ -147,7 +151,8 @@ const QarzDaftariYopish = () => {
   // Mijoz rejimida 30s keshni chetlab o'tamiz — eski jami (yopishdan oldingi) ko'rinmasin.
   const [nonce] = React.useState(() => Date.now());
 
-  const { data, loading, error } = useFetch({
+  // 23.10 (oflayn rejim): cache-first + navbatdagi amallar proyeksiyasi (oflayn mijoz/qarz ham).
+  const { data, loading, error } = useQarzFetch({
     url: isMijozMode
       ? `${URL}/qarz-daftari/mijozlar/${mijozId}/yopish-info?turi=${turi}&_=${nonce}`
       : `${URL}/qarz-daftari/qarz/${id}`,
@@ -216,23 +221,46 @@ const QarzDaftariYopish = () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const token = storage.getString('token');
-      const res = await axios.post(
-        isMijozMode
-          ? `${URL}/qarz-daftari/mijozlar/${mijozId}/yopish`
-          : `${URL}/qarz-daftari/qarz/${id}/yopish`,
-        isMijozMode
-          ? { summa, valyuta, turi, savdo_faoliyat_id: qarz?.mijoz?.savdo_faoliyat_id }
-          : { summa, valyuta },
-        { headers: { Authorization: `Bearer ${token}` } },
+      // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
+      const mid = Number(isMijozMode ? mijozId : qarz?.mijoz_id ?? qarz?.mijoz?.id);
+      const fid = Number(isMijozMode ? qarz?.mijoz?.savdo_faoliyat_id : qarz?.savdo_faoliyat_id) || undefined;
+      const meta = {
+        fish: qarz?.mijoz?.fish,
+        mijozId: Number.isFinite(mid) ? mid : undefined,
+        turi: (isMijozMode ? turi : qarz?.turi) as Turi | undefined,
+        valyuta: valyuta as Valyuta,
+        summa,
+        faoliyatId: fid,
+      };
+      const out = await submitQarzOp(
+        (isMijozMode
+          ? {
+              kind: 'mijoz.yopish',
+              payload: { mijozId: Number(mijozId), summa, valyuta, turi, faoliyatId: fid ?? null },
+              deps: Number(mijozId) < 0 ? [Number(mijozId)] : [],
+              meta,
+            }
+          : {
+              kind: 'qarz.yopish',
+              payload: { qarzId: Number(id), summa, valyuta },
+              deps: Number(id) < 0 ? [Number(id)] : [],
+              meta: { ...meta, qarzId: Number(id) },
+            }) as NewOp,
       );
-      if (res?.data?.success) {
+      if (out.status === 'queued') {
+        navigation.goBack();
+        showQueuedToast(t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi'));
+      } else if (out.data?.success) {
         Toast.show({ type: 'omad', props: { desc: t('To‘lov qabul qilindi') } });
         navigation.goBack();
       } else {
         Toast.show({ type: 'error2', props: { desc: t('Xatolik') } });
       }
     } catch (error: any) {
+      if (error instanceof OutboxFullError) {
+        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+        return;
+      }
       Toast.show({
         type: 'error2',
         props: { desc: error?.response?.data?.message || t('Xatolik') },
@@ -246,6 +274,7 @@ const QarzDaftariYopish = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Qarzni yopish')} />
+      <OfflineBanner />
 
       <ScrollView
         style={styles.scroll}

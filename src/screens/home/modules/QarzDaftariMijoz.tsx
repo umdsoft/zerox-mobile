@@ -21,7 +21,12 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish, navbatdagi amallar proyeksiyasi, banner va nishonlar.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { isOnline } from '../../../offline/netStatus';
+import { isUnsyncedId, resolveLocalId } from '../../../offline/submit';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge from '../../../offline/ui/PendingBadge';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -156,6 +161,7 @@ const ActiveQarzRow = ({ q, accent, onPress, t }: ActiveQarzRowProps) => {
             </View>
           )}
         </View>
+        <PendingBadge item={q} style={{ marginBottom: rs(4) }} />
         <Text style={styles.aqQoldiq} numberOfLines={1}>
           {`${t('Qoldiq')}: ${sortMoneyText(q?.qoldiq) || 0} ${valyuta}`}
         </Text>
@@ -229,7 +235,7 @@ const QarzDaftariMijoz = () => {
   const accent = turi === 'olish' ? GREEN : BLUE;
   const accentBg = turi === 'olish' ? '#F0FDF4' : '#EFF6FF';
 
-  const { data, loading, onRefresh } = useFetch({
+  const { data, loading, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/mijozlar/${id}/history`,
     method: 'GET',
   });
@@ -447,6 +453,12 @@ const QarzDaftariMijoz = () => {
       hint(t('Aktiv qarzlar yo‘q'));
       return;
     }
+    // 23.10 (oflayn rejim): talab SMS navbatga QO'YILMAYDI — oldindan ko'rish va tarif tekshiruvi
+    // server bilan; kechikib ketgan talab noto'g'ri vaqtda borardi.
+    if (!isOnline() || isUnsyncedId(lastActiveQarz.id) || isUnsyncedId(id)) {
+      hint(t('Talab SMS faqat internet bilan (sinxronlangan qarz uchun) yuboriladi'));
+      return;
+    }
     if (!telefon) {
       hint(t('Mijoz telefoni yo‘q'));
       return;
@@ -561,6 +573,7 @@ const QarzDaftariMijoz = () => {
       {/* SS-A2: sarlavha turiga qarab — Berilgan qarzда "Qarz oluvchi",
           Olingan qarzда "Qarz beruvchi" (ilgari doim "Qarz tafsiloti" edi). */}
       <RdHeader title={role.label} />
+      <OfflineBanner />
 
       <ScrollView
         style={styles.scroll}
@@ -579,6 +592,7 @@ const QarzDaftariMijoz = () => {
               <Text style={styles.clientName} numberOfLines={2}>
                 {fish}
               </Text>
+              <PendingBadge item={mijoz} style={{ marginTop: rs(4) }} />
             </View>
             {/* SS8-1 (2026-09-14): FISH yonida TAHRIRLASH tugmasi — mijozning
                 ismi/telefoni noto'g'ri kiritilgan bo'lsa shu yerdan tuzatiladi.
@@ -742,7 +756,8 @@ const QarzDaftariMijoz = () => {
         </View>
 
         {/* 21.10: sahifa oxirida "Tavsiya" — saytdagi mijoz sahifasi bilan bir xil (GET .../mijozlar/:id/tavsiya). */}
-        <QarzMijozTavsiyaCard mijozId={id} />
+        {/* 23.10: oflayn yaratilgan (hali server id'siz) mijozda tavsiya so'ralmaydi. */}
+        <QarzMijozTavsiyaCard mijozId={isUnsyncedId(id) ? null : resolveLocalId(id)} />
       </ScrollView>
 
       {/* SS-DEV (2026-09-29): SMS ikonkasi → avval tayyor shablonlar oynasi. */}

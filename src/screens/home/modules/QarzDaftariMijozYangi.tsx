@@ -37,6 +37,13 @@ import RdHeader from '../redesign/RdHeader';
 import { ContactBookIcon, PencilIcon, PlusIcon, UserIcon } from '../redesign/icons';
 import ClientRegisterAnimation from '../../../images/clientRegisterAnim';
 import { isContactPickerAvailable, pickContactInto } from '../../../helper/pickContactInto';
+// 23.10: oflayn rejim
+import { isUnsyncedId, submitQarzOp } from '../../../offline/submit';
+import { isOnline } from '../../../offline/netStatus';
+import { OutboxFullError } from '../../../offline/outbox';
+import { NewOp } from '../../../offline/types';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import { showQueuedToast } from '../../../offline/ui/queuedToast';
 
 const BLUE = '#2f6fed'; // berish
 const GREEN = '#16a34a'; // olish
@@ -112,17 +119,49 @@ const QarzDaftariMijozYangi = () => {
       return;
     }
 
+    // 23.10 (oflayn rejim): tahrirlash faqat onlayn (oflayn yaratilgan mijozni sinxrondan keyin).
+    if (isEdit && (!isOnline() || isUnsyncedId(mijoz_id))) {
+      Toast.show({
+        type: 'error2',
+        props: { desc: t('Mijozni tahrirlash uchun internet kerak (avval sinxronlang)') },
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       const body = { fish: fish.trim(), telefon: fullPhone };
       const headers = { Authorization: `Bearer ${token}` };
-      const res = isEdit
-        ? await axios.put(`${URL}/qarz-daftari/mijozlar/${mijoz_id}`, body, { headers })
-        : await axios.post(
-            `${URL}/qarz-daftari/savdo-faoliyat/${faoliyat_id}/mijozlar`,
-            body,
-            { headers },
-          );
+      let res: { data: any };
+      if (isEdit) {
+        res = await axios.put(`${URL}/qarz-daftari/mijozlar/${mijoz_id}`, body, { headers });
+      } else {
+        // 23.10: yaratish oflayn navbat orqali (onlaynda darhol, Idempotency-Key bilan).
+        const out = await submitQarzOp({
+          kind: 'mijoz.create',
+          payload: { faoliyatId: Number(faoliyat_id), fish: body.fish, telefon: body.telefon },
+          meta: {
+            fish: body.fish,
+            telefon: body.telefon,
+            faoliyatId: Number(faoliyat_id),
+            faoliyatNomi: route.params?.faoliyat_nomi,
+            turi,
+          },
+        } as NewOp);
+        if (out.status === 'queued') {
+          showQueuedToast(t('Mijoz oflayn saqlandi — internet tiklanganda yuboriladi'));
+          navigation.replace('QarzDaftariYangi', {
+            faoliyat_id,
+            mijoz_id: out.op.tempId,
+            fish: body.fish,
+            turi,
+            qoldiq_uzs: 0,
+            qoldiq_usd: 0,
+          });
+          return;
+        }
+        res = { data: out.data };
+      }
       if (isEdit) {
         if (res.data?.success) {
           Toast.show({ type: 'omad', props: { desc: t('Mijoz ma’lumotlari saqlandi') } });
@@ -158,6 +197,10 @@ const QarzDaftariMijozYangi = () => {
         Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
       }
     } catch (error: any) {
+      if (error instanceof OutboxFullError) {
+        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+        return;
+      }
       const status = error?.response?.status;
       const code = error?.response?.data?.code;
       const msg =
@@ -174,6 +217,7 @@ const QarzDaftariMijozYangi = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={isEdit ? t('Mijozni tahrirlash') : t('Yangi mijoz')} />
+      <OfflineBanner />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}

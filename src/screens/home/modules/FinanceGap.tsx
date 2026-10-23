@@ -17,6 +17,7 @@ import { AmountField, CurrencyToggle, DateField, FieldLabel } from './financeFor
 import { fDate, fMoney, num } from './financeMoney';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 import FinanceAddButton from './FinanceAddButton';
+import FinanceGapIntro from './FinanceGapIntro';
 
 const TEAL = '#0d9488';
 
@@ -127,7 +128,10 @@ const FinanceGap = () => {
           })}
         </View>
 
-        {gaps.length === 0 ? (
+        {gaps.length === 0 && filter !== 'completed' && !(listFetch.loading && !listFetch.data) ? (
+          // 22.10: faol Gap yo'q — imkoniyatlar haqida ma'lumot + "mutlaqo bepul".
+          <FinanceGapIntro onCreate={() => setModal(true)} />
+        ) : gaps.length === 0 ? (
           <View style={styles.empty}><AnimatedEmpty variant="time" compact /><Text style={styles.emptyText}>{t('Gap yo‘q. "Yangi qo‘shish" orqali oching.')}</Text></View>
         ) : (
           gaps.map((g, i) => {

@@ -33,7 +33,9 @@ import {
   View,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import {
   exitXodimSession,
   isXodimSession,
@@ -524,10 +526,10 @@ const QarzDaftari = () => {
 
   // REAL backend — dashboard summalari + muddati yaqin qatorlar.
   // ⚠️ useFetch effekt bog'liqligi URL SATRI — do'kon almashsa avtomatik qayta o'qiydi.
-  const dashboard = useFetch({ url: `${URL}/qarz-daftari/dashboard${shopQs}`, method: 'GET' });
-  const nearExp = useFetch({ url: `${URL}/qarz-daftari/near-expiration${shopQs}`, method: 'GET' });
+  const dashboard = useQarzFetch({ url: `${URL}/qarz-daftari/dashboard${shopQs}`, method: 'GET' });
+  const nearExp = useQarzFetch({ url: `${URL}/qarz-daftari/near-expiration${shopQs}`, method: 'GET' });
   // SS11-1: bosh sahifada do'kon cardi + modal ro'yxati.
-  const shopsFetch = useFetch({ url: `${URL}/qarz-daftari/savdo-faoliyat`, method: 'GET' });
+  const shopsFetch = useQarzFetch({ url: `${URL}/qarz-daftari/savdo-faoliyat`, method: 'GET' });
   // ⚠️ MEMO: `|| []` har renderda YANGI massiv yaratardi — quyidagi effekt
   // har renderda qayta ishlab ketardi. Endi faqat ma'lumot o'zgarsa yangilanadi.
   const shopsData = (shopsFetch.data as any)?.data;
@@ -684,6 +686,8 @@ const QarzDaftari = () => {
       {/* SS24: ORQAGA tugmasi OLIB TASHLANDI — bu ham TAB (top-level ekran). */}
       {/* SS7 (2026-09-18): Bosh sahifadagi bilan bir xil panel. */}
       <RdTopBar title={t('Qarz daftari')} />
+      {/* 23.10: oflayn rejim holati — doim ko'rinadi (Sinxron sahifasiga kirish). */}
+      <OfflineBanner persistent />
 
       <ScrollView
         style={styles.scroll}

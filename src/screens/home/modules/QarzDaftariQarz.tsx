@@ -20,7 +20,12 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish, navbatdagi amallar proyeksiyasi, banner va nishon.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { isOnline } from '../../../offline/netStatus';
+import { isUnsyncedId } from '../../../offline/submit';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge from '../../../offline/ui/PendingBadge';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
@@ -147,7 +152,7 @@ const QarzDaftariQarz = () => {
   const id = route.params?.id;
   const { t } = useTranslation();
 
-  const { data, loading, onRefresh } = useFetch({
+  const { data, loading, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarz/${id}`,
     method: 'GET',
   });
@@ -235,6 +240,15 @@ const QarzDaftariQarz = () => {
       Toast.show({ type: 'error2', visibilityTime: 3500, props: { desc: t('Mijoz telefoni yo‘q') } });
       return;
     }
+    // 23.10 (oflayn rejim): talab SMS navbatga qo'yilmaydi — faqat onlayn va sinxronlangan qarz uchun.
+    if (!isOnline() || isUnsyncedId(id)) {
+      Toast.show({
+        type: 'error2',
+        visibilityTime: 3500,
+        props: { desc: t('Talab SMS faqat internet bilan (sinxronlangan qarz uchun) yuboriladi') },
+      });
+      return;
+    }
     talabQil();
   };
   const goYopish = () => navigation.navigate('QarzDaftariYopish', { id });
@@ -288,6 +302,8 @@ const QarzDaftariQarz = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Qarz tafsiloti')} />
+      <OfflineBanner />
+      <PendingBadge item={qarz} style={{ marginHorizontal: rs(16), marginBottom: rs(4) }} />
 
       <ScrollView
         style={styles.scroll}

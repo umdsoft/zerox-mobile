@@ -20,7 +20,10 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish, navbatdagi amallar proyeksiyasi, banner va nishonlar.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge from '../../../offline/ui/PendingBadge';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -61,7 +64,7 @@ const QarzDaftariMijozlar = () => {
   const turi: 'berish' | 'olish' = route.params?.turi === 'olish' ? 'olish' : 'berish';
   const { t } = useTranslation();
 
-  const { data, loading, onRefresh } = useFetch({
+  const { data, loading, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat/${faoliyat_id}/mijozlar?turi=${turi}`,
     method: 'GET',
   });
@@ -187,6 +190,7 @@ const QarzDaftariMijozlar = () => {
             <Text style={styles.rowMeta} numberOfLines={1}>
               {c?.telefon || '—'}
             </Text>
+            <PendingBadge item={c} style={{ marginTop: rs(4) }} />
             {/* SS26: "Qarzga berish"да mijoz cardida qoldiq summasi KO'RSATILMAYDI
                 (yangi qarz beryapmiz, eski qoldiq chalkashtiradi). "olish"да qoladi. */}
             {turi !== 'berish' && (
@@ -228,6 +232,7 @@ const QarzDaftariMijozlar = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={title} />
+      <OfflineBanner />
 
       <FlatList
         style={styles.scroll}

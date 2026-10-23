@@ -34,7 +34,7 @@ const DebtPlanHomeRow = ({
       accessibilityRole="button"
       accessibilityLabel={`${t('Qarzdan chiqish')}: ${parts}`}>
       <View style={{ flex: 1 }}>
-        <Text allowFontScaling={false} style={styles.text} numberOfLines={1}>
+        <Text allowFontScaling={false} style={styles.text} numberOfLines={2}>
           <Text style={styles.title}>{t('Qarzdan chiqish')}: </Text>
           {parts}
         </Text>

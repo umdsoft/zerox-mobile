@@ -3,16 +3,52 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../theme/rd';
-import { WifiOffIcon } from '../redesign/icons';
+import { LedgerIcon, WifiOffIcon } from '../redesign/icons';
+import { navigationRef } from '../../../navigation/NavigationRef';
+import { storage } from '../../../store/api/token/getToken';
+import { startOfflineSync } from '../../../offline/syncManager';
+
+/**
+ * 23.10 (oflayn rejim): Qarz daftari ekranlari internetsiz ishlaydi — ularda bu to'liq ekran
+ * overlay KO'RSATILMAYDI (ekran tepasida OfflineBanner bor). Boshqa ekranlarda overlay'da
+ * "Qarz daftari — oflayn rejim" tugmasi: do'kon internet/svet o'chganda ham savdoni davom ettiradi.
+ */
+const isOfflineCapableRoute = (name?: string) => !!name && name.startsWith('QarzDaftari');
+
+const useCurrentRouteName = (): string | undefined => {
+  const [name, setName] = React.useState<string | undefined>(undefined);
+  React.useEffect(() => {
+    const ref: any = navigationRef.current;
+    if (!ref?.addListener) return;
+    const update = () => setName(ref.getCurrentRoute?.()?.name);
+    update();
+    return ref.addListener('state', update);
+  }, []);
+  return name;
+};
 
 const NoInternet = ({ onChangeIntenet }) => {
   const { t } = useTranslation();
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const internet = useSelector(state => state.HomeReducer.internet);
+  const routeName = useCurrentRouteName();
 
   // To'liq ekran overlay (react-native-paper Modal o'rniga — u kontentni markazlab
   // kichkina ko'rsatib, ikonkani kesib qo'yardi). internet=true bo'lganda ko'rinadi.
   if (!internet) return null;
+  if (isOfflineCapableRoute(routeName)) return null;
+
+  let loggedIn = false;
+  try {
+    loggedIn = !!storage?.getString('token');
+  } catch {
+    loggedIn = false;
+  }
+  const openOfflineLedger = () => {
+    startOfflineSync();
+    const ref: any = navigationRef.current;
+    ref?.navigate?.('BottomTabNavigator', { screen: 'QarzDaftari' });
+  };
 
   return (
     <View style={styles.overlay}>
@@ -36,6 +72,20 @@ const NoInternet = ({ onChangeIntenet }) => {
           {t('783')}
         </Text>
       </TouchableOpacity>
+
+      {loggedIn ? (
+        <TouchableOpacity
+          onPress={openOfflineLedger}
+          activeOpacity={0.85}
+          style={styles.offlineBtn}
+          accessibilityRole="button"
+        >
+          <LedgerIcon size={rs(18)} color={rd.color.primary} />
+          <Text allowFontScaling={false} style={styles.offlineBtnText}>
+            {t('Qarz daftari — oflayn rejim')}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };
@@ -93,6 +143,23 @@ const styles = StyleSheet.create({
   textbtn: {
     fontSize: rs(16),
     color: rd.color.onPrimary,
+    fontFamily: rd.font.semibold,
+  },
+  offlineBtn: {
+    marginTop: rs(14),
+    height: rs(48),
+    minWidth: rs(200),
+    paddingHorizontal: rs(24),
+    flexDirection: 'row',
+    gap: rs(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: rd.color.primaryTint,
+    borderRadius: rd.radius.lg,
+  },
+  offlineBtnText: {
+    fontSize: rs(15),
+    color: rd.color.primary,
     fontFamily: rd.font.semibold,
   },
 });

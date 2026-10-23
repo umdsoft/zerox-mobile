@@ -7,9 +7,8 @@
  * turiga mos "Amaliyot tafsiloti" ni ochadi: Qarz berildi / Qarz qaytarildi /
  * Qarzdan voz kechildi.
  */
-import axios from 'axios';
 import { URL } from '../../constants';
-import { storage } from '../../../store/api/token/getToken';
+import { qarzGet } from '../../../offline/qarzGet'; // 23.10: oflayn rejim
 
 type AnyObj = Record<string, any>;
 export type AmaliyotParams = { tx: AnyObj; qarz: AnyObj };
@@ -68,9 +67,8 @@ export const fetchCreationParams = async (
 ): Promise<(AmaliyotParams & { mijoz?: AnyObj }) | null> => {
   if (!qarzId) return null;
   try {
-    const { data } = await axios.get(`${URL}/qarz-daftari/qarz/${qarzId}`, {
-      headers: { Authorization: `Bearer ${storage.getString('token')}` },
-    });
+    // 23.10 (oflayn rejim): cache-first + oflayn qarz sintezi.
+    const data = await qarzGet(`${URL}/qarz-daftari/qarz/${qarzId}`);
     const full: AnyObj = data?.data || {};
     const { tranzaksiyalar, tolovlar, ...qarz } = full;
     if (!qarz?.id) return null;
@@ -106,9 +104,8 @@ export const fetchTxParams = async (row: AnyObj): Promise<AmaliyotParams> => {
     },
   };
   try {
-    const { data } = await axios.get(`${URL}/qarz-daftari/qarz/${row?.qarz_id}`, {
-      headers: { Authorization: `Bearer ${storage.getString('token')}` },
-    });
+    // 23.10 (oflayn rejim): cache-first + oflayn qarz sintezi.
+    const data = await qarzGet(`${URL}/qarz-daftari/qarz/${row?.qarz_id}`);
     const full: AnyObj = data?.data || {};
     const { tranzaksiyalar, tolovlar, ...qarz } = full;
     const tx = (Array.isArray(tranzaksiyalar) ? tranzaksiyalar : []).find(

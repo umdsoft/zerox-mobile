@@ -23,7 +23,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge from '../../../offline/ui/PendingBadge';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -138,7 +141,7 @@ const QarzDaftariAmaliyotlar = () => {
   const mijozId = route.params?.mijoz_id;
   const { t } = useTranslation();
 
-  const { data, loading, onRefresh } = useFetch({
+  const { data, loading, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/mijozlar/${mijozId}/history`,
     method: 'GET',
   });
@@ -253,6 +256,8 @@ const QarzDaftariAmaliyotlar = () => {
               </View>
             )}
           </View>
+          {/* 23.10: oflayn yozilgan (hali serverga yetmagan) amaliyot. */}
+          <PendingBadge item={tx} style={{ marginTop: rs(4) }} />
         </View>
         <Text
           style={[styles.rowAmount, { color: amountColor(turi) }]}
@@ -279,6 +284,7 @@ const QarzDaftariAmaliyotlar = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Amaliyotlar tarixi')} />
+      <OfflineBanner />
 
       <FlatList
         style={styles.scroll}

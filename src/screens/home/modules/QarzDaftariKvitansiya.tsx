@@ -12,7 +12,10 @@ import { useRoute } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import PendingBadge from '../../../offline/ui/PendingBadge';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
@@ -88,7 +91,7 @@ const QarzDaftariKvitansiya = () => {
   const { t } = useTranslation();
   const id = route.params?.id;
 
-  const { data, loading } = useFetch({
+  const { data, loading } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarz/${id}/kvitansiya`,
     method: 'GET',
   });
@@ -119,6 +122,9 @@ const QarzDaftariKvitansiya = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Kvitansiya')} />
+      <OfflineBanner />
+      {/* 23.10: oflayn yozilgan qarzning lokal kvitansiyasi — serverga hali yetmagan. */}
+      <PendingBadge item={k} style={{ marginHorizontal: rs(16), marginBottom: rs(4) }} />
 
       <ScrollView
         style={styles.scroll}

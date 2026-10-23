@@ -23,7 +23,9 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
+// 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import { enterXodimSession } from '../../../store/api/token/xodimSession';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
@@ -72,7 +74,7 @@ const QarzDaftariKiritish = () => {
   const { t } = useTranslation();
   const preTuri: 'berish' | 'olish' | undefined = route.params?.turi;
 
-  const { data, loading, onRefresh } = useFetch({
+  const { data, loading, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat`,
     method: 'GET',
   });
@@ -137,6 +139,7 @@ const QarzDaftariKiritish = () => {
             : t('Daftariga kiritish')
         }
       />
+      <OfflineBanner />
 
       <ScrollView
         style={styles.scroll}

@@ -15,7 +15,6 @@
  * Route params: { tx, qarz }
  */
 import { useRoute } from '@react-navigation/native';
-import axios from 'axios';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -25,8 +24,12 @@ import Share from 'react-native-share';
 import RNBlobUtil from 'react-native-blob-util';
 import Toast from 'react-native-toast-message';
 import { URL } from '../../constants';
-import { storage } from '../../../store/api/token/getToken';
 import { getQarzShop } from '../../../store/api/token/qarzShop';
+// 23.10: oflayn rejim
+import { qarzGet } from '../../../offline/qarzGet';
+import { isUnsyncedId, submitQarzOp } from '../../../offline/submit';
+import { OutboxFullError } from '../../../offline/outbox';
+import { NewOp } from '../../../offline/types';
 import { rd, rs } from '../../../theme/rd';
 import { sortMoneyText } from '../../components/StatisticCard';
 import {
@@ -173,11 +176,9 @@ const useDokonNomi = (tx: any, qarz: any, mijoz: any): string => {
   React.useEffect(() => {
     if (!needFetch) return;
     let alive = true;
-    axios
-      .get(`${URL}/qarz-daftari/qarz/${qarzId}`, {
-        headers: { Authorization: `Bearer ${storage.getString('token')}` },
-      })
-      .then(({ data }) => {
+    // 23.10: oflaynda keshdan / lokal sintezdan (oflayn qarz).
+    qarzGet(`${URL}/qarz-daftari/qarz/${qarzId}`)
+      .then(data => {
         if (alive) setFetched(shopNameOf(data?.data));
       })
       .catch(() => {
@@ -252,11 +253,13 @@ const QarzDaftariAmaliyot = () => {
     if (!bolib || !qarzId) return;
     try {
       setGrafikLoading(true);
-      const { data } = await axios.get(
-        `${URL}/qarz-daftari/qarz/${qarzId}/tolovlar`,
-        { headers: { Authorization: `Bearer ${storage.getString('token')}` } },
-      );
-      if (Array.isArray(data?.data)) setGrafik(data.data);
+      // 23.10 (oflayn rejim): qarz tafsilotidagi `tolovlar` — cache-first va navbatdagi bo'lak
+      // to'lovlari proyeksiyasi bilan (oflayn belgilangan bo'lak darhol "to'langan" ko'rinadi).
+      const data = await qarzGet(`${URL}/qarz-daftari/qarz/${qarzId}`);
+      const rows = data?.data?.tolovlar;
+      if (Array.isArray(rows)) {
+        setGrafik(rows.slice().sort((a: any, b: any) => Number(a.tartib_raqami) - Number(b.tartib_raqami)));
+      }
     } catch (e) {
       // Grafik yuklanmasa ekranning QOLGAN qismi baribir ishlaydi.
     } finally {
@@ -279,17 +282,46 @@ const QarzDaftariAmaliyot = () => {
       Toast.show({ type: 'error2', props: { desc: t('Summani kiriting') } });
       return;
     }
+    // 23.10: oflayn yaratilgan qarzning bo'laklari serverda hali yo'q — sinxrondan keyin.
+    const tolovId = Number(payRow.id);
+    if (!Number.isFinite(tolovId) || tolovId <= 0 || isUnsyncedId(qarzId)) {
+      Toast.show({
+        type: 'error2',
+        props: { desc: t('Qarz hali sinxronlanmagan — bo‘lakni keyin belgilang yoki «Qarzni yopish» orqali to‘lov qabul qiling') },
+      });
+      return;
+    }
     try {
       setPaying(true);
-      await axios.put(
-        `${URL}/qarz-daftari/tolov/${payRow.id}/tolandi`,
-        { summa: raw },
-        { headers: { Authorization: `Bearer ${storage.getString('token')}` } },
-      );
+      const out = await submitQarzOp({
+        kind: 'tolov.tolandi',
+        payload: { tolovId, qarzId: Number(qarzId), summa: raw },
+        meta: {
+          fish: qarz?.mijoz?.fish || mijozParam?.fish,
+          qarzId: Number(qarzId),
+          mijozId: Number(qarz?.mijoz_id) || undefined,
+          turi: qarz?.turi,
+          valyuta: qarz?.valyuta,
+          summa: raw,
+          faoliyatId: Number(qarz?.savdo_faoliyat_id) || undefined,
+        },
+      } as NewOp);
       setPayRow(null);
       await loadGrafik();
-      Toast.show({ type: 'omad', props: { desc: t('To‘lov qayd etildi') } });
+      Toast.show({
+        type: 'omad',
+        props: {
+          desc:
+            out.status === 'queued'
+              ? t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi')
+              : t('To‘lov qayd etildi'),
+        },
+      });
     } catch (e: any) {
+      if (e instanceof OutboxFullError) {
+        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+        return;
+      }
       Toast.show({
         type: 'error2',
         props: { desc: t(e?.response?.data?.message || 'Xatolik yuz berdi') },
@@ -297,7 +329,7 @@ const QarzDaftariAmaliyot = () => {
     } finally {
       setPaying(false);
     }
-  }, [paying, payRow, payVal, loadGrafik, t]);
+  }, [paying, payRow, payVal, loadGrafik, t, qarz, qarzId, mijozParam]);
   const oylar = Number(qarz?.oylar_soni || 0);
   const boshlangich = Number(qarz?.boshlangich_tolov || 0);
   // Oylik to'lov = (qarz summasi − boshlang'ich to'lov) / oylar soni.

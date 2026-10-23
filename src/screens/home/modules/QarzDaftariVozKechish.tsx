@@ -8,7 +8,6 @@
  * Aksent rang: QIZIL (qaytarib bo'lmaydigan amal).
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,9 +21,14 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useFetch } from '../../../hooks/useFetch';
 import { toastAfterBack } from '../../../helper/finishAction';
-import { storage } from '../../../store/api/token/getToken';
+// 23.10: oflayn rejim
+import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { submitQarzOp } from '../../../offline/submit';
+import { OutboxFullError } from '../../../offline/outbox';
+import { NewOp } from '../../../offline/types';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import { showQueuedToast } from '../../../offline/ui/queuedToast';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import {
@@ -118,7 +122,8 @@ const QarzDaftariVozKechish = () => {
   const { t } = useTranslation();
   const id = route.params?.id;
 
-  const { data, loading } = useFetch({
+  // 23.10 (oflayn rejim): cache-first + navbatdagi amallar proyeksiyasi.
+  const { data, loading } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarz/${id}`,
     method: 'GET',
   });
@@ -150,15 +155,28 @@ const QarzDaftariVozKechish = () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const token = storage.getString('token');
-      await axios.post(
-        `${URL}/qarz-daftari/qarz/${id}/voz-kechish`,
-        {
-          summa,
+      // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
+      const qid = Number(id);
+      const mid = Number(qarz?.mijoz_id ?? qarz?.mijoz?.id);
+      const out = await submitQarzOp({
+        kind: 'qarz.vozKechish',
+        payload: { qarzId: qid, summa, valyuta },
+        deps: qid < 0 ? [qid] : [],
+        meta: {
+          fish: qarz?.mijoz?.fish,
+          qarzId: qid,
+          mijozId: Number.isFinite(mid) ? mid : undefined,
+          turi: qarz?.turi,
           valyuta,
+          summa,
+          faoliyatId: Number(qarz?.savdo_faoliyat_id) || undefined,
         },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      } as NewOp);
+      if (out.status === 'queued') {
+        navigation.goBack();
+        showQueuedToast(t('Voz kechish oflayn saqlandi — internet tiklanganda yuboriladi'));
+        return;
+      }
       // SS9-3: matn to'liq jumla.
       // SS7: bildirishnoma sahifaning PASTKI qismida (tepada sarlavha ustiga tushardi).
       // 🔴 SS11 ILDIZ SABAB: App.tsx navigatsiya 'state' listeneri HAR
@@ -175,6 +193,10 @@ const QarzDaftariVozKechish = () => {
         }),
       );
     } catch (error: any) {
+      if (error instanceof OutboxFullError) {
+        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+        return;
+      }
       Toast.show({
         type: 'error2',
         props: { desc: error?.response?.data?.message || t('Xatolik yuz berdi') },
@@ -188,6 +210,7 @@ const QarzDaftariVozKechish = () => {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
       <RdHeader title={t('Qarzdan voz kechish')} />
+      <OfflineBanner />
 
       <ScrollView
         style={styles.scroll}

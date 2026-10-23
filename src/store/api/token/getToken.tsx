@@ -21,6 +21,25 @@ export const prefsStorage = new MMKV({ id: 'prefs' });
  */
 export let storage: MMKV = undefined as unknown as MMKV;
 
+// 23.10 (oflayn rejim): asosiy store kaliti — boshqa SHIFRLANGAN instansiyalar uchun
+// (masalan oflayn navbat). Faqat xotirada; hech qachon saqlanmaydi/log qilinmaydi.
+let secureKey: string | undefined;
+
+/**
+ * 23.10: alohida SHIFRLANGAN MMKV instansiyasi (o'sha Keychain kaliti bilan).
+ * Oflayn navbat (outbox) shu yerda turadi: logout'dagi `storage.clearAll()` uni
+ * O'CHIRMAYDI — sinxronlanmagan amallar jim yo'qolmasin. `initSecureStorage()` dan
+ * KEYIN chaqirilishi kerak. Degraded rejimda (Keychain yo'q) — shifrsiz instansiya.
+ */
+export function openSecureMMKV(id: string): MMKV {
+  if (secureKey) return new MMKV({ id, encryptionKey: secureKey });
+  // Store ALLAQACHON shifrlangan, lekin kalit hozir o'qilmadi (vaqtinchalik Keychain xatosi):
+  // shifrlangan faylni kalitsiz OCHMAYMIZ (MMKV uni buzilgan deb tozalashi mumkin) — alohida
+  // vaqtinchalik instansiya; keyingi ishga tushishda asl navbat o'qiladi.
+  if (prefsStorage.getBoolean(SECURE_FLAG) === true) return new MMKV({ id: `${id}-degraded` });
+  return new MMKV({ id });
+}
+
 const KEYCHAIN_SERVICE = 'com.zeroxuz.securestore';
 const KEYCHAIN_USERNAME = 'mmkv-encryption-key';
 // prefsStorage'da (shifrlanmagan) — maxfiy store ALLAQACHON shifrlanganmi belgisi.
@@ -89,6 +108,7 @@ async function doInitSecureStorage(): Promise<void> {
 
     // 1) Kalit BOR → shifrlangan store'ni kalit bilan ochamiz (odatiy yo'l).
     if (existing && existing.password) {
+      secureKey = existing.password;
       storage = new MMKV({ id: 'storage', encryptionKey: existing.password });
       if (!wasEncrypted) prefsStorage.set(SECURE_FLAG, true);
       return;
@@ -107,6 +127,7 @@ async function doInitSecureStorage(): Promise<void> {
         accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK,
       });
       broken.recrypt(newKey);
+      secureKey = newKey;
       storage = broken;
       return;
     }
@@ -131,6 +152,7 @@ async function doInitSecureStorage(): Promise<void> {
     });
     legacy.recrypt(key);
     prefsStorage.set(SECURE_FLAG, true);
+    secureKey = key;
     storage = legacy;
   } catch (err) {
     if (__DEV__) {
