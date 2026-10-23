@@ -13,7 +13,28 @@ import { startOfflineSync } from '../../../offline/syncManager';
  * overlay KO'RSATILMAYDI (ekran tepasida OfflineBanner bor). Boshqa ekranlarda overlay'da
  * "Qarz daftari — oflayn rejim" tugmasi: do'kon internet/svet o'chganda ham savdoni davom ettiradi.
  */
-const isOfflineCapableRoute = (name?: string) => !!name && name.startsWith('QarzDaftari');
+// PIN qulfi lokal tekshiriladi (verifyPin) — internetsiz ham ochiladi, overlay uni yopmasin.
+const isOfflineCapableRoute = (name?: string) =>
+  !!name && (name.startsWith('QarzDaftari') || name === 'SetLocalPassword');
+
+/**
+ * 23.10 XAVFSIZLIK: oflayn tugma PIN qulfini chetlab o'tmasin. Qulf/kirish/ro'yxat ekranlarida
+ * (yoki ilova fonga ketib qulflangan bo'lsa) tugma ko'rsatilmaydi — avval PIN kiritiladi.
+ */
+const PRE_AUTH_ROUTES = new Set([
+  'SelectLanguageScreen', 'SetLocalPassword', 'LoginWithPhone', 'RecoveryPassword', 'NewPasswordEnter',
+  'NewRecoveryPassword', 'RecoverySmsReset', 'RegisterWithJuridic', 'RegisterWithPeople', 'CheckSmsPassword',
+  'Agree', 'CreateSecretWord', 'CreatePassword', 'SelectJuridical', 'UpdatePasswordWithJshir', 'ResetPassCode',
+  'PrivacyConsentNote', 'Indentifikatsiya',
+]);
+const isUnlockedRoute = (name?: string): boolean => {
+  if (!name || PRE_AUTH_ROUTES.has(name)) return false;
+  try {
+    return !storage?.getBoolean('appLocked');
+  } catch {
+    return false;
+  }
+};
 
 const useCurrentRouteName = (): string | undefined => {
   const [name, setName] = React.useState<string | undefined>(undefined);
@@ -40,7 +61,7 @@ const NoInternet = ({ onChangeIntenet }) => {
 
   let loggedIn = false;
   try {
-    loggedIn = !!storage?.getString('token');
+    loggedIn = !!storage?.getString('token') && isUnlockedRoute(routeName);
   } catch {
     loggedIn = false;
   }

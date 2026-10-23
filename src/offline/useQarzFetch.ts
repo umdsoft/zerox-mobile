@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { storage } from '../store/api/token/getToken';
 import { useOutboxState } from './hooks';
 import { isOnline, reportApiResult, useIsOnline } from './netStatus';
-import { currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
+import { cachedOrDerived, currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
 import { opsForProjection, project, rewriteTempUrl } from './projection';
 import { startOfflineSync, useSyncStatus } from './syncManager';
 import { ACTIVE_STATUSES } from './types';
@@ -64,7 +64,7 @@ export function useQarzFetch({ url }: Options): QarzFetchResult {
   );
 
   const [entry, setEntry] = useState<Entry | null>(() => {
-    const hit = effUrl && !unresolved && actor ? responseCache.get(actor, effUrl) : null;
+    const hit = effUrl && !unresolved && actor ? cachedOrDerived(actor, effUrl) : null;
     return hit ? { url: effUrl, body: hit.data, at: hit.savedAt, fromCache: true } : null;
   });
   const [loading, setLoading] = useState(false);
@@ -88,7 +88,7 @@ export function useQarzFetch({ url }: Options): QarzFetchResult {
   useEffect(() => {
     if (!effUrl) return;
     let cancelled = false;
-    const cached = !unresolved && actor ? responseCache.get(actor, effUrl) : null;
+    const cached = !unresolved && actor ? cachedOrDerived(actor, effUrl) : null;
     const sameUrlFresh = (e: Entry | null) => !!e && e.url === effUrl && !e.fromCache;
 
     // Shu URL uchun yangi (server) ma'lumot bo'lsa — saqlanadi; aks holda kesh (yoki bo'sh).

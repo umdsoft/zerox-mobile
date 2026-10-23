@@ -537,6 +537,41 @@ function projectKvitansiya(body: Json, ctx: ProjectionCtx, qarzId: number): Json
   };
 }
 
+/**
+ * 23.10: yopish-info keshda yo'q (mijoz oflaynda birinchi marta yopilmoqda) — asos mijozning
+ * SAQLANGAN tarixidan (`/mijozlar/:id/history`) hisoblanadi: backend `mijozQoldiqlari` bilan bir xil
+ * (shu tur, `aktiv`, valyuta bo'yicha jami qoldiq va soni). Navbatdagi amallar keyin proyeksiya qilinadi.
+ */
+export function yopishInfoFromHistory(historyBody: Json, turi: Turi): Json {
+  const h = historyBody?.data;
+  if (!h?.mijoz) return null;
+  const map = new Map<string, { valyuta: string; qoldiq: number; soni: number }>();
+  (Array.isArray(h.qarzlar) ? h.qarzlar : [])
+    .filter((q: Json) => q.turi === turi && q.status === 'aktiv' && !q.deleted_at)
+    .forEach((q: Json) => {
+      const v = q.valyuta || 'UZS';
+      const e = map.get(v) || { valyuta: v, qoldiq: 0, soni: 0 };
+      map.set(v, { ...e, qoldiq: round2(e.qoldiq + num(q.qoldiq)), soni: e.soni + 1 });
+    });
+  const m = h.mijoz;
+  return {
+    success: true,
+    data: {
+      mijoz: { id: m.id, fish: m.fish, telefon: m.telefon ?? null, savdo_faoliyat_id: m.savdo_faoliyat_id },
+      turi,
+      qoldiqlar: Array.from(map.values()).filter(r => r.qoldiq > EPS),
+    },
+  };
+}
+
+/** Kesh kalitidan hosil qilinadigan "qardosh" URL: yopish-info -> shu mijozning tarixi. */
+export function derivableFrom(url: string): { source: string; derive: (body: Json) => Json } | null {
+  const m = normalizeUrl(url).match(/^(.*\/qarz-daftari\/mijozlar\/-?\d+)\/yopish-info(?:\?|$)/);
+  if (!m) return null;
+  const turi = (parseQuery(url).turi as Turi) === 'olish' ? 'olish' : 'berish';
+  return { source: `${m[1]}/history`, derive: body => yopishInfoFromHistory(body, turi) };
+}
+
 function projectYopishInfo(url: string, body: Json, ctx: ProjectionCtx, mijozId: number): Json {
   const turi = (parseQuery(url).turi as Turi) || 'berish';
   let data: Json = body?.data;

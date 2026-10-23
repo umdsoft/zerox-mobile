@@ -8,6 +8,7 @@ import { backoffMs, buildRequest, classify } from '../src/offline/opSpec';
 import {
   applyRepayment,
   computeHistoryStats,
+  derivableFrom,
   installmentSchedule,
   opsForProjection,
   project,
@@ -676,5 +677,42 @@ describe('ResponseCache', () => {
     c.clear();
     expect(c.stats().entries).toBe(0);
     expect(Array.from(kv.data.keys())).toEqual([]);
+  });
+});
+
+describe('yopish-info keshsiz (tarixdan hosil qilish)', () => {
+  const history = {
+    success: true,
+    data: {
+      mijoz: { id: 42, fish: 'Test Mijoz', telefon: '+998900000000', savdo_faoliyat_id: 7 },
+      qarzlar: [
+        { id: 1, turi: 'berish', status: 'aktiv', valyuta: 'UZS', qoldiq: 500000 },
+        { id: 2, turi: 'berish', status: 'aktiv', valyuta: 'UZS', qoldiq: 309937 },
+        { id: 3, turi: 'berish', status: 'yopilgan', valyuta: 'UZS', qoldiq: 0 },
+        { id: 4, turi: 'olish', status: 'aktiv', valyuta: 'UZS', qoldiq: 100 },
+        { id: 5, turi: 'berish', status: 'aktiv', valyuta: 'USD', qoldiq: 12.5 },
+      ],
+    },
+  };
+
+  test("yopish-info URL tarix URL ga bog'lanadi (nonce e'tiborsiz)", () => {
+    const rel = derivableFrom('https://tb.zerox.uz/api/qarz-daftari/mijozlar/42/yopish-info?turi=berish&_=123');
+    expect(rel?.source).toBe('/api/qarz-daftari/mijozlar/42/history');
+    expect(derivableFrom('https://tb.zerox.uz/api/qarz-daftari/qarz/5')).toBeNull();
+  });
+
+  test("backend mijozQoldiqlari kabi: shu tur, aktiv, valyuta bo'yicha jami", () => {
+    const body = derivableFrom('/api/qarz-daftari/mijozlar/42/yopish-info?turi=berish')!.derive(history);
+    expect(body.data.mijoz).toEqual({ id: 42, fish: 'Test Mijoz', telefon: '+998900000000', savdo_faoliyat_id: 7 });
+    expect(body.data.qoldiqlar).toEqual([
+      { valyuta: 'UZS', qoldiq: 809937, soni: 2 },
+      { valyuta: 'USD', qoldiq: 12.5, soni: 1 },
+    ]);
+    const olish = derivableFrom('/api/qarz-daftari/mijozlar/42/yopish-info?turi=olish')!.derive(history);
+    expect(olish.data.qoldiqlar).toEqual([{ valyuta: 'UZS', qoldiq: 100, soni: 1 }]);
+  });
+
+  test("tarixda mijoz yo'q — null (soxta ekran emas)", () => {
+    expect(derivableFrom('/api/qarz-daftari/mijozlar/42/yopish-info?turi=berish')!.derive({ data: null })).toBeNull();
   });
 });

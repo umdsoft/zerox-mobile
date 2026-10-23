@@ -48,3 +48,20 @@ export function currentOwnerName(): string {
     return '';
   }
 }
+
+/**
+ * 23.10: keshdagi javob; bo'lmasa — saqlangan "qardosh" javobdan hosil qilingani (masalan mijozni
+ * oflaynda yopish: yopish-info hech ochilmagan, lekin mijoz tarixi keshda). `savedAt` — manba vaqti,
+ * shu sababli proyeksiya undan keyingi amallarni to'g'ri qo'yadi.
+ */
+export function cachedOrDerived(actor: string, url: string): { data: unknown; savedAt: number } | null {
+  const hit = responseCache.get(actor, url);
+  if (hit) return hit;
+  // Aylanma import bo'lmasligi uchun kech olinadi (projection -> responseCache).
+  const { derivableFrom } = require('./projection');
+  const rel = derivableFrom(url);
+  if (!rel) return null;
+  const src = responseCache.get(actor, rel.source);
+  const data = src ? rel.derive(src.data) : null;
+  return data ? { data, savedAt: src!.savedAt } : null;
+}

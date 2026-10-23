@@ -7,7 +7,7 @@
 import axios from 'axios';
 import { storage } from '../store/api/token/getToken';
 import { isOnline, reportApiResult } from './netStatus';
-import { currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
+import { cachedOrDerived, currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
 import { opsForProjection, project, rewriteTempUrl } from './projection';
 import { ACTIVE_STATUSES } from './types';
 
@@ -37,7 +37,7 @@ export async function qarzGet(url: string): Promise<any> {
     }
   }
   if (base === null && !unresolved && actor) {
-    const hit = responseCache.get(actor, effUrl);
+    const hit = cachedOrDerived(actor, effUrl);
     if (hit) {
       base = hit.data;
       baseAt = hit.savedAt;
