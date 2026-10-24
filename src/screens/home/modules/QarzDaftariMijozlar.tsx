@@ -24,6 +24,7 @@ import Toast from 'react-native-toast-message';
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge from '../../../offline/ui/PendingBadge';
+import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -64,7 +65,7 @@ const QarzDaftariMijozlar = () => {
   const turi: 'berish' | 'olish' = route.params?.turi === 'olish' ? 'olish' : 'berish';
   const { t } = useTranslation();
 
-  const { data, loading, onRefresh } = useQarzFetch({
+  const { data, loading, onRefresh, error, offline } = useQarzFetch({
     url: `${URL}/qarz-daftari/savdo-faoliyat/${faoliyat_id}/mijozlar?turi=${turi}`,
     method: 'GET',
   });
@@ -345,12 +346,17 @@ const QarzDaftariMijozlar = () => {
           </View>
         }
         ListEmptyComponent={
+          // 24.10: kesh yo'q (oflayn) / yuklanmadi — "mijozlar yo'q" EMAS.
+          error ? (
+            <NotSavedOffline offline={offline} onRetry={() => onRefresh({})} style={styles.notSaved} />
+          ) : (
           <View style={styles.emptyBox}>
             <View style={styles.emptyCircle}>
               <UserIcon size={rs(24)} color={rd.color.textTertiary} />
             </View>
             <Text style={styles.emptyText}>{t('Mijozlar hali qo‘shilmagan.')}</Text>
           </View>
+          )
         }
       />
     </View>
@@ -360,6 +366,7 @@ const QarzDaftariMijozlar = () => {
 export default QarzDaftariMijozlar;
 
 const styles = StyleSheet.create({
+  notSaved: { marginHorizontal: 0, marginTop: rs(8) },
   // SS15-5: "Qanday ishlaydi?" + eslatma — uslublar QarzDaftariKiritish'dagi
   // bilan AYNAN bir xil (blok o'sha sahifadan ko'chirildi).
   guideCard: {

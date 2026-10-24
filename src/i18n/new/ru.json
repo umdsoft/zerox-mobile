@@ -1,5 +1,19 @@
 {
   "translation": {
+    "Serverda bajarilgan — ma’lumotlarni yangilang": "Выполнено на сервере — обновите данные",
+    "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Внутренняя ошибка — отмените действие и введите заново",
+    "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Предыдущее действие этого клиента не отправлено — сначала решите его",
+    "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting": "Связанное действие выполнено на сервере — обновите данные и введите действие заново",
+    "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda": "Не удалось записать в память телефона — повторная попытка",
+    "Telefon xotirasiga yozib bo‘lmadi": "Не удалось записать в память телефона",
+    "Bu telefon raqami boshqa mijozda: {{fish}}": "Этот номер телефона у другого клиента: {{fish}}",
+    "Server xatosi — keyinroq qayta urining": "Ошибка сервера — повторите позже",
+    "Yuborilmoqda — kuting": "Отправляется — подождите",
+    "Keshni faqat internet bor paytda tozalash mumkin": "Кэш можно очистить только при наличии интернета",
+    "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.": "Действие уже выполнено на сервере — оно будет только убрано из этого списка.",
+    "Serverda bajarilgan": "Выполнено на сервере",
+    "Shu mijozga bog‘lash": "Привязать к этому клиенту",
+    "Ro‘yxatdan olib tashlash": "Убрать из списка",
     "Amalni bekor qilasizmi?": "Отменить действие?",
     "Barcha amallar serverga yuborilgan": "Все действия отправлены на сервер",
     "Barcha amallar sinxronlangan": "Все действия синхронизированы",
@@ -2134,6 +2148,18 @@
     "Qabul qilingan": "Принято",
     "Taklif bekor qilingan": "Приглашение отменено",
     "Oila moliyasi taklifi": "Приглашение в семейные финансы",
-    "Rejani tahrirlash": "Редактировать план"
+    "Rejani tahrirlash": "Редактировать план",
+    "Bu ma’lumot oflayn saqlanmagan": "Эти данные не сохранены для офлайн-режима",
+    "Internet tiklanganda yuklanadi": "Загрузятся, когда появится интернет",
+    "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi": "Эти данные не сохранены для офлайн-режима — загрузятся, когда появится интернет",
+    "Qisman (saqlangan ro‘yxatdan)": "Частично (из сохранённого списка)",
+    "Qarz topilmadi": "Долг не найден",
+    "Internet tiklanganda SMS paketi tekshiriladi": "SMS-пакет будет проверен, когда появится интернет",
+    "Oflayn — kalendar mavjud emas": "Офлайн — календарь недоступен",
+    "Bu telefon raqamli mijoz allaqachon bor: {{fish}}": "Клиент с этим номером уже есть: {{fish}}",
+    "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling": "Сохранено, но предыдущее действие этого клиента завершилось ошибкой — решите на странице «Офлайн-режим»",
+    "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi": "Не удалось записать в память устройства — действие не сохранено",
+    "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak": "Дата возврата должна быть позже даты выдачи",
+    "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing": "Предыдущее действие отменено — чтобы отправить это действие, нажмите «Повторить»"
   }
 }

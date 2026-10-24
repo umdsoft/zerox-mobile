@@ -27,6 +27,7 @@ import {
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge from '../../../offline/ui/PendingBadge';
+import NotSavedOffline, { isDerivedBody, PartialDataNote } from '../../../offline/ui/NotSavedOffline';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -141,7 +142,7 @@ const QarzDaftariAmaliyotlar = () => {
   const mijozId = route.params?.mijoz_id;
   const { t } = useTranslation();
 
-  const { data, loading, onRefresh } = useQarzFetch({
+  const { data, loading, onRefresh, error, offline } = useQarzFetch({
     url: `${URL}/qarz-daftari/mijozlar/${mijozId}/history`,
     method: 'GET',
   });
@@ -280,6 +281,18 @@ const QarzDaftariAmaliyotlar = () => {
 
   if (loading) return <Loading />;
 
+  // 24.10: tarix oflayn saqlanmagan / yuklanmadi — bo'sh tarix va 0 summalar EMAS, aniq holat.
+  if (error) {
+    return (
+      <View style={styles.screen}>
+        <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+        <RdHeader title={t('Amaliyotlar tarixi')} />
+        <OfflineBanner />
+        <NotSavedOffline offline={offline} onRetry={() => onRefresh({})} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
@@ -300,6 +313,8 @@ const QarzDaftariAmaliyotlar = () => {
         ItemSeparatorComponent={ListSeparator}
         ListHeaderComponent={
           <View style={styles.headerWrap}>
+            {/* 24.10: saqlangan ro'yxatdan hosil qilingan (to'liq bo'lmagan) tarix. */}
+            {isDerivedBody(data) && <PartialDataNote />}
             {/* 1. Mijoz subtitr kartasi */}
             <View style={styles.clientCard}>
               <View style={styles.clientAvatar}>

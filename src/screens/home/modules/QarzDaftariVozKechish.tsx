@@ -25,10 +25,10 @@ import { toastAfterBack } from '../../../helper/finishAction';
 // 23.10: oflayn rejim
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import { submitQarzOp } from '../../../offline/submit';
-import { OutboxFullError } from '../../../offline/outbox';
 import { NewOp } from '../../../offline/types';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
-import { showQueuedToast } from '../../../offline/ui/queuedToast';
+import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
+import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import {
@@ -123,7 +123,7 @@ const QarzDaftariVozKechish = () => {
   const id = route.params?.id;
 
   // 23.10 (oflayn rejim): cache-first + navbatdagi amallar proyeksiyasi.
-  const { data, loading } = useQarzFetch({
+  const { data, loading, error, offline, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarz/${id}`,
     method: 'GET',
   });
@@ -132,8 +132,28 @@ const QarzDaftariVozKechish = () => {
 
   const [summaRaw, setSummaRaw] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  // 24.10: ikki marta tez bosishdan himoya — state yangilanguncha ikkinchi bosish ham o'tib,
+  // navbatga IKKI amal tushardi. Qulf faqat xatoda ochiladi (muvaffaqiyatda ekran yopiladi).
+  const submitLock = React.useRef(false);
 
   if (loading) return <Loading />;
+
+  // 24.10: qarz topilmadi / oflayn saqlanmagan — ilgari qoldiq 0 bilan bo'sh forma va jimgina
+  // o'chiq tugma ko'rinardi. Endi aniq holat.
+  if (!qarz) {
+    return (
+      <View style={styles.screen}>
+        <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+        <RdHeader title={t('Qarzdan voz kechish')} />
+        <OfflineBanner />
+        <NotSavedOffline
+          offline={offline && error}
+          onlineTitle={error ? undefined : t('Qarz topilmadi')}
+          onRetry={() => onRefresh({})}
+        />
+      </View>
+    );
+  }
 
   const valyuta = qarz?.valyuta || 'UZS';
   const qoldiq = Number(qarz?.qoldiq || 0);
@@ -152,7 +172,8 @@ const QarzDaftariVozKechish = () => {
 
   // POST — summani voz kechish.
   const onSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
     try {
       // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
@@ -174,7 +195,7 @@ const QarzDaftariVozKechish = () => {
       } as NewOp);
       if (out.status === 'queued') {
         navigation.goBack();
-        showQueuedToast(t('Voz kechish oflayn saqlandi — internet tiklanganda yuboriladi'));
+        showQueuedResult(out.op, t('Voz kechish oflayn saqlandi — internet tiklanganda yuboriladi'), t);
         return;
       }
       // SS9-3: matn to'liq jumla.
@@ -193,8 +214,11 @@ const QarzDaftariVozKechish = () => {
         }),
       );
     } catch (error: any) {
-      if (error instanceof OutboxFullError) {
-        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+      submitLock.current = false;
+      // 24.10: navbat to'lgan / qurilma xotirasiga yozilmadi — aniq xabar.
+      const obErr = outboxErrorText(error, t);
+      if (obErr) {
+        Toast.show({ type: 'error2', props: { desc: obErr } });
         return;
       }
       Toast.show({
@@ -265,8 +289,10 @@ const QarzDaftariVozKechish = () => {
             />
             <Text style={styles.inputSuffix}>{valyuta}</Text>
           </View>
-          <Text style={[styles.hint, tooMuch && { color: RED }]}>
-            {t('Maksimal: {{amount}}', { amount: `${sortMoneyText(qoldiq) || 0} ${valyuta}` })}
+          <Text style={[styles.hint, (tooMuch || qoldiq <= 0) && { color: RED }]}>
+            {qoldiq <= 0
+              ? t('Qarz allaqachon yopilgan')
+              : t('Maksimal: {{amount}}', { amount: `${sortMoneyText(qoldiq) || 0} ${valyuta}` })}
           </Text>
 
           {/* Tezkor chiplar */}

@@ -39,11 +39,11 @@ import ClientRegisterAnimation from '../../../images/clientRegisterAnim';
 import { isContactPickerAvailable, pickContactInto } from '../../../helper/pickContactInto';
 // 23.10: oflayn rejim
 import { isUnsyncedId, submitQarzOp } from '../../../offline/submit';
-import { isOnline } from '../../../offline/netStatus';
-import { OutboxFullError } from '../../../offline/outbox';
+import { isOnline, useIsOnline } from '../../../offline/netStatus';
+import { findCachedCustomerByPhone } from '../../../offline/customerLookup';
 import { NewOp } from '../../../offline/types';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
-import { showQueuedToast } from '../../../offline/ui/queuedToast';
+import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
 
 const BLUE = '#2f6fed'; // berish
 const GREEN = '#16a34a'; // olish
@@ -78,6 +78,9 @@ const QarzDaftariMijozYangi = () => {
     return (d.startsWith('998') ? d.slice(3) : d).slice(0, 9);
   });
   const [submitting, setSubmitting] = React.useState(false);
+  // 24.10: ikki marta tez bosishdan himoya (navbatga ikki mijoz tushmasin). Faqat xatoda ochiladi.
+  const submitLock = React.useRef(false);
+  const online = useIsOnline();
 
   // Telefon: foydalanuvchi faqat raqam kiritadi, +998 doim old qo'shiladi.
   const onPhoneChange = (txt: string) => {
@@ -101,12 +104,35 @@ const QarzDaftariMijozYangi = () => {
   // So'rov SS5: telefon TO'LIQ (9 raqam) kiritilmaguncha Saqlash NOFAOL — xato
   // matni ko'rsatilmaydi, faqat tugma nofaol turadi.
   const canSave = !!fish.trim() && phone.length === 9;
+
+  // 24.10: OFLAYNDA telefon dublikati — onlaynda server 409 qaytaradi, oflaynda esa saqlangan
+  // mijozlar ro'yxatlari (va navbatdagi yangi mijozlar)dan qidiramiz. Topilsa — yangisini yaratish
+  // o'rniga mavjud mijozni ochish taklif qilinadi.
+  const duplicate = React.useMemo(
+    () =>
+      !isEdit && !online && phone.length === 9 && faoliyat_id != null
+        ? findCachedCustomerByPhone(URL, faoliyat_id, phone)
+        : null,
+    [isEdit, online, phone, faoliyat_id],
+  );
+  const openDuplicate = () => {
+    if (!duplicate) return;
+    // Mijozlar ro'yxatidagi qator bosilgandagidek — to'g'ridan-to'g'ri qarz formasi.
+    navigation.replace('QarzDaftariYangi', {
+      faoliyat_id: duplicate.savdo_faoliyat_id ?? faoliyat_id,
+      mijoz_id: duplicate.id,
+      fish: duplicate.fish,
+      turi,
+      qoldiq_uzs: duplicate.qoldiq_uzs,
+      qoldiq_usd: duplicate.qoldiq_usd,
+    });
+  };
   // Ko'rsatishда bo'shliqли format: "93 752 44 11" (2-3-2-2). Stateда faqat raqam.
   // SS-AUDIT (2026-09-25): helper/phone.formatPhone9 (yagona manba).
   const formatPhone = formatPhone9;
 
   const handleSubmit = async () => {
-    if (submitting) return;
+    if (submitting || submitLock.current) return;
     if (!fish.trim()) {
       Toast.show({ type: 'error2', props: { desc: t('FISH kiritilishi shart') } });
       return;
@@ -128,6 +154,15 @@ const QarzDaftariMijozYangi = () => {
       return;
     }
 
+    if (duplicate) {
+      Toast.show({
+        type: 'error2',
+        props: { desc: t('Bu telefon raqamli mijoz allaqachon bor: {{fish}}', { fish: duplicate.fish }) },
+      });
+      return;
+    }
+
+    submitLock.current = true;
     try {
       setSubmitting(true);
       const body = { fish: fish.trim(), telefon: fullPhone };
@@ -149,7 +184,7 @@ const QarzDaftariMijozYangi = () => {
           },
         } as NewOp);
         if (out.status === 'queued') {
-          showQueuedToast(t('Mijoz oflayn saqlandi — internet tiklanganda yuboriladi'));
+          showQueuedResult(out.op, t('Mijoz oflayn saqlandi — internet tiklanganda yuboriladi'), t);
           navigation.replace('QarzDaftariYangi', {
             faoliyat_id,
             mijoz_id: out.op.tempId,
@@ -168,6 +203,7 @@ const QarzDaftariMijozYangi = () => {
           // Mijoz sahifasiga qaytamiz — u fokusda qayta yuklanadi.
           navigation.goBack();
         } else {
+          submitLock.current = false;
           Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
         }
       } else if (res.data?.success) {
@@ -194,11 +230,15 @@ const QarzDaftariMijozYangi = () => {
           navigation.goBack();
         }
       } else {
+        submitLock.current = false;
         Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
       }
     } catch (error: any) {
-      if (error instanceof OutboxFullError) {
-        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+      submitLock.current = false;
+      // 24.10: navbat to'lgan / qurilma xotirasiga yozilmadi — aniq xabar.
+      const obErr = outboxErrorText(error, t);
+      if (obErr) {
+        Toast.show({ type: 'error2', props: { desc: obErr } });
         return;
       }
       const status = error?.response?.status;
@@ -318,6 +358,23 @@ const QarzDaftariMijozYangi = () => {
             )}
           </View>
 
+          {/* 24.10: oflayn dublikat ogohlantirishi + mavjud mijozni ochish. */}
+          {duplicate && (
+            <View style={styles.dupBox}>
+              <Text style={styles.dupText}>
+                {t('Bu telefon raqamli mijoz allaqachon bor: {{fish}}', { fish: duplicate.fish })}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={openDuplicate}
+                style={[styles.dupBtn, { backgroundColor: accent }]}
+                accessibilityRole="button"
+              >
+                <Text style={styles.dupBtnText}>{t('Mijozni ochish')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Saqlash — FISH kiritilmagунча OQ/rangsiz (nofaol), kiritilgach accent
               rang (so'rov). Telefon ixtiyoriy (bo'sh yoki 9 raqam). */}
           <TouchableOpacity
@@ -350,6 +407,21 @@ const QarzDaftariMijozYangi = () => {
 export default QarzDaftariMijozYangi;
 
 const styles = StyleSheet.create({
+  dupBox: {
+    marginTop: rs(12),
+    padding: rs(12),
+    gap: rs(10),
+    borderRadius: rd.radius.md,
+    backgroundColor: rd.color.warningBg,
+  },
+  dupText: { fontFamily: rd.font.medium, fontSize: rs(13), color: rd.color.text },
+  dupBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: rs(16),
+    paddingVertical: rs(8),
+    borderRadius: rd.radius.pill,
+  },
+  dupBtnText: { fontFamily: rd.font.semibold, fontSize: rs(13), color: '#fff' },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {

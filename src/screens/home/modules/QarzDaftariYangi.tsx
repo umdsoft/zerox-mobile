@@ -38,10 +38,10 @@ import {
 import RdHeader from '../redesign/RdHeader';
 // 23.10: oflayn rejim
 import { submitQarzOp } from '../../../offline/submit';
-import { OutboxFullError } from '../../../offline/outbox';
 import { NewOp, QarzCreateBody } from '../../../offline/types';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
-import { showQueuedToast } from '../../../offline/ui/queuedToast';
+import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
+import { useIsOnline } from '../../../offline/netStatus';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -176,6 +176,13 @@ const QarzDaftariYangi = () => {
   const [boshlangichRaw, setBoshlangichRaw] = React.useState(''); // faqat raqamlar
 
   const [submitting, setSubmitting] = React.useState(false);
+  // 24.10: ikki marta tez bosishdan himoya — `submitting` state keyingi renderda yangilanadi,
+  // shu oraliqda ikkinchi bosish navbatga IKKINCHI qarzni qo'shardi. Qulf faqat xatoda ochiladi.
+  const submitLock = React.useRef(false);
+  // 24.10: oflaynda "berish" qarzi sinxronda 402 no-sms-package bilan rad etilishi mumkin —
+  // SMS qoldig'i qurilmada saqlanmaydi (faqat drawer panelida onlayn olinadi), shuning uchun
+  // aniq tekshiruv o'rniga yumshoq ogohlantirish.
+  const online = useIsOnline();
 
   // USD — tsentlar (655,77), UZS — butun (egasi hujjati 2026-10-18).
   const isUsdVal = valyuta === 'USD';
@@ -209,8 +216,15 @@ const QarzDaftariYangi = () => {
     setOylar(String(n));
   };
 
+  // Qaytarish sanasi kamida berilgan sanadan keyingi kun (server: qaytarish > berilgan).
+  const minQaytarish = React.useMemo(() => {
+    const d = new Date(berilganSana);
+    d.setDate(d.getDate() + 1);
+    return d;
+  }, [berilganSana]);
+
   const handleSubmit = async () => {
-    if (submitting) return;
+    if (submitting || submitLock.current) return;
 
     if (miqdor <= 0) {
       Toast.show({ type: 'error2', props: { desc: t('Qarz miqdorini kiriting') } });
@@ -223,6 +237,10 @@ const QarzDaftariYangi = () => {
       }
     } else if (!qaytarishSana) {
       Toast.show({ type: 'error2', props: { desc: t('Qaytarish sanasini tanlang') } });
+      return;
+    } else if (toApiDate(qaytarishSana) <= toApiDate(berilganSana)) {
+      // 24.10: server qoidasi (qarz.validator) — oflaynda navbatga tushib keyin rad etilmasin.
+      Toast.show({ type: 'error2', props: { desc: t("Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak") } });
       return;
     }
 
@@ -241,6 +259,7 @@ const QarzDaftariYangi = () => {
       boshlangich_tolov: bolibTolash ? boshlangich : 0,
     };
 
+    submitLock.current = true;
     try {
       setSubmitting(true);
       // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
@@ -260,16 +279,20 @@ const QarzDaftariYangi = () => {
       } as NewOp);
       if (out.status === 'queued') {
         navigation.goBack();
-        showQueuedToast(t('Qarz oflayn saqlandi — internet tiklanganda yuboriladi'));
+        showQueuedResult(out.op, t('Qarz oflayn saqlandi — internet tiklanganda yuboriladi'), t);
       } else if (out.data?.success) {
         Toast.show({ type: 'omad', props: { desc: t('Qarz saqlandi') } });
         navigation.goBack();
       } else {
+        submitLock.current = false;
         Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
       }
     } catch (error: any) {
-      if (error instanceof OutboxFullError) {
-        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+      submitLock.current = false;
+      // 24.10: navbat to'lgan / qurilma xotirasiga yozilmadi — aniq xabar.
+      const obErr = outboxErrorText(error, t);
+      if (obErr) {
+        Toast.show({ type: 'error2', props: { desc: obErr } });
         return;
       }
       const code = error?.response?.data?.code;
@@ -503,6 +526,12 @@ const QarzDaftariYangi = () => {
             )}
           </View>
 
+          {/* 24.10: oflayn "berish" — SMS paketi sinxronda tekshiriladi (paket yo'q bo'lsa amal
+              Sinxron sahifasida "xato" bo'lib qoladi, paket olib qayta urinish mumkin). */}
+          {!online && turi === 'berish' && (
+            <Text style={styles.smsNote}>{t('Internet tiklanganda SMS paketi tekshiriladi')}</Text>
+          )}
+
           {/* 8) Saqlash */}
           <TouchableOpacity
             activeOpacity={0.9}
@@ -539,9 +568,9 @@ const QarzDaftariYangi = () => {
         open={qaytarishOpen}
         setOpen={setQaytarishOpen}
         title={t('Qaytarish sanasi')}
-        date={qaytarishSana || berilganSana}
+        date={qaytarishSana || minQaytarish}
         setDate={setQaytarishSana}
-        min={berilganSana}
+        min={minQaytarish}
       />
     </View>
   );
@@ -551,6 +580,13 @@ export default QarzDaftariYangi;
 
 // ---------- Uslublar ----------
 const styles = StyleSheet.create({
+  smsNote: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12),
+    color: rd.color.warning,
+    textAlign: 'center',
+    marginTop: rs(4),
+  },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {

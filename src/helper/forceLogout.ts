@@ -81,6 +81,15 @@ export const forceLogout = (reason: ForceLogoutReason = 'revoked'): Promise<void
     try {
       require('../store/api/home').resetHomeBundle?.();
     } catch {}
+    // 24.10: foydalanuvchi O'ZI chiqdi — oflayn navbatdagi shu sessiyaning yuborilgan (done) amallari
+    // tarixi o'chiriladi (yuborilmaganlari qoladi — UserScreen ogohlantiradi). Token o'chishidan OLDIN.
+    if (reason === 'user') {
+      try {
+        const { currentActor, getOutbox } = require('../offline/offlineStore');
+        const actor = currentActor();
+        if (actor) getOutbox().dropDone(actor.key);
+      } catch {}
+    }
     // 2) MMKV
     try {
       storage.clearAll();

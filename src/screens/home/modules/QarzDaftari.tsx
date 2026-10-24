@@ -36,6 +36,10 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 // 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
+// 24.10: fonda "oflayn uchun tayyorlash" + kesh bo'lmasa aniq holat (bo'sh EMAS).
+import { prefetchForOffline, startOfflinePrefetch } from '../../../offline/prefetch';
+import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
+import Toast from 'react-native-toast-message';
 import {
   exitXodimSession,
   isXodimSession,
@@ -555,19 +559,38 @@ const QarzDaftari = () => {
     if (Array.isArray(shopsData)) syncQarzShopWithList(shopsData);
   }, [shopsData]);
 
+  // 24.10: OFLAYN UCHUN TAYYORLASH — onlayn bo'lsa fonda asosiy ro'yxatlar va aktiv qarzli
+  // mijozlar tarixi keshga yoziladi (aktor+do'kon bo'yicha 30 daqiqada bir; UI bloklanmaydi).
+  // Do'kon almashganda ham (yangi do'kon ma'lumoti) qayta ishga tushadi.
+  React.useEffect(() => {
+    startOfflinePrefetch();
+    prefetchForOffline();
+  }, [shop?.id]);
+
+  // 24.10: do'konlar ro'yxati NOMA'LUM (oflayn va keshda yo'q / yuklanmadi) — bu "do'kon yo'q"
+  // EMAS. Ilgari bu holatda card "Do'kon qo'shish" taklif qilardi (oflaynda ikkinchi do'kon
+  // yaratishga undardi). Endi aniq "oflayn saqlanmagan" holati ko'rsatiladi.
+  const shopsUnknown = !Array.isArray(shopsData) && (shopsFetch.error || shopsFetch.offline);
+
   // SS13-1/2/4: card sarlavhasi holatga qarab.
   //   0 ta do'kon      -> "Do'kon qo'shish" (bosilsa darhol yaratish sahifasi)
   //   1 ta / tanlangan -> DO'KON NOMI
   //   2+ va tanlanmagan-> "Barcha do'konlar"
   const shopCount = shops.length;
-  const shopCardTitle = shopCount === 0
+  const shopCardTitle = shopsUnknown && !shop
+    ? t('Bu ma’lumot oflayn saqlanmagan')
+    : shopCount === 0 && !shopsUnknown
     ? t('Do‘kon qo‘shish')
     : shop
     ? shop.nomi || t('Do‘kon')
     : t('Barcha do‘konlar');
   // Do'konlar SONI faqat "Barcha do'konlar" holatida ko'rsatiladi (so'rov): aniq
   // do'kon tanlanganda uning nomi ostida "5 ta do'kon" chalkashtirardi.
-  const shopCardSub = shopCount === 0
+  const shopCardSub = shopsUnknown && !shop
+    ? shopsFetch.offline
+      ? t('Internet tiklanganda yuklanadi')
+      : t('Ma’lumotni yuklab bo‘lmadi')
+    : shopCount === 0 && !shopsUnknown
     ? t('Qarz daftarini yuritish uchun do‘kon yarating')
     : shop
     ? ''
@@ -655,9 +678,23 @@ const QarzDaftari = () => {
   // Tanlagich TANLOVSIZ yopilsa kutilayotgan amal ham bekor bo'ladi.
   const closeShopPicker = () => { setShopPicker(false); setPendingTuri(null); };
 
+  // 24.10: ro'yxat noma'lum bo'lsa — yaratish taklif QILINMAYDI.
+  const shopsUnknownHint = () => {
+    if (shopsFetch.offline) {
+      Toast.show({
+        type: 'error2',
+        props: { desc: t('Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi') },
+      });
+    } else {
+      shopsFetch.onRefresh({});
+    }
+  };
+
   const goKiritish = (turi: 'berish' | 'olish') => {
-    if (shopCount === 0) return nav('QarzDaftariFaoliyat');
+    // Saqlangan tanlov bo'lsa — ro'yxat noma'lum bo'lsa ham (oflayn) mijozlarga o'tamiz.
     if (shop) return goMijozlar(turi, shop);
+    if (shopsUnknown) return shopsUnknownHint();
+    if (shopCount === 0) return nav('QarzDaftariFaoliyat');
     setPendingTuri(turi);
     setShopPicker(true);
   };
@@ -732,13 +769,15 @@ const QarzDaftari = () => {
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() =>
-            shopCount === 0
+            shopsUnknown && !shop
+              ? shopsUnknownHint()
+              : shopCount === 0 && !shopsUnknown
               ? nav('QarzDaftariFaoliyat')
               : setShopPicker(true)
           }
           style={styles.allShopsCard}>
           <View style={styles.allShopsIcon}>
-            {shopCount === 0 ? (
+            {shopCount === 0 && !shopsUnknown ? (
               <PlusIcon size={rs(20)} color={BLUE} />
             ) : (
               <StorefrontIcon size={rs(20)} color={BLUE} />
@@ -757,6 +796,15 @@ const QarzDaftari = () => {
             sahifasiga (SearchDebitor select view) ko'chirilgan.
             D. "Tezkor amallar" bo'limi (Qarzga berish/olish kartalari) so'rov bo'yicha
             OLIB TASHLANDI — bu amallar endi yuqoridagi hero kartadagi tugmalarda. */}
+
+        {/* 24.10: dashboard javobi oflayn saqlanmagan — summalar 0 EMAS, noma'lum. */}
+        {dashboard.error && (
+          <NotSavedOffline
+            offline={dashboard.offline}
+            onRetry={() => dashboard.onRefresh({})}
+            style={styles.notSaved}
+          />
+        )}
 
         {/* E. Qarzdorliklar (sarlavha so'rov bo'yicha olib tashlandi) */}
         <View style={styles.sumGrid}>
@@ -947,7 +995,11 @@ const QarzDaftari = () => {
                 );
               }}
               ListEmptyComponent={
-                <Text style={styles.shopEmpty}>{t('Do‘konlar yo‘q.')}</Text>
+                <Text style={styles.shopEmpty}>
+                  {shopsUnknown
+                    ? t('Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi')
+                    : t('Do‘konlar yo‘q.')}
+                </Text>
               }
             />
             <TouchableOpacity
@@ -971,6 +1023,7 @@ export default QarzDaftari;
 
 // ---------- Uslublar ----------
 const styles = StyleSheet.create({
+  notSaved: { marginHorizontal: 0, marginTop: 0 },
   // SS11-1/2: "Barcha do‘konlar" cardi + do‘konlar modali
   allShopsCard: {
     flexDirection: 'row', alignItems: 'center', gap: rs(12),

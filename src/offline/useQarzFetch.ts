@@ -10,13 +10,15 @@
  *  4. URL'da hali server id olmagan temp (manfiy) id — tarmoqqa chiqilmaydi, ma'lumot lokal sintez.
  *  5. Navbatdagi amallar har doim ustiga proyeksiya qilinadi (`_offline` belgili yozuvlar).
  *  6. Muvaffaqiyatli sinxrondan keyin (epoch) va oflayn->onlayn o'tishda avtomatik qayta yuklanadi.
+ *  7. 24.10: kesh allaqachon ko'rsatilgan bo'lsa tarmoq yangilanishi QISQA (5 s, GET retry'siz) — internetsiz
+ *     Wi-Fi'da ~30 s osilib qolmaydi. Proyeksiyaga qardosh kesh (`cachedLookup`) va asos vaqti beriladi.
  */
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { storage } from '../store/api/token/getToken';
 import { useOutboxState } from './hooks';
 import { isOnline, reportApiResult, useIsOnline } from './netStatus';
-import { cachedOrDerived, currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
+import { CACHED_REFRESH_TIMEOUT_MS, cachedLookup, cachedOrDerived, currentActor, currentOwnerName, getOutbox, responseCache } from './offlineStore';
 import { opsForProjection, project, rewriteTempUrl } from './projection';
 import { startOfflineSync, useSyncStatus } from './syncManager';
 import { ACTIVE_STATUSES } from './types';
@@ -106,7 +108,15 @@ export function useQarzFetch({ url }: Options): QarzFetchResult {
     setLoading(!cached && entryRef.current?.url !== effUrl);
     setNetError(false);
     const token = storage.getString('token');
-    axios({ url: effUrl, method: 'GET', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } })
+    // Kesh bor — qisqa timeout va interceptor'ning GET qayta urinishi o'chiriladi (`_netRetried` bayrog'i
+    // authInterceptor.isRetriableGet'da "allaqachon qayta urinilgan" deb o'qiladi).
+    const fast = cached || entryRef.current?.url === effUrl ? { timeout: CACHED_REFRESH_TIMEOUT_MS, _netRetried: true } : {};
+    axios({
+      url: effUrl,
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      ...fast,
+    } as AxiosRequestConfig)
       .then(res => {
         if (cancelled || !mounted.current) return;
         reportApiResult(true);
@@ -136,15 +146,14 @@ export function useQarzFetch({ url }: Options): QarzFetchResult {
 
   const data = useMemo(() => {
     if (!url) return [];
-    const ops = opsForProjection(
-      outboxState.ops.filter(o => o.actor === actor && (ACTIVE_STATUSES.has(o.status) || o.status === 'done')),
-      baseAt,
-    );
+    const allOps = outboxState.ops.filter(o => o.actor === actor && (ACTIVE_STATUSES.has(o.status) || o.status === 'done'));
     const projected = project(effUrl || url, base, {
-      ops,
+      ops: opsForProjection(allOps, baseAt),
       resolve: id => getOutbox().resolveId(id),
       now: Date.now(),
       ownerName: currentOwnerName(),
+      baseAt,
+      cached: cachedLookup(actor, allOps),
     });
     // useFetch bilan mos: ma'lumot yo'q bo'lsa [] (ekranlar `data?.data` ni o'qiydi).
     return projected === null || projected === undefined ? [] : projected;

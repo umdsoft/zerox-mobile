@@ -1,5 +1,19 @@
 {
   "translation": {
+    "Serverda bajarilgan — ma’lumotlarni yangilang": "Completed on the server — refresh the data",
+    "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Internal error — cancel the action and enter it again",
+    "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "An earlier action for this customer was not sent — resolve it first",
+    "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting": "The related action was completed on the server — refresh the data and enter this action again",
+    "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda": "Could not save to phone storage — retrying",
+    "Telefon xotirasiga yozib bo‘lmadi": "Could not save to phone storage",
+    "Bu telefon raqami boshqa mijozda: {{fish}}": "This phone number belongs to another customer: {{fish}}",
+    "Server xatosi — keyinroq qayta urining": "Server error — try again later",
+    "Yuborilmoqda — kuting": "Sending — please wait",
+    "Keshni faqat internet bor paytda tozalash mumkin": "The cache can only be cleared while online",
+    "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.": "The action was already completed on the server — it will only be removed from this list.",
+    "Serverda bajarilgan": "Completed on server",
+    "Shu mijozga bog‘lash": "Link to this customer",
+    "Ro‘yxatdan olib tashlash": "Remove from list",
     "Amalni bekor qilasizmi?": "Cancel this action?",
     "Barcha amallar serverga yuborilgan": "All actions have been sent to the server",
     "Barcha amallar sinxronlangan": "All actions are synced",
@@ -2133,6 +2147,18 @@
     "Qabul qilingan": "Accepted",
     "Taklif bekor qilingan": "Invitation cancelled",
     "Oila moliyasi taklifi": "Family finance invitation",
-    "Rejani tahrirlash": "Edit plan"
+    "Rejani tahrirlash": "Edit plan",
+    "Bu ma’lumot oflayn saqlanmagan": "This data is not saved for offline use",
+    "Internet tiklanganda yuklanadi": "It will load when the internet is back",
+    "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi": "This data is not saved for offline use — it will load when the internet is back",
+    "Qisman (saqlangan ro‘yxatdan)": "Partial (from a saved list)",
+    "Qarz topilmadi": "Debt not found",
+    "Internet tiklanganda SMS paketi tekshiriladi": "The SMS package will be checked when the internet is back",
+    "Oflayn — kalendar mavjud emas": "Offline — calendar is unavailable",
+    "Bu telefon raqamli mijoz allaqachon bor: {{fish}}": "A customer with this phone number already exists: {{fish}}",
+    "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling": "Saved, but an earlier action for this customer failed — resolve it on the Offline mode page",
+    "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi": "Could not write to device storage — the action was not saved",
+    "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak": "The return date must be after the issue date",
+    "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing": "The earlier action was cancelled — tap “Retry” to send this one"
   }
 }

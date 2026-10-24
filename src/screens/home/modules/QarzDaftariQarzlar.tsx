@@ -22,6 +22,7 @@ import {
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge, { BadgeKind, offlineKindOf } from '../../../offline/ui/PendingBadge';
+import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
 import { shopQuery } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
@@ -87,7 +88,7 @@ const QarzDaftariQarzlar = () => {
     .filter(Boolean)
     .join('&');
 
-  const { data, loading } = useQarzFetch({
+  const { data, loading, error, offline, onRefresh } = useQarzFetch({
     url: `${URL}/qarz-daftari/qarzlar${qs ? `?${qs}` : ''}`,
     method: 'GET',
   });
@@ -297,12 +298,17 @@ const QarzDaftariQarzlar = () => {
           </View>
         }
         ListEmptyComponent={
-          <View style={styles.emptyBox}>
-            <View style={styles.emptyCircle}>
-              <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
+          // 24.10: kesh yo'q (oflayn) / yuklanmadi — "qarzlar topilmadi" EMAS.
+          error ? (
+            <NotSavedOffline offline={offline} onRetry={() => onRefresh({})} style={styles.notSaved} />
+          ) : (
+            <View style={styles.emptyBox}>
+              <View style={styles.emptyCircle}>
+                <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
+              </View>
+              <Text style={styles.emptyText}>{t('Qarzlar topilmadi.')}</Text>
             </View>
-            <Text style={styles.emptyText}>{t('Qarzlar topilmadi.')}</Text>
-          </View>
+          )
         }
       />
 
@@ -315,6 +321,7 @@ const QarzDaftariQarzlar = () => {
 export default QarzDaftariQarzlar;
 
 const styles = StyleSheet.create({
+  notSaved: { marginHorizontal: 0, marginTop: rs(8) },
   // SS1: do‘kon tanlash modali (QarzDaftariFaoliyat dagi picker bilan bir xil uslub).
   modalRoot: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: rs(22) },
   modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(11,18,32,0.6)' },

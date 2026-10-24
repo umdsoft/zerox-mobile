@@ -1,5 +1,19 @@
 {
   "translation": {
+    "Serverda bajarilgan — ma’lumotlarni yangilang": "Серверда бажарилган — маълумотларни янгиланг",
+    "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Ички хато — амални бекор қилиб, қайтадан киритинг",
+    "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Шу мижознинг олдинги амали юборилмаган — аввал уни ҳал қилинг",
+    "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting": "Боғлиқ амал серверда бажарилган — маълумотларни янгилаб, амални қайтадан киритинг",
+    "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda": "Телефон хотирасига ёзиб бўлмади — қайта уринилмоқда",
+    "Telefon xotirasiga yozib bo‘lmadi": "Телефон хотирасига ёзиб бўлмади",
+    "Bu telefon raqami boshqa mijozda: {{fish}}": "Бу телефон рақами бошқа мижозда: {{fish}}",
+    "Server xatosi — keyinroq qayta urining": "Сервер хатоси — кейинроқ қайта уриниб кўринг",
+    "Yuborilmoqda — kuting": "Юборилмоқда — кутинг",
+    "Keshni faqat internet bor paytda tozalash mumkin": "Кешни фақат интернет бор пайтда тозалаш мумкин",
+    "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.": "Амал серверда аллақачон бажарилган — фақат бу рўйхатдан олиб ташланади.",
+    "Serverda bajarilgan": "Серверда бажарилган",
+    "Shu mijozga bog‘lash": "Шу мижозга боғлаш",
+    "Ro‘yxatdan olib tashlash": "Рўйхатдан олиб ташлаш",
     "Amalni bekor qilasizmi?": "Амални бекор қиласизми?",
     "Barcha amallar serverga yuborilgan": "Барча амаллар серверга юборилган",
     "Barcha amallar sinxronlangan": "Барча амаллар синхронланган",
@@ -2133,6 +2147,18 @@
     "Qabul qilingan": "Қабул қилинган",
     "Taklif bekor qilingan": "Таклиф бекор қилинган",
     "Oila moliyasi taklifi": "Оила молияси таклифи",
-    "Rejani tahrirlash": "Режани таҳрирлаш"
+    "Rejani tahrirlash": "Режани таҳрирлаш",
+    "Bu ma’lumot oflayn saqlanmagan": "Бу маълумот офлайн сақланмаган",
+    "Internet tiklanganda yuklanadi": "Интернет тикланганда юкланади",
+    "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi": "Бу маълумот офлайн сақланмаган — интернет тикланганда юкланади",
+    "Qisman (saqlangan ro‘yxatdan)": "Қисман (сақланган рўйхатдан)",
+    "Qarz topilmadi": "Қарз топилмади",
+    "Internet tiklanganda SMS paketi tekshiriladi": "Интернет тикланганда SMS пакети текширилади",
+    "Oflayn — kalendar mavjud emas": "Офлайн — календарь мавжуд эмас",
+    "Bu telefon raqamli mijoz allaqachon bor: {{fish}}": "Бу телефон рақамли мижоз аллақачон бор: {{fish}}",
+    "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling": "Сақланди, лекин шу мижознинг олдинги амали хато — Офлайн режим саҳифасида ҳал қилинг",
+    "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi": "Қурилма хотирасига ёзиб бўлмади — амал сақланмади",
+    "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak": "Қайтариш санаси берилган санадан кейин бўлиши керак",
+    "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing": "Олдинги амал бекор қилинди — бу амални юбориш учун «Қайта уриниш»ни босинг"
   }
 }

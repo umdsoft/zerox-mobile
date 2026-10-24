@@ -9,12 +9,17 @@ import { useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import apiClient from '../store/api/apiClient';
 import { refreshAccessToken } from '../store/api/authInterceptor';
+import { storage } from '../store/api/token/getToken';
+import { actorFromToken } from './actor';
 import { currentActor, getOutbox } from './offlineStore';
 import { isOnline, probeApi, reportApiResult, startNetMonitor, subscribeNet } from './netStatus';
+import { parseRetryAfter } from './opSpec';
 import { RunSummary, SyncEngine } from './syncEngine';
 import { OpRequest, SendResult } from './types';
 
-const SEND_TIMEOUT_MS = 20_000;
+// 24.10: 20s -> 8s. Wi-Fi bor, internet yo'q holatda onlayn yuborish ekranni uzoq ushlab turmasin;
+// timeout'da amal O'SHA kalit bilan navbatda qoladi (server ikki marta bajarmaydi).
+const SEND_TIMEOUT_MS = 8_000;
 
 export interface SyncStatus {
   running: boolean;
@@ -47,8 +52,34 @@ export const subscribeSync = (fn: () => void): (() => void) => {
 };
 export const useSyncStatus = (): SyncStatus => useSyncExternalStore(subscribeSync, getSyncStatus, getSyncStatus);
 
-/** Bitta amal so'rovi — onlayn to'g'ridan-to'g'ri yuborishda ham, sinxronda ham shu. */
-export async function sendOpRequest(req: OpRequest, idempotencyKey: string): Promise<SendResult> {
+type HeaderBag = { get?: (k: string) => unknown; [k: string]: unknown } | undefined;
+const retryAfterOf = (headers: HeaderBag): number | undefined => {
+  const raw = typeof headers?.get === 'function' ? headers.get('retry-after') : headers?.['retry-after'];
+  return parseRetryAfter(raw);
+};
+
+/**
+ * Bitta amal so'rovi — onlayn to'g'ridan-to'g'ri yuborishda ham, sinxronda ham shu.
+ *
+ * 24.10: `actor` — amal aktori. Token so'rov oldidan o'qiladi va SHU aktorniki bo'lishi shart (aks holda
+ * so'rov yuborilmaydi: `actorMismatch`); o'sha token `transformRequest` da qat'iy qo'yiladi (interceptor
+ * orada almashgan tokenni qo'ymasin). Interceptor'ning avtomatik refresh+qayta yuborishi o'chiriladi
+ * (`_retry`) — refresh'dan keyin aktorni chaqiruvchi (dvigatel / submit) qayta tekshiradi.
+ */
+export async function sendOpRequest(req: OpRequest, idempotencyKey: string, actor?: string): Promise<SendResult> {
+  let token: string | undefined;
+  try {
+    token = storage?.getString('token');
+  } catch {
+    token = undefined;
+  }
+  if (actor && actorFromToken(token)?.key !== actor) return { status: null, actorMismatch: true };
+  const pinAuth = (data: unknown, headers: { set?: (k: string, v: string) => void }) => {
+    if (token && typeof headers?.set === 'function') headers.set('Authorization', `Bearer ${token}`);
+    return data;
+  };
+  const defaults = apiClient.defaults.transformRequest;
+  const transformRequest = [pinAuth, ...(Array.isArray(defaults) ? defaults : defaults ? [defaults] : [])];
   try {
     const res = await apiClient.request({
       method: req.method,
@@ -56,14 +87,16 @@ export async function sendOpRequest(req: OpRequest, idempotencyKey: string): Pro
       data: req.body,
       timeout: SEND_TIMEOUT_MS,
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
-    });
+      transformRequest: transformRequest as never,
+      _retry: true, // authInterceptor: avtomatik refresh YO'Q (aktor almashishi mumkin)
+    } as Parameters<typeof apiClient.request>[0]);
     reportApiResult(true);
     return { status: res.status, data: res.data };
   } catch (err: unknown) {
-    const response = (err as { response?: { status: number; data?: unknown } })?.response;
+    const response = (err as { response?: { status: number; data?: unknown; headers?: HeaderBag } })?.response;
     if (response) {
       reportApiResult(true);
-      return { status: response.status, data: response.data };
+      return { status: response.status, data: response.data, retryAfterMs: retryAfterOf(response.headers) };
     }
     reportApiResult(false);
     return { status: null };
@@ -119,7 +152,7 @@ export async function requestSync(force = false): Promise<RunSummary | null> {
   setStatus({ running: true });
   try {
     const summary = await getEngine().run(force);
-    const progressed = summary.synced + summary.linked > 0;
+    const progressed = summary.synced + summary.linked + summary.committed > 0;
     setStatus({
       running: false,
       lastRunAt: Date.now(),
@@ -154,7 +187,7 @@ export function startOfflineSync(): void {
   started = true;
   startNetMonitor();
   const ob = getOutbox();
-  ob.prune(currentActor()?.key ?? null);
+  ob.prune();
 
   let wasOnline = isOnline();
   subscribeNet(() => {

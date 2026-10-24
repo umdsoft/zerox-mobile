@@ -4,17 +4,26 @@
  * Qoidalar:
  *  - Faqat joriy aktorning amallari; yaratilish tartibida (FIFO).
  *  - Bir vaqtda bitta yugurish (qayta chaqirilsa o'sha promise qaytadi).
+ *  - 24.10: aktor HAR yuborishdan oldin qayta tekshiriladi (xodim rejimiga kirish/chiqish, refresh tokenni
+ *    almashtiradi) — boshqa bo'lsa yugurish to'xtaydi ('no-actor'); `send` ham aktorni oladi va token
+ *    shu aktorniki ekanini so'rov oldidan tekshiradi.
  *  - Vaqtinchalik xato (tarmoq/5xx/429/in-progress) -> yugurish TO'XTAYDI (tartib saqlansin),
- *    amal backoff bilan qayta rejalashtiriladi.
- *  - Doimiy xato (4xx) -> `failed`, unga bog'liq amallar -> `blocked`; qolgan mustaqil amallar davom etadi.
- *  - 401 -> bir marta `refreshAuth`, so'ng shu amal qayta; baribir 401 -> yugurish to'xtaydi ('auth').
+ *    amal backoff bilan (server `Retry-After` so'rasa — kamida shuncha) qayta rejalashtiriladi.
+ *    24.10: ketma-ket MAX_SERVER_ERRORS ta 5xx JAVOB -> `failed` (vaqtinchalik, "Qayta urinish"),
+ *    navbat mustaqil amallar bilan davom etadi. Tarmoq xatosi (javobsiz) — cheksiz qayta urinish.
+ *  - Doimiy xato (4xx) -> `failed`, unga bog'liq amallar va O'SHA MIJOZNING keyingi amallari -> `blocked`;
+ *    qolgan mustaqil amallar davom etadi.
+ *  - 24.10: 409 IDEMPOTENCY_RESPONSE_UNAVAILABLE (serverda bajarilgan, javobi yo'q): qaytarish/yopish/
+ *    voz kechish/bo'lak -> `done`; yaratish (server id noma'lum) -> yakuniy `failed`, bog'liqlar `blocked`.
+ *  - 401 -> bir marta `refreshAuth`, so'ng (aktor qayta tekshirilib) shu amal qayta; baribir 401 -> 'auth'.
  *  - Bog'liqlik (temp id) hal bo'lmagan va uni yaratuvchi amal muvaffaqiyatsiz -> `blocked`.
  */
 import { Outbox } from './outbox';
-import { backoffMs, buildRequest, classify } from './opSpec';
+import { buildRequest, classify, CODE_RESPONSE_UNAVAILABLE, MAX_SERVER_ERRORS, retryDelayMs } from './opSpec';
 import { OpError, OpRequest, OutboxOp, SendResult } from './types';
 
-export type Sender = (req: OpRequest, idempotencyKey: string) => Promise<SendResult>;
+/** @param actor amal aktori — yuboruvchi token shu aktorniki ekanini tekshiradi (aks holda `actorMismatch`). */
+export type Sender = (req: OpRequest, idempotencyKey: string, actor: string) => Promise<SendResult>;
 
 export type StopReason = 'idle' | 'transient' | 'auth' | 'no-actor';
 
@@ -22,6 +31,8 @@ export interface RunSummary {
   synced: number;
   failed: number;
   linked: number;
+  /** 24.10: serverda avval bajarilgan (javobi yo'qolgan) — ekranlar serverdan qayta yuklasin. */
+  committed: number;
   stoppedBy: StopReason;
   /** Keyingi urinish vaqti (backoff) — bo'lsa sync manager taymer qo'yadi. */
   nextAttemptAt?: number;
@@ -37,7 +48,19 @@ export interface EngineDeps {
   refreshAuth?: () => Promise<boolean>;
 }
 
-const DEP_ERROR: OpError = { status: null, code: 'DEPENDENCY_FAILED', message: 'Bog‘liq amal sinxronlanmadi' };
+export const DEP_ERROR: OpError = { status: null, code: 'DEPENDENCY_FAILED', message: 'Bog‘liq amal sinxronlanmadi' };
+/** 24.10: o'sha mijozning oldingi amali muvaffaqiyatsiz — bu amal undan keyin ma'nosini yo'qotishi mumkin. */
+export const CUSTOMER_ERROR: OpError = {
+  status: null,
+  code: 'CUSTOMER_BLOCKED',
+  message: 'Shu mijozning oldingi amali yuborilmagan',
+};
+/** 24.10: bog'liq yaratish serverda bajarilgan, lekin server id'si noma'lum — avtomatik hal bo'lmaydi. */
+export const COMMITTED_DEP_ERROR: OpError = {
+  status: null,
+  code: 'DEPENDENCY_COMMITTED',
+  message: 'Bog‘liq amal serverda bajarilgan, id’si noma’lum',
+};
 const NO_ID_ERROR: OpError = { status: 200, code: 'NO_SERVER_ID', message: 'Server javobida yaratilgan obyekt id’si yo‘q' };
 
 export class SyncEngine {
@@ -63,34 +86,61 @@ export class SyncEngine {
     return this.deps.now ? this.deps.now() : Date.now();
   }
 
-  private blockDependents(op: OutboxOp): void {
+  /**
+   * Muvaffaqiyatsiz amaldan keyingilar: temp id bo'yicha bog'liqlar (`depError`) va o'sha mijozning
+   * keyingi amallari (`custError`) — faqat hali yuborilmagan (pending) lari.
+   */
+  private blockFollowers(opId: string, depError: OpError = DEP_ERROR, custError: OpError = CUSTOMER_ERROR): void {
     const { outbox } = this.deps;
-    outbox.dependentsOf(op.id).forEach(id => {
+    const deps = outbox.dependentsOf(opId);
+    const block = (id: string, error: OpError) => {
       const d = outbox.get(id);
-      if (d && (d.status === 'pending' || d.status === 'syncing')) {
-        outbox.update(id, { status: 'blocked', lastError: DEP_ERROR });
-      }
+      if (d && d.status === 'pending') outbox.update(id, { status: 'blocked', lastError: error });
+    };
+    deps.forEach(id => block(id, depError));
+    outbox.sameCustomerFollowers(opId).forEach(id => {
+      if (!deps.includes(id)) block(id, custError);
     });
   }
 
   /**
    * Temp id'ni yaratuvchi amal muvaffaqiyatsizmi, yo'qmi yoki BOSHQA sessiyaniki (bu sessiyada hech
-   * qachon yuborilmaydi — navbat boshini abadiy to'smasin)?
+   * qachon yuborilmaydi — navbat boshini abadiy to'smasin)? Bloklash sababi yoki null.
    */
-  private creatorUnavailable(tempId: number, actor: string): boolean {
+  private creatorUnavailable(tempId: number, actor: string): OpError | null {
     const creator = this.deps.outbox.list().find(o => o.tempId === tempId);
-    return !creator || creator.actor !== actor || creator.status === 'failed' || creator.status === 'blocked';
+    if (creator && creator.status === 'failed' && creator.lastError?.code === CODE_RESPONSE_UNAVAILABLE) {
+      return COMMITTED_DEP_ERROR;
+    }
+    const bad = !creator || creator.actor !== actor || creator.status === 'failed' || creator.status === 'blocked';
+    return bad ? DEP_ERROR : null;
+  }
+
+  /** Server id'ni saqlab bo'lmadi (disk) — O'SHA kalit bilan keyinroq: server saqlangan javobni qaytaradi. */
+  private persistFailed(op: OutboxOp, summary: RunSummary): RunSummary {
+    const attempts = op.attempts + 1;
+    const at = this.now() + retryDelayMs(attempts, undefined, this.deps.random);
+    this.deps.outbox.update(op.id, {
+      status: 'pending',
+      attempts,
+      nextAttemptAt: at,
+      lastError: { status: null, code: 'PERSIST_FAILED' },
+    });
+    return { ...summary, stoppedBy: 'transient', nextAttemptAt: at };
   }
 
   private async runInner(force: boolean): Promise<RunSummary> {
     const { outbox, send } = this.deps;
     const actor = this.deps.getActor();
-    const summary: RunSummary = { synced: 0, failed: 0, linked: 0, stoppedBy: 'idle' };
+    const summary: RunSummary = { synced: 0, failed: 0, linked: 0, committed: 0, stoppedBy: 'idle' };
     if (!actor) return { ...summary, stoppedBy: 'no-actor' };
 
     let refreshedOnce = false;
     // Har iteratsiyada navbatni yangidan o'qiymiz (yugurish paytida yangi amal qo'shilishi mumkin).
     for (;;) {
+      // 24.10: token yugurish davomida almashgan bo'lsa (xodim rejimi / refresh) — boshqa aktor nomidan
+      // yubormaymiz; yangi aktor o'z yugurishini boshlaydi.
+      if (this.deps.getActor() !== actor) return { ...summary, stoppedBy: 'no-actor' };
       const next = outbox.list(actor).find(o => o.status === 'pending');
       if (!next) return summary;
 
@@ -100,22 +150,35 @@ export class SyncEngine {
 
       const built = buildRequest(next, id => outbox.resolveId(id));
       if (!built.ok) {
-        if (this.creatorUnavailable(built.unresolved, actor)) {
-          outbox.update(next.id, { status: 'blocked', lastError: DEP_ERROR });
+        const why = this.creatorUnavailable(built.unresolved, actor);
+        if (why) {
+          outbox.update(next.id, { status: 'blocked', lastError: why });
           continue;
         }
         // Yaratuvchi hali navbatda (oldinroq turibdi) — FIFO buzilgan holat; keyinroq.
-        const at = this.now() + backoffMs(next.attempts + 1, this.deps.random);
+        const at = this.now() + retryDelayMs(next.attempts + 1, undefined, this.deps.random);
         outbox.update(next.id, { attempts: next.attempts + 1, nextAttemptAt: at });
         return { ...summary, stoppedBy: 'transient', nextAttemptAt: at };
       }
 
-      outbox.update(next.id, { status: 'syncing' });
+      // 24.10: o'sha mijozning oldingi amali muvaffaqiyatsiz — bu amal yuborilmaydi (masalan yangi qarz
+      // rad etilgan, mijozni yopish esa eski qarzlarga tushib qolardi).
+      if (outbox.hasFailedPredecessor(next.id)) {
+        outbox.update(next.id, { status: 'blocked', lastError: CUSTOMER_ERROR });
+        continue;
+      }
+
+      outbox.update(next.id, { status: 'syncing', sentOnce: true });
       let res: SendResult;
       try {
-        res = await send(built.request, next.id);
+        res = await send(built.request, next.id, actor);
       } catch {
         res = { status: null };
+      }
+      if (res.actorMismatch) {
+        // So'rov yuborilmadi — amal o'zgarishsiz navbatga qaytadi.
+        outbox.update(next.id, { status: 'pending', sentOnce: next.sentOnce });
+        return { ...summary, stoppedBy: 'no-actor' };
       }
       const outcome = classify(next, res);
 
@@ -125,23 +188,31 @@ export class SyncEngine {
           // (navbat to'xtab qolardi). Jim "done" emas — foydalanuvchiga ko'rsatiladi.
           if (next.tempId !== undefined && !outcome.serverId) {
             outbox.update(next.id, { status: 'failed', lastError: NO_ID_ERROR });
-            const f = outbox.get(next.id);
-            if (f) this.blockDependents(f);
+            this.blockFollowers(next.id);
             summary.failed += 1;
             break;
           }
-          if (next.tempId !== undefined && outcome.serverId) outbox.mapId(next.tempId, outcome.serverId);
+          try {
+            if (next.tempId !== undefined && outcome.serverId) outbox.mapId(next.tempId, outcome.serverId);
+          } catch {
+            return this.persistFailed(next, summary);
+          }
           outbox.update(next.id, {
             status: 'done',
             doneAt: this.now(),
             serverId: outcome.serverId,
+            serverErrors: 0,
             lastError: undefined,
           });
           summary.synced += 1;
           break;
         }
         case 'link-existing': {
-          if (next.tempId !== undefined) outbox.mapId(next.tempId, outcome.serverId);
+          try {
+            if (next.tempId !== undefined) outbox.mapId(next.tempId, outcome.serverId);
+          } catch {
+            return this.persistFailed(next, summary);
+          }
           outbox.update(next.id, {
             status: 'done',
             doneAt: this.now(),
@@ -152,10 +223,34 @@ export class SyncEngine {
           summary.linked += 1;
           break;
         }
+        case 'committed': {
+          if (next.tempId === undefined) {
+            // Qaytarish/yopish/voz kechish/bo'lak — serverda BAJARILGAN: qayta yuborish ham, yangi kalit ham
+            // dublikat bo'lardi. Ekranlar serverdan qayta yuklaydi.
+            outbox.update(next.id, { status: 'done', doneAt: this.now(), note: 'replay-lost', lastError: undefined });
+            summary.committed += 1;
+            break;
+          }
+          // Yaratish: obyekt serverda bor, lekin id'si noma'lum — bog'liqlar avtomatik hal bo'lmaydi.
+          outbox.update(next.id, { status: 'failed', attempts: next.attempts + 1, lastError: outcome.error });
+          this.blockFollowers(next.id, COMMITTED_DEP_ERROR, COMMITTED_DEP_ERROR);
+          summary.committed += 1;
+          break;
+        }
         case 'transient': {
           const attempts = next.attempts + 1;
-          const at = this.now() + backoffMs(attempts, this.deps.random);
-          outbox.update(next.id, { status: 'pending', attempts, nextAttemptAt: at, lastError: outcome.error });
+          // Javobsiz (tarmoq) urinish hisobni buzmaydi; boshqa javob (429/in-progress) — nollaydi.
+          const prev = next.serverErrors || 0;
+          const serverErrors = outcome.serverError ? prev + 1 : outcome.error.status === null ? prev : 0;
+          if (serverErrors >= MAX_SERVER_ERRORS) {
+            // Bir amal navbatni abadiy to'smasin — vaqtinchalik `failed` ("Qayta urinish" bilan qaytadi).
+            outbox.update(next.id, { status: 'failed', attempts, serverErrors, lastError: outcome.error });
+            this.blockFollowers(next.id);
+            summary.failed += 1;
+            break;
+          }
+          const at = this.now() + retryDelayMs(attempts, outcome.retryAfterMs, this.deps.random);
+          outbox.update(next.id, { status: 'pending', attempts, serverErrors, nextAttemptAt: at, lastError: outcome.error });
           return { ...summary, stoppedBy: 'transient', nextAttemptAt: at };
         }
         case 'auth': {
@@ -168,7 +263,7 @@ export class SyncEngine {
               ok = false;
             }
             outbox.update(next.id, { status: 'pending' });
-            if (ok) continue; // o'sha amal yangi token bilan qayta
+            if (ok) continue; // o'sha amal yangi token bilan qayta (sikl boshida aktor qayta tekshiriladi)
           } else {
             outbox.update(next.id, { status: 'pending', lastError: outcome.error });
           }
@@ -176,8 +271,7 @@ export class SyncEngine {
         }
         case 'permanent': {
           outbox.update(next.id, { status: 'failed', attempts: next.attempts + 1, lastError: outcome.error });
-          const failed = outbox.get(next.id);
-          if (failed) this.blockDependents(failed);
+          this.blockFollowers(next.id);
           summary.failed += 1;
           break;
         }

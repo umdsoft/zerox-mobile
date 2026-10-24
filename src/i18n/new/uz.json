@@ -1,5 +1,19 @@
 {
   "translation": {
+    "Serverda bajarilgan — ma’lumotlarni yangilang": "Serverda bajarilgan — ma’lumotlarni yangilang",
+    "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Ichki xato — amalni bekor qilib, qaytadan kiriting",
+    "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling",
+    "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting": "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting",
+    "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda": "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda",
+    "Telefon xotirasiga yozib bo‘lmadi": "Telefon xotirasiga yozib bo‘lmadi",
+    "Bu telefon raqami boshqa mijozda: {{fish}}": "Bu telefon raqami boshqa mijozda: {{fish}}",
+    "Server xatosi — keyinroq qayta urining": "Server xatosi — keyinroq qayta urining",
+    "Yuborilmoqda — kuting": "Yuborilmoqda — kuting",
+    "Keshni faqat internet bor paytda tozalash mumkin": "Keshni faqat internet bor paytda tozalash mumkin",
+    "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.": "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.",
+    "Serverda bajarilgan": "Serverda bajarilgan",
+    "Shu mijozga bog‘lash": "Shu mijozga bog‘lash",
+    "Ro‘yxatdan olib tashlash": "Ro‘yxatdan olib tashlash",
     "Amallar": "Amallar",
     "Bekor": "Bekor",
     "Qarzdan voz kechish": "Qarzdan voz kechish",
@@ -1333,6 +1347,20 @@
     "Qabul qilingan": "Qabul qilingan",
     "Taklif bekor qilingan": "Taklif bekor qilingan",
     "Oila moliyasi taklifi": "Oila moliyasi taklifi",
-    "Rejani tahrirlash": "Rejani tahrirlash"
+    "Rejani tahrirlash": "Rejani tahrirlash",
+    "Bu ma’lumot oflayn saqlanmagan": "Bu ma’lumot oflayn saqlanmagan",
+    "Internet tiklanganda yuklanadi": "Internet tiklanganda yuklanadi",
+    "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi": "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi",
+    "Qisman (saqlangan ro‘yxatdan)": "Qisman (saqlangan ro‘yxatdan)",
+    "Qarz topilmadi": "Qarz topilmadi",
+    "Internet tiklanganda SMS paketi tekshiriladi": "Internet tiklanganda SMS paketi tekshiriladi",
+    "Oflayn — kalendar mavjud emas": "Oflayn — kalendar mavjud emas",
+    "Bu telefon raqamli mijoz allaqachon bor: {{fish}}": "Bu telefon raqamli mijoz allaqachon bor: {{fish}}",
+    "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling": "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling",
+    "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi": "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi",
+    "Topilmadi": "Topilmadi",
+    "Do‘konlar yo‘q.": "Do‘konlar yo‘q.",
+    "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak": "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak",
+    "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing": "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing"
   }
 }

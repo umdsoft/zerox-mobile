@@ -6,8 +6,14 @@
  * - Xato (server rad etgan) amallar HECH QACHON jim tashlanmaydi — bu yerda hal qilinadi:
  *   "Qayta urinish", "Summani o'zgartirish" (qaytarish/voz kechish/bo'lak), "Bekor qilish" (tasdiq bilan,
  *   bog'liq amallar soni ko'rsatiladi), "Mijozni ochish".
- * - O'qish keshi hajmi va "Keshni tozalash".
+ * - 24.10: navbatdagi (pending) amalni ham bekor qilish / summasini o'zgartirish mumkin — faqat u hali
+ *   HECH QACHON jo'natilmagan bo'lsa (jo'natilib javobi kelmagan amal serverda bajarilgan bo'lishi mumkin:
+ *   yangi kalit = dublikat) — aks holda "Yuborilmoqda — kuting". Summa faqat 4xx bilan rad etilganda.
+ * - 24.10: serverda bajarilgan, javobi yo'qolgan amal — "Qayta urinish"/"Summani o'zgartirish" YO'Q
+ *   (dublikat bo'lardi), faqat ro'yxatdan olib tashlash. Telefon band, ism boshqa — "Shu mijozga bog'lash".
+ * - O'qish keshi hajmi va "Keshni tozalash" (oflaynda o'chirilgan — oflayn ekranlar bo'sh qolardi).
  */
+import { prefetchForOffline } from '../../../offline/prefetch';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +33,8 @@ import { fmtAmountByCurrency, formatAmountInput, isUsd, parseAmount, sanitizeAmo
 import { useOfflineSummary } from '../../../offline/hooks';
 import { useIsOnline } from '../../../offline/netStatus';
 import { getOutbox, responseCache } from '../../../offline/offlineStore';
+import { CODE_RESPONSE_UNAVAILABLE, isTerminalFailure } from '../../../offline/opSpec';
+import { canDiscard, canEditAmount } from '../../../offline/outbox';
 import { requestSync, startOfflineSync, useSyncStatus } from '../../../offline/syncManager';
 import { OutboxOp } from '../../../offline/types';
 import { rd, rs } from '../../../theme/rd';
@@ -44,8 +52,6 @@ const KIND_LABEL: Record<OutboxOp['kind'], string> = {
   'tolov.tolandi': 'Bo‘lak to‘lovi',
 };
 
-const EDITABLE: ReadonlySet<OutboxOp['kind']> = new Set(['qarz.yopish', 'mijoz.yopish', 'qarz.vozKechish', 'tolov.tolandi']);
-
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const fmtTime = (ms?: number) => {
   if (!ms) return '—';
@@ -59,6 +65,23 @@ export function opErrorText(op: OutboxOp, t: TFn): string {
   const e = op.lastError;
   if (!e) return '';
   switch (e.code) {
+    case CODE_RESPONSE_UNAVAILABLE:
+      return t('Serverda bajarilgan — ma’lumotlarni yangilang');
+    case 'IDEMPOTENCY_KEY_REUSED':
+      return t('Ichki xato — amalni bekor qilib, qaytadan kiriting');
+    case 'CUSTOMER_BLOCKED':
+      return t('Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling');
+    case 'CUSTOMER_PARENT_DISCARDED':
+      return t('Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing');
+    case 'DEPENDENCY_COMMITTED':
+      return t('Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting');
+    case 'PERSIST_FAILED':
+      return t('Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda');
+    case 'phone-exists':
+      if (e.existingId) {
+        return t('Bu telefon raqami boshqa mijozda: {{fish}}', { fish: e.existingFish || `#${e.existingId}` });
+      }
+      break;
     case 'amount-exceeds':
       return t('To‘lov summasi qoldiqdan oshib ketdi — qarz boshqa joyda o‘zgargan bo‘lishi mumkin');
     case 'no-sms-package':
@@ -75,6 +98,7 @@ export function opErrorText(op: OutboxOp, t: TFn): string {
   if (e.status === 403) return t('Ruxsat yo‘q');
   if (e.status === 404) return t('Qarz yoki mijoz topilmadi (o‘chirilgan bo‘lishi mumkin)');
   if (e.status === null) return t('Tarmoq xatosi — qayta urinilmoqda');
+  if (e.status >= 500 && op.status === 'failed') return t('Server xatosi — keyinroq qayta urining');
   return e.message || t('Server amalni rad etdi');
 }
 
@@ -119,7 +143,22 @@ const QarzDaftariSinxron = () => {
     if (!confirmOp) return;
     const n = getOutbox().discard(confirmOp.id);
     setConfirmOp(null);
+    if (!n) {
+      // Shu orada jo'natilgan — endi bekor qilib bo'lmaydi.
+      Toast.show({ type: 'error2', props: { desc: t('Yuborilmoqda — kuting') } });
+      return;
+    }
     Toast.show({ type: 'omad', props: { desc: t('{{n}} ta amal bekor qilindi', { n }) } });
+  };
+
+  const linkExisting = (op: OutboxOp) => {
+    try {
+      if (!getOutbox().linkExisting(op.id)) return;
+    } catch {
+      Toast.show({ type: 'error2', props: { desc: t('Telefon xotirasiga yozib bo‘lmadi') } });
+      return;
+    }
+    requestSync(true);
   };
 
   const openEdit = (op: OutboxOp) => {
@@ -136,8 +175,12 @@ const QarzDaftariSinxron = () => {
       Toast.show({ type: 'error2', props: { desc: t('Summani kiriting') } });
       return;
     }
-    getOutbox().editAmount(editOp.id, v);
+    const edited = getOutbox().editAmount(editOp.id, v);
     setEditOp(null);
+    if (!edited) {
+      Toast.show({ type: 'error2', props: { desc: t('Yuborilmoqda — kuting') } });
+      return;
+    }
     requestSync(true);
   };
 
@@ -149,6 +192,7 @@ const QarzDaftariSinxron = () => {
   };
 
   const confirmDeps = confirmOp ? getOutbox().dependentsOf(confirmOp.id).length : 0;
+  const confirmCommitted = !!confirmOp && isTerminalFailure(confirmOp) && confirmOp.lastError?.code === CODE_RESPONSE_UNAVAILABLE;
 
   return (
     <View style={styles.screen}>
@@ -210,7 +254,8 @@ const QarzDaftariSinxron = () => {
               t={t}
               onRetry={() => retry(op)}
               onDiscard={() => setConfirmOp(op)}
-              onEdit={EDITABLE.has(op.kind) ? () => openEdit(op) : undefined}
+              onEdit={() => openEdit(op)}
+              onLink={() => linkExisting(op)}
               onOpenMijoz={op.meta.mijozId !== undefined || op.kind === 'mijoz.create' ? () => openMijoz(op) : undefined}
             />
           ))
@@ -222,9 +267,15 @@ const QarzDaftariSinxron = () => {
           <Text style={styles.muted}>
             {t('{{n}} ta sahifa, {{size}}', { n: cacheStats.entries, size: fmtBytes(cacheStats.bytes) })}
           </Text>
-          <TouchableOpacity activeOpacity={0.85} style={styles.secondaryBtn} onPress={() => setClearAsk(true)}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.secondaryBtn, !online && styles.btnDisabled]}
+            disabled={!online}
+            accessibilityState={{ disabled: !online }}
+            onPress={() => setClearAsk(true)}>
             <Text style={styles.secondaryBtnText}>{t('Keshni tozalash')}</Text>
           </TouchableOpacity>
+          {!online ? <Text style={styles.muted}>{t('Keshni faqat internet bor paytda tozalash mumkin')}</Text> : null}
         </View>
       </ScrollView>
 
@@ -234,7 +285,9 @@ const QarzDaftariSinxron = () => {
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{t('Amalni bekor qilasizmi?')}</Text>
             <Text style={styles.modalText}>
-              {t('Bu amal serverga yuborilmaydi va qayta tiklanmaydi.')}
+              {confirmCommitted
+                ? t('Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.')
+                : t('Bu amal serverga yuborilmaydi va qayta tiklanmaydi.')}
               {confirmDeps ? `\n${t('Unga bog‘liq yana {{n}} ta amal ham bekor qilinadi.', { n: confirmDeps })}` : ''}
             </Text>
             <View style={styles.modalRow}>
@@ -289,6 +342,8 @@ const QarzDaftariSinxron = () => {
                 style={styles.dangerBtn}
                 onPress={() => {
                   responseCache.clear();
+                  // Kesh bo'shadi — oflayn uchun darhol qayta tayyorlanadi (30 daqiqalik throttle'siz).
+                  prefetchForOffline({ minIntervalMs: 0 });
                   setCacheStats(responseCache.stats());
                   setClearAsk(false);
                 }}>
@@ -314,21 +369,28 @@ type OpCardProps = {
   t: TFn;
   onRetry: () => void;
   onDiscard: () => void;
-  onEdit?: () => void;
+  onEdit: () => void;
+  onLink: () => void;
   onOpenMijoz?: () => void;
 };
 
-const OpCard = ({ op, t, onRetry, onDiscard, onEdit, onOpenMijoz }: OpCardProps) => {
+const OpCard = ({ op, t, onRetry, onDiscard, onEdit, onLink, onOpenMijoz }: OpCardProps) => {
   const { summa, valyuta } = amountOf(op);
   const bad = op.status === 'failed' || op.status === 'blocked';
   const done = op.status === 'done';
+  const terminal = isTerminalFailure(op);
+  const committed = terminal && op.lastError?.code === CODE_RESPONSE_UNAVAILABLE;
   const statusText = done
     ? op.note === 'linked-existing'
       ? t('Mavjud mijozga bog‘landi')
+      : op.note === 'replay-lost'
+      ? t('Serverda bajarilgan')
       : t('Yuborildi')
     : bad
     ? op.status === 'blocked'
       ? t('Kutmoqda (bog‘liq amal)')
+      : committed
+      ? t('Serverda bajarilgan')
       : t('Rad etildi')
     : op.status === 'syncing'
     ? t('Yuborilmoqda…')
@@ -350,12 +412,18 @@ const OpCard = ({ op, t, onRetry, onDiscard, onEdit, onOpenMijoz }: OpCardProps)
       </Text>
       <Text style={styles.muted}>{fmtTime(op.createdAt)}</Text>
       {!done && op.lastError ? <Text style={[styles.opError, !bad && { color: rd.color.textSecondary }]}>{opErrorText(op, t)}</Text> : null}
-      {bad ? (
+      {op.status === 'pending' && op.sentOnce ? <Text style={styles.muted}>{t('Yuborilmoqda — kuting')}</Text> : null}
+      {bad || (op.status === 'pending' && !op.sentOnce) ? (
         <View style={styles.actions}>
-          <ActionBtn label={t('Qayta urinish')} onPress={onRetry} primary />
-          {onEdit && op.status === 'failed' ? <ActionBtn label={t('Summani o‘zgartirish')} onPress={onEdit} /> : null}
+          {bad && !terminal ? <ActionBtn label={t('Qayta urinish')} onPress={onRetry} primary /> : null}
+          {op.kind === 'mijoz.create' && op.status === 'failed' && op.lastError?.existingId ? (
+            <ActionBtn label={t('Shu mijozga bog‘lash')} onPress={onLink} primary />
+          ) : null}
+          {canEditAmount(op) ? <ActionBtn label={t('Summani o‘zgartirish')} onPress={onEdit} /> : null}
           {onOpenMijoz ? <ActionBtn label={t('Mijozni ochish')} onPress={onOpenMijoz} /> : null}
-          <ActionBtn label={t('Bekor qilish')} onPress={onDiscard} danger />
+          {canDiscard(op) ? (
+            <ActionBtn label={committed ? t('Ro‘yxatdan olib tashlash') : t('Bekor qilish')} onPress={onDiscard} danger />
+          ) : null}
         </View>
       ) : null}
     </View>

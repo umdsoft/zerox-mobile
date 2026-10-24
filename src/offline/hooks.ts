@@ -25,8 +25,9 @@ export interface OfflineSummary {
 
 export function useOfflineSummary(): OfflineSummary {
   const state = useOutboxState();
+  // 24.10: aktor (xodim rejimiga kirish/chiqish) navbat o'zgarmasa ham almashadi — memo kalitida bo'lsin.
+  const actor = currentActor()?.key;
   return useMemo(() => {
-    const actor = currentActor()?.key;
     const mine = actor ? state.ops.filter(o => o.actor === actor) : [];
     const count = (pred: (o: OutboxOp) => boolean) => mine.filter(pred).length;
     return {
@@ -36,7 +37,7 @@ export function useOfflineSummary(): OfflineSummary {
       otherSession: state.ops.filter(o => o.actor !== actor && o.status !== 'done').length,
       ops: mine,
     };
-  }, [state]);
+  }, [state, actor]);
 }
 
 /** Logout oynasi uchun (hook emas): joriy sessiyaning yuborilmagan amallari soni. */

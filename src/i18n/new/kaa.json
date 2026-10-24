@@ -1,5 +1,19 @@
 {
   "translation": {
+    "Serverda bajarilgan — ma’lumotlarni yangilang": "Serverde orınlanǵan — maǵlıwmatlardı jańalań",
+    "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Ishki qátelik — ámeldi biykar etip, qaytadan kiritiń",
+    "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Bul klienttiń aldıńǵı ámeli jiberilmegen — aldın onı sheshiń",
+    "Bog‘liq amal serverda bajarilgan — ma’lumotlarni yangilab, amalni qaytadan kiriting": "Baylanıslı ámel serverde orınlanǵan — maǵlıwmatlardı jańalap, ámeldi qaytadan kiritiń",
+    "Telefon xotirasiga yozib bo‘lmadi — qayta urinilmoqda": "Telefon yadına jazıp bolmadı — qayta urınılmaqta",
+    "Telefon xotirasiga yozib bo‘lmadi": "Telefon yadına jazıp bolmadı",
+    "Bu telefon raqami boshqa mijozda: {{fish}}": "Bul telefon nomeri basqa klientte: {{fish}}",
+    "Server xatosi — keyinroq qayta urining": "Server qáteligi — keyinirek qayta urınıp kóriń",
+    "Yuborilmoqda — kuting": "Jiberilmekte — kútiń",
+    "Keshni faqat internet bor paytda tozalash mumkin": "Keshti tek internet bar waqıtta tazalaw múmkin",
+    "Amal serverda allaqachon bajarilgan — faqat bu ro‘yxatdan olib tashlanadi.": "Ámel serverde áldeqashan orınlanǵan — tek bul diziminen alıp taslanadı.",
+    "Serverda bajarilgan": "Serverde orınlanǵan",
+    "Shu mijozga bog‘lash": "Usı klientke baylaw",
+    "Ro‘yxatdan olib tashlash": "Dizimnen alıp taslaw",
     "Amalni bekor qilasizmi?": "Ámeldi biykar etesiz be?",
     "Barcha amallar serverga yuborilgan": "Barlıq ámeller serverge jiberilgen",
     "Barcha amallar sinxronlangan": "Barlıq ámeller sinxronlanǵan",
@@ -2133,6 +2147,18 @@
     "Qabul qilingan": "Qabıl etilgen",
     "Taklif bekor qilingan": "Mirát biykar etilgen",
     "Oila moliyasi taklifi": "Shańaraq qarjısı mirátı",
-    "Rejani tahrirlash": "Rejeni redaktorlaw"
+    "Rejani tahrirlash": "Rejeni redaktorlaw",
+    "Bu ma’lumot oflayn saqlanmagan": "Bul maǵlıwmat oflayn saqlanbaǵan",
+    "Internet tiklanganda yuklanadi": "Internet tiklengende júklenedi",
+    "Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi": "Bul maǵlıwmat oflayn saqlanbaǵan — internet tiklengende júklenedi",
+    "Qisman (saqlangan ro‘yxatdan)": "Bólekan (saqlanǵan diziminen)",
+    "Qarz topilmadi": "Qarız tabılmadı",
+    "Internet tiklanganda SMS paketi tekshiriladi": "Internet tiklengende SMS paketi tekseriledi",
+    "Oflayn — kalendar mavjud emas": "Oflayn — kalendar joq",
+    "Bu telefon raqamli mijoz allaqachon bor: {{fish}}": "Bul telefon nomerli klient álleqashan bar: {{fish}}",
+    "Saqlandi, lekin shu mijozning oldingi amali xato — Oflayn rejim sahifasida hal qiling": "Saqlandı, biraq usı klienttiń aldıńǵı ámeli qáte — Oflayn rejim betinde sheshiń",
+    "Qurilma xotirasiga yozib bo‘lmadi — amal saqlanmadi": "Qurılma yadına jazıp bolmadı — ámel saqlanbadı",
+    "Qaytarish sanasi berilgan sanadan keyin bo'lishi kerak": "Qaytarıw sánesi berilgen sánesinen keyin bolıwı kerek",
+    "Oldingi amal bekor qilindi — bu amalni yuborish uchun «Qayta urinish»ni bosing": "Aldıńǵı ámel biykar etildi — bul ámeldi jiberiw ushın «Qayta urınıw»dı basıń"
   }
 }

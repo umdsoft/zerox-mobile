@@ -178,7 +178,8 @@ describe('Outbox', () => {
   test('editAmount faqat rad etilgan amalga; yuborilayotgan amalni bekor qilib bo\'lmaydi', () => {
     const ob = makeOutbox();
     const r = repayOp(ob, 10, 20, 500);
-    expect(ob.editAmount(r.id, 300)).toBeUndefined(); // pending — kalit almashmaydi
+    ob.update(r.id, { sentOnce: true }); // 24.10: jo'natilgan (javobsiz) pending — kalit almashmaydi
+    expect(ob.editAmount(r.id, 300)).toBeUndefined();
     ob.update(r.id, { status: 'syncing' });
     expect(ob.discard(r.id)).toBe(0);
     expect(ob.get(r.id)).toBeDefined();
@@ -197,7 +198,7 @@ describe('Outbox', () => {
     expect(() => repayOp(ob, 10, 20, 1)).toThrow(OutboxFullError);
   });
 
-  test('prune: eski done va BOSHQA aktorning 30 kunlik amallari; joriy aktorning faol amali qoladi', () => {
+  test('prune: eski done o\'chadi; faol amallar (BOSHQA aktorniki ham, 24.10) qoladi', () => {
     let t = 1_000_000;
     const ob = makeOutbox(memKV(), () => t);
     const mine = repayOp(ob, 10, 20, 1);
@@ -208,11 +209,11 @@ describe('Outbox', () => {
       'u8:x0',
     );
     t += 31 * 24 * 3600 * 1000;
-    ob.prune(ACTOR);
+    ob.prune();
     const ids = ob.list().map(o => o.id);
     expect(ids).toContain(mine.id);
     expect(ids).not.toContain(done.id);
-    expect(ids).not.toContain(foreign.id);
+    expect(ids).toContain(foreign.id);
   });
 });
 
@@ -243,7 +244,8 @@ describe('opSpec', () => {
     expect(classify(m, { status: 503 }).type).toBe('transient');
     expect(classify(m, { status: 429 }).type).toBe('transient');
     expect(classify(m, { status: 409, data: { code: 'IDEMPOTENCY_IN_PROGRESS' } }).type).toBe('transient');
-    expect(classify(m, { status: 409, data: { code: 'phone-exists', existing_id: 44 } })).toEqual({
+    const existing = { id: 44, fish: 'Ali Valiyev' }; // 24.10: faqat FISH mos bo'lsa bog'lanadi
+    expect(classify(m, { status: 409, data: { code: 'phone-exists', existing_id: 44, existing_mijoz: existing } })).toEqual({
       type: 'link-existing',
       serverId: 44,
     });
@@ -359,7 +361,7 @@ describe('SyncEngine', () => {
     qarzOp(ob, m.tempId as number);
     const srv = fakeServer(req =>
       req.path.endsWith('/mijozlar')
-        ? { status: 409, data: { code: 'phone-exists', existing_id: 321 } }
+        ? { status: 409, data: { code: 'phone-exists', existing_id: 321, existing_mijoz: { id: 321, fish: 'Ali Valiyev' } } }
         : { status: 200, data: { data: { id: 1 } } },
     );
     const s = await new SyncEngine({ outbox: ob, send: srv.send, getActor: () => ACTOR }).run();

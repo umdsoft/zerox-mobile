@@ -43,6 +43,7 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { URL } from '../../constants';
 import { storage } from '../../../store/api/token/getToken';
+import { isOnline } from '../../../offline/netStatus';
 import { rd, rs } from '../../../theme/rd';
 import { fMoney, fTime } from './financeMoney';
 import { fetchTxParams } from './qarzAmaliyot';
@@ -115,6 +116,8 @@ const QarzDaftariKalendar = () => {
   const [cur, setCur] = React.useState<'UZS' | 'USD'>('UZS');
   const [selDay, setSelDay] = React.useState<number | null>(null);
   const [rows, setRows] = React.useState<Kun[]>([]);
+  // 24.10: kalendar onlayn-only (keshlanmaydi) — oflaynda bo'sh oy EMAS, aniq izoh.
+  const [offlineErr, setOfflineErr] = React.useState(false);
   // SS-DEV (2026-09-24): kun/hafta tafsilot varag'i.
   const [varaq, setVaraq] = React.useState<Varaq | null>(null);
   const [varaqLoading, setVaraqLoading] = React.useState(false);
@@ -133,9 +136,14 @@ const QarzDaftariKalendar = () => {
         );
         if (alive && Array.isArray(data?.data?.daily)) setRows(data.data.daily);
         else if (alive) setRows([]);
-      } catch (e) {
+        if (alive) setOfflineErr(false);
+      } catch (e: any) {
         // Kalendar yuklanmasa sahifaning qolgani ishlayveradi.
-        if (alive) setRows([]);
+        if (alive) {
+          setRows([]);
+          // Javobsiz yiqildi (tarmoq yo'q) — oflayn izohi.
+          setOfflineErr(!e?.response || !isOnline());
+        }
       }
     })();
     return () => {
@@ -426,6 +434,11 @@ const QarzDaftariKalendar = () => {
 
       {/* Kunlar gridi */}
       <View style={styles.card}>
+        {offlineErr && (
+          <Text allowFontScaling={false} style={styles.offlineNote}>
+            {t('Oflayn — kalendar mavjud emas')}
+          </Text>
+        )}
         <View style={styles.weekRow}>
           {WEEKDAYS.map(w => (
             <Text key={w} allowFontScaling={false} style={styles.weekCell}>{t(w)}</Text>
@@ -609,6 +622,13 @@ export default QarzDaftariKalendar;
 // Uslublar FinanceCalendarCard bilan AYNAN bir xil — so'rov "xuddi shaxsiy
 // moliya sahifasidagidek" bo'lgani uchun ko'rinish farq qilmasligi kerak.
 const styles = StyleSheet.create({
+  offlineNote: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.warning,
+    textAlign: 'center',
+    marginBottom: rs(8),
+  },
   wrap: { gap: rs(12) },
   monthNav: {
     flexDirection: 'row',

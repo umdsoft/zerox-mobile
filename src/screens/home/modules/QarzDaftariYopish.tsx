@@ -32,10 +32,10 @@ import { rd, rs } from '../../../theme/rd';
 // 23.10: oflayn rejim
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import { submitQarzOp } from '../../../offline/submit';
-import { OutboxFullError } from '../../../offline/outbox';
 import { NewOp, Turi, Valyuta } from '../../../offline/types';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
-import { showQueuedToast } from '../../../offline/ui/queuedToast';
+import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
+import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import {
@@ -152,7 +152,7 @@ const QarzDaftariYopish = () => {
   const [nonce] = React.useState(() => Date.now());
 
   // 23.10 (oflayn rejim): cache-first + navbatdagi amallar proyeksiyasi (oflayn mijoz/qarz ham).
-  const { data, loading, error } = useQarzFetch({
+  const { data, loading, error, offline } = useQarzFetch({
     url: isMijozMode
       ? `${URL}/qarz-daftari/mijozlar/${mijozId}/yopish-info?turi=${turi}&_=${nonce}`
       : `${URL}/qarz-daftari/qarz/${id}`,
@@ -161,6 +161,8 @@ const QarzDaftariYopish = () => {
 
   const [raw, setRaw] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  // 24.10: ikki marta tez bosishdan himoya (navbatga ikki to'lov tushmasin). Faqat xatoda ochiladi.
+  const submitLock = React.useRef(false);
   const [cur, setCur] = React.useState<string | null>(route.params?.valyuta || null);
 
   const payload: any = (data as any)?.data;
@@ -183,12 +185,17 @@ const QarzDaftariYopish = () => {
       <View style={styles.screen}>
         <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
         <RdHeader title={t('Qarzni yopish')} />
-        <View style={styles.notFound}>
-          <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
-            <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
-          </CircleIcon>
-          <Text style={styles.notFoundText}>{t('Topilmadi')}</Text>
-        </View>
+        {/* 24.10: oflayn va keshda yo'q — "Topilmadi" EMAS, aniq sabab. */}
+        {offline && error ? (
+          <NotSavedOffline offline />
+        ) : (
+          <View style={styles.notFound}>
+            <CircleIcon size={rs(56)} bg={rd.color.surfaceAlt}>
+              <ClockIcon size={rs(24)} color={rd.color.textTertiary} />
+            </CircleIcon>
+            <Text style={styles.notFoundText}>{t('Topilmadi')}</Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -218,7 +225,8 @@ const QarzDaftariYopish = () => {
 
   // To'lovni qabul qilish (POST).
   const submit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || submitLock.current) return;
+    submitLock.current = true;
     setSubmitting(true);
     try {
       // 23.10 (oflayn rejim): navbat orqali — onlaynda darhol (Idempotency-Key), oflaynda saqlanadi.
@@ -249,16 +257,20 @@ const QarzDaftariYopish = () => {
       );
       if (out.status === 'queued') {
         navigation.goBack();
-        showQueuedToast(t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi'));
+        showQueuedResult(out.op, t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi'), t);
       } else if (out.data?.success) {
         Toast.show({ type: 'omad', props: { desc: t('To‘lov qabul qilindi') } });
         navigation.goBack();
       } else {
+        submitLock.current = false;
         Toast.show({ type: 'error2', props: { desc: t('Xatolik') } });
       }
     } catch (error: any) {
-      if (error instanceof OutboxFullError) {
-        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+      submitLock.current = false;
+      // 24.10: navbat to'lgan / qurilma xotirasiga yozilmadi — aniq xabar.
+      const obErr = outboxErrorText(error, t);
+      if (obErr) {
+        Toast.show({ type: 'error2', props: { desc: obErr } });
         return;
       }
       Toast.show({

@@ -13,9 +13,32 @@ import { startOfflineSync } from '../../../offline/syncManager';
  * overlay KO'RSATILMAYDI (ekran tepasida OfflineBanner bor). Boshqa ekranlarda overlay'da
  * "Qarz daftari — oflayn rejim" tugmasi: do'kon internet/svet o'chganda ham savdoni davom ettiradi.
  */
-// PIN qulfi lokal tekshiriladi (verifyPin) — internetsiz ham ochiladi, overlay uni yopmasin.
-const isOfflineCapableRoute = (name?: string) =>
-  !!name && (name.startsWith('QarzDaftari') || name === 'SetLocalPassword');
+/**
+ * 24.10: ANIQ ro'yxat (ilgari `startsWith('QarzDaftari')` — onlayn-only ekranlar ham, masalan
+ * do'kon yaratish/tahrirlash, rekvizitlar, karta, xodimlar, eslatma, ochiq qolib, so'rovlari jim
+ * yiqilardi). Faqat oflayn rejimni qo'llab-quvvatlaydigan (kesh / navbat) ekranlar.
+ * Onlayn-only qarz-daftari ekranlarida overlay ko'rinadi — undagi "Qarz daftari — oflayn rejim"
+ * tugmasi daftar bosh sahifasiga qaytaradi.
+ * PIN qulfi lokal tekshiriladi (verifyPin) — internetsiz ham ochiladi, overlay uni yopmasin.
+ */
+export const OFFLINE_CAPABLE_ROUTES = new Set([
+  'QarzDaftari', // dashboard (TAB)
+  'QarzDaftariKiritish',
+  'QarzDaftariQarzlar',
+  'QarzDaftariMijozlar',
+  'QarzDaftariMijozYangi', // yaratish — navbat; tahrirlash oflaynda o'zi rad etadi
+  'QarzDaftariMijoz',
+  'QarzDaftariQarz',
+  'QarzDaftariYangi',
+  'QarzDaftariYopish',
+  'QarzDaftariVozKechish',
+  'QarzDaftariKvitansiya',
+  'QarzDaftariAmaliyotlar',
+  'QarzDaftariAmaliyot',
+  'QarzDaftariSinxron',
+  'SetLocalPassword',
+]);
+const isOfflineCapableRoute = (name?: string) => !!name && OFFLINE_CAPABLE_ROUTES.has(name);
 
 /**
  * 23.10 XAVFSIZLIK: oflayn tugma PIN qulfini chetlab o'tmasin. Qulf/kirish/ro'yxat ekranlarida

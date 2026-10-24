@@ -27,8 +27,9 @@ import { URL } from '../../constants';
 import { getQarzShop } from '../../../store/api/token/qarzShop';
 // 23.10: oflayn rejim
 import { qarzGet } from '../../../offline/qarzGet';
+import { isOnline } from '../../../offline/netStatus';
 import { isUnsyncedId, submitQarzOp } from '../../../offline/submit';
-import { OutboxFullError } from '../../../offline/outbox';
+import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
 import { NewOp } from '../../../offline/types';
 import { rd, rs } from '../../../theme/rd';
 import { sortMoneyText } from '../../components/StatisticCard';
@@ -243,6 +244,8 @@ const QarzDaftariAmaliyot = () => {
    */
   const [grafik, setGrafik] = React.useState<any[]>([]);
   const [grafikLoading, setGrafikLoading] = React.useState(false);
+  // 24.10: grafik olinmadi — oflayn (keshda yo'q) yoki xato. Ilgari jim bo'sh qolardi.
+  const [grafikMissing, setGrafikMissing] = React.useState<'offline' | 'error' | null>(null);
   // SS3 (2026-09-21): to'lovni belgilash oynasi.
   const [payRow, setPayRow] = React.useState<any>(null);
   const [payVal, setPayVal] = React.useState('');
@@ -259,9 +262,13 @@ const QarzDaftariAmaliyot = () => {
       const rows = data?.data?.tolovlar;
       if (Array.isArray(rows)) {
         setGrafik(rows.slice().sort((a: any, b: any) => Number(a.tartib_raqami) - Number(b.tartib_raqami)));
+        setGrafikMissing(null);
+      } else {
+        setGrafikMissing(isOnline() ? 'error' : 'offline');
       }
     } catch (e) {
-      // Grafik yuklanmasa ekranning QOLGAN qismi baribir ishlaydi.
+      // Grafik yuklanmasa ekranning QOLGAN qismi baribir ishlaydi (izoh ko'rsatiladi).
+      setGrafikMissing(isOnline() ? 'error' : 'offline');
     } finally {
       setGrafikLoading(false);
     }
@@ -308,18 +315,17 @@ const QarzDaftariAmaliyot = () => {
       } as NewOp);
       setPayRow(null);
       await loadGrafik();
-      Toast.show({
-        type: 'omad',
-        props: {
-          desc:
-            out.status === 'queued'
-              ? t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi')
-              : t('To‘lov qayd etildi'),
-        },
-      });
+      if (out.status === 'queued') {
+        // 24.10: blocked (shu mijozning oldingi amali xato) bo'lsa — ogohlantirish.
+        showQueuedResult(out.op, t('To‘lov oflayn saqlandi — internet tiklanganda yuboriladi'), t, 0);
+      } else {
+        Toast.show({ type: 'omad', props: { desc: t('To‘lov qayd etildi') } });
+      }
     } catch (e: any) {
-      if (e instanceof OutboxFullError) {
-        Toast.show({ type: 'error2', props: { desc: t('Oflayn navbat to‘lgan — avval sinxronlang') } });
+      // 24.10: navbat to'lgan / qurilma xotirasiga yozilmadi — aniq xabar.
+      const obErr = outboxErrorText(e, t);
+      if (obErr) {
+        Toast.show({ type: 'error2', props: { desc: obErr } });
         return;
       }
       Toast.show({
@@ -537,6 +543,15 @@ const QarzDaftariAmaliyot = () => {
             <Row label={t('Boshlang‘ich to‘lov')} value={money(boshlangich, qarz?.valyuta)} />
             <Row label={t('Oylik to‘lov')} value={money(isUsd(qarz?.valyuta) ? oylik : Math.round(oylik), qarz?.valyuta)} />
 
+            {/* 24.10: grafik keshda yo'q / yuklanmadi — aniq izoh (jim bo'sh joy emas). */}
+            {!grafik.length && !grafikLoading && grafikMissing && (
+              <Text style={styles.grafikNote}>
+                {grafikMissing === 'offline'
+                  ? t('Bu ma’lumot oflayn saqlanmagan — internet tiklanganda yuklanadi')
+                  : t('Ma’lumotni yuklab bo‘lmadi')}
+              </Text>
+            )}
+
             {/* SS4: TO'LOV GRAFIGI — har oyning holati bilan. */}
             {!!grafik.length && (
               <View style={styles.schedule}>
@@ -741,6 +756,12 @@ const QarzDaftariAmaliyot = () => {
 export default QarzDaftariAmaliyot;
 
 const styles = StyleSheet.create({
+  grafikNote: {
+    fontFamily: rd.font.medium,
+    fontSize: rs(12.5),
+    color: rd.color.warning,
+    marginTop: rs(10),
+  },
   // SS13: kvitansiya / ulashish tugmalari va kvitansiya oynasi.
   // SS4 (2026-09-20) — to'lov grafigi
   schedule: { marginTop: rs(10), borderTopWidth: 1, borderTopColor: rd.color.border, paddingTop: rs(10) },

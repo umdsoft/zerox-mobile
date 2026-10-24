@@ -27,6 +27,7 @@ import { isOnline } from '../../../offline/netStatus';
 import { isUnsyncedId, resolveLocalId } from '../../../offline/submit';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge from '../../../offline/ui/PendingBadge';
+import NotSavedOffline, { isDerivedBody, PartialDataNote } from '../../../offline/ui/NotSavedOffline';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -235,7 +236,7 @@ const QarzDaftariMijoz = () => {
   const accent = turi === 'olish' ? GREEN : BLUE;
   const accentBg = turi === 'olish' ? '#F0FDF4' : '#EFF6FF';
 
-  const { data, loading, onRefresh } = useQarzFetch({
+  const { data, loading, onRefresh, error, offline } = useQarzFetch({
     url: `${URL}/qarz-daftari/mijozlar/${id}/history`,
     method: 'GET',
   });
@@ -567,6 +568,19 @@ const QarzDaftariMijoz = () => {
 
   if (loading) return <Loading />;
 
+  // 24.10: mijoz tarixi oflayn saqlanmagan / yuklanmadi — "0 qarz, aktiv qarzlar yo'q" EMAS
+  // (bu yolg'on bo'lardi va yopish/voz kechish tugmalari noto'g'ri holatda turardi).
+  if (error) {
+    return (
+      <View style={styles.screen}>
+        <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
+        <RdHeader title={role.label} />
+        <OfflineBanner />
+        <NotSavedOffline offline={offline} onRetry={() => onRefresh({})} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
@@ -574,6 +588,8 @@ const QarzDaftariMijoz = () => {
           Olingan qarzда "Qarz beruvchi" (ilgari doim "Qarz tafsiloti" edi). */}
       <RdHeader title={role.label} />
       <OfflineBanner />
+      {/* 24.10: saqlangan ro'yxatdan hosil qilingan tarix — summalar taxminiy bo'lishi mumkin. */}
+      {isDerivedBody(data) && <PartialDataNote style={styles.partialNote} />}
 
       <ScrollView
         style={styles.scroll}
@@ -778,6 +794,7 @@ export default QarzDaftariMijoz;
 
 // ---------- Uslublar ----------
 const styles = StyleSheet.create({
+  partialNote: { marginHorizontal: rs(16), marginTop: rs(6) },
   screen: { flex: 1, backgroundColor: rd.color.page },
   scroll: { flex: 1 },
   content: {

@@ -4,17 +4,21 @@
  *  1) Onlayn, navbatda kutayotgan amal yo'q, temp bog'liqlik yo'q -> amal AVVAL saqlanadi ('syncing'),
  *     so'ng darhol yuboriladi (Idempotency-Key = amal id):
  *       - 2xx  -> 'done' => { status: 'synced', data }   (ekran avvalgidek ishlaydi)
- *       - 4xx  -> amal navbatdan olib tashlanadi va xato TASHLANADI (axios xatosi shaklida —
- *                 mavjud ekran catch bloklari o'zgarishsiz: 409 phone-exists, 402, amount-exceeds...)
- *       - javobsiz / 5xx / 401 / in-progress -> navbatda qoladi => { status: 'queued' }
+ *       - 4xx  -> amal navbatdan olib tashlanadi (24.10: 'syncing' bo'lsa ham — force) va xato TASHLANADI
+ *                 (axios xatosi shaklida — mavjud ekran catch bloklari o'zgarishsiz: 409 phone-exists, 402...)
+ *       - 401  -> bir marta refresh (aktor o'zgarmagan bo'lsa) va qayta
+ *       - javobsiz / 5xx / 401 / in-progress / sessiya almashgan -> navbatda qoladi => { status: 'queued' }
+ *     O'sha mijozning oldingi amali rad etilgan bo'lsa -> 'blocked' (yuborilmaydi).
  *  2) Aks holda -> navbatga ('pending') => { status: 'queued' } va fon sinxroni boshlanadi.
  *
  * Shu tartib (avval saqlash) tufayli so'rov paytida ilova yopilsa ham amal yo'qolmaydi va o'sha kalit
  * bilan qayta yuborilganda server ikki marta bajarmaydi.
  */
+import { refreshAccessToken } from '../store/api/authInterceptor';
 import { getOutbox, currentActor } from './offlineStore';
 import { isOnline } from './netStatus';
-import { backoffMs, buildRequest, classify, extractServerId } from './opSpec';
+import { buildRequest, classify, extractServerId, retryDelayMs } from './opSpec';
+import { CUSTOMER_ERROR } from './syncEngine';
 import { requestSync, sendOpRequest, startOfflineSync } from './syncManager';
 import { NewOp, OutboxOp } from './types';
 
@@ -46,6 +50,7 @@ export async function submitQarzOp(rawInput: NewOp): Promise<SubmitResult> {
   if (!actor) throw new NoSessionError();
   const ob = getOutbox();
   // Yaratish amallari doim lokal (manfiy) id oladi — oflayn navbatda ekranlar shu id bilan ochiladi.
+  // 24.10: nextTempId/enqueue diskka yoza olmasa OutboxPersistError — ekran xato ko'rsatadi.
   const isCreate = rawInput.kind === 'mijoz.create' || rawInput.kind === 'qarz.create';
   const input = (isCreate && rawInput.tempId === undefined ? { ...rawInput, tempId: ob.nextTempId() } : rawInput) as NewOp;
 
@@ -53,41 +58,81 @@ export async function submitQarzOp(rawInput: NewOp): Promise<SubmitResult> {
   const unresolvedDep = (input.deps || []).some(d => d < 0 && ob.resolveId(d) === undefined);
   const direct = isOnline() && !waiting && !unresolvedDep;
 
+  const op = ob.enqueue(input, actor.key, direct ? 'syncing' : 'pending'); // OutboxFullError — chaqiruvchiga
+  // 24.10: o'sha mijozning oldingi amali rad etilgan/kutmoqda — bu amal yuborilmaydi (masalan rad etilgan
+  // yangi qarzdan keyingi mijozni yopish eski qarzlarga tushib qolardi). Sinxron sahifasida hal qilinadi.
+  if (ob.hasFailedPredecessor(op.id)) {
+    const blocked = ob.update(op.id, { status: 'blocked', sentOnce: undefined, lastError: CUSTOMER_ERROR }) as OutboxOp;
+    return { status: 'queued', op: blocked };
+  }
   if (!direct) {
-    const op = ob.enqueue(input, actor.key, 'pending'); // OutboxFullError — chaqiruvchiga
     requestSync();
     return { status: 'queued', op };
   }
 
-  const op = ob.enqueue(input, actor.key, 'syncing');
   const built = buildRequest(op, id => ob.resolveId(id));
   if (!built.ok) {
-    ob.update(op.id, { status: 'pending' });
+    ob.update(op.id, { status: 'pending', sentOnce: undefined });
     requestSync();
     return { status: 'queued', op };
   }
-  const res = await sendOpRequest(built.request, op.id);
-  const outcome = classify(op, res);
+  let res = await sendOpRequest(built.request, op.id, op.actor);
+  let outcome = classify(op, res);
+  // 401: bir marta refresh; token o'sha aktorniki bo'lib qolgan bo'lsagina o'sha kalit bilan qayta.
+  if (!res.actorMismatch && outcome.type === 'auth') {
+    const fresh = await refreshAccessToken().catch(() => null);
+    if (fresh && currentActor()?.key === op.actor) {
+      res = await sendOpRequest(built.request, op.id, op.actor);
+      outcome = classify(op, res);
+    }
+  }
+  if (res.actorMismatch) {
+    // Sessiya (xodim rejimi) almashgan — so'rov ketmadi; amal o'z aktori sessiyasida yuboriladi.
+    const queued = ob.update(op.id, { status: 'pending', sentOnce: undefined }) as OutboxOp;
+    return { status: 'queued', op: queued };
+  }
 
   if (outcome.type === 'success') {
     const serverId = outcome.serverId ?? extractServerId(op, res.data);
-    if (op.tempId !== undefined && serverId) ob.mapId(op.tempId, serverId);
+    try {
+      if (op.tempId !== undefined && serverId) ob.mapId(op.tempId, serverId);
+    } catch {
+      // Server bajardi, lekin xarita saqlanmadi — amal O'SHA kalit bilan navbatda qoladi (server saqlangan
+      // javobni qaytaradi va xarita keyin yoziladi). Ekranga muvaffaqiyat — qayta kiritib dublikat qilmasin.
+      ob.update(op.id, { status: 'pending', lastError: { status: null, code: 'PERSIST_FAILED' } });
+      requestSync();
+      return { status: 'synced', data: res.data, op };
+    }
     const done = ob.update(op.id, { status: 'done', doneAt: Date.now(), serverId }) as OutboxOp;
     return { status: 'synced', data: res.data, op: done };
   }
 
+  if (outcome.type === 'committed') {
+    // Yangi kalit bilan amalda bo'lmaydi; himoya uchun: serverda bajarilgan — qayta yuborilmaydi.
+    if (op.tempId === undefined) {
+      const done = ob.update(op.id, { status: 'done', doneAt: Date.now(), note: 'replay-lost' }) as OutboxOp;
+      return { status: 'synced', data: { success: true }, op: done };
+    }
+    ob.update(op.id, { status: 'failed', attempts: op.attempts + 1, lastError: outcome.error });
+    throw httpError(res.status as number, res.data);
+  }
+
   // Onlayn yo'lda 409 phone-exists ham (link-existing) — ekran o'z xabarini ko'rsatadi (avvalgi xulq).
+  // 24.10: `force` — amal 'syncing' holatida; force'siz discard uni rad etar va "arvoh" amal keyingi
+  // ishga tushishda O'SHA kalit bilan qayta yuborilardi (server 4xx da kalitni bo'shatgan — dublikat).
   if (outcome.type === 'permanent' || outcome.type === 'link-existing') {
-    ob.discard(op.id);
+    ob.discard(op.id, true);
     throw httpError(res.status as number, res.data);
   }
 
   // transient / auth — navbatda qoladi.
   const attempts = op.attempts + 1;
+  const tr = outcome.type === 'transient' ? outcome : null;
   const queued = ob.update(op.id, {
     status: 'pending',
     attempts,
-    nextAttemptAt: outcome.type === 'transient' ? Date.now() + backoffMs(attempts) : 0,
+    serverErrors: tr?.serverError ? 1 : 0,
+    nextAttemptAt: tr ? Date.now() + retryDelayMs(attempts, tr.retryAfterMs) : 0,
     lastError: outcome.error,
   }) as OutboxOp;
   requestSync();

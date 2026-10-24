@@ -21,7 +21,9 @@ export type OpKind =
  * pending  — navbatda, yuborilishi kutilmoqda (yoki backoff)
  * syncing  — hozir yuborilmoqda
  * done     — server qabul qildi (24 soat ko'rsatiladi, so'ng tozalanadi)
- * failed   — server RAD ETDI (4xx) — foydalanuvchi hal qiladi, hech qachon jim tashlanmaydi
+ * failed   — server RAD ETDI (4xx), yoki 5xx ketma-ket ko'p marta (vaqtinchalik — "Qayta urinish"),
+ *            yoki serverda BAJARILGAN, lekin javobi yo'qolgan (yakuniy — qarang `isTerminalFailure`) —
+ *            foydalanuvchi hal qiladi, hech qachon jim tashlanmaydi
  * blocked  — bog'liq amal (masalan oflayn mijoz yaratish) muvaffaqiyatsiz — kutib turibdi
  */
 export type OpStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'blocked';
@@ -30,6 +32,9 @@ export interface OpError {
   status: number | null;
   code?: string;
   message?: string;
+  /** 24.10: telefon band, lekin ism boshqa — mavjud mijoz (foydalanuvchi o'zi bog'lashi mumkin). */
+  existingId?: number;
+  existingFish?: string;
 }
 
 export interface MijozCreatePayload {
@@ -109,10 +114,20 @@ interface OpBase {
   status: OpStatus;
   attempts: number;
   nextAttemptAt: number;
+  /**
+   * 24.10: so'rov kamida bir marta serverga JO'NATILGAN (javob kelmagan bo'lsa ham — server bajargan
+   * bo'lishi mumkin). Shunday pending amalni tahrirlab/bekor qilib bo'lmaydi: yangi kalit = dublikat.
+   */
+  sentOnce?: boolean;
+  /** 24.10: ketma-ket JAVOB BERGAN 5xx urinishlar (tarmoq xatosi hisoblanmaydi) — chegaradan keyin failed. */
+  serverErrors?: number;
   lastError?: OpError;
   serverId?: number;
   doneAt?: number;
-  /** 'linked-existing' — telefon band edi, temp mijoz mavjud mijozga bog'landi. */
+  /**
+   * 'linked-existing' — telefon band edi, temp mijoz mavjud mijozga bog'landi;
+   * 'replay-lost' — serverda avval bajarilgan (409 IDEMPOTENCY_RESPONSE_UNAVAILABLE), javobi yo'q.
+   */
   note?: string;
   meta: OpMeta;
 }
@@ -145,6 +160,10 @@ export interface OpRequest {
 export interface SendResult {
   status: number | null;
   data?: any;
+  /** 24.10: `Retry-After` sarlavhasi (ms) — 429/503/409 in-progress. */
+  retryAfterMs?: number;
+  /** 24.10: joriy token BOSHQA aktorniki (xodim rejimi almashdi) — so'rov YUBORILMADI. */
+  actorMismatch?: boolean;
 }
 
 /** Simple key-value saqlagich (MMKV yoki testda xotira). */
