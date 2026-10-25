@@ -336,18 +336,15 @@ const MetricCard = ({
   if (total && !comingSoon) {
     return (
       <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={[styles.metricCard, styles.totalCard]}>
-        <Grad id={total.id} colors={total.colors} />
         <View style={styles.totalGlow} />
+        <Text style={styles.totalEyebrow} numberOfLines={1}>
+          {t('Jami')}
+        </Text>
         <View style={styles.metricHead}>
-          <CircleIcon size={rs(32)} bg="rgba(255,255,255,0.22)">
-            <Icon size={rs(17)} color={rd.color.onPrimary} />
+          <CircleIcon size={rs(32)} bg={rd.color.surface}>
+            <Icon size={rs(17)} color={rd.color.primary} />
           </CircleIcon>
-          {/* 22.10: "Jami" — doirasiz oddiy kichik matn, sarlavha USTIDA (ilgari o'ng
-              burchakdagi pill "Berilgan qarz" yozuvini kesib qo'yardi). */}
           <View style={styles.totalTitleCol}>
-            <Text style={styles.totalEyebrow} numberOfLines={1}>
-              {t('Jami')}
-            </Text>
             <Text style={[styles.totalLabel]} numberOfLines={2}>
               {t(label)}
             </Text>
@@ -355,8 +352,8 @@ const MetricCard = ({
         </View>
         {loading ? (
           <>
-            <Shimmer width="68%" height={rs(18)} onDark style={styles.metricSkeleton} />
-            <Shimmer width="40%" height={rs(14)} onDark style={styles.metricSkeleton} />
+            <Shimmer width="68%" height={rs(18)} style={styles.metricSkeleton} />
+            <Shimmer width="40%" height={rs(14)} style={styles.metricSkeleton} />
           </>
         ) : (
           <>
@@ -1249,12 +1246,15 @@ const styles = StyleSheet.create({
   metricCardSoon: { opacity: 0.75 },
   // 21.10: tepadagi JAMI kartalar (modul kartalaridan ajralib tursin)
   totalCard: {
-    borderWidth: 0,
+    backgroundColor: rd.color.primaryTint,
+    borderWidth: 1,
+    borderColor: '#cfdcf7',
+    paddingTop: rs(8),
     shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
   totalGlow: {
     position: 'absolute',
@@ -1263,23 +1263,27 @@ const styles = StyleSheet.create({
     borderRadius: rs(55),
     right: -rs(36),
     top: -rs(46),
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(47,111,237,0.08)',
   },
-  totalTitleCol: { flex: 1, marginLeft: rs(8), minWidth: 0 },
+  // O'ng yuqoridagi "Jami" (absolute) bilan sarlavha ustma-ust tushmasin.
+  totalTitleCol: { flex: 1, marginLeft: rs(8), minWidth: 0, paddingRight: rs(26) },
   totalEyebrow: {
+    position: 'absolute',
+    top: rs(6),
+    right: rs(10),
     fontFamily: rd.font.medium,
     fontSize: rs(10.5),
     lineHeight: rs(13),
-    color: 'rgba(255,255,255,0.8)',
+    color: rd.color.textSecondary,
   },
   totalLabel: {
     fontFamily: rd.font.semibold,
     fontSize: rs(12),
     lineHeight: rs(15),
-    color: rd.color.onPrimary,
+    color: rd.color.primaryStrong,
   },
-  totalUzs: { color: rd.color.onPrimary },
-  totalUsd: { color: 'rgba(255,255,255,0.82)' },
+  totalUzs: { color: rd.color.primaryStrong },
+  totalUsd: { color: rd.color.primary },
   metricAccent: {
     position: 'absolute',
     top: 0,

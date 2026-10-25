@@ -53,12 +53,12 @@ type TariffFeature = { label: string; on: boolean };
 const PLAN_LEVEL: Record<string, number> = { free: 0, start: 1, premium: 2 };
 const FEATURE_ROWS: { label: string; level: number }[] = [
   { label: 'Qarz va to‘lovlarni yuritish', level: 0 },
-  { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS', level: 0 },
+  { label: 'Qarz qayd etilganda qarzdorga avtomatik SMS xabar yuborish', level: 0 },
   { label: 'Shaxsiy moliyani yuritish', level: 0 },
-  { label: 'Avtomatik eslatma, talab va to‘lov SMS', level: 1 },
-  { label: 'SMS tarixi va statistika', level: 1 },
-  { label: 'Batafsil SMS ro‘yxati va qidiruv', level: 2 },
-  { label: 'Qarzlar tahlili va Excel', level: 2 },
+  { label: 'Avtomatik eslatma, talab va to‘lov SMS xabarlari', level: 1 },
+  { label: 'SMS xabarlar tarixi va statistika', level: 1 },
+  { label: 'SMS xabarlarning batafsil ro‘yxati va qidiruv', level: 2 },
+  { label: 'Qarzlar tahlili va Excelga yuklab olish', level: 2 },
 ];
 
 function planFeatures(planKey: string, smsLabel: string): TariffFeature[] {
@@ -221,10 +221,6 @@ const Types = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
-        <Text allowFontScaling={false} style={styles.subtitle}>
-          {t('Qarz daftari va qarz shartnomasi bo‘yicha narxlar')}
-        </Text>
-
         {/* ══ SMS balans (ENG TEPADA — saytdagidek) ══ */}
         <View style={styles.smsCard}>
           <View style={styles.smsTop}>
