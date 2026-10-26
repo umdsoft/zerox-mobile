@@ -27,11 +27,13 @@ import {
   AnimatedIconCircle,
   FullReturnIcon,
 } from '../../../images/debtActionIcons';
+import { useFio } from '../../../helper/useFio';
 
 // To'liq qaytarish — YASHIL (DebtTakeSelect bilan mos).
 const FULL = '#16a34a';
 
 const DebtTakeFull = () => {
+  const { fio } = useFio();
   const navigation = useNavigation();
   const { item } = useRoute().params;
   const dispatch = useDispatch();
@@ -158,7 +160,7 @@ const DebtTakeFull = () => {
                         }`,
                         id: item.number,
                         // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.
-                        name: titleCase(item?.debitor_name),
+                        name: fio(titleCase(item?.debitor_name)),
                         // sum: `${sortText(item.residual_amount - item.inc) + ' ' + item.currency}`,
                       }}
                       components={{

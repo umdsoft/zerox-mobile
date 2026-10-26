@@ -9,6 +9,7 @@
  */
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { rd, rs } from '../../../theme/rd';
 import { ChevronLeft } from './icons';
@@ -27,6 +28,9 @@ type Props = {
 
 const RdHeader = ({ title, subtitle, onBack, right, showBack = true, backColor, titleSize }: Props) => {
   const navigation = useNavigation<any>();
+  // Sarlavha HAR DOIM tanlangan tilda: route param / mapper orqali kelgan o'zbekcha
+  // kalit ham render paytida tarjima qilinadi (allaqachon tarjima qilingan matn o'zgarmaydi).
+  const { t } = useTranslation();
   const back = onBack || (() => navigation.goBack());
 
   return (
@@ -50,11 +54,11 @@ const RdHeader = ({ title, subtitle, onBack, right, showBack = true, backColor, 
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.8}>
-          {title}
+          {title ? t(title) : title}
         </Text>
         {subtitle ? (
           <Text style={styles.subtitle} numberOfLines={1}>
-            {subtitle}
+            {t(subtitle)}
           </Text>
         ) : null}
       </View>

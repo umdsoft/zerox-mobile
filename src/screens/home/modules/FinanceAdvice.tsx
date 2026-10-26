@@ -149,7 +149,7 @@ const FinanceAdvice = () => {
                     style={styles.groupHead}
                     onPress={() => toggleGroup(g.key)}>
                     <View style={[styles.groupDot, { backgroundColor: g.color }]} />
-                    <Text style={[styles.groupTitle, { color: g.color }]}>{g.label}</Text>
+                    <Text style={[styles.groupTitle, { color: g.color }]}>{t(g.label)}</Text>
                     <View style={[styles.groupBadge, { backgroundColor: g.bg }]}>
                       <Text style={[styles.groupBadgeText, { color: g.color }]}>{items.length}</Text>
                     </View>

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { BaseToast, ErrorToast } from 'react-native-toast-message';
 import CheckIcon from '../../images/CheckToast';
 import WrongIcon from '../../images/WrongToast';
+import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 
 // Barcha toast (alert) uchun YAGONA professional karta — bir xil ko'rinish.
@@ -37,7 +38,7 @@ const ToastCard = ({
             allowFontScaling={false}
             style={[styles.title, isError && styles.titleError]}
             numberOfLines={2}>
-            {title}
+            {t(title)}
           </Text>
         )}
         {!!desc && (
@@ -48,7 +49,7 @@ const ToastCard = ({
             allowFontScaling={false}
             style={[styles.desc, !title && styles.descStrong]}
             numberOfLines={title ? 3 : 4}>
-            {desc}
+            {t(desc)}
           </Text>
         )}
       </View>

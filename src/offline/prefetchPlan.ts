@@ -14,6 +14,13 @@ import { CACHE_LIMITS } from './responseCache';
 export type Turi = 'berish' | 'olish';
 const TURLAR: Turi[] = ['berish', 'olish'];
 
+/**
+ * "Barcha do'konlar" rejimida mijozlar ro'yxati olinadigan do'konlar soni (har do'kon = 2 kesh yozuvi).
+ * 🔴 24.10 ILDIZ SABAB: ilgari 5 edi — 9 ta do'konli foydalanuvchida 6..9-do'kon mijozlari keshga
+ * HECH QACHON yozilmasdi, oflaynda "Qarzga berish/olish" ro'yxati shu do'konlar uchun bo'sh qolardi.
+ */
+export const MAX_PREFETCH_SHOPS = 20;
+
 /** Bir yugurishda keshga yoziladigan mijoz tarixlari soni (yuqori chegara). */
 export const HISTORY_CAP = 300;
 /** Kesh yozuvlari chegarasidan (250) boshqa ekranlar (kvitansiya, qarz tafsiloti...) uchun zaxira. */
@@ -31,10 +38,16 @@ const USD_WEIGHT = 12_500;
 const shopPart = (shopId: number | null): string => (shopId ? `faoliyat_id=${shopId}` : '');
 
 /** QarzDaftariQarzlar bilan AYNAN bir xil tartibda query yig'iladi (turi, status, do'kon). */
-export function qarzlarUrl(base: string, turi: Turi, status: string | undefined, shopId: number | null): string {
-  const qs = [`turi=${turi}`, status ? `status=${status}` : '', shopPart(shopId)].filter(Boolean).join('&');
-  return `${base}/qarz-daftari/qarzlar?${qs}`;
+export function qarzlarUrl(base: string, turi: Turi | undefined, status: string | undefined, shopId: number | null): string {
+  const qs = [turi ? `turi=${turi}` : '', status ? `status=${status}` : '', shopPart(shopId)].filter(Boolean).join('&');
+  return `${base}/qarz-daftari/qarzlar${qs ? `?${qs}` : ''}`;
 }
+
+/** QarzDaftari.tsx dashboard / near-expiration — `?faoliyat_id=..` (do'kon tanlanmagan bo'lsa query yo'q). */
+export const dashboardUrl = (base: string, shopId: number | null): string =>
+  `${base}/qarz-daftari/dashboard${shopId ? `?${shopPart(shopId)}` : ''}`;
+export const nearExpirationUrl = (base: string, shopId: number | null): string =>
+  `${base}/qarz-daftari/near-expiration${shopId ? `?${shopPart(shopId)}` : ''}`;
 
 export const mijozlarUrl = (base: string, faoliyatId: number | string, turi: Turi): string =>
   `${base}/qarz-daftari/savdo-faoliyat/${faoliyatId}/mijozlar?turi=${turi}`;
@@ -49,8 +62,7 @@ export const shopsUrl = (base: string): string => `${base}/qarz-daftari/savdo-fa
  * @param shopId `effectiveShopId()` — dashboard/qarzlar filtri (xodim sessiyasida null).
  */
 export function buildBaseUrls(base: string, shopId: number | null): string[] {
-  const q = shopId ? `?${shopPart(shopId)}` : '';
-  const urls = [shopsUrl(base), `${base}/qarz-daftari/dashboard${q}`, `${base}/qarz-daftari/near-expiration${q}`];
+  const urls = [shopsUrl(base), dashboardUrl(base, shopId), nearExpirationUrl(base, shopId)];
   for (const turi of TURLAR) {
     urls.push(qarzlarUrl(base, turi, undefined, shopId));
     urls.push(qarzlarUrl(base, turi, 'muddati-otgan', shopId));
@@ -63,8 +75,11 @@ export function buildBaseUrls(base: string, shopId: number | null): string[] {
  * aks holda (tanlov yo'q / 2+ do'kon) barcha do'konlar, `maxShops` gacha.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function pickShopIds(shops: any[], selectedId: number | null, maxShops = 5): number[] {
+export function pickShopIds(shops: any[], selectedId: number | null, maxShops = MAX_PREFETCH_SHOPS): number[] {
+  // Xodim do'konlari (is_xodim_role) boshqa egaga tegishli — ularning ro'yxati faqat xodim sessiyasi
+  // (boshqa aktor) ostida olinadi; eganing tokeni bilan so'rash 403 beradi va keshni isrof qiladi.
   const ids = (Array.isArray(shops) ? shops : [])
+    .filter(s => !s?.is_xodim_role)
     .map(s => Number(s?.id))
     .filter(n => Number.isFinite(n) && n > 0);
   if (selectedId && ids.includes(selectedId)) return [selectedId];

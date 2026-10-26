@@ -20,10 +20,11 @@ import {
 } from 'react-native';
 // 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { qarzlarUrl } from '../../../offline/prefetchPlan';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge, { BadgeKind, offlineKindOf } from '../../../offline/ui/PendingBadge';
 import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
-import { shopQuery } from '../../../store/api/token/qarzShop';
+import { effectiveShopId } from '../../../store/api/token/qarzShop';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
@@ -80,16 +81,8 @@ const QarzDaftariQarzlar = () => {
   // SS17: do'kon endi BOSH SAHIFADA global tanlanadi — ro'yxat o'sha tanlovga
   // bo'ysunadi (backend `faoliyat_id` bo'yicha filtrlaydi). useFetch bog'liqligi
   // URL SATRI bo'lgani uchun do'kon almashsa avtomatik qayta o'qiladi.
-  const qs = [
-    turi ? `turi=${turi}` : '',
-    status ? `status=${status}` : '',
-    shopQuery('').replace(/^&/, ''),
-  ]
-    .filter(Boolean)
-    .join('&');
-
   const { data, loading, error, offline, onRefresh } = useQarzFetch({
-    url: `${URL}/qarz-daftari/qarzlar${qs ? `?${qs}` : ''}`,
+    url: qarzlarUrl(URL, turi, status, effectiveShopId()),
     method: 'GET',
   });
 

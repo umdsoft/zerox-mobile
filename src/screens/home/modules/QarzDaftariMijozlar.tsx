@@ -22,6 +22,7 @@ import {
 import Toast from 'react-native-toast-message';
 // 23.10: oflayn rejim — cache-first o'qish, navbatdagi amallar proyeksiyasi, banner va nishonlar.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
+import { mijozlarUrl } from '../../../offline/prefetchPlan';
 import OfflineBanner from '../../../offline/ui/OfflineBanner';
 import PendingBadge from '../../../offline/ui/PendingBadge';
 import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
@@ -66,7 +67,7 @@ const QarzDaftariMijozlar = () => {
   const { t } = useTranslation();
 
   const { data, loading, onRefresh, error, offline } = useQarzFetch({
-    url: `${URL}/qarz-daftari/savdo-faoliyat/${faoliyat_id}/mijozlar?turi=${turi}`,
+    url: mijozlarUrl(URL, faoliyat_id, turi),
     method: 'GET',
   });
 

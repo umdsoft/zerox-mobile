@@ -57,8 +57,10 @@ import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { UserIcon, CoinIcon } from '../home/redesign/icons';
+import { useFio } from '../../helper/useFio';
 
 const GiveDebtUser = () => {
+  const { fio } = useFio();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const theme = useColorScheme();
@@ -555,7 +557,7 @@ const GiveDebtUser = () => {
                     {t('270')}
                   </Text>
                   <Text allowFontScaling={false} style={styles.partyName}>
-                    {debtorName}
+                    {fio(debtorName)}
                   </Text>
                 </View>
               </View>
@@ -593,7 +595,7 @@ const GiveDebtUser = () => {
                     {t('273')}
                   </Text>
                   <Text allowFontScaling={false} style={styles.partyName}>
-                    {creditorName}
+                    {fio(creditorName)}
                   </Text>
                 </View>
               </View>

@@ -18,6 +18,7 @@ import ScreenLayout from '../components/ScreenLayout';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { SearchIcon, UserIcon, ChevronRight } from '../home/redesign/icons';
+import { useFio } from '../../helper/useFio';
 
 // FISH -> TitleCase (server BOSH HARFLI beradi -> "BOBUROV BOBUR" -> "Boburov Bobur").
 const titleCase = (s?: string) =>
@@ -30,6 +31,7 @@ const titleCase = (s?: string) =>
     .join(' ');
 
 const HistoryDebt = () => {
+  const { fio, matches } = useFio();
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [searchdata, setSearchData] = useState([]);
@@ -86,7 +88,11 @@ const HistoryDebt = () => {
                 const phone = String(obj?.phone || '').toLowerCase();
                 const uid = String(obj?.uid || '').toLowerCase();
                 return (
-                  name.includes(q) || phone.includes(q) || uid.includes(q)
+                  name.includes(q) ||
+                  phone.includes(q) ||
+                  uid.includes(q) ||
+                  // Ilova tilidagi (translit) FISh bo'yicha ham topilsin.
+                  matches(name, text)
                 );
               });
               setSearchData(a);
@@ -109,9 +115,9 @@ const HistoryDebt = () => {
             // 1-qator — familiya + ism, 2-qator (kichikroq, kulrang) — sharif.
             const isPerson = item.type === 2;
             const name = isPerson
-              ? titleCase(`${item?.last_name || ''} ${item?.first_name || ''}`)
+              ? fio(titleCase(`${item?.last_name || ''} ${item?.first_name || ''}`))
               : titleCase(item?.company);
-            const sharif = isPerson ? titleCase(item?.middle_name) : '';
+            const sharif = isPerson ? fio(titleCase(item?.middle_name)) : '';
             return (
               <TouchableOpacity
                 key={item.id}

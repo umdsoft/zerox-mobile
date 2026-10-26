@@ -130,7 +130,7 @@ const QarzDaftariSinxron = () => {
   const syncNow = async () => {
     const res = await requestSync(true);
     if (!res && !online) {
-      Toast.show({ type: 'error2', props: { desc: t('Internet yo‘q — amallar saqlangan, keyinroq yuboriladi') } });
+      Toast.show({ type: 'error2', props: { desc: t('Internet yo‘q. Amallar saqlandi, sms xabarlar keyinroq yuboriladi.') } });
     }
   };
 
@@ -211,7 +211,8 @@ const QarzDaftariSinxron = () => {
             <Counter label={t('Xato')} value={summary.failed + summary.blocked} color={rd.color.error} />
           </View>
           <Text style={styles.muted}>
-            {t('Oxirgi sinxron')}: {fmtTime(sync.lastRunAt)}
+            {/* 25.10: faqat BITTA ajratgich — vaqt bor bo'lsa ":", yo'q bo'lsa faqat "—". */}
+            {sync.lastRunAt ? `${t('Oxirgi sinxron')}: ${fmtTime(sync.lastRunAt)}` : `${t('Oxirgi sinxron')} —`}
           </Text>
           {sync.authBlocked && summary.queued ? (
             <Text style={[styles.muted, { color: rd.color.error }]}>{t('Iltimos, qayta kiring — amallar saqlangan')}</Text>
@@ -235,7 +236,7 @@ const QarzDaftariSinxron = () => {
 
         <Text style={styles.info}>
           {t(
-            'Internet yoki svet o‘chganda ham qarz yozish, qarzni yopish va voz kechish ishlaydi. Amallar telefonda shifrlangan holda saqlanadi va internet tiklanishi bilan avtomatik yuboriladi. Mijozga SMS amal serverga yetganda ketadi; talab SMS faqat internet bilan yuboriladi.',
+            'Internet o‘chganda qarz yozish, qarzni yopish va voz kechish ishlaydi. Amallar telefonda shifrlangan holda saqlanadi va internet tiklanishi bilan avtomatik yuboriladi. Internet aloqasi tiklanganida mijozga barcha turdagi sms xabarlar yuboriladi.',
           )}
         </Text>
 

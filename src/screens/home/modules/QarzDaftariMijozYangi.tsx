@@ -184,7 +184,7 @@ const QarzDaftariMijozYangi = () => {
           },
         } as NewOp);
         if (out.status === 'queued') {
-          showQueuedResult(out.op, t('Mijoz oflayn saqlandi — internet tiklanganda yuboriladi'), t);
+          showQueuedResult(out.op, t('Mijoz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.'), t);
           navigation.replace('QarzDaftariYangi', {
             faoliyat_id,
             mijoz_id: out.op.tempId,

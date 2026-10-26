@@ -36,6 +36,7 @@ import {expire_passport_check} from '../../helper/timeChecker';
 import {forceLogout} from '../../helper/forceLogout';
 import {unsyncedCount} from '../../offline/hooks';
 import {storage} from '../../store/api/token/getToken';
+import { useFio } from '../../helper/useFio';
 
 const UserScreen = () => {
   const route = useRoute();
@@ -56,6 +57,7 @@ const UserScreen = () => {
     : reduxUser;
   const dispatch = useDispatch();
   const {t} = useTranslation();
+  const { fio } = useFio();
   const [hide, setHide] = useState(false);
   const navigation = useNavigation();
   const navigateScreen = useCallback(
@@ -85,7 +87,7 @@ const UserScreen = () => {
 
   const isIndividual = user?.data?.type === 2;
   const displayName = isIndividual
-    ? `${user?.data?.first_name || ''} ${user?.data?.last_name || ''}`.trim()
+    ? fio(`${user?.data?.first_name || ''} ${user?.data?.last_name || ''}`.trim())
     : user?.data?.company || user?.data?.director || '';
   // Tasdiqlangan foydalanuvchida "Identifikatsiyadan o'tish" FAQAT pasport muddati
   // o'tганда chiqadi (so'rov). 🔴 ROOT: expiry_date bo'sh/null bo'lса

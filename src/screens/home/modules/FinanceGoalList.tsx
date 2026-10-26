@@ -285,10 +285,10 @@ const FinanceGoalList = () => {
                         { color: dl < 0 ? RED : dl <= 7 ? AMBER : rd.color.textTertiary },
                       ]}>
                       {dl < 0
-                        ? `${Math.abs(dl)} kun kechikkan`
+                        ? t('{{n}} kun kechikkan', { n: Math.abs(dl) })
                         : dl === 0
-                        ? 'Bugun tugaydi'
-                        : `${dl} kun qoldi`}
+                        ? t('Bugun tugaydi')
+                        : t('{{n}} kun qoldi', { n: dl })}
                     </Text>
                   )}
                   </TouchableOpacity>

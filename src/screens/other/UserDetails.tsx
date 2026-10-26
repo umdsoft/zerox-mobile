@@ -13,6 +13,7 @@ import { rd, rs } from '../../theme/rd';
 import { ArrowDown, ArrowUp, AvatarFemaleIcon, AvatarPersonIcon, CopyIcon, StarIcon } from '../home/redesign/icons';
 import { useFetch } from '../../hooks/useFetch';
 import { URL } from '../constants';
+import { useFio } from '../../helper/useFio';
 
 // So'z boshini katta, "o'g'li/qizi" kichik harflar bilan.
 const titleCaseName = (s?: string) =>
@@ -60,6 +61,7 @@ const InfoRow = ({ label, value, divider, right }: any) => (
 );
 
 const UserDetails = () => {
+  const { fio } = useFio();
   const navigation = useNavigation();
 
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
@@ -78,9 +80,9 @@ const UserDetails = () => {
 
   // FISH: familiya + ism BIR qatorda, otasining ismi PASTKI qatorda (so'rov bo'yicha).
   const line1 = isPerson
-    ? titleCaseName(`${d?.last_name ?? ''} ${d?.first_name ?? ''}`)
+    ? fio(titleCaseName(`${d?.last_name ?? ''} ${d?.first_name ?? ''}`))
     : d?.company || '';
-  const line2 = isPerson ? titleCaseName(`${d?.middle_name ?? ''}`) : '';
+  const line2 = isPerson ? fio(titleCaseName(`${d?.middle_name ?? ''}`)) : '';
 
   // JShShIR (PINFL) ni clipboard'ga nusxalash + qisqa toast.
   // "Nusxalandi" sarlavhasi OLIB TASHLANDI (so'rov bo'yicha): faqat bitta

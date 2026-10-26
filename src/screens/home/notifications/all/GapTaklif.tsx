@@ -154,7 +154,7 @@ const GapTaklif = ({ item, okay, navigation }: any) => {
         <>
           <Text allowFontScaling={false} style={styles.sub}>
             <Text style={styles.bold}>{info.gap_name}</Text>
-            {info.round_no ? ` · ${info.round_no}-davra` : ''}
+            {info.round_no ? ` · ${t('{{n}}-davra', { n: info.round_no })}` : ''}
             {info.due_date ? ` · ${fmtDateDots(info.due_date)}` : ''}
           </Text>
           {!!info.recipient_name && (

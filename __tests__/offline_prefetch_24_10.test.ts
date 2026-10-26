@@ -12,6 +12,11 @@ import { findByPhone, phoneKey } from '../src/offline/customerLookup';
 import {
   buildBaseUrls,
   buildMijozlarUrls,
+  dashboardUrl,
+  MAX_PREFETCH_SHOPS,
+  mijozlarUrl,
+  nearExpirationUrl,
+  shopsUrl,
   HISTORY_CAP,
   historyCap,
   historyUrl,
@@ -71,6 +76,36 @@ describe('pickShopIds', () => {
     expect(pickShopIds(shops, null)).toEqual([1, 2, 3]);
     expect(pickShopIds(shops, 99, 2)).toEqual([1, 2]);
     expect(pickShopIds(undefined as any, null)).toEqual([]);
+  });
+});
+
+describe('25.10: ekranlar ishlatadigan URL’lar prefetch to‘plamiga kiradi (oflayn "Qarzga berish/olish")', () => {
+  const nineShops = Array.from({ length: 9 }, (_, i) => ({ id: i + 1 }));
+
+  test('"Barcha do‘konlar" (9 ta do‘kon): har do‘kon uchun MijozlarScreen URL’i keshlanadi', () => {
+    const prefetched = new Set(buildMijozlarUrls(BASE, pickShopIds(nineShops, null)).map(normalizeUrl));
+    for (const s of nineShops) {
+      for (const turi of ['berish', 'olish'] as const) {
+        // QarzDaftariMijozlar.tsx / QarzDaftariKiritish.pickShop shu builder’dan foydalanadi
+        expect(prefetched.has(normalizeUrl(mijozlarUrl(BASE, s.id, turi)))).toBe(true);
+      }
+    }
+  });
+
+  test('chegara 5 emas (ildiz sabab) va xodim do‘konlari chiqarib tashlanadi', () => {
+    expect(MAX_PREFETCH_SHOPS).toBeGreaterThanOrEqual(9);
+    expect(pickShopIds(nineShops, null)).toHaveLength(9);
+    expect(pickShopIds([{ id: 1 }, { id: 2, is_xodim_role: true }], null)).toEqual([1]);
+  });
+
+  test('buildBaseUrls = ekran builder’lari (do‘kon ro‘yxati, dashboard, near-expiration)', () => {
+    for (const sid of [null, 7]) {
+      const urls = buildBaseUrls(BASE, sid);
+      expect(urls).toContain(shopsUrl(BASE));
+      expect(urls).toContain(dashboardUrl(BASE, sid));
+      expect(urls).toContain(nearExpirationUrl(BASE, sid));
+    }
+    expect(qarzlarUrl(BASE, undefined, undefined, null)).toBe(`${BASE}/qarz-daftari/qarzlar`);
   });
 });
 

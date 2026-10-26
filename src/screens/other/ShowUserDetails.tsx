@@ -43,6 +43,7 @@ import {
   PhoneCallIcon,
   MessageIcon,
 } from '../home/redesign/icons';
+import { useFio } from '../../helper/useFio';
 
 const InfoRow = ({
   Icon,
@@ -100,6 +101,7 @@ const sortContracts = (rows: any[]): any[] => {
 };
 
 const ShowUserDetails = () => {
+  const { fio } = useFio();
   const navigation = useNavigation();
   const route = useRoute();
   const { id, type } = route.params;
@@ -270,7 +272,7 @@ const ShowUserDetails = () => {
             )}
           </View>
           <Text allowFontScaling={false} style={styles.nameLeft} numberOfLines={2}>
-            {data?.last_name + ' ' + data?.first_name + ' ' + data?.middle_name}
+            {fio(data?.last_name + ' ' + data?.first_name + ' ' + data?.middle_name)}
           </Text>
         </View>
         {/* SS4: ID-karta ikonkasi OLIB TASHLANdi — "ID" va raqam uning o'rnida. */}

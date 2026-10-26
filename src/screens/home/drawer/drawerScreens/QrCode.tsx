@@ -35,6 +35,7 @@ import RNBlobUtil from 'react-native-blob-util';
 // import RNFS from 'react-native-fs';
 import ViewShot from 'react-native-view-shot';
 import { fontSize } from '../../../../theme';
+import { fioNow } from '../../../../helper/useFio';
 
 // https://www.npmjs.com/package/node-html-to-image
 
@@ -273,10 +274,10 @@ const QrCode = () => {
   };
 
   // FISH: familiya + ism BIR qatorda, otasining ismi PASTKI qatorda (so'rov bo'yicha).
-  const nameLine1 = `${user?.data?.last_name ?? ''} ${
-    user?.data?.first_name ?? ''
-  }`.trim();
-  const nameLine2 = `${user?.data?.middle_name ?? ''}`.trim();
+  const nameLine1 = fioNow(
+    `${user?.data?.last_name ?? ''} ${user?.data?.first_name ?? ''}`.trim(),
+  );
+  const nameLine2 = fioNow(`${user?.data?.middle_name ?? ''}`.trim());
 
   return (
     <ScreenLayout title={t('qrcode')}>

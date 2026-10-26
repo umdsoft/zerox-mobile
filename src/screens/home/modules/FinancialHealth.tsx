@@ -76,6 +76,8 @@ const MODULE_META: Record<
   finance: { route: 'ShaxsiyMoliya', Icon: WalletIcon, color: '#db2777', tint: '#fdf2f8' },
 };
 
+const TAB_ROUTES = new Set(['QarzShartnomasi', 'QarzDaftari']);
+
 const IMPACT_STYLE: Record<Impact, { color: string; bg: string }> = {
   positive: { color: '#15803d', bg: '#dcfce7' },
   negative: { color: '#b91c1c', bg: '#fee2e2' },
@@ -212,6 +214,16 @@ const FinancialHealth = () => {
     }, [refresh]),
   );
 
+  // 25.10: Qarz shartnomasi / Qarz daftari — pastki menyu tablari (BottomTabNavigator ichida);
+  // stek ekranidan to'g'ridan-to'g'ri navigate(route) ularni TOPMAYDI. Qolganlari stek ekrani.
+  const openModule = (route: string) => {
+    if (TAB_ROUTES.has(route)) {
+      navigation.navigate('BottomTabNavigator', { screen: route });
+      return;
+    }
+    navigation.navigate(route);
+  };
+
   const data: HealthData | null = (fetcher.data as any)?.data || null;
   const status = data?.status || 'no_data';
   const grad = HERO_GRAD[status] || HERO_GRAD.good;
@@ -275,7 +287,7 @@ const FinancialHealth = () => {
           <View style={styles.howBox}>
             <InfoIcon size={rs(18)} color={rd.color.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.howTitle}>{t('Ball qanday hisoblanadi')}</Text>
+              <Text style={styles.howTitle}>{t('Ball qanday hisoblanadi?')}</Text>
               <Text style={styles.howText}>
                 {t(
                   'Har bir modul o‘z vazniga ega (30 / 20 / 20 / 30). Ma’lumoti yo‘q modul hisobga olinmaydi — qolganlarining vazni 100 ballga qayta taqsimlanadi.',
@@ -288,7 +300,7 @@ const FinancialHealth = () => {
             <Text style={styles.sectionTitle}>{t('Modullar bo‘yicha tafsilot')}</Text>
           ) : null}
           {data.components.map((c) => (
-            <ModuleCard key={c.key} c={c} lang={lang} onOpen={(route) => navigation.navigate(route)} />
+            <ModuleCard key={c.key} c={c} lang={lang} onOpen={openModule} />
           ))}
 
           {data.tips.length > 0 ? (

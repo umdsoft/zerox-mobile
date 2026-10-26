@@ -14,6 +14,7 @@ import { settingDate } from '../../helper';
 import { rd, rs } from '../../theme/rd';
 import { Trans, useTranslation } from 'react-i18next';
 import { AnimatedIconCircle, DemandReturnIcon } from '../../images/debtActionIcons';
+import { useFio } from '../../helper/useFio';
 
 // ALL CAPS ismni "O'tamuratov Nurbek" ko'rinishiga keltiradi (SS1: FISH baqiruvchi
 // CAPS o'rniga tabiiy holatда; kichik harflar ham qabul qilinadi).
@@ -29,6 +30,7 @@ const titleCase = (s?: string) =>
 const FullDebtSelect = () => {
   const { item } = useRoute().params;
   const { t } = useTranslation();
+  const { fio } = useFio();
   const navigation = useNavigation();
   const [info, setInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -188,7 +190,7 @@ const FullDebtSelect = () => {
                   values={{
                     start: settingDate(info.created_at),
                     count: info?.number,
-                    name: titleCase(info?.creditor_name),
+                    name: fio(titleCase(info?.creditor_name)),
                   }}
                   components={{
                     start: <Text allowFontScaling={false} />,

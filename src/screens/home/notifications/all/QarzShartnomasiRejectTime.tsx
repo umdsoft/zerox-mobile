@@ -10,6 +10,7 @@ import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
 import { useSelector } from 'react-redux';
+import { fioNow } from '../../../../helper/useFio';
 // FISH -> TitleCase; otasining ismi qo'shimchasi ("o'g'li"/"qizi") KICHIK harfда qoladi.
 const titleCase = (s: string) =>
   String(s || '')
@@ -24,17 +25,17 @@ const titleCase = (s: string) =>
 
 export const getFullName = (role: string, item: any) => {
   if (role === 'sender') {
-    return titleCase(
+    return fioNow(titleCase(
       item.creditor === item.csender
         ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
         : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`,
-    );
+    ));
   } else if (role === 'receiver') {
-    return titleCase(
+    return fioNow(titleCase(
       item.creditor === item.creciver
         ? `${item.d_last_name} ${item.d_first_name} ${item.d_middle_name}`
         : `${item.c_last_name} ${item.c_first_name} ${item.c_middle_name}`,
-    );
+    ));
   }
   return '';
 };

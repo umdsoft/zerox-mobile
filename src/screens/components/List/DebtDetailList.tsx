@@ -17,6 +17,7 @@ import {
   WalletIcon,
 } from '../../home/redesign/icons';
 import { checkDate, settingDate } from '../../../helper';
+import { useFio } from '../../../helper/useFio';
 
 /**
  * SS-DEV (2026-09-24): "Qarzni qaytarish sanasi" — NaN.NaN.NaN chiqmasin.
@@ -62,7 +63,9 @@ const PartyHeader = ({
   name?: string;
   amount: string;
   onPress?: () => void;
-}) => (
+}) => {
+  const { fio } = useFio();
+  return (
   <View style={styles.headerCard}>
     <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.partyRow}>
       <View style={styles.partyAvatar}>
@@ -73,7 +76,7 @@ const PartyHeader = ({
           {label}
         </Text>
         <Text allowFontScaling={false} numberOfLines={2} style={styles.partyName}>
-          {name}
+          {fio(name)}
         </Text>
       </View>
       {onPress ? <ChevronRight size={rs(18)} color={rd.color.textTertiary} /> : null}
@@ -87,7 +90,8 @@ const PartyHeader = ({
       </Text>
     </View>
   </View>
-);
+  );
+};
 
 // Ikonali qator (chapda mos ikona, o'ngda qiymat).
 const IconRow = ({

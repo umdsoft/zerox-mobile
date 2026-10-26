@@ -376,10 +376,10 @@ const FinanceBudget = () => {
           <TouchableOpacity activeOpacity={1} style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>
               {modal?.mode === 'general'
-                ? 'Umumiy limit'
+                ? t('Umumiy limit')
                 : modal?.item
-                ? `Limit: ${modal?.catName}`
-                : 'Kategoriya limiti'}
+                ? t('Limit: {{name}}', { name: modal?.catName })
+                : t('Kategoriya limiti')}
             </Text>
 
             {/* Kategoriya tanlash (faqat YANGI kategoriya limiti uchun) */}

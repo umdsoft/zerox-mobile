@@ -56,6 +56,7 @@ import {
 import Svg, { Defs, LinearGradient, Rect, Stop, Circle } from 'react-native-svg';
 import Person from '../../images/home/person';
 import Famale from '../../images/Famale';
+import { useFio } from '../../helper/useFio';
 const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
@@ -539,6 +540,7 @@ const SearchPulse = ({ color }: { color: string }) => {
 };
 
 const UserInfo = ({ user, navigation, type }) => {
+  const { fio } = useFio();
   const userInfo = useSelector(state => state.HomeReducer);
 
   const [active, setActive] = useState(false);
@@ -623,7 +625,7 @@ const UserInfo = ({ user, navigation, type }) => {
           )}
         </View>
         <Text style={styles.profileName} numberOfLines={2} allowFontScaling={false}>
-          {fullName.trim()}
+          {fio(fullName.trim())}
         </Text>
         <View style={styles.profileChip}>
           <Text style={styles.profileChipLabel} allowFontScaling={false}>

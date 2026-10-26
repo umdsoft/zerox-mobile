@@ -69,7 +69,7 @@ const RdTopBar = ({ title, badge }: Props) => {
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.8}>
-            {title}
+            {t(title)}
           </Text>
         ) : (
           <ZeroXWordmark

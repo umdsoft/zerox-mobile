@@ -8,6 +8,7 @@ import { rd, rs } from '../../theme/rd';
 import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign/icons';
 import { parseApiDate } from '../../helper';
 import { groupMoney } from '../../helper/money';
+import { useFio } from '../../helper/useFio';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -37,6 +38,17 @@ type DueMeta = {
   bg: string;
   date: string; // qaytarish sanasi (DD.MM.YYYY)
   diff: number;
+};
+/**
+ * Status/muddat yorlig'ini TANLANGAN tilda qaytaradi. getDueMeta/reportStatusMeta xom
+ * o'zbekcha `label` qaytaradi (eksport/filtr mantig'i uchun) — UI'da HAR DOIM shu orqali.
+ * `${diff} kun qoldi` kabi sonli yorliq interpolyatsiya kaliti bilan tarjima qilinadi.
+ */
+export const dueLabel = (meta: { label: string; cat?: DueCat; diff?: number }): string => {
+  if (meta.cat === 'near' && typeof meta.diff === 'number' && meta.diff > 0) {
+    return t('{{n}} kun qoldi', { n: meta.diff });
+  }
+  return t(meta.label);
 };
 export const getDueMeta = (endDate: any): DueMeta => {
   // SS-DEV (2026-09-24): "YYYY-MM-DD HH:MM:SS.mmm" (talab dalolatnomasidan
@@ -110,7 +122,9 @@ type RowProps = {
 };
 const StatisticRow = memo(({ item, isDebitor, report, dirBg, dirColor, onPress }: RowProps) => {
   const rawName = isDebitor ? item?.creditor_name : item?.debitor_name;
-  const name = renderName(rawName);
+  // FISh ilova tilida (identifikatsiyadan o'tgan foydalanuvchi) — faqat ko'rsatish.
+  const { fio } = useFio();
+  const name = fio(renderName(rawName));
   const female = isFemaleName(rawName);
   const due = getDueMeta(item?.end_date);
   // Hisobotда — status badge (Tugallangan/Rad); faol ro'yxatда — muddat badge.
@@ -145,7 +159,7 @@ const StatisticRow = memo(({ item, isDebitor, report, dirBg, dirColor, onPress }
           ) : null}
           <View style={[styles.dueBadge, { backgroundColor: badge.bg }]}>
             <Text allowFontScaling={false} style={[styles.dueBadgeText, { color: badge.color }]}>
-              {badge.label}
+              {dueLabel(badge as any)}
             </Text>
           </View>
         </View>
@@ -282,8 +296,8 @@ export const formatMln = (value: any): string => {
   const n = Number(value) || 0;
   const abs = Math.abs(n);
   const unit = (div: number) => String(Number((n / div).toFixed(2))).replace('.', ',');
-  if (abs >= 1e9) return `${unit(1e9)} mlrd`;
-  if (abs >= 1e6) return `${unit(1e6)} mln`;
+  if (abs >= 1e9) return t('{{v}} mlrd', { v: unit(1e9) });
+  if (abs >= 1e6) return t('{{v}} mln', { v: unit(1e6) });
   return String(sortText(n) || 0);
 };
 // Pul summasi — backend "550000.00" kabi o'nlik string qaytaradi; web'dagidek

@@ -4,27 +4,27 @@
  *   sinxron -> "Sinxronlanmoqda…" (ko'k)
  *   xato    -> "N ta amal yuborilmadi — ko'rish" (qizil)
  *   navbat  -> "N ta amal navbatda" + "Yuborish"
- * Bosilsa — Sinxron sahifasi (QarzDaftariSinxron). Hammasi joyida bo'lsa — hech narsa ko'rinmaydi.
+ * Bosilsa — Sinxron sahifasi (QarzDaftariSinxron). Hammasi joyida (va internet bor) bo'lsa — hech narsa ko'rinmaydi.
  */
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { rd, rs } from '../../theme/rd';
-import { CheckCircleIcon, ChevronRight, ClockIcon, WarningIcon, WifiOffIcon } from '../../screens/home/redesign/icons';
+import { ChevronRight, ClockIcon, WarningIcon, WifiOffIcon } from '../../screens/home/redesign/icons';
 import { useOfflineSummary } from '../hooks';
 import { useIsOnline } from '../netStatus';
 import { requestSync, startOfflineSync, useSyncStatus } from '../syncManager';
 
 type Props = {
   style?: ViewStyle;
-  /** Hammasi joyida bo'lsa ham ixcham "sinxronlangan" qatori (Sinxron sahifasiga kirish) — dashboard uchun. */
+  /** @deprecated 25.10: endi hech narsa qilmaydi — "sinxronlangan" kartasi internet bor paytda ko'rsatilmaydi. */
   persistent?: boolean;
 };
 
 export const SYNC_ROUTE = 'QarzDaftariSinxron';
 
-export function OfflineBanner({ style, persistent }: Props) {
+export function OfflineBanner({ style }: Props) {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const online = useIsOnline();
@@ -36,14 +36,14 @@ export function OfflineBanner({ style, persistent }: Props) {
   }, []);
 
   const problems = s.failed + s.blocked;
-  let tone: 'warn' | 'info' | 'error' | 'ok' | null = null;
+  let tone: 'warn' | 'info' | 'error' | null = null;
   let title = '';
   let sub = '';
   if (!online) {
     tone = 'warn';
     title = t('Oflayn rejim');
     sub = s.queued
-      ? t('{{n}} ta amal navbatda — internet tiklanganda yuboriladi', { n: s.queued })
+      ? t('{{n}} ta amal navbatda. Internet tiklanganda yuboriladi.', { n: s.queued })
       : t('Saqlangan ma’lumotlar ko‘rsatilmoqda');
   } else if (sync.running) {
     tone = 'info';
@@ -61,11 +61,9 @@ export function OfflineBanner({ style, persistent }: Props) {
     tone = 'info';
     title = t('{{n}} ta amal navbatda', { n: s.queued });
     sub = t('Bosing — hozir yuborish');
-  } else if (persistent) {
-    tone = 'ok';
-    title = t('Barcha amallar sinxronlangan');
-    sub = t('Oflayn rejim: internet o‘chsa ham savdo davom etadi');
   }
+  // 25.10: "Barcha amallar sinxronlangan" yashil kartasi internet bor paytda KO'RSATILMAYDI
+  // (faqat oflayn / navbat / xato holatlari). Sahifaga kirish — Qarz daftari sarlavhasidagi tugma.
   if (!tone) return null;
 
   const palette =
@@ -73,8 +71,6 @@ export function OfflineBanner({ style, persistent }: Props) {
       ? { bg: rd.color.warningBg, fg: rd.color.warning }
       : tone === 'error'
       ? { bg: rd.color.errorBg, fg: rd.color.error }
-      : tone === 'ok'
-      ? { bg: rd.color.successBg, fg: rd.color.success }
       : { bg: rd.color.primaryTint, fg: rd.color.primary };
 
   const onPress = () => {
@@ -92,8 +88,6 @@ export function OfflineBanner({ style, persistent }: Props) {
       <View style={styles.icon}>
         {tone === 'warn' ? (
           <WifiOffIcon size={rs(18)} color={palette.fg} />
-        ) : tone === 'ok' ? (
-          <CheckCircleIcon size={rs(18)} color={palette.fg} />
         ) : tone === 'error' ? (
           <WarningIcon size={rs(18)} color={palette.fg} />
         ) : sync.running ? (

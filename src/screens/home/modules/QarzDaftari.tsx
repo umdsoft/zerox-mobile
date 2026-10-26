@@ -35,7 +35,8 @@ import {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 // 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
-import OfflineBanner from '../../../offline/ui/OfflineBanner';
+import { dashboardUrl, nearExpirationUrl, shopsUrl } from '../../../offline/prefetchPlan';
+import OfflineBanner, { SYNC_ROUTE } from '../../../offline/ui/OfflineBanner';
 // 24.10: fonda "oflayn uchun tayyorlash" + kesh bo'lmasa aniq holat (bo'sh EMAS).
 import { prefetchForOffline, startOfflinePrefetch } from '../../../offline/prefetch';
 import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
@@ -48,7 +49,7 @@ import {
 import {
   clearQarzShop,
   setQarzShop,
-  shopQuery,
+  effectiveShopId,
   syncQarzShopWithList,
   useQarzShop,
 } from '../../../store/api/token/qarzShop';
@@ -71,6 +72,7 @@ import {
   IconProps,
   ShieldIcon,
   TelegramPlaneIcon,
+  WifiOffIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 
@@ -526,14 +528,13 @@ const QarzDaftari = () => {
   // SS13: GLOBAL tanlangan do'kon — tanlansa BUTUN qarz daftari bo'limi (summalar,
   // ro'yxatlar, qarzga berish/olish) FAQAT shu do'kon bo'yicha ishlaydi.
   const shop = useQarzShop();
-  const shopQs = shopQuery('?');
 
   // REAL backend — dashboard summalari + muddati yaqin qatorlar.
   // ⚠️ useFetch effekt bog'liqligi URL SATRI — do'kon almashsa avtomatik qayta o'qiydi.
-  const dashboard = useQarzFetch({ url: `${URL}/qarz-daftari/dashboard${shopQs}`, method: 'GET' });
-  const nearExp = useQarzFetch({ url: `${URL}/qarz-daftari/near-expiration${shopQs}`, method: 'GET' });
+  const dashboard = useQarzFetch({ url: dashboardUrl(URL, effectiveShopId()), method: 'GET' });
+  const nearExp = useQarzFetch({ url: nearExpirationUrl(URL, effectiveShopId()), method: 'GET' });
   // SS11-1: bosh sahifada do'kon cardi + modal ro'yxati.
-  const shopsFetch = useQarzFetch({ url: `${URL}/qarz-daftari/savdo-faoliyat`, method: 'GET' });
+  const shopsFetch = useQarzFetch({ url: shopsUrl(URL), method: 'GET' });
   // ⚠️ MEMO: `|| []` har renderda YANGI massiv yaratardi — quyidagi effekt
   // har renderda qayta ishlab ketardi. Endi faqat ma'lumot o'zgarsa yangilanadi.
   const shopsData = (shopsFetch.data as any)?.data;
@@ -723,8 +724,20 @@ const QarzDaftari = () => {
       {/* SS24: ORQAGA tugmasi OLIB TASHLANDI — bu ham TAB (top-level ekran). */}
       {/* SS7 (2026-09-18): Bosh sahifadagi bilan bir xil panel. */}
       <RdTopBar title={t('Qarz daftari')} />
-      {/* 23.10: oflayn rejim holati — doim ko'rinadi (Sinxron sahifasiga kirish). */}
-      <OfflineBanner persistent />
+      {/* 25.10: banner faqat oflayn / navbat / xato holatida chiqadi; "Oflayn rejim"
+          sahifasiga doimiy kirish — pastdagi ixcham tugma. */}
+      <OfflineBanner />
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={styles.offlineEntry}
+        onPress={() => nav(SYNC_ROUTE)}
+        accessibilityRole="button"
+        accessibilityLabel={t('Oflayn rejim')}
+        accessibilityHint={t('Oflayn rejim: internet o‘chsa ham savdo davom etadi.')}>
+        <WifiOffIcon size={rs(14)} color={rd.color.textSecondary} />
+        <Text style={styles.offlineEntryText}>{t('Oflayn rejim')}</Text>
+        <ChevronRight size={rs(14)} color={rd.color.textTertiary} />
+      </TouchableOpacity>
 
       <ScrollView
         style={styles.scroll}
@@ -1084,6 +1097,17 @@ const styles = StyleSheet.create({
   },
   shopAddText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: BLUE },
   screen: { flex: 1, backgroundColor: rd.color.page },
+  offlineEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: rs(5),
+    marginRight: rs(16),
+    marginTop: rs(2),
+    paddingVertical: rs(4),
+    paddingHorizontal: rs(8),
+  },
+  offlineEntryText: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary },
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: rs(20),

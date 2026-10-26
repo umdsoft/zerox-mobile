@@ -7,6 +7,7 @@
  * - Tugmalar useNavigation orqali real ekranlarga o'tadi.
  * Ma'lumot hozircha statik (Figma bilan bir xil) — keyin Redux/backendga ulanadi.
  */
+import { fioNow } from '../../../helper/useFio';
 import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -284,7 +285,7 @@ const HeroBanner = ({
               {score == null ? '—' : score}
             </Text>
           )}
-          <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
+          <Text style={styles.heroChipLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} allowFontScaling={false}>
             {t('Moliyaviy sog‘liq')}
           </Text>
         </View>
@@ -296,7 +297,7 @@ const HeroBanner = ({
               {t(status)}
             </Text>
           )}
-          <Text style={styles.heroChipLabel} numberOfLines={2} allowFontScaling={false}>
+          <Text style={styles.heroChipLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} allowFontScaling={false}>
             {t('Holat')}
           </Text>
         </View>
@@ -336,16 +337,13 @@ const MetricCard = ({
   if (total && !comingSoon) {
     return (
       <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={[styles.metricCard, styles.totalCard]}>
-        <View style={styles.totalGlow} />
-        <Text style={styles.totalEyebrow} numberOfLines={1}>
-          {t('Jami')}
-        </Text>
         <View style={styles.metricHead}>
           <CircleIcon size={rs(32)} bg={rd.color.surface}>
             <Icon size={rs(17)} color={rd.color.primary} />
           </CircleIcon>
           <View style={styles.totalTitleCol}>
-            <Text style={[styles.totalLabel]} numberOfLines={2}>
+            {/* 25.10: so'z o'rtasida uzilmasin va "…" bilan kesilmasin — kichrayadi. */}
+            <Text style={[styles.totalLabel]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
               {t(label)}
             </Text>
           </View>
@@ -436,6 +434,14 @@ const SubSkeleton = () => (
 
 // Modul kartasi — "Qarz shartnomasi" (Debitor + Kreditor qiymatlari bilan).
 // Modul kartasi — sarlavha + ikona + IKKI sub-summa (Debitor / Kreditor).
+// 25.10: ruscha yorliq (Выданный долг / Полученный долг) har doim 2 qatorda —
+// oxirgi bo'sh joyda uziladi. Boshqa tillarda o'zgarishsiz.
+const subLabelText = (text: string, lang?: string): string => {
+  if (lang !== 'ru') return text;
+  const i = text.lastIndexOf(' ');
+  return i > 0 ? text.slice(0, i) + '\n' + text.slice(i + 1) : text;
+};
+
 // Qarz shartnomasi VA Qarz daftari uchun bitta shakl (faqat ikona/nom/summa farq).
 const ModuleWithSubs = ({
   title,
@@ -464,7 +470,7 @@ const ModuleWithSubs = ({
   info?: string;
   loading?: boolean;
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [infoOpen, setInfoOpen] = React.useState(false);
   return (
     <TouchableOpacity activeOpacity={0.9} style={styles.moduleCard} onPress={onPress}>
@@ -500,7 +506,7 @@ const ModuleWithSubs = ({
               {debUsd ? <Text style={styles.moduleSubUsd}>{debUsd}</Text> : null}
             </>
           )}
-          <Text style={styles.moduleSubLabel}>{t(debLabel || 'Berilgan qarz')}</Text>
+          <Text style={styles.moduleSubLabel}>{subLabelText(t(debLabel || 'Berilgan qarz'), i18n.language)}</Text>
         </View>
         <View style={[styles.moduleSub, { backgroundColor: rd.color.errorBg }]}>
           {loading ? (
@@ -513,7 +519,7 @@ const ModuleWithSubs = ({
               {credUsd ? <Text style={styles.moduleSubUsd}>{credUsd}</Text> : null}
             </>
           )}
-          <Text style={styles.moduleSubLabel}>{t(credLabel || 'Olingan qarz')}</Text>
+          <Text style={styles.moduleSubLabel}>{subLabelText(t(credLabel || 'Olingan qarz'), i18n.language)}</Text>
         </View>
       </View>
 
@@ -617,7 +623,7 @@ const buildRecentOps = (bild?: any[], myId?: number): RecentOp[] =>
     const positive = iAmCreditor; // men qarz berganman → menga qarzdor
     const first = iAmCreditor ? n?.d_first_name : n?.c_first_name;
     const last = iAmCreditor ? n?.d_last_name : n?.c_last_name;
-    const name = titleCase(`${first || ''} ${last || ''}`) || 'Noma’lum';
+    const name = fioNow(titleCase(`${first || ''} ${last || ''}`)) || 'Noma’lum';
     const amt = Number(n?.amount ?? n?.residual_amount ?? 0);
     const cur = String(n?.currency || 'UZS').toUpperCase();
     const dateStr = n?.created || n?.created_at || '';
@@ -756,7 +762,7 @@ const HomeRedesign = () => {
   // "Xush kelibsiz!" (so'rov bo'yicha; "Foydalanuvchi" default nomi endi ishlatilmaydi).
   const isIdentified = storeUser?.data?.is_active === 1;
   const first = storeUser?.data?.first_name;
-  const name = isIdentified && first ? first : '';
+  const name = isIdentified && first ? fioNow(first) : '';
   // `initials` olib tashlandi — sarlavhadagi "BB" doirasi o'rniga endi odam
   // ikonkasi turadi, shuning uchun bosh harflar hisoblanmaydi.
 
@@ -1256,26 +1262,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  totalGlow: {
-    position: 'absolute',
-    width: rs(110),
-    height: rs(110),
-    borderRadius: rs(55),
-    right: -rs(36),
-    top: -rs(46),
-    backgroundColor: 'rgba(47,111,237,0.08)',
-  },
-  // O'ng yuqoridagi "Jami" (absolute) bilan sarlavha ustma-ust tushmasin.
-  totalTitleCol: { flex: 1, marginLeft: rs(8), minWidth: 0, paddingRight: rs(26) },
-  totalEyebrow: {
-    position: 'absolute',
-    top: rs(6),
-    right: rs(10),
-    fontFamily: rd.font.medium,
-    fontSize: rs(10.5),
-    lineHeight: rs(13),
-    color: rd.color.textSecondary,
-  },
+  totalTitleCol: { flex: 1, marginLeft: rs(8), minWidth: 0 },
   totalLabel: {
     fontFamily: rd.font.semibold,
     fontSize: rs(12),

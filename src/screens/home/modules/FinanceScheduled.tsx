@@ -246,8 +246,8 @@ const ScheduledList = ({ cfg }: { cfg: Cfg }) => {
             const active = it.is_active !== false && it.is_active !== 0;
             const sched =
               it.frequency === 'once'
-                ? `${fDate(it.next_date)} (bir marta)`
-                : `Har oy ${it.day_of_month}-kun`;
+                ? `${fDate(it.next_date)} (${t('bir marta')})`
+                : t('Har oy {{n}}-kun', { n: it.day_of_month });
             return (
               <View key={it.id ?? i} style={[styles.card, !active && { opacity: 0.6 }]}>
                 {/* SS13/SS14: kartaga bosilganda BATAFSIL modal (sayt kabi); tahrir
@@ -334,16 +334,16 @@ const ScheduledList = ({ cfg }: { cfg: Cfg }) => {
 
               <FieldLabel>{t('Turi')}</FieldLabel>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: rs(8) }}>
-                {cfg.types.map(t => {
-                  const on = form?.type === t.key;
+                {cfg.types.map(ty => {
+                  const on = form?.type === ty.key;
                   return (
                     <TouchableOpacity
-                      key={t.key}
+                      key={ty.key}
                       style={[styles.typeChip, on && { borderColor: cfg.accent, backgroundColor: cfg.accent + '12' }]}
-                      onPress={() => setForm((f: any) => ({ ...f, type: t.key }))}>
-                      <Text style={styles.typeEmoji}>{t.emoji}</Text>
+                      onPress={() => setForm((f: any) => ({ ...f, type: ty.key }))}>
+                      <Text style={styles.typeEmoji}>{ty.emoji}</Text>
                       <Text allowFontScaling={false} style={[styles.typeLabel, on && { color: cfg.accent }]}>
-                        {t.label}
+                        {t(ty.label)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -454,19 +454,19 @@ const ScheduledList = ({ cfg }: { cfg: Cfg }) => {
               </View>
             </View>
             <View style={styles.detailRows}>
-              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Kategoriya')}</Text><Text style={styles.detailValue}>{typeDef(detail?.[cfg.typeField]).label}</Text></View>
-              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Takrorlanish')}</Text><Text style={styles.detailValue}>{detail?.frequency === 'once' ? 'Bir marta' : `Har oyning ${detail?.day_of_month}-kuni`}</Text></View>
-              <View style={styles.detailRow}><Text style={styles.detailLabel}>{cfg.kind === 'payment' ? 'Keyingi to‘lov' : 'Keyingi daromad'}</Text><Text style={styles.detailValue}>{detail?.next_date ? fDate(detail.next_date) : '—'}</Text></View>
+              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Kategoriya')}</Text><Text style={styles.detailValue}>{t(typeDef(detail?.[cfg.typeField]).label)}</Text></View>
+              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Takrorlanish')}</Text><Text style={styles.detailValue}>{detail?.frequency === 'once' ? t('Bir marta') : t('Har oyning {{n}}-kuni', { n: detail?.day_of_month })}</Text></View>
+              <View style={styles.detailRow}><Text style={styles.detailLabel}>{cfg.kind === 'payment' ? t('Keyingi to‘lov') : t('Keyingi daromad')}</Text><Text style={styles.detailValue}>{detail?.next_date ? fDate(detail.next_date) : '—'}</Text></View>
               {(detail?.last_paid_date || detail?.last_received_date) ? (
                 <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Oxirgi')}</Text><Text style={styles.detailValue}>{fDate(detail?.last_paid_date || detail?.last_received_date)}</Text></View>
               ) : null}
-              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Holat')}</Text><Text style={[styles.detailValue, { color: (detail?.is_active !== false && detail?.is_active !== 0) ? GREEN : rd.color.textTertiary }]}>{(detail?.is_active !== false && detail?.is_active !== 0) ? 'Faol' : 'Nofaol'}</Text></View>
+              <View style={styles.detailRow}><Text style={styles.detailLabel}>{t('Holat')}</Text><Text style={[styles.detailValue, { color: (detail?.is_active !== false && detail?.is_active !== 0) ? GREEN : rd.color.textTertiary }]}>{(detail?.is_active !== false && detail?.is_active !== 0) ? t('Faol') : t('Nofaol')}</Text></View>
             </View>
 
             {/* So'rov: amalga oshirilgan to'lovlar / olingan daromadlar tarixi. */}
             <View style={styles.detailHistory}>
               <Text allowFontScaling={false} style={styles.detailHistTitle}>
-                {cfg.kind === 'payment' ? 'Amalga oshirilgan to‘lovlar' : 'Olingan daromadlar'}
+                {cfg.kind === 'payment' ? t('Amalga oshirilgan to‘lovlar') : t('Olingan daromadlar')}
               </Text>
               {historyLoading ? (
                 <Text allowFontScaling={false} style={styles.detailHistEmpty}>{t('Yuklanmoqda…')}</Text>

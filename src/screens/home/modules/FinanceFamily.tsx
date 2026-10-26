@@ -504,7 +504,7 @@ const FinanceFamily = () => {
             ].map(sec => (
               <View key={sec.key} style={styles.permBlock}>
                 <View style={styles.permRow}>
-                  <Text allowFontScaling={false} style={styles.permLabel}>{sec.label}</Text>
+                  <Text allowFontScaling={false} style={styles.permLabel}>{t(sec.label)}</Text>
                   <Switch value={!!perms[sec.key]?.view} onValueChange={v => togglePerm(sec.key, v)} trackColor={{ true: BLUE, false: rd.color.border }} thumbColor="#fff" />
                 </View>
                 {sec.detail && perms[sec.key]?.view && (
@@ -513,7 +513,7 @@ const FinanceFamily = () => {
                       const on = (perms[sec.key]?.detail || 'summary') === d.k;
                       return (
                         <TouchableOpacity key={d.k} style={[styles.detailChip, on && { borderColor: BLUE, backgroundColor: BLUE + '12' }]} onPress={() => setPermDetail(sec.key, d.k)}>
-                          <Text allowFontScaling={false} style={[styles.detailChipText, on && { color: BLUE }]}>{d.l}</Text>
+                          <Text allowFontScaling={false} style={[styles.detailChipText, on && { color: BLUE }]}>{t(d.l)}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -528,8 +528,8 @@ const FinanceFamily = () => {
                     Kuzatuvchi (u sizga limit qo'yadi). */}
                 <Text allowFontScaling={false} style={styles.permSub}>
                   {role === 'watched'
-                    ? 'U taklifni qabul qilgach, ushbu a‘zoga oylik limit o‘rnata olasiz.'
-                    : 'Ushbu kuzatuvchi sizga oylik limit o‘rnata oladi.'}
+                    ? t('U taklifni qabul qilgach, ushbu a‘zoga oylik limit o‘rnata olasiz.')
+                    : t('Ushbu kuzatuvchi sizga oylik limit o‘rnata oladi.')}
                 </Text>
               </View>
               <Switch value={!!perms.set_limit} onValueChange={v => setPerms((p: any) => ({ ...p, set_limit: v }))} trackColor={{ true: BLUE, false: rd.color.border }} thumbColor="#fff" />
@@ -562,7 +562,7 @@ const FinanceFamily = () => {
               ].map(sec => (
                 <View key={sec.key} style={styles.permBlock}>
                   <View style={styles.permRow}>
-                    <Text allowFontScaling={false} style={styles.permLabel}>{sec.label}</Text>
+                    <Text allowFontScaling={false} style={styles.permLabel}>{t(sec.label)}</Text>
                     <Switch value={!!perms[sec.key]?.view} onValueChange={v => togglePerm(sec.key, v)} trackColor={{ true: BLUE, false: rd.color.border }} thumbColor="#fff" />
                   </View>
                   {perms[sec.key]?.view && (
@@ -571,7 +571,7 @@ const FinanceFamily = () => {
                         const on = (perms[sec.key]?.detail || 'summary') === dch.k;
                         return (
                           <TouchableOpacity key={dch.k} style={[styles.detailChip, on && { borderColor: BLUE, backgroundColor: BLUE + '12' }]} onPress={() => setPermDetail(sec.key, dch.k)}>
-                            <Text allowFontScaling={false} style={[styles.detailChipText, on && { color: BLUE }]}>{dch.l}</Text>
+                            <Text allowFontScaling={false} style={[styles.detailChipText, on && { color: BLUE }]}>{t(dch.l)}</Text>
                           </TouchableOpacity>
                         );
                       })}

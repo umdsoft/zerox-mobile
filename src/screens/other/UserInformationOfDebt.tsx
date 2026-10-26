@@ -30,6 +30,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { checkExpire } from '../../store/reducers/HomeReducer';
 import { rd, rs } from '../../theme/rd';
 import { ArrowUpRight, ArrowDownLeft } from '../home/redesign/icons';
+import { useFio } from '../../helper/useFio';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 // Ikki karta bir qatorda: ekran eni − chetlar (rs(16)*2) − oradagi bo'shliq (rs(12)).
@@ -54,6 +55,7 @@ const UserInformationOfDebt = () => {
   const navigation = useNavigation();
   const { user, type, ctok, dtok, item } = useRoute().params ?? {};
   const { t } = useTranslation();
+  const { fio } = useFio();
   const userInfo = useSelector(state => state.HomeReducer);
   const [me, setMe] = useState({});
   const [data, setData] = useState({ profile: {}, creditor: {}, debitor: {} });
@@ -126,6 +128,7 @@ const UserInformationOfDebt = () => {
   } ${data.profile?.middle_name ?? ''}`
     .replace(/\s+/g, ' ')
     .trim();
+  const shownName = fio(fullName);
 
   return (
     <ScreenLayout title={type === 1 ? '' : t('Qarz ma’lumoti')}>
@@ -161,7 +164,7 @@ const UserInformationOfDebt = () => {
               numberOfLines={2}
               allowFontScaling={false}
             >
-              {fullName || t('fish')}
+              {shownName || t('fish')}
             </Text>
           </View>
         </View>

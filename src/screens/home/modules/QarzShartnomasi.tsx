@@ -31,7 +31,7 @@ import { compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
-import { getDueMeta, sortText } from '../../components/StatisticCard';
+import { dueLabel, getDueMeta, sortText } from '../../components/StatisticCard';
 import Donut from '../redesign/Donut';
 import RdHeader from '../redesign/RdHeader';
 import RdTopBar from '../redesign/RdTopBar';
@@ -311,7 +311,7 @@ const NearCard = ({
                 onPress={() => tappable && onRow!(r.counter_uid, Number(r.counter_type) || 0)}
                 style={styles.tableRow}>
                 <View style={[styles.dueBadge, { backgroundColor: due.bg }]}>
-                  <Text style={[styles.dueBadgeText, { color: due.color }]}>{due.label}</Text>
+                  <Text style={[styles.dueBadgeText, { color: due.color }]}>{dueLabel(due)}</Text>
                 </View>
                 <Text style={[styles.tableAmount, styles.tableRight]} numberOfLines={1}>
                   {sortText(num(r.residual_amount))} {r.currency || 'UZS'}

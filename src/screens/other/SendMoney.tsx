@@ -27,6 +27,7 @@ import { goHomeSmooth } from '../../helper/finishAction';
 import { rd, rs } from '../../theme/rd';
 import { AnimatedIconCircle } from '../../images/debtActionIcons';
 import { AnimatedTransferIcon } from '../home/redesign/icons';
+import { fioNow } from '../../helper/useFio';
 
 const SendMoney = () => {
   const navigation = useNavigation();
@@ -314,7 +315,7 @@ const SendMoney = () => {
           {renderId}
           {client.id ? (
             <Text style={styles.clientText} allowFontScaling={false}>
-              {maskName(client.last_name)} {maskName(client.first_name)}
+              {maskName(fioNow(client.last_name))} {maskName(fioNow(client.first_name))}
             </Text>
           ) : null}
           {renderSum}

@@ -25,6 +25,7 @@ import { fmtPhoneUz } from '../../../../helper/phone';
 import { sortText } from '../../../components/StatisticCard';
 import Toast from 'react-native-toast-message';
 import { fetchCreationParams } from '../../modules/qarzAmaliyot';
+import { fioNow } from '../../../../helper/useFio';
 
 // Backend `SHOP_COMPLAINT_REASONS` kalitlari -> i18n kalitlari (FinanceDebtDetail bilan bir xil matn).
 const REASON_KEYS: Record<string, string> = {
@@ -47,7 +48,7 @@ const Shikoyat = ({ item, okay, navigation }: any) => {
 
   // Shikoyatchi (n.debitor = shikoyat yuborgan foydalanuvchi) — FISH, bo'lmasa mijoz/manba nomi.
   const who =
-    titleCase([it.d_last_name, it.d_first_name].filter(Boolean).join(' ')) ||
+    fioNow(titleCase([it.d_last_name, it.d_first_name].filter(Boolean).join(' '))) ||
     String((isShop ? it.sh_mijoz : it.pc_source_name) || '—');
   const phone = fmtPhoneUz(isShop ? it.sh_phone : it.pc_phone);
   const amount = isShop

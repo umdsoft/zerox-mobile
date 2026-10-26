@@ -26,8 +26,10 @@ import { t } from 'i18next';
 import { expire_passport_check } from '../../helper/timeChecker';
 import { rd, rs } from '../../theme/rd';
 import { UserIcon } from '../home/redesign/icons';
+import { useFio } from '../../helper/useFio';
 
 const UserInfo = () => {
+  const { fio } = useFio();
   const userInfo = useSelector(state => state.HomeReducer);
   const { params } = useRoute();
   const navigation = useNavigation();
@@ -99,7 +101,7 @@ const UserInfo = () => {
           )}
         </View>
         <Text allowFontScaling={false} style={styles.name}>
-          {user?.last_name + ' ' + user.first_name + ' ' + user.middle_name}
+          {fio(user?.last_name + ' ' + user.first_name + ' ' + user.middle_name)}
         </Text>
         <View style={styles.uidChip}>
           <Text allowFontScaling={false} style={styles.uidLabel}>

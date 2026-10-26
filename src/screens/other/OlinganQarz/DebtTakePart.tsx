@@ -46,11 +46,13 @@ import {
   AnimatedIconCircle,
   PartReturnIcon,
 } from '../../../images/debtActionIcons';
+import { useFio } from '../../../helper/useFio';
 
 // Qisman qaytarish — KO'K (DebtTakeSelect bilan mos).
 const PART = '#2f6fed';
 
 const DebtTakePart = () => {
+  const { fio } = useFio();
   const navigation = useNavigation();
   let { id } = useRoute().params;
   const [sum, setSum] = useState('');
@@ -237,7 +239,7 @@ const DebtTakePart = () => {
                         end: contractInfo.number,
                         id: contractInfo.number,
                         // FISH TitleCase (o'g'li/qizi kichik) — server ALL CAPS beradi.
-                        name: titleCase(contractInfo?.debitor_name),
+                        name: fio(titleCase(contractInfo?.debitor_name)),
                         sum: `${
                           groupMoney(Number(contractInfo.amount) - Number(contractInfo.inc)) +
                           ' ' +

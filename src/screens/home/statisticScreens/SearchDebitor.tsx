@@ -10,6 +10,7 @@ import {
 import React, {useRef, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import StatisticCard, {getDueMeta, reportStatusMeta} from '../../components/StatisticCard';
+import {fioMatches} from '../../../helper/useFio';
 import {settingDate} from '../../../helper';
 import {useFetch} from '../../../hooks/useFetch';
 import Loading from '../../components/Loading';
@@ -73,7 +74,7 @@ const SourceCardWide = ({Icon, label, uzs, usd, onPress, tint, accent}: any) => 
 );
 
 const SearchDebitor = () => {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
   const route = useRoute<any>();
   const {
@@ -97,6 +98,8 @@ const SearchDebitor = () => {
 
   const [searchData, setSearchData] = useState([]);
   const [isCheck, setIsCheck] = useState(false);
+  // Qidiruv matni — FISh bo'yicha klient tomonda ham (asl lotin YOKI ilova tilidagi translit) moslash uchun.
+  const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [activeTab, setActiveTab] = useState<
     'all' | 'active' | 'near' | 'overdue' | 'completed' | 'rejected'
@@ -215,6 +218,7 @@ const SearchDebitor = () => {
 
   // ══════════ LIST REJIMI: izlash + tablar + ro'yxat + Excel ══════════
   const searchUser = (text: string) => {
+    setQuery(text);
     if (!token) {
       navigation.navigate('LoginWithPhone');
       return;
@@ -255,8 +259,20 @@ const SearchDebitor = () => {
     const s = it?.status;
     return s === 2 || s === '2';
   };
-  const usingSearch = searchData.length > 0 || isCheck;
-  const rawListSrc: any[] = (usingSearch ? searchData : data?.data) || [];
+  // FISh klient tomonda ham qidiriladi: server asl lotin matn bilan qidiradi, foydalanuvchi esa
+  // ilova tilidagi (masalan rus kirilligi) ismni yozishi mumkin — shuning uchun asosiy ro'yxatdan
+  // ikkala ko'rinish bo'yicha moslarini qo'shamiz (server so'rovi o'zgarmaydi).
+  const mainList: any[] = Array.isArray(data?.data) ? data.data : [];
+  const nameOf = (it: any) => (isDebitorRole ? it?.creditor_name : it?.debitor_name);
+  const clientHits: any[] = query.trim()
+    ? mainList.filter((it: any) => fioMatches(nameOf(it), query, i18n.language))
+    : [];
+  const usingSearch = searchData.length > 0 || isCheck || clientHits.length > 0;
+  const searchMerged: any[] = [
+    ...searchData,
+    ...clientHits.filter((h: any) => !searchData.some((s: any) => s?.id != null && s?.id === h?.id)),
+  ];
+  const rawListSrc: any[] = (usingSearch ? searchMerged : data?.data) || [];
   // SS2 (so'rov bo'yicha): OLINGAN/BERILGAN faol ro'yxatida faqat JARAYONDAGI (faol)
   // qarz shartnomalari bo'lsin. Tugallangan va RAD ETILGAN shartnomalar bu yerda
   // KO'RINMASIN (ular hisobot/arxivga tegishli). Ikki mezon:
@@ -285,7 +301,9 @@ const SearchDebitor = () => {
           !isRejected(it),
       );
   const rawList: any[] =
-    usingSearch && !isReport ? rawListAll.filter(isActive) : rawListAll;
+    usingSearch && !isReport
+      ? rawListAll.filter((it: any) => isActive(it) || clientHits.includes(it))
+      : rawListAll;
 
   const counts: Record<string, number> = isReport
     ? {all: rawList.length, completed: 0, rejected: 0}

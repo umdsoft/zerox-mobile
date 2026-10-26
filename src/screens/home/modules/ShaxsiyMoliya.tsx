@@ -480,18 +480,21 @@ const ShaxsiyMoliya = () => {
               {t('ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.')}
             </Text>
             <View style={styles.healthQoldiq}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate('FinanceAdvice')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityRole="button"
-                accessibilityLabel={t('Tavsiyalar')}
-                style={[styles.healthAdviceBtn, styles.fmHeroAdvice]}>
-                <BulbIcon size={rs(15)} color={rd.color.onPrimary} />
-              </TouchableOpacity>
-              <Text allowFontScaling={false} style={styles.healthQoldiqLabel}>
-                {t('Qoldiq')}
-              </Text>
+              {/* 25.10: lampochka "Qoldiq" so'zining CHAP tomonida (bir qatorda). */}
+              <View style={styles.fmQoldiqHead}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('FinanceAdvice')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('Tavsiyalar')}
+                  style={[styles.healthAdviceBtn, styles.fmHeroAdvice]}>
+                  <BulbIcon size={rs(14)} color={rd.color.onPrimary} />
+                </TouchableOpacity>
+                <Text allowFontScaling={false} style={styles.healthQoldiqLabel}>
+                  {t('Qoldiq')}
+                </Text>
+              </View>
               <Text
                 allowFontScaling={false}
                 style={styles.healthQoldiqVal}
@@ -776,7 +779,7 @@ const styles = StyleSheet.create({
   fmHero: {
     borderRadius: rs(22),
     overflow: 'hidden',
-    padding: rs(18),
+    padding: rs(16),
     shadowColor: GRAD_BRAND[1],
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
@@ -787,9 +790,9 @@ const styles = StyleSheet.create({
   fmHeroSep: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.22)',
-    marginTop: rs(12),
+    marginTop: rs(10),
   },
-  fmHeroBtns: { flexDirection: 'row', gap: rs(10), marginTop: rs(14) },
+  fmHeroBtns: { flexDirection: 'row', gap: rs(10), marginTop: rs(12) },
   fmHeroBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -878,7 +881,7 @@ const styles = StyleSheet.create({
   },
   healthBottomRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   healthScoreInline: { flexDirection: 'row', alignItems: 'flex-end', flex: 1 },
@@ -899,15 +902,17 @@ const styles = StyleSheet.create({
   },
   healthQoldiq: { alignItems: 'flex-end', maxWidth: '46%' },
   // 21.10: sog'liq bali o'rnidagi shior (ko'k kartada)
+  // 25.10: shrift Qarz daftari hero'sidagi heroSub bilan BIR XIL; karta TEPASIDA.
   fmHeroSlogan: {
     flex: 1,
     marginRight: rs(12),
-    fontFamily: rd.font.semibold,
-    fontSize: rs(14.5),
-    lineHeight: rs(20),
-    color: rd.color.onPrimary,
+    fontFamily: rd.font.regular,
+    fontSize: rs(12.5),
+    lineHeight: rs(17),
+    color: 'rgba(255,255,255,0.9)',
   },
-  fmHeroAdvice: { marginBottom: rs(8) },
+  fmQoldiqHead: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
+  fmHeroAdvice: { width: rs(24), height: rs(24), borderRadius: rs(12) },
   healthQoldiqLabel: {
     fontFamily: rd.font.medium,
     fontSize: rs(11),

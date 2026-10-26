@@ -1001,8 +1001,8 @@ const FinanceGapDetail = () => {
             </Text>
             <Text allowFontScaling={false} style={styles.confirmText}>
               {coOrg?.add
-                ? `"${coOrg?.member?.name || 'A‘zo'}" ham tashkilotchi bo‘ladi: uchrashuv joyi, plastik karta va to‘lovlarni belgilash imkoniga ega bo‘ladi. Istalgan vaqtda olib tashlashingiz mumkin.`
-                : `"${coOrg?.member?.name || 'A‘zo'}" endi tashkilotchi bo‘lmaydi.`}
+                ? t('"{{name}}" ham tashkilotchi bo‘ladi: uchrashuv joyi, plastik karta va to‘lovlarni belgilash imkoniga ega bo‘ladi. Istalgan vaqtda olib tashlashingiz mumkin.', { name: coOrg?.member?.name || t('A‘zo') })
+                : t('"{{name}}" endi tashkilotchi bo‘lmaydi.', { name: coOrg?.member?.name || t('A‘zo') })}
             </Text>
             <View style={styles.confirmBtns}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setCoOrg(null)}>
@@ -1012,7 +1012,7 @@ const FinanceGapDetail = () => {
                 style={[styles.confirmDel, { backgroundColor: coOrg?.add ? TEAL : RED }, busy && { opacity: 0.6 }]}
                 disabled={busy}
                 onPress={applyCoOrg}>
-                <Text style={styles.confirmDelText}>{coOrg?.add ? 'Tasdiqlash' : 'Olib tashlash'}</Text>
+                <Text style={styles.confirmDelText}>{coOrg?.add ? t('Tasdiqlash') : t('Olib tashlash')}</Text>
               </TouchableOpacity>
             </View>
           </View>
