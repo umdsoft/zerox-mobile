@@ -36,7 +36,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 // 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import { dashboardUrl, nearExpirationUrl, shopsUrl } from '../../../offline/prefetchPlan';
-import OfflineBanner, { SYNC_ROUTE } from '../../../offline/ui/OfflineBanner';
+import OfflineBanner from '../../../offline/ui/OfflineBanner';
 // 24.10: fonda "oflayn uchun tayyorlash" + kesh bo'lmasa aniq holat (bo'sh EMAS).
 import { prefetchForOffline, startOfflinePrefetch } from '../../../offline/prefetch';
 import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
@@ -72,7 +72,6 @@ import {
   IconProps,
   ShieldIcon,
   TelegramPlaneIcon,
-  WifiOffIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 
@@ -724,20 +723,8 @@ const QarzDaftari = () => {
       {/* SS24: ORQAGA tugmasi OLIB TASHLANDI — bu ham TAB (top-level ekran). */}
       {/* SS7 (2026-09-18): Bosh sahifadagi bilan bir xil panel. */}
       <RdTopBar title={t('Qarz daftari')} />
-      {/* 25.10: banner faqat oflayn / navbat / xato holatida chiqadi; "Oflayn rejim"
-          sahifasiga doimiy kirish — pastdagi ixcham tugma. */}
+      {/* 27.10: banner faqat oflayn / navbat / xato holatida chiqadi; alohida "Oflayn rejim" tugmasi YO'Q (so'rov bo'yicha). */}
       <OfflineBanner />
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.offlineEntry}
-        onPress={() => nav(SYNC_ROUTE)}
-        accessibilityRole="button"
-        accessibilityLabel={t('Oflayn rejim')}
-        accessibilityHint={t('Oflayn rejim: internet o‘chsa ham savdo davom etadi.')}>
-        <WifiOffIcon size={rs(14)} color={rd.color.textSecondary} />
-        <Text style={styles.offlineEntryText}>{t('Oflayn rejim')}</Text>
-        <ChevronRight size={rs(14)} color={rd.color.textTertiary} />
-      </TouchableOpacity>
 
       <ScrollView
         style={styles.scroll}
@@ -1097,17 +1084,6 @@ const styles = StyleSheet.create({
   },
   shopAddText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: BLUE },
   screen: { flex: 1, backgroundColor: rd.color.page },
-  offlineEntry: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    gap: rs(5),
-    marginRight: rs(16),
-    marginTop: rs(2),
-    paddingVertical: rs(4),
-    paddingHorizontal: rs(8),
-  },
-  offlineEntryText: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textSecondary },
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: rs(20),

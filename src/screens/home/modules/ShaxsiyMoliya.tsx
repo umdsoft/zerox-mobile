@@ -476,7 +476,7 @@ const ShaxsiyMoliya = () => {
               ball endi bosh sahifada (barcha modullar). O'rniga shior; tavsiya tugmasi va
               qoldiq joyida qoladi. */}
           <View style={styles.healthBottomRow}>
-            <Text allowFontScaling={false} style={styles.fmHeroSlogan} numberOfLines={3}>
+            <Text style={styles.fmHeroSlogan} numberOfLines={3}>
               {t('ZeroX orqali daromadlar va xarajatlaringizni nazorat qiling.')}
             </Text>
             <View style={styles.healthQoldiq}>
@@ -903,6 +903,7 @@ const styles = StyleSheet.create({
   healthQoldiq: { alignItems: 'flex-end', maxWidth: '46%' },
   // 21.10: sog'liq bali o'rnidagi shior (ko'k kartada)
   // 25.10: shrift Qarz daftari hero'sidagi heroSub bilan BIR XIL; karta TEPASIDA.
+  // 27.10: allowFontScaling o'chirilgan edi — telefon shrift kattaligini hisobga olmay, Qarz daftaridan kichik chiqardi.
   fmHeroSlogan: {
     flex: 1,
     marginRight: rs(12),

@@ -2214,6 +2214,8 @@
     "Internet o‘chganda qarz yozish, qarzni yopish va voz kechish ishlaydi. Amallar telefonda shifrlangan holda saqlanadi va internet tiklanishi bilan avtomatik yuboriladi. Internet aloqasi tiklanganida mijozga barcha turdagi sms xabarlar yuboriladi.": "When the internet is off, recording a debt, closing a debt and debt forgiveness still work. Actions are stored encrypted on the phone and sent automatically once the internet is back. When the connection is restored, all types of SMS messages are sent to the customer.",
     "Mijoz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.": "Customer saved offline. It will be recorded in the usual way once the internet connection is restored.",
     "{{n}} ta amal navbatda. Internet tiklanganda yuboriladi.": "{{n}} action(s) queued. They will be sent when the internet is back.",
-    "Oflayn rejim: internet o‘chsa ham savdo davom etadi.": "Offline mode: sales continue even without internet."
+    "Oflayn rejim: internet o‘chsa ham savdo davom etadi.": "Offline mode: sales continue even without internet.",
+    "Saqlangan ma’lumotlar ko‘rsatilmoqda.": "Showing saved data.",
+    "Qarz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.": "Debt saved offline. It will be recorded in the usual way once the internet connection is restored."
   }
 }

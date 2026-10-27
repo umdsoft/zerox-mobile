@@ -2215,6 +2215,8 @@
     "Internet o‘chganda qarz yozish, qarzni yopish va voz kechish ishlaydi. Amallar telefonda shifrlangan holda saqlanadi va internet tiklanishi bilan avtomatik yuboriladi. Internet aloqasi tiklanganida mijozga barcha turdagi sms xabarlar yuboriladi.": "Когда интернета нет, работают запись долга, закрытие долга и прощение долга. Операции хранятся на телефоне в зашифрованном виде и автоматически отправляются при появлении интернета. После восстановления связи клиенту отправляются смс-сообщения всех видов.",
     "Mijoz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.": "Клиент сохранён офлайн. После восстановления интернета он будет зарегистрирован в обычном порядке.",
     "{{n}} ta amal navbatda. Internet tiklanganda yuboriladi.": "В очереди: {{n}}. Будет отправлено, когда появится интернет.",
-    "Oflayn rejim: internet o‘chsa ham savdo davom etadi.": "Офлайн-режим: торговля продолжается даже без интернета."
+    "Oflayn rejim: internet o‘chsa ham savdo davom etadi.": "Офлайн-режим: торговля продолжается даже без интернета.",
+    "Saqlangan ma’lumotlar ko‘rsatilmoqda.": "Показаны сохранённые данные.",
+    "Qarz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.": "Долг сохранён офлайн. После восстановления интернета он будет зарегистрирован в обычном порядке."
   }
 }

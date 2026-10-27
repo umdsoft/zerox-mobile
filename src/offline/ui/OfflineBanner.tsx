@@ -44,7 +44,7 @@ export function OfflineBanner({ style }: Props) {
     title = t('Oflayn rejim');
     sub = s.queued
       ? t('{{n}} ta amal navbatda. Internet tiklanganda yuboriladi.', { n: s.queued })
-      : t('Saqlangan ma’lumotlar ko‘rsatilmoqda');
+      : t('Saqlangan ma’lumotlar ko‘rsatilmoqda.');
   } else if (sync.running) {
     tone = 'info';
     title = t('Sinxronlanmoqda…');

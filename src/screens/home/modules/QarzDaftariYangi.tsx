@@ -279,7 +279,7 @@ const QarzDaftariYangi = () => {
       } as NewOp);
       if (out.status === 'queued') {
         navigation.goBack();
-        showQueuedResult(out.op, t('Qarz oflayn saqlandi — internet tiklanganda yuboriladi'), t);
+        showQueuedResult(out.op, t('Qarz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.'), t);
       } else if (out.data?.success) {
         Toast.show({ type: 'omad', props: { desc: t('Qarz saqlandi') } });
         navigation.goBack();
