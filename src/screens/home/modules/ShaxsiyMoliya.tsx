@@ -506,8 +506,6 @@ const ShaxsiyMoliya = () => {
             </View>
           </View>
 
-          <View style={styles.fmHeroSep} />
-
           <View style={styles.fmHeroBtns}>
             <TouchableOpacity
               activeOpacity={0.9}
@@ -787,11 +785,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   // SS19: hero ichida holat va amallarni ajratuvchi nozik chiziq.
-  fmHeroSep: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    marginTop: rs(10),
-  },
   fmHeroBtns: { flexDirection: 'row', gap: rs(10), marginTop: rs(12) },
   fmHeroBtn: {
     flex: 1,
