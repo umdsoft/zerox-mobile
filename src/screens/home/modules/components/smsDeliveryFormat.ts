@@ -55,6 +55,16 @@ export const mergeSmsRows = (existing: UndeliveredSms[], incoming: UndeliveredSm
   return [...existing, ...incoming.filter(r => !seen.has(String(r.id)))];
 };
 
+/** Ekran nomi — banner shu ekranni ochadi (Navigation.tsx da ro'yxatga olingan). */
+export const SMS_SCREEN = 'QarzDaftariYetkazilmagan';
+
+/** "Qarzni ochish" — QarzDaftariQarz `route.params.id` ni o'qiydi; qarz_id yo'q bo'lsa null. */
+export const debtRouteParams = (qarzId?: number | string | null): { id: number | string } | null =>
+  qarzId ? { id: qarzId } : null;
+
+/** Banner -> ekran parametrlari (shopId yo'q/0 bo'lsa null = barcha do'konlar). */
+export const smsScreenParams = (shopId?: number | null): { shopId: number | null } => ({ shopId: shopId || null });
+
 /** Tanlangan do'kon bo'lsagina `faoliyat_id` yuboriladi. */
 export const smsParams = (page: number, shopId?: number | null) => ({
   days: SMS_DAYS,

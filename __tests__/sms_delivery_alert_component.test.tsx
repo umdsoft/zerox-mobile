@@ -1,6 +1,6 @@
 /**
- * SmsDeliveryAlert komponent testi: yashirinish (xato/oflayn), do'kon almashuvi poygasi,
- * sahifalash to'xtashi, "Qarzni ochish" navigatsiya parametri, sessiya almashuvi.
+ * SmsDeliveryAlert banner testi: yashirinish (xato/oflayn/0), faoliyat_id, do'kon almashuvi poygasi,
+ * bosilganda QarzDaftariYetkazilmagan ga navigatsiya, sessiya almashuvi.
  */
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
@@ -14,13 +14,16 @@ jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate:
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string, o?: Record<string, unknown>) => k.replace(/\{\{(\w+)\}\}/g, (_m, n) => String(o?.[n])) }),
 }));
-jest.mock('../src/helper', () => ({ fmtDateTimeUz: (v: string) => `D:${v}` }));
 jest.mock('../src/offline/netStatus', () => ({ isOnline: () => mockOnline, useIsOnline: () => mockOnline }));
 jest.mock('../src/store/api/token/getToken', () => ({ storage: { getString: () => 'tok' } }));
 jest.mock('../src/screens/constants', () => ({ URL: 'http://x' }));
-jest.mock('../src/screens/home/redesign/icons', () => ({ MessageIcon: () => null }));
+jest.mock('../src/screens/home/redesign/icons', () => ({ MessageIcon: () => null, ChevronRight: () => null }));
 jest.mock('../src/theme/rd', () => {
-  const rdMock = { color: new Proxy({}, { get: () => '#000' }), font: new Proxy({}, { get: () => 'F' }) };
+  const rdMock = {
+    color: new Proxy({}, { get: () => '#000' }),
+    font: new Proxy({}, { get: () => 'F' }),
+    radius: new Proxy({}, { get: () => 8 }),
+  };
   return { rd: rdMock, rs: (n: number) => n };
 });
 
@@ -55,47 +58,42 @@ test('oflaynda so\'rov yuborilmaydi va karta yo\'q', async () => {
   expect(r.toJSON()).toBeNull();
 });
 
-test('count > 0 bo\'lsa karta; faoliyat_id faqat do\'kon tanlanganda', async () => {
-  mockGet.mockResolvedValue(ok(2, mkRows(1, 2)));
+test('count > 0 bo\'lsa karta; faoliyat_id faqat do\'kon tanlanganda; limit=1', async () => {
+  mockGet.mockResolvedValue(ok(2, mkRows(1, 1)));
   const r = await mount({ shopId: 7 });
   expect(texts(r).some(t => t.includes('2 ta SMS'))).toBe(true);
-  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, page: 1, limit: 20, faoliyat_id: 7 });
+  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, page: 1, limit: 1, faoliyat_id: 7 });
+});
+
+test('count 0 bo\'lsa karta yo\'q', async () => {
+  mockGet.mockResolvedValue(ok(0, []));
+  const r = await mount();
+  expect(r.toJSON()).toBeNull();
+});
+
+test('bosilsa QarzDaftariYetkazilmagan ochiladi (shopId bilan)', async () => {
+  mockGet.mockResolvedValue(ok(3, mkRows(1, 1)));
+  const r = await mount({ shopId: 4 });
+  const card = r.root.findAll(n => n.props.accessibilityRole === 'button' && n.props.onPress)[0];
+  await act(async () => { card.props.onPress(); });
+  expect(mockNavigate).toHaveBeenCalledWith('QarzDaftariYetkazilmagan', { shopId: 4 });
 });
 
 test('do\'kon almashsa eski javob tashlanadi (poyga)', async () => {
   let resolveA!: (v: unknown) => void;
   mockGet.mockImplementationOnce(() => new Promise(res => { resolveA = res; }));
-  mockGet.mockResolvedValueOnce(ok(5, mkRows(1, 5)));
+  mockGet.mockResolvedValueOnce(ok(5, mkRows(1, 1)));
   const r = await mount({ shopId: 1 });
   await act(async () => { r.update(<SmsDeliveryAlert shopId={2} />); });
   await flush();
-  await act(async () => { resolveA(ok(99, mkRows(50, 3))); });
+  await act(async () => { resolveA(ok(99, mkRows(50, 1))); });
   await flush();
   const all = texts(r).join('|');
   expect(all).toContain('5 ta SMS');
   expect(all).not.toContain('99 ta SMS');
 });
 
-test('sahifalash: <limit qator qaytsa "Yana ko\'rsatish" yo\'qoladi; Qarzni ochish param', async () => {
-  mockGet.mockResolvedValueOnce(ok(25, mkRows(1, 20)));
-  mockGet.mockResolvedValueOnce(ok(25, mkRows(21, 3)));
-  const r = await mount();
-  expect(texts(r).includes('Yana ko‘rsatish')).toBe(false); // modal yopiq
-  const open = r.root.findAll(n => n.props.onPress && [n.props.children].flat().some((c: any) => c?.props?.children === 'Ko‘rish'))[0];
-  await act(async () => { open.props.onPress(); });
-  const more = () => r.root.findAll(n => n.props.onPress && texts({ root: n }).includes('Yana ko‘rsatish'))[0];
-  expect(more()).toBeDefined();
-  await act(async () => { more().props.onPress(); more().props.onPress(); }); // qo'sh bosish
-  await flush();
-  expect(mockGet).toHaveBeenCalledTimes(2);
-  expect(mockGet.mock.calls[1][1].params.page).toBe(2);
-  expect(more()).toBeUndefined();
-  const debt = r.root.findAll(n => n.props.accessibilityLabel === 'Qarzni ochish: M1')[0];
-  await act(async () => { debt.props.onPress(); });
-  expect(mockNavigate).toHaveBeenCalledWith('QarzDaftariQarz', { id: 101 });
-});
-
-test('sessionKey o\'zgarsa eski qatorlar tozalanadi', async () => {
+test('sessionKey o\'zgarsa eski son tozalanadi', async () => {
   mockGet.mockResolvedValueOnce(ok(1, mkRows(1, 1)));
   mockGet.mockRejectedValueOnce(new Error('403'));
   const r = await mount({ sessionKey: 'xodim:A' });

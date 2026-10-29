@@ -798,6 +798,13 @@ const QarzDaftari = () => {
           <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
         </TouchableOpacity>
 
+        {/* 29.10: oxirgi 7 kunda yetkazilmagan SMS — do'kon cardi tagida (faqat count > 0 va onlayn bo'lsa). */}
+        <SmsDeliveryAlert
+          shopId={effectiveShopId()}
+          refreshKey={smsRefreshKey}
+          sessionKey={xodim ? `xodim:${xodimNomi}` : 'owner'}
+        />
+
         {/* C. "Umumiy ko'rinish" diagrammasi Berilgan/Olingan "manba tanlash"
             sahifasiga (SearchDebitor select view) ko'chirilgan.
             D. "Tezkor amallar" bo'limi (Qarzga berish/olish kartalari) so'rov bo'yicha
@@ -869,12 +876,6 @@ const QarzDaftari = () => {
           />
         </View>
 
-        {/* 29.10: oxirgi 7 kunda yetkazilmagan SMS (faqat count > 0 bo'lsa ko'rinadi). */}
-        <SmsDeliveryAlert
-          shopId={effectiveShopId()}
-          refreshKey={smsRefreshKey}
-          sessionKey={xodim ? `xodim:${xodimNomi}` : 'owner'}
-        />
 
         {/* F. Muddati yaqinlashganlar (sarlavha so'rov bo'yicha olib tashlandi) */}
         <DueTable

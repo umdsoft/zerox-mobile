@@ -3,6 +3,8 @@
  */
 import { fmtDateTimeUz } from '../src/helper';
 import {
+  debtRouteParams,
+  smsScreenParams,
   mergeSmsRows,
   smsParams,
   smsReason,
@@ -41,5 +43,17 @@ describe('smsDeliveryFormat', () => {
   test('smsParams: faoliyat_id faqat do\'kon tanlanganda', () => {
     expect(smsParams(2, null)).toEqual({ days: 7, page: 2, limit: 20 });
     expect(smsParams(1, 5)).toEqual({ days: 7, page: 1, limit: 20, faoliyat_id: 5 });
+  });
+
+  test('debtRouteParams: qarz_id bo\'lsa {id}, aks holda null', () => {
+    expect(debtRouteParams(101)).toEqual({ id: 101 });
+    expect(debtRouteParams(null)).toBeNull();
+    expect(debtRouteParams(undefined)).toBeNull();
+  });
+
+  test('smsScreenParams: shopId yo\'q/0 -> null', () => {
+    expect(smsScreenParams(7)).toEqual({ shopId: 7 });
+    expect(smsScreenParams(0)).toEqual({ shopId: null });
+    expect(smsScreenParams(null)).toEqual({ shopId: null });
   });
 });
