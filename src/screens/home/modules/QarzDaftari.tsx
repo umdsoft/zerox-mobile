@@ -74,6 +74,7 @@ import {
   TelegramPlaneIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import SmsDeliveryAlert from './components/SmsDeliveryAlert';
 
 type Nav = (route: string, params?: object) => void;
 
@@ -859,6 +860,9 @@ const QarzDaftari = () => {
             }
           />
         </View>
+
+        {/* 29.10: oxirgi 7 kunda yetkazilmagan SMS (faqat count > 0 bo'lsa ko'rinadi). */}
+        <SmsDeliveryAlert shopId={effectiveShopId()} />
 
         {/* F. Muddati yaqinlashganlar (sarlavha so'rov bo'yicha olib tashlandi) */}
         <DueTable
