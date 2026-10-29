@@ -2219,7 +2219,7 @@
     "Qarz oflayn saqlandi. Internet aloqasi tiklanganda odatiy tarzda qayd etiladi.": "Debt saved offline. It will be recorded in the usual way once the internet connection is restored.",
     "Moliyaviy holat": "Financial condition",
     "Status": "Status",
-    "Oxirgi {{days}} kunda {{count}} ta SMS mijozga yetkazilmadi": "{{count}} SMS were not delivered to customers in the last {{days}} days",
+    "Oxirgi {{days}} kunda {{count}} ta SMS mijozga yetkazilmadi": "{{count}} SMS was not delivered to customers in the last {{days}} days",
     "Mijoz qarz haqidagi xabarni olmagan bo‘lishi mumkin — u bilan boshqa yo‘l orqali bog‘laning.": "The customer may not have received the debt notice — contact them another way.",
     "Yetkazilmagan SMS xabarlar": "Undelivered SMS messages",
     "Oxirgi {{days}} kun — {{count}} ta": "Last {{days}} days — {{count}} total",
@@ -2239,6 +2239,7 @@
     "telefon raqami noto‘g‘ri": "invalid phone number",
     "SMS xizmati matnni rad etdi": "the SMS service rejected the text",
     "SMS xizmati sozlanmagan": "the SMS service is not configured",
-    "texnik xato": "technical error"
+    "texnik xato": "technical error",
+    "Oxirgi {{days}} kunda {{count}} ta SMS mijozga yetkazilmadi_plural": "{{count}} SMS were not delivered to customers in the last {{days}} days"
   }
 }

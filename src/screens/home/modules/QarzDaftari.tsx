@@ -603,6 +603,9 @@ const QarzDaftari = () => {
   const [xodim, setXodim] = React.useState(isXodimSession());
   const [xodimNomi, setXodimNomi] = React.useState(xodimFaoliyatNomi());
   const firstFocus = React.useRef(true);
+  // SMS ogohlantirishi dashboard bilan birga yangilansin (fokus, qayta urinish, xodimdan chiqish).
+  const [smsRefreshKey, setSmsRefreshKey] = React.useState(0);
+  const bumpSms = React.useCallback(() => setSmsRefreshKey(k => k + 1), []);
   useFocusEffect(
     React.useCallback(() => {
       setXodim(isXodimSession());
@@ -613,6 +616,7 @@ const QarzDaftari = () => {
       }
       dashboard.onRefresh({});
       nearExp.onRefresh({});
+      bumpSms();
       // 🔴 DO'KONLAR RO'YXATI HAM yangilanishi SHART. Ilgari u faqat mount'da
       // o'qilardi, shu sabab:
       //   - do'kon NOMI tahrirlangach cardda ESKI nom qolardi;
@@ -621,7 +625,7 @@ const QarzDaftari = () => {
       // Endi ekranga har qaytganda ro'yxat qayta o'qiladi → nom/soni va
       // `syncQarzShopWithList` orqali tanlov yorlig'i ham darhol yangilanadi.
       shopsFetch.onRefresh({});
-    }, [dashboard.onRefresh, nearExp.onRefresh, shopsFetch.onRefresh]),
+    }, [dashboard.onRefresh, nearExp.onRefresh, shopsFetch.onRefresh, bumpSms]),
   );
 
   const onExitXodim = () => {
@@ -631,6 +635,7 @@ const QarzDaftari = () => {
     // Owner tokeni tiklandi — summalarni qayta o'qiymiz.
     dashboard.onRefresh({});
     nearExp.onRefresh({});
+    bumpSms();
   };
 
   const d: any = (dashboard.data as any)?.data || dashboard.data || {};
@@ -802,7 +807,10 @@ const QarzDaftari = () => {
         {dashboard.error && (
           <NotSavedOffline
             offline={dashboard.offline}
-            onRetry={() => dashboard.onRefresh({})}
+            onRetry={() => {
+              dashboard.onRefresh({});
+              bumpSms();
+            }}
             style={styles.notSaved}
           />
         )}
@@ -862,7 +870,11 @@ const QarzDaftari = () => {
         </View>
 
         {/* 29.10: oxirgi 7 kunda yetkazilmagan SMS (faqat count > 0 bo'lsa ko'rinadi). */}
-        <SmsDeliveryAlert shopId={effectiveShopId()} />
+        <SmsDeliveryAlert
+          shopId={effectiveShopId()}
+          refreshKey={smsRefreshKey}
+          sessionKey={xodim ? `xodim:${xodimNomi}` : 'owner'}
+        />
 
         {/* F. Muddati yaqinlashganlar (sarlavha so'rov bo'yicha olib tashlandi) */}
         <DueTable

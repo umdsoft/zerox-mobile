@@ -62,3 +62,10 @@ export const smsParams = (page: number, shopId?: number | null) => ({
   limit: SMS_PAGE_SIZE,
   ...(shopId ? { faoliyat_id: shopId } : {}),
 });
+
+/**
+ * "Yana ko'rsatish" ko'rinsinmi: sahifa to'liq (limit) bo'lmasa — oxirgi sahifa, to'xtaymiz
+ * (count backendda tozalangan qatorlardan ko'p bo'lib qolishi mumkin).
+ */
+export const hasMorePages = (pageRows: number, count: number, loadedTotal: number = pageRows): boolean =>
+  pageRows >= SMS_PAGE_SIZE && loadedTotal < count;

@@ -17,6 +17,7 @@ import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { MessageIcon } from '../../redesign/icons';
 import {
+  hasMorePages,
   mergeSmsRows,
   SMS_DAYS,
   smsParams,
@@ -28,6 +29,10 @@ import {
 interface Props {
   /** Tanlangan do'kon id (null — "Barcha do'konlar"). */
   shopId: number | null;
+  /** Dashboard yangilanganda (fokus, qayta urinish, xodimdan chiqish) oshiriladi — ro'yxat qayta o'qiladi. */
+  refreshKey?: number;
+  /** Sessiya konteksti (owner / xodim). O'zgarsa eski qatorlar tozalanadi va modal yopiladi. */
+  sessionKey?: string;
 }
 
 interface Page {
@@ -45,27 +50,46 @@ const fetchPage = async (page: number, shopId: number | null): Promise<Page> => 
   return { count: Number(data.count) || 0, rows: data.rows };
 };
 
-const SmsDeliveryAlert = ({ shopId }: Props) => {
+const SmsDeliveryAlert = ({ shopId, refreshKey = 0, sessionKey = '' }: Props) => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const online = useIsOnline();
   const [count, setCount] = React.useState(0);
   const [rows, setRows] = React.useState<UndeliveredSms[]>([]);
-  const [page, setPage] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [listError, setListError] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   // So'rov tartib raqami: faqat oxirgi reload()/loadMore() natijasi qo'llanadi (do'kon almashsa eski javob tashlanadi).
   const seq = React.useRef(0);
+  const pageRef = React.useRef(0);
+  const rowsRef = React.useRef<UndeliveredSms[]>([]);
+  const inFlight = React.useRef(false);
+
+  // Sessiya (owner/xodim) almashsa — eski sessiyaning mijoz ma'lumotlari DARHOL tashlanadi.
+  React.useEffect(() => {
+    seq.current += 1;
+    inFlight.current = false;
+    pageRef.current = 0;
+    rowsRef.current = [];
+    setCount(0);
+    setRows([]);
+    setHasMore(false);
+    setOpen(false);
+  }, [sessionKey]);
 
   const reload = React.useCallback(async () => {
     seq.current += 1;
     const mySeq = seq.current;
+    inFlight.current = false;
+    pageRef.current = 0;
+    rowsRef.current = [];
     setRows([]);
-    setPage(0);
+    setHasMore(false);
     setListError(false);
     if (!isOnline()) {
       setCount(0);
+      setOpen(false);
       setLoading(false);
       return;
     }
@@ -74,31 +98,46 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
       const data = await fetchPage(1, shopId);
       if (mySeq !== seq.current) return;
       setCount(data.count);
-      setRows(mergeSmsRows([], data.rows));
-      setPage(1);
+      rowsRef.current = mergeSmsRows([], data.rows);
+      setRows(rowsRef.current);
+      setHasMore(hasMorePages(data.rows.length, data.count));
+      pageRef.current = 1;
+      if (data.count <= 0) setOpen(false);
     } catch {
-      if (mySeq === seq.current) setCount(0); // xato — ogohlantirish ko'rsatilmaydi
+      if (mySeq === seq.current) {
+        // xato — ogohlantirish ko'rsatilmaydi, modal o'zi qayta ochilib qolmasin
+        setCount(0);
+        setOpen(false);
+      }
     } finally {
       if (mySeq === seq.current) setLoading(false);
     }
   }, [shopId]);
 
   const loadMore = React.useCallback(async () => {
-    if (loading) return;
+    if (inFlight.current) return; // ikki marta bosish: bitta so'rov
+    inFlight.current = true;
     const mySeq = seq.current;
+    const nextPage = pageRef.current + 1;
     setLoading(true);
     setListError(false);
     try {
-      const data = await fetchPage(page + 1, shopId);
+      const data = await fetchPage(nextPage, shopId);
       if (mySeq !== seq.current) return;
-      setRows(prev => mergeSmsRows(prev, data.rows));
-      setPage(p => p + 1);
+      rowsRef.current = mergeSmsRows(rowsRef.current, data.rows);
+      setRows(rowsRef.current);
+      setHasMore(hasMorePages(data.rows.length, data.count, rowsRef.current.length));
+      setCount(data.count);
+      pageRef.current = nextPage;
     } catch {
       if (mySeq === seq.current) setListError(true);
     } finally {
-      if (mySeq === seq.current) setLoading(false);
+      if (mySeq === seq.current) {
+        inFlight.current = false;
+        setLoading(false);
+      }
     }
-  }, [loading, page, shopId]);
+  }, [shopId]);
 
   // Do'kon o'zgarsa yoki oflayn->onlayn bo'lsa qayta yuklanadi; unmountda uchib yurgan javoblar tashlanadi.
   React.useEffect(() => {
@@ -106,7 +145,7 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
     return () => {
       seq.current += 1;
     };
-  }, [reload, online]);
+  }, [reload, online, refreshKey, sessionKey]);
 
   const openDebt = (qarzId: number | string) => {
     setOpen(false);
@@ -120,7 +159,7 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
       case 'manual': return t('Qaytarish talabi');
       case 'qarz_tolandi': return t('To‘lov qabul qilindi');
       case 'payment_link': return t('To‘lov havolasi');
-      default: return 'SMS';
+      default: return t('Boshqa');
     }
   };
 
@@ -145,6 +184,7 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
   };
 
   if (count <= 0) return null;
+  const showMore = hasMore && (rows.length > 0 || listError);
 
   const renderRow = ({ item }: { item: UndeliveredSms }) => (
     <View style={styles.row}>
@@ -163,6 +203,7 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.openBtn}
+          accessibilityLabel={`${t('Qarzni ochish')}: ${item.mijoz_fish || ''}`}
           onPress={() => openDebt(item.qarz_id as number | string)}
           accessibilityRole="button">
           <Text style={styles.openBtnText}>{t('Qarzni ochish')}</Text>
@@ -199,11 +240,16 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
 
       <Modal visible={open} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setOpen(false)}>
         <View style={styles.modalRoot}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />
-          <View style={styles.modalCard}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel={t('Yopish')}
+          />
+          <View style={styles.modalCard} accessibilityViewIsModal>
             <View style={styles.modalHead}>
               <View style={styles.textCol}>
-                <Text style={styles.modalTitle}>{t('Yetkazilmagan SMS xabarlar')}</Text>
+                <Text style={styles.modalTitle} accessibilityRole="header">{t('Yetkazilmagan SMS xabarlar')}</Text>
                 <Text style={styles.modalSub}>{t('Oxirgi {{days}} kun — {{count}} ta', { days: SMS_DAYS, count })}</Text>
               </View>
               <TouchableOpacity
@@ -231,7 +277,7 @@ const SmsDeliveryAlert = ({ shopId }: Props) => {
                   {listError && rows.length > 0 && (
                     <Text style={styles.stateError}>{t('Ro‘yxatni yuklab bo‘lmadi')}</Text>
                   )}
-                  {rows.length < count && (rows.length > 0 || listError) && (
+                  {showMore && (
                     <TouchableOpacity
                       activeOpacity={0.7}
                       style={styles.moreBtn}
@@ -306,7 +352,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.text },
   modalSub: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textSecondary, marginTop: rs(2) },
   modalClose: { fontFamily: rd.font.bold, fontSize: rs(16), color: rd.color.textTertiary, paddingHorizontal: rs(4) },
-  list: { flexGrow: 0 },
+  list: { flexGrow: 0, flexShrink: 1 },
   sep: { height: 1, backgroundColor: rd.color.border },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10), paddingVertical: rs(12) },
   rowMain: { flex: 1 },
