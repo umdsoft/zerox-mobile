@@ -276,7 +276,7 @@ const HeroBanner = ({
         onPress={onHealthPress}
         disabled={!onHealthPress}
         accessibilityRole="button"
-        accessibilityLabel={t('Moliyaviy sog‘liq')}>
+        accessibilityLabel={t('Moliyaviy holat')}>
         <View style={styles.heroChip}>
           {loading ? (
             <Shimmer width={rs(44)} height={rs(20)} onDark style={styles.heroChipSkel} />
@@ -286,7 +286,7 @@ const HeroBanner = ({
             </Text>
           )}
           <Text style={styles.heroChipLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} allowFontScaling={false}>
-            {t('Moliyaviy sog‘liq')}
+            {t('Moliyaviy holat')}
           </Text>
         </View>
         <View style={styles.heroChip}>
@@ -298,7 +298,7 @@ const HeroBanner = ({
             </Text>
           )}
           <Text style={styles.heroChipLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} allowFontScaling={false}>
-            {t('Holat')}
+            {t('Status')}
           </Text>
         </View>
       </TouchableOpacity>
