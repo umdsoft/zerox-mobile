@@ -18,7 +18,9 @@ import SmsStatsPanel from './SmsStatsPanel';
 import PlanLimitModal from './PlanLimitModal';
 import BlurModal from '../../../components/BlurModal';
 import SmsListRow from './SmsListRow';
-import { categoryPools, mapType, poolLine } from './smsPools';
+import axios from 'axios';
+import { storage } from '../../../../store/api/token/getToken';
+import { categoryCounts, categoryPools, poolLine, statsCategory } from './smsPools';
 import {
   BellIcon,
   CheckIcon,
@@ -54,6 +56,7 @@ const CATEGORIES = [
   { key: 'due', label: 'Muddati kelgan qarzdorlik yuzasidan xabarnoma', Icon: ClockIcon, color: rd.color.warning, bg: rd.color.warningBg },
   { key: 'demand', label: 'Qaytarishni talab qilish yuzasidan xabarnoma', Icon: BellIcon, color: rd.color.error, bg: rd.color.errorBg },
   { key: 'paid', label: 'Qarz to‘langanligi to‘g‘risida xabarnoma', Icon: CheckIcon, color: rd.color.success, bg: rd.color.successBg },
+  { key: 'other', label: 'Boshqa', Icon: MessageIcon, color: rd.color.textSecondary, bg: rd.color.surfaceAlt },
 ];
 
 const SmsHistory = () => {
@@ -73,15 +76,37 @@ const SmsHistory = () => {
 
   // Kategoriya bo'yicha guruhlash.
   const grouped = useMemo(() => {
-    const g: Record<string, any[]> = { register: [], due: [], demand: [], paid: [] };
+    const g: Record<string, any[]> = { register: [], due: [], demand: [], paid: [], other: [] };
     rawItems.forEach(it => {
-      const k = mapType(it?.type ?? it?.category);
+      const k = statsCategory(it?.type ?? it?.category);
       (g[k] || (g[k] = [])).push(it);
     });
     return g;
   }, [rawItems]);
 
-  const openItems = open ? grouped[open] || [] : [];
+  // 'Boshqa' — backend type=other (ma'lum turlardan tashqari hammasi) bilan alohida so'raladi.
+  const [otherItems, setOtherItems] = useState<any[] | null>(null);
+  React.useEffect(() => {
+    if (open !== 'other') return;
+    let alive = true;
+    setOtherItems(null);
+    axios
+      .get(URL + '/qarz-daftari/sms-history', {
+        params: { type: 'other' },
+        headers: { Authorization: `Bearer ${storage.getString('token')}` },
+      })
+      .then(r => {
+        const d: any = r.data?.data ?? r.data;
+        if (alive) setOtherItems(Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : []);
+      })
+      .catch(() => {
+        if (alive) setOtherItems(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+  const openItems = open === 'other' ? otherItems ?? grouped.other ?? [] : open ? grouped[open] || [] : [];
 
   /**
    * 29.09 (2-band): kategoriya sonlari — backend `counts` (turi bo'yicha, FAQAT yuborilgan
@@ -89,16 +114,12 @@ const SmsHistory = () => {
    * (paketdan yechilgan SMS) bilan AYNAN teng bo'ladi. Eski backend (counts yo'q) —
    * ro'yxat uzunligi.
    */
-  const catCounts = useMemo(() => {
-    const counts: any = (res.data as any)?.counts;
-    if (!counts || typeof counts !== 'object') return null;
-    const c: Record<string, number> = { register: 0, due: 0, demand: 0, paid: 0 };
-    Object.keys(counts).forEach(type => {
-      const k = mapType(type);
-      c[k] = (c[k] || 0) + (Number(counts[type]) || 0);
-    });
-    return c;
-  }, [res.data]);
+  // 30.10: sonlar SERVER stats.by_type'dan (Sarflangan bilan mos, 'other' va payment_link ham);
+  // stats kelmasa eski /qarz-daftari/sms-history `counts`, u ham yo'q bo'lsa ro'yxat uzunligi.
+  const catCounts = useMemo(
+    () => categoryCounts(stats?.by_type) ?? categoryCounts((res.data as any)?.counts),
+    [stats, res.data],
+  );
   const countOf = (key: string) => catCounts?.[key] ?? (grouped[key] || []).length;
   const total = catCounts
     ? Object.values(catCounts).reduce((a, b) => a + b, 0)
@@ -139,6 +160,8 @@ const SmsHistory = () => {
         </Text>
 
         {CATEGORIES.map(cat => {
+          // 'Boshqa' faqat server qoldiq bergan bo'lsa ko'rinadi.
+          if (cat.key === 'other' && countOf('other') === 0) return null;
           const line = poolLine(catPools?.[cat.key] ?? null, { plan: t('Tarif'), package: t('Paket') });
           return (
             <View key={cat.key} style={styles.catCard}>

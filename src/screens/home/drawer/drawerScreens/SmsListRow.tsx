@@ -10,7 +10,7 @@ import { fmtDateTimeUz } from '../../../../helper';
 import { fmtPhoneUzFull } from '../../../../helper/phone';
 import { BulbIcon } from '../../redesign/icons';
 import BlurModal from '../../../components/BlurModal';
-import { isSmsUndelivered, smsFailureText } from '../../modules/components/smsDeliveryFormat';
+import { isSmsUndelivered, smsFailureModalText } from '../../modules/components/smsDeliveryFormat';
 
 const VIOLET = '#6d5ae6';
 const VIOLET_TINT = '#efe9fd';
@@ -25,6 +25,7 @@ export type SmsItem = {
   status?: string;
   delivery_status?: string;
   failure_reason?: string | null;
+  undelivered?: boolean;
   pool?: 'plan' | 'package' | null;
 };
 
@@ -42,6 +43,7 @@ const SmsListRow = ({ item }: { item: SmsItem }) => {
   const [why, setWhy] = React.useState(false);
   const meta = TYPE_META[String(item.type || '').toLowerCase()];
   const undelivered = isSmsUndelivered(item);
+  const reasonText = smsFailureModalText(t, item.failure_reason);
   return (
     <View style={styles.row}>
       <View style={styles.rowTop}>
@@ -77,10 +79,32 @@ const SmsListRow = ({ item }: { item: SmsItem }) => {
         </TouchableOpacity>
       ) : null}
       {undelivered ? (
-        <BlurModal visible={why} title={t('Nima uchun yetkazilmadi?')} onClose={() => setWhy(false)}>
-          <Text allowFontScaling={false} style={styles.whyText}>
-            {smsFailureText(t, item.failure_reason)}
+        <BlurModal
+          visible={why}
+          title={t('SMS nima uchun yetkazilmadi')}
+          icon={<BulbIcon size={rs(18)} color={rd.color.error} />}
+          footerCloseLabel={t('Yopish')}
+          onClose={() => setWhy(false)}>
+          <Text allowFontScaling={false} style={styles.whyHead}>
+            {reasonText.headline}
           </Text>
+          <Text allowFontScaling={false} style={styles.whyText}>
+            {reasonText.description}
+          </Text>
+          {item.phone || item.message ? (
+            <View style={styles.msgBox}>
+              {item.phone ? (
+                <Text allowFontScaling={false} style={styles.msgPhone}>
+                  {fmtPhoneUzFull(item.phone)}
+                </Text>
+              ) : null}
+              {item.message ? (
+                <Text allowFontScaling={false} style={styles.msgText}>
+                  {item.message}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </BlurModal>
       ) : null}
     </View>
@@ -112,5 +136,14 @@ const styles = StyleSheet.create({
   },
   failRow: { flexDirection: 'row', alignItems: 'center', gap: rs(5), marginTop: rs(6), alignSelf: 'flex-start' },
   failText: { fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.error },
+  whyHead: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.error, marginBottom: rs(8) },
   whyText: { fontFamily: rd.font.regular, fontSize: rs(14), lineHeight: rs(21), color: rd.color.text },
+  msgBox: {
+    marginTop: rs(14),
+    padding: rs(12),
+    borderRadius: rs(12),
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  msgPhone: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textTertiary },
+  msgText: { fontFamily: rd.font.regular, fontSize: rs(12.5), lineHeight: rs(18), color: rd.color.textSecondary, marginTop: rs(2) },
 });

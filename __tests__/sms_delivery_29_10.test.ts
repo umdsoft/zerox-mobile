@@ -41,8 +41,8 @@ describe('smsDeliveryFormat', () => {
   });
 
   test('smsParams: faoliyat_id faqat do\'kon tanlanganda', () => {
-    expect(smsParams(2, null)).toEqual({ days: 7, page: 2, limit: 20 });
-    expect(smsParams(1, 5)).toEqual({ days: 7, page: 1, limit: 20, faoliyat_id: 5 });
+    expect(smsParams(2, null)).toEqual({ days: 7, scope: 'period', page: 2, limit: 20 });
+    expect(smsParams(1, 5)).toEqual({ days: 7, scope: 'period', page: 1, limit: 20, faoliyat_id: 5 });
   });
 
   test('debtRouteParams: qarz_id bo\'lsa {id}, aks holda null', () => {

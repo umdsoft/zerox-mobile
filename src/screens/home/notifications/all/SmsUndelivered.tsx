@@ -75,7 +75,7 @@ const SmsUndelivered = ({ item, okay, navigation }: any) => {
 
   return (
     <NotificationShell
-      title={t('SMS yetkazilmadi') as string}
+      title={t('SMS xabar yetkazilmaganligi to‘g‘risida') as string}
       date={item?.created}
       time={item?.time}
       actions={
@@ -88,11 +88,11 @@ const SmsUndelivered = ({ item, okay, navigation }: any) => {
       }>
       <Text allowFontScaling={false} style={styles.body}>
         {info.name
-          ? t('{{name}} ga qarz haqidagi SMS yetkazilmadi.', { name: info.name })
-          : t('Qarzdorga qarz haqidagi SMS yetkazilmadi.')}
+          ? t('{{name}}ga qarz ro‘yxatga olinganligi haqidagi SMS xabar yetkazilmadi.', { name: info.name })
+          : t('Qarz ro‘yxatga olinganligi haqidagi SMS xabar yetkazilmadi.')}
       </Text>
       <Text allowFontScaling={false} style={styles.reason}>
-        {why}
+        {t('Sababi: {{reason}}', { reason: why })}
       </Text>
     </NotificationShell>
   );

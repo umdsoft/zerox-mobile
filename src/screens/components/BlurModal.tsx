@@ -19,9 +19,13 @@ interface Props {
   children: React.ReactNode;
   /** true — balandroq (ro'yxat uchun), false — ixcham kartochka. */
   tall?: boolean;
+  /** Sarlavha oldidagi ikonka (sayt dizayni: yumshoq doira ichida). */
+  icon?: React.ReactNode;
+  /** Berilsa — pastda ajratgich + o'ngda "Yopish" tugmasi (sayt dizayni). */
+  footerCloseLabel?: string;
 }
 
-const BlurModal = ({ visible, title, onClose, children, tall = false }: Props) => {
+const BlurModal = ({ visible, title, onClose, children, tall = false, icon, footerCloseLabel }: Props) => {
   const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -29,6 +33,7 @@ const BlurModal = ({ visible, title, onClose, children, tall = false }: Props) =
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Yopish')} />
         <View style={[styles.sheet, tall && styles.sheetTall]}>
           <View style={styles.head}>
+            {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
             <Text allowFontScaling={false} numberOfLines={2} style={styles.title} accessibilityRole="header">
               {title}
             </Text>
@@ -40,7 +45,24 @@ const BlurModal = ({ visible, title, onClose, children, tall = false }: Props) =
               <CloseIcon size={rs(18)} color={rd.color.textTertiary} />
             </Pressable>
           </View>
-          {children}
+          <View style={styles.divider} />
+          <View style={tall ? styles.bodyTall : styles.body}>{children}</View>
+          {footerCloseLabel ? (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.footer}>
+                <Pressable
+                  onPress={onClose}
+                  accessibilityRole="button"
+                  accessibilityLabel={footerCloseLabel}
+                  style={styles.closeBtn}>
+                  <Text allowFontScaling={false} style={styles.closeText}>
+                    {footerCloseLabel}
+                  </Text>
+                </Pressable>
+              </View>
+            </>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -58,12 +80,31 @@ const styles = StyleSheet.create({
     paddingVertical: rs(40),
   },
   sheet: {
-    backgroundColor: rd.color.page,
+    backgroundColor: rd.color.surface,
     borderRadius: rs(18),
-    padding: rs(14),
     maxHeight: '100%',
+    overflow: 'hidden',
   },
   sheetTall: { flex: 1 },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: rs(10), marginBottom: rs(10) },
+  head: { flexDirection: 'row', alignItems: 'center', gap: rs(12), paddingHorizontal: rs(16), paddingVertical: rs(14) },
+  iconWrap: {
+    width: rs(36),
+    height: rs(36),
+    borderRadius: rs(10),
+    backgroundColor: rd.color.errorBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  divider: { height: 1, backgroundColor: rd.color.border },
+  body: { paddingHorizontal: rs(16), paddingVertical: rs(14) },
+  bodyTall: { flex: 1, paddingHorizontal: rs(12), paddingTop: rs(10) },
+  footer: { alignItems: 'flex-end', paddingHorizontal: rs(16), paddingVertical: rs(12) },
+  closeBtn: {
+    paddingHorizontal: rs(20),
+    paddingVertical: rs(9),
+    borderRadius: rs(10),
+    backgroundColor: rd.color.surfaceAlt,
+  },
+  closeText: { fontFamily: rd.font.semibold, fontSize: rs(13.5), color: rd.color.text },
   title: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
 });

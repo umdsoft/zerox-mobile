@@ -57,7 +57,7 @@ beforeEach(() => { mockGet.mockReset(); mockNavigate.mockReset(); mockOpen.mockC
 test('do\'kon id so\'rovga uzatiladi va "Qarzni ochish" Amaliyot tafsilotiga (QarzDaftariQarz emas) o\'tadi', async () => {
   mockGet.mockResolvedValueOnce(ok(2, mkRows(1, 2)));
   const r = await mount();
-  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, page: 1, limit: 20, faoliyat_id: 3 });
+  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, scope: 'period', page: 1, limit: 20, faoliyat_id: 3 });
   await act(async () => { press(r, 'Qarzni ochish: M1').props.onPress(); });
   expect(mockOpen).toHaveBeenCalledWith(expect.objectContaining({ navigate: mockNavigate }), 101);
   expect(mockNavigate).not.toHaveBeenCalledWith('QarzDaftariQarz', expect.anything());
@@ -70,7 +70,7 @@ test('shopId yo\'q — faoliyat_id yuborilmaydi', async () => {
   mockParams = {};
   mockGet.mockResolvedValueOnce(ok(0, []));
   await mount();
-  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, page: 1, limit: 20 });
+  expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, scope: 'period', page: 1, limit: 20 });
 });
 
 test('sahifalash: qo\'sh bosish bitta so\'rov, oxirgi sahifadan keyin tugma yo\'q', async () => {

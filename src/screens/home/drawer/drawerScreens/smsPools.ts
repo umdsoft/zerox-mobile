@@ -57,12 +57,32 @@ export const poolLine = (
 // Backend `sms_history.type` -> mobil kategoriya kaliti.
 export const mapType = (t: unknown): string => {
   const s = String(t ?? '').toLowerCase();
+  if (s === 'other') return 'other'; // 30.10: backend qoldiq (kategoriyaga kirmagan SMS'lar)
   if (s === 'registration' || s.includes('register') || s === '1') return 'register';
   if (s === 'auto' || s.includes('due') || s.includes('muddat') || s === '2') return 'due';
   if (s === 'manual' || s === 'payment_link' || s.includes('demand') || s.includes('talab') || s === '3')
     return 'demand';
   if (s === 'qarz_tolandi' || s.includes('paid') || s.includes('tolan') || s === '4') return 'paid';
   return 'register';
+};
+
+const KNOWN_TYPES = ['registration', 'auto', 'manual', 'payment_link', 'qarz_tolandi'];
+
+/** Server turi -> kategoriya; noma'lum turlar 'other' ("Boshqa") ga tushadi. */
+export const statsCategory = (type: unknown): string => {
+  const s = String(type ?? '').toLowerCase();
+  return KNOWN_TYPES.includes(s) ? mapType(s) : 'other';
+};
+
+/** stats.by_type ({[type]:n}) -> kategoriya bo'yicha sonlar (null = maydon yo'q). */
+export const categoryCounts = (byType: any): Record<string, number> | null => {
+  if (!byType || typeof byType !== 'object') return null;
+  const c: Record<string, number> = { register: 0, due: 0, demand: 0, paid: 0, other: 0 };
+  Object.keys(byType).forEach(type => {
+    const k = statsCategory(type);
+    c[k] = (c[k] || 0) + (Number(byType[type]) || 0);
+  });
+  return c;
 };
 
 /** by_type_pool ({[type]:{plan,package}}) -> kategoriya bo'yicha yig'indi. */
@@ -72,7 +92,7 @@ export const categoryPools = (byTypePool: any): Record<string, PoolPair> | null 
   Object.keys(byTypePool).forEach(type => {
     const pair = toPair(byTypePool[type]);
     if (!pair) return;
-    const k = mapType(type);
+    const k = statsCategory(type);
     const prev = out[k] || { plan: 0, package: 0 };
     out[k] = { plan: prev.plan + pair.plan, package: prev.package + pair.package };
   });

@@ -21,7 +21,6 @@ import { fetchUndeliveredPage } from './components/smsDeliveryApi';
 import {
   hasMorePages,
   mergeSmsRows,
-  SMS_DAYS,
   smsReason,
   smsTypeCode,
   UndeliveredSms,
@@ -35,7 +34,7 @@ const QarzDaftariYetkazilmagan = () => {
   const online = useIsOnline();
 
   const [rows, setRows] = React.useState<UndeliveredSms[]>([]);
-  const [count, setCount] = React.useState(0);
+  const [, setCount] = React.useState(0);
   const [hasMore, setHasMore] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [moreLoading, setMoreLoading] = React.useState(false);
@@ -126,10 +125,11 @@ const QarzDaftariYetkazilmagan = () => {
   const reasonLabel = (r: UndeliveredSms) => {
     const reason = smsReason(r);
     if (reason.kind === 'operator') {
-      const base = t('Operator yetkazmadi');
-      if (reason.detail === 'expired') return `${base} — ${t('abonent tarmoqda bo‘lmagan')}`;
-      if (reason.detail === 'rejected') return `${base} — ${t('raqam bloklangan')}`;
-      if (reason.detail === 'undeliv') return `${base} — ${t('abonent raqami faol emas')}`;
+      // 30.10: "Operator tomonidan yetkazilmadi. Abonent raqami faol emas."
+      const base = t('Operator tomonidan yetkazilmadi.');
+      if (reason.detail === 'expired') return `${base} ${t('Abonent tarmoqda bo‘lmagan.')}`;
+      if (reason.detail === 'rejected') return `${base} ${t('Raqam bloklangan.')}`;
+      if (reason.detail === 'undeliv') return `${base} ${t('Abonent raqami faol emas.')}`;
       return base;
     }
     let why: string;
@@ -156,38 +156,38 @@ const QarzDaftariYetkazilmagan = () => {
     }
   };
 
+  // 30.10: sabab matni "Qarzni ochish" tugmasi TAGIDA (qator ustun: tepada ma'lumot + tugma, pastda sabab).
   const renderRow = ({ item, index }: { item: UndeliveredSms; index: number }) => (
     <View style={styles.row}>
-      <Text style={styles.rowNum}>{index + 1}</Text>
-      <View style={styles.rowMain}>
-        <Text style={styles.rowName}>{item.mijoz_fish || '—'}</Text>
-        {!!item.phone && <Text style={styles.rowPhone}>{item.phone}</Text>}
-        <View style={styles.rowMeta}>
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>{typeLabel(item.sms_type)}</Text>
+      <View style={styles.rowTop}>
+        <Text style={styles.rowNum}>{index + 1}</Text>
+        <View style={styles.rowMain}>
+          <Text style={styles.rowName}>{item.mijoz_fish || '—'}</Text>
+          {!!item.phone && <Text style={styles.rowPhone}>{item.phone}</Text>}
+          <View style={styles.rowMeta}>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>{typeLabel(item.sms_type)}</Text>
+            </View>
+            <Text style={styles.rowDate}>{fmtDateTimeUz(item.created_at)}</Text>
           </View>
-          <Text style={styles.rowDate}>{fmtDateTimeUz(item.created_at)}</Text>
         </View>
-        <Text style={styles.rowReason}>{reasonLabel(item)}</Text>
+        {!!item.qarz_id && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.openBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('Qarzni ochish')}: ${item.mijoz_fish || ''}`}
+            onPress={() => openDebt(item.qarz_id)}>
+            <Text style={styles.openBtnText}>{t('Qarzni ochish')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      {!!item.qarz_id && (
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.openBtn}
-          accessibilityRole="button"
-          accessibilityLabel={`${t('Qarzni ochish')}: ${item.mijoz_fish || ''}`}
-          onPress={() => openDebt(item.qarz_id)}>
-          <Text style={styles.openBtnText}>{t('Qarzni ochish')}</Text>
-        </TouchableOpacity>
-      )}
+      <Text style={styles.rowReason}>{reasonLabel(item)}</Text>
     </View>
   );
 
   const header = (
-    <RdHeader
-      title={t('Yetkazilmagan SMS xabarlar')}
-      subtitle={error || loading ? undefined : t('Oxirgi {{days}} kun — {{count}} ta', { days: SMS_DAYS, count })}
-    />
+    <RdHeader title={t('Yetkazilmagan SMS xabarlar')} />
   );
 
   if (loading) {
@@ -269,7 +269,8 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   listContent: { paddingHorizontal: rs(20), paddingBottom: rs(12), flexGrow: 1 },
   sep: { height: 1, backgroundColor: rd.color.border },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(8), paddingVertical: rs(8) },
+  row: { paddingVertical: rs(8) },
+  rowTop: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(8) },
   rowNum: { width: rs(22), fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.textTertiary, paddingTop: rs(1) },
   rowMain: { flex: 1 },
   rowName: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: rs(6), paddingVertical: rs(1), borderRadius: rs(20), backgroundColor: rd.color.surfaceAlt },
   chipText: { fontFamily: rd.font.bold, fontSize: rs(10), color: rd.color.textSecondary },
   rowDate: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary },
-  rowReason: { fontFamily: rd.font.bold, fontSize: rs(10.5), color: rd.color.error, marginTop: rs(2) },
+  rowReason: { fontFamily: rd.font.bold, fontSize: rs(10.5), color: rd.color.error, marginTop: rs(4), paddingLeft: rs(30) },
   openBtn: {
     paddingHorizontal: rs(10),
     paddingVertical: rs(6),

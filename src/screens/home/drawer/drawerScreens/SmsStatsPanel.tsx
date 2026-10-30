@@ -223,7 +223,7 @@ const SmsStatsPanel = ({
           bg={rd.color.errorBg}
           label={t('Yetkazilmagan')}
           value={undelivered ?? '—'}
-          sub={t('Oxirgi 7 kun')}
+          sub={t('Joriy davr')}
           onPress={() => navigation.navigate(SMS_SCREEN, smsScreenParams(null))}
         />
       </View>

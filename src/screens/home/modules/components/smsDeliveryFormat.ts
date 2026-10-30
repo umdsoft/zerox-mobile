@@ -68,6 +68,7 @@ export const smsScreenParams = (shopId?: number | null): { shopId: number | null
 /** Tanlangan do'kon bo'lsagina `faoliyat_id` yuboriladi. */
 export const smsParams = (page: number, shopId?: number | null) => ({
   days: SMS_DAYS,
+  scope: 'period', // 30.10: amaldagi tarif/paket davri bo'yicha (backend meta.scope='period')
   page,
   limit: SMS_PAGE_SIZE,
   ...(shopId ? { faoliyat_id: shopId } : {}),
@@ -80,35 +81,62 @@ export const smsParams = (page: number, shopId?: number | null) => ({
 export const hasMorePages = (pageRows: number, count: number, loadedTotal: number = pageRows): boolean =>
   pageRows >= SMS_PAGE_SIZE && loadedTotal < count;
 
-/** SMS yetkazilmagan deb belgilanadimi (delivery_status undelivered/rejected yoki status failed). */
+/** SMS yetkazilmagan deb belgilanadimi (undelivered=true, failure_reason, delivery_status undelivered/rejected yoki status failed). */
 export const isSmsUndelivered = (
-  it: { delivery_status?: string | null; status?: string | null } | null | undefined,
+  it:
+    | {
+        undelivered?: boolean | null;
+        failure_reason?: string | null;
+        delivery_status?: string | null;
+        status?: string | null;
+      }
+    | null
+    | undefined,
 ): boolean => {
-  const d = String(it?.delivery_status || '').toLowerCase();
-  return d === 'undelivered' || d === 'rejected' || String(it?.status || '').toLowerCase() === 'failed';
+  if (!it) return false;
+  if (it.undelivered === true || !!it.failure_reason) return true;
+  const d = String(it.delivery_status || '').toLowerCase();
+  return d === 'undelivered' || d === 'rejected' || String(it.status || '').toLowerCase() === 'failed';
 };
 
-/** Backend `failure_reason` kodi -> foydalanuvchiga tushunarli sabab (mavjud i18n matnlari qayta ishlatiladi). */
-export const smsFailureText = (
-  t: (k: string, o?: Record<string, unknown>) => string,
-  code?: string | null,
-): string => {
+type Tr = (k: string, o?: Record<string, unknown>) => string;
+
+const OPERATOR_CODES = ['subscriber_inactive', 'blocked', 'not_delivered'];
+
+/** Backend `failure_reason` kodi -> to'liq jumla ("Operator tomonidan xabar yetkazilmadi. Abonent raqami faol emas."). */
+export const smsFailureText = (t: Tr, code?: string | null): string => {
+  const op = t('Operator tomonidan xabar yetkazilmadi.');
   switch (code) {
     case 'subscriber_inactive':
-      return `${t('Operator yetkazmadi')} — ${t('abonent raqami faol emas')}`;
+      return `${op} ${t('Abonent raqami faol emas.')}`;
     case 'blocked':
-      return `${t('Operator yetkazmadi')} — ${t('raqam bloklangan')}`;
+      return `${op} ${t('Raqam bloklangan.')}`;
     case 'invalid_number':
-      return t('Yuborilmadi: {{reason}}', { reason: t('telefon raqami noto‘g‘ri') });
+      return t('Telefon raqami noto‘g‘ri.');
     case 'provider_rejected':
-      return t('Yuborilmadi: {{reason}}', { reason: t('SMS xizmati matnni rad etdi') });
+      return t('SMS xizmati matnni rad etdi.');
     case 'no_package':
-      return t('Yuborilmadi: {{reason}}', { reason: t('SMS paketi tugagan') });
+      return t('SMS paketi tugagan.');
     case 'plan_required':
-      return t('Yuborilmadi: {{reason}}', { reason: t('texnik xato') });
     case 'send_error':
-      return t('Yuborilmadi: {{reason}}', { reason: t('texnik xato') });
+      return t('Texnik xato.');
     default:
-      return t('Operator yetkazmadi');
+      return op;
   }
+};
+
+/** "SMS nima uchun yetkazilmadi" oynasi: qizil sarlavha + tushuntirish (sayt dizayni). */
+export const smsFailureModalText = (
+  t: Tr,
+  code?: string | null,
+): { headline: string; description: string } => {
+  const isOperator = !code || OPERATOR_CODES.includes(code);
+  const headline = isOperator
+    ? t('Yetkazilmagan: operator xabarni yetkazmadi')
+    : t('Yetkazilmagan: xabar yuborilmadi');
+  const description =
+    !code || code === 'not_delivered'
+      ? t('Xabar yuborildi, lekin mobil operator uni abonentga yetkaza olmadi. Keyinroq qayta urinib ko‘rishingiz mumkin.')
+      : smsFailureText(t, code);
+  return { headline, description };
 };

@@ -1,6 +1,6 @@
 /** 30.10: SMS pul (tarif/paket) yordamchilari, yetkazilmagan belgisi, bildirishnoma payload parseri. */
 import { categoryPools, mapType, poolLine, toPair, toPools } from '../src/screens/home/drawer/drawerScreens/smsPools';
-import { isSmsUndelivered, smsFailureText } from '../src/screens/home/modules/components/smsDeliveryFormat';
+import { isSmsUndelivered, smsFailureModalText, smsFailureText } from '../src/screens/home/modules/components/smsDeliveryFormat';
 
 jest.mock('react-native-toast-message', () => ({ __esModule: true, default: { show: jest.fn() } }));
 jest.mock('i18next', () => ({ t: (k: string) => k }));
@@ -38,6 +38,7 @@ describe('smsPools', () => {
     expect(c).toEqual({ register: { plan: 2, package: 1 }, due: { plan: 4, package: 0 }, paid: { plan: 1, package: 1 } });
     expect(categoryPools(undefined)).toBeNull();
     expect(mapType('manual')).toBe('demand');
+    expect(mapType('other')).toBe('other');
   });
 });
 
@@ -47,13 +48,19 @@ describe('yetkazilmagan belgisi', () => {
     expect(isSmsUndelivered({ delivery_status: 'rejected' })).toBe(true);
     expect(isSmsUndelivered({ status: 'failed' })).toBe(true);
     expect(isSmsUndelivered({ status: 'sent', delivery_status: 'delivered' })).toBe(false);
+    expect(isSmsUndelivered({ undelivered: true })).toBe(true);
+    expect(isSmsUndelivered({ failure_reason: 'blocked' })).toBe(true);
+    expect(isSmsUndelivered({ undelivered: false, status: 'sent' })).toBe(false);
     expect(isSmsUndelivered(null)).toBe(false);
   });
   test('smsFailureText: kodlar -> sabab; noma\'lum/null -> umumiy', () => {
     const t = (k: string, o?: Record<string, unknown>) => k.replace(/\{\{(\w+)\}\}/g, (_m, n) => String(o?.[n]));
-    expect(smsFailureText(t, 'blocked')).toBe('Operator yetkazmadi — raqam bloklangan');
-    expect(smsFailureText(t, 'invalid_number')).toBe('Yuborilmadi: telefon raqami noto‘g‘ri');
-    expect(smsFailureText(t, null)).toBe('Operator yetkazmadi');
+    expect(smsFailureText(t, 'blocked')).toBe('Operator tomonidan xabar yetkazilmadi. Raqam bloklangan.');
+    expect(smsFailureText(t, 'invalid_number')).toBe('Telefon raqami noto‘g‘ri.');
+    expect(smsFailureText(t, null)).toBe('Operator tomonidan xabar yetkazilmadi.');
+    expect(smsFailureText(t, 'subscriber_inactive')).toBe('Operator tomonidan xabar yetkazilmadi. Abonent raqami faol emas.');
+    expect(smsFailureModalText(t, 'blocked').headline).toBe('Yetkazilmagan: operator xabarni yetkazmadi');
+    expect(smsFailureModalText(t, 'invalid_number').headline).toBe('Yetkazilmagan: xabar yuborilmadi');
   });
 });
 
