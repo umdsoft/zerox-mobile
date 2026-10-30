@@ -42,11 +42,11 @@ const FamilyInviteTaklif = ({ item, okay, navigation }: any) => {
   }, [item?.fm_status]);
 
   const name = String(item?.fm_owner_name || item?.fm_owner_phone || t('Foydalanuvchi'));
-  const relation = item?.fm_relation_label ? ` (${item.fm_relation_label})` : '';
+  // 30.10: qabul qiluvchining O'Z ismi (fm_relation_label) matnda ko'rsatilmaydi — faqat yuboruvchi.
   const text =
     item?.fm_role === 'watcher'
-      ? t('{{name}} sizni o‘zining moliyasini kuzatishga taklif qilmoqda.', { name: name + relation })
-      : t('{{name}} sizni oila moliyasi kuzatuviga qo‘shmoqchi.', { name: name + relation });
+      ? t('{{name}} sizni o‘zining moliyasini kuzatishga taklif qilmoqda.', { name })
+      : t('{{name}} sizni oila moliyasi kuzatuviga qo‘shmoqchi.', { name });
 
   const respond = async (action: 'accept' | 'reject') => {
     if (busy || !fmId) return;

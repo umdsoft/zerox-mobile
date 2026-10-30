@@ -117,3 +117,19 @@ export const fetchTxParams = async (row: AnyObj): Promise<AmaliyotParams> => {
     return fallback;
   }
 };
+
+/**
+ * 30.10: qarz id bo'yicha "Amaliyot tafsiloti"ni (qarzni yaratgan amaliyot) ochadi.
+ * "Qarz tafsiloti" (QarzDaftariQarz) sahifasi tizimdan olib tashlangan — barcha
+ * "qarzga o'tish" yo'llari shu yordamchidan o'tadi. Qarz topilmasa false qaytaradi.
+ */
+export const openCreationAmaliyot = async (
+  navigation: { navigate: (name: string, params?: object) => void } | null | undefined,
+  qarzId: number | string | null | undefined,
+): Promise<boolean> => {
+  if (!qarzId || !navigation?.navigate) return false;
+  const params = await fetchCreationParams(qarzId);
+  if (!params) return false;
+  navigation.navigate('QarzDaftariAmaliyot', params);
+  return true;
+};

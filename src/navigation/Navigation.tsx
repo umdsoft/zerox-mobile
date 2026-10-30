@@ -130,7 +130,6 @@ import FinancePayoutCard from '../screens/home/modules/FinancePayoutCard';
 import QarzDaftariXodimYangi from '../screens/home/modules/QarzDaftariXodimYangi';
 import QarzDaftariMijozYangi from '../screens/home/modules/QarzDaftariMijozYangi';
 import QarzDaftariMijoz from '../screens/home/modules/QarzDaftariMijoz';
-import QarzDaftariQarz from '../screens/home/modules/QarzDaftariQarz';
 import QarzDaftariYangi from '../screens/home/modules/QarzDaftariYangi';
 import QarzDaftariFaoliyat from '../screens/home/modules/QarzDaftariFaoliyat';
 import QarzDaftariYopish from '../screens/home/modules/QarzDaftariYopish';
@@ -345,7 +344,6 @@ const AllNavigators = [
   { name: 'QarzDaftariXodimYangi', component: QarzDaftariXodimYangi },
   { name: 'QarzDaftariMijozYangi', component: QarzDaftariMijozYangi },
   { name: 'QarzDaftariMijoz', component: QarzDaftariMijoz },
-  { name: 'QarzDaftariQarz', component: QarzDaftariQarz },
   { name: 'QarzDaftariYangi', component: QarzDaftariYangi },
   { name: 'QarzDaftariFaoliyat', component: QarzDaftariFaoliyat },
   { name: 'QarzDaftariYopish', component: QarzDaftariYopish },

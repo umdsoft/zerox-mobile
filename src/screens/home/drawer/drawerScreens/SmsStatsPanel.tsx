@@ -1,51 +1,44 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { financeApi } from '../../modules/financeApi';
-import { fmtDateTimeUz } from '../../../../helper';
-import {
-  CalendarIcon,
-  CheckCircleIcon,
-  LedgerIcon,
-  MessageIcon,
-} from '../../redesign/icons';
+import { CheckCircleIcon, LedgerIcon, MessageIcon, WarningIcon } from '../../redesign/icons';
+import { fetchUndeliveredPage } from '../../modules/components/smsDeliveryApi';
+import { SMS_SCREEN, smsScreenParams } from '../../modules/components/smsDeliveryFormat';
+import { poolLine, PoolPair, toPair, toPools } from './smsPools';
 
 /**
- * SmsStatsPanel — SMS paket kartalari (Qoldiq / Jami paket / Ishlatilgan / Shu oy)
+ * SmsStatsPanel — SMS kartalari (Jami SMS / Qoldiq SMS / Sarflangan / Yetkazilmagan)
  * + "Foydalanish darajasi" chizig'i.
  *
- * 28.09 (5-band): ilgari faqat "SMS boshqaruvi" (SmsManager) ekranining tepasida
- * edi. Endi "SMS xabarlar tarixi" (SmsHistory) sahifasining ENG TEPASIDA turadi,
- * SMS ro'yxati esa alohida "Batafsil" sahifasiga o'tdi — shu bois bu blok o'z
- * ma'lumotini o'zi yuklaydigan mustaqil komponentga ajratildi.
+ * 30.10: "Jami paket" -> "Jami SMS" (o'rni Qoldiq bilan almashdi), "Ishlatilgan" -> "Sarflangan",
+ * "Shu oy" kartasi o'rniga "Yetkazilmagan" (bosilsa — to'liq ro'yxat ekrani).
+ * Har bir son tagida (backend `sms.pools` bo'lsa) "Tarif N · Paket M" — joriy tarif va xarid
+ * qilingan paket alohida. Eski backend: faqat umumiy sonlar.
  *
- * Manba (saytdagi `components/finance/SmsManager.vue` bilan AYNI):
- *   GET /finance/subscription           → sms {total, used, remaining, warning}
- *   GET /finance/subscription/sms-stats → this_month ("Shu oy")
+ * Manba:
+ *   GET /finance/subscription           → sms {total, used, remaining, warning, pools?}
+ *   GET /finance/subscription/sms-stats → pools_used?, by_type_pool? (`onStats` orqali sahifaga ham beriladi)
+ *   GET /qarz-daftari/sms/undelivered   → "Yetkazilmagan" soni
  *
- * 29.09: obuna javobi (tarif imkoniyatlari — `features.sms_list`) `onSubscription` orqali
- * sahifaga ham beriladi — "Batafsil" Premium cheklovi uchun QAYTA so'rov yuborilmaydi.
+ * 29.09: obuna javobi (`features.sms_list`) `onSubscription` orqali sahifaga beriladi.
  */
 
 const VIOLET = '#6d5ae6';
 const VIOLET_TINT = '#efe9fd';
 
 type SmsBalance = { total: number; used: number; remaining: number; warning: string | null };
-type SentItem = { sent_at?: string; created_at?: string };
 
-const toBalance = (raw: any): SmsBalance => ({
-  total: Number(raw?.total) || 0,
-  used: Number(raw?.used) || 0,
-  remaining: Number(raw?.remaining) || 0,
-  warning: raw?.warning || null,
-});
-
-// "Shu oy" zaxirasi (sms-stats kelmasa): berilgan ro'yxatdan joriy oy (UTC+5).
-const countThisMonth = (items: SentItem[]): number => {
-  const ym = fmtDateTimeUz(new Date()).slice(3, 10);
-  return items.filter(it => fmtDateTimeUz(it.sent_at || it.created_at).slice(3, 10) === ym)
-    .length;
+const toBalance = (raw: any): SmsBalance => {
+  const pools = toPools(raw);
+  const total = pools.hasSplit ? pools.plan.total + pools.package.total : Number(raw?.total) || 0;
+  const used = pools.hasSplit ? pools.plan.used + pools.package.used : Number(raw?.used) || 0;
+  const remaining = pools.hasSplit
+    ? pools.plan.remaining + pools.package.remaining
+    : Number(raw?.remaining) || 0;
+  return { total, used, remaining, warning: raw?.warning || null };
 };
 
 const StatCard = ({
@@ -56,75 +49,106 @@ const StatCard = ({
   value,
   valueColor,
   note,
+  sub,
+  onPress,
 }: {
   Icon: (p: { size?: number; color?: string }) => React.ReactElement;
   color: string;
   bg: string;
   label: string;
-  value: number;
+  value: number | string;
   valueColor?: string;
   note?: string;
-}) => (
-  <View style={styles.statCard}>
-    <View style={styles.statHead}>
-      <View style={[styles.statIcon, { backgroundColor: bg }]}>
-        <Icon size={rs(16)} color={color} />
+  sub?: string;
+  onPress?: () => void;
+}) => {
+  const body = (
+    <>
+      <View style={styles.statHead}>
+        <View style={[styles.statIcon, { backgroundColor: bg }]}>
+          <Icon size={rs(16)} color={color} />
+        </View>
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.statLabel}>
+          {label}
+        </Text>
       </View>
-      <Text allowFontScaling={false} numberOfLines={1} style={styles.statLabel}>
-        {label}
+      <Text allowFontScaling={false} style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
+        {value}
       </Text>
-    </View>
-    <Text allowFontScaling={false} style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
-      {value}
-    </Text>
-    {note ? (
-      <Text allowFontScaling={false} style={[styles.statNote, { color: valueColor }]}>
-        {note}
-      </Text>
-    ) : null}
-  </View>
-);
+      {sub ? (
+        <Text allowFontScaling={false} numberOfLines={1} style={styles.statSub}>
+          {sub}
+        </Text>
+      ) : null}
+      {note ? (
+        <Text allowFontScaling={false} style={[styles.statNote, { color: valueColor }]}>
+          {note}
+        </Text>
+      ) : null}
+    </>
+  );
+  return onPress ? (
+    <TouchableOpacity
+      activeOpacity={0.75}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={styles.statCard}>
+      {body}
+    </TouchableOpacity>
+  ) : (
+    <View style={styles.statCard}>{body}</View>
+  );
+};
 
 /**
- * @param fallbackItems "Shu oy" ni sms-stats kelmaganda hisoblash uchun
- *        yuborilgan SMS'lar (sahifada allaqachon yuklangan bo'lsa).
  * @param reloadKey o'zgarsa ma'lumot qayta yuklanadi (pastga tortib yangilash).
  * @param onSubscription /finance/subscription javobi (`data`) — muvaffaqiyatli kelganda.
+ * @param onStats /finance/subscription/sms-stats javobi (`data`) — kategoriya qatorlari uchun.
  */
 const SmsStatsPanel = ({
-  fallbackItems = [],
   reloadKey = 0,
   onSubscription,
+  onStats,
 }: {
-  fallbackItems?: SentItem[];
   reloadKey?: number;
   onSubscription?: (data: any) => void;
+  onStats?: (data: any) => void;
 }) => {
   const { t } = useTranslation();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
-  const [sms, setSms] = useState<SmsBalance>(toBalance(null));
-  const [statsMonth, setStatsMonth] = useState<number | null>(null);
-  // Eng so'nggi callback (effekt uni dependency qilmasin — har renderda qayta so'rov bo'lmasin).
+  const [sub, setSub] = useState<any>(null);
+  const [usedPair, setUsedPair] = useState<PoolPair | null>(null);
+  const [undelivered, setUndelivered] = useState<number | null>(null);
+  // Eng so'nggi callback'lar (effekt ularni dependency qilmasin — har renderda qayta so'rov bo'lmasin).
   const onSubRef = useRef(onSubscription);
+  const onStatsRef = useRef(onStats);
   useEffect(() => {
     onSubRef.current = onSubscription;
-  }, [onSubscription]);
+    onStatsRef.current = onStats;
+  }, [onSubscription, onStats]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [subR, statsR] = await Promise.allSettled([
+      const [subR, statsR, undR] = await Promise.allSettled([
         financeApi.getSubscription(),
         financeApi.getSmsStats(),
+        fetchUndeliveredPage(1, null, 1),
       ]);
       if (!alive) return;
       if (subR.status === 'fulfilled') {
         const data = subR.value?.data?.data || {};
-        setSms(toBalance(data.sms));
+        setSub(data.sms || null);
         onSubRef.current?.(data);
       }
-      const month = statsR.status === 'fulfilled' ? statsR.value?.data?.data?.this_month : null;
-      setStatsMonth(month == null ? null : Number(month) || 0);
+      if (statsR.status === 'fulfilled') {
+        const stats = statsR.value?.data?.data || {};
+        setUsedPair(toPair(stats.pools_used));
+        onStatsRef.current?.(stats);
+      }
+      setUndelivered(undR.status === 'fulfilled' ? undR.value.count : null);
       setLoading(false);
     })();
     return () => {
@@ -140,10 +164,22 @@ const SmsStatsPanel = ({
     );
   }
 
+  const sms = toBalance(sub);
+  const pools = toPools(sub);
+  const labels = { plan: t('Tarif'), package: t('Paket') };
+  const totalPair: PoolPair | null = pools.hasSplit
+    ? { plan: pools.plan.total, package: pools.package.total }
+    : null;
+  const remainPair: PoolPair | null = pools.hasSplit
+    ? { plan: pools.plan.remaining, package: pools.package.remaining }
+    : null;
+  const spentPair: PoolPair | null = pools.hasSplit
+    ? { plan: pools.plan.used, package: pools.package.used }
+    : usedPair;
+
   const usagePct = sms.total > 0 ? Math.min(100, Math.round((sms.used / sms.total) * 100)) : 0;
   const barColor =
     usagePct > 90 ? rd.color.error : usagePct > 70 ? rd.color.warning : rd.color.primary;
-  const thisMonth = statsMonth ?? countThisMonth(fallbackItems);
   const warnColor =
     sms.warning === 'empty' ? rd.color.error : sms.warning === 'critical' ? rd.color.warning : undefined;
   const warnText = sms.warning
@@ -156,6 +192,14 @@ const SmsStatsPanel = ({
     <View>
       <View style={styles.grid}>
         <StatCard
+          Icon={LedgerIcon}
+          color={rd.color.primary}
+          bg={rd.color.primaryTint}
+          label={t('Jami SMS')}
+          value={sms.total}
+          sub={poolLine(totalPair, labels)}
+        />
+        <StatCard
           Icon={MessageIcon}
           color={warnColor || rd.color.success}
           bg={warnColor ? (sms.warning === 'empty' ? rd.color.errorBg : rd.color.warningBg) : rd.color.successBg}
@@ -163,27 +207,24 @@ const SmsStatsPanel = ({
           value={sms.remaining}
           valueColor={warnColor}
           note={warnText}
-        />
-        <StatCard
-          Icon={LedgerIcon}
-          color={rd.color.primary}
-          bg={rd.color.primaryTint}
-          label={t('Jami paket')}
-          value={sms.total}
+          sub={poolLine(remainPair, labels)}
         />
         <StatCard
           Icon={CheckCircleIcon}
           color={VIOLET}
           bg={VIOLET_TINT}
-          label={t('Ishlatilgan')}
+          label={t('Sarflangan')}
           value={sms.used}
+          sub={poolLine(spentPair, labels)}
         />
         <StatCard
-          Icon={CalendarIcon}
-          color={rd.color.warning}
-          bg={rd.color.warningBg}
-          label={t('Shu oy')}
-          value={thisMonth}
+          Icon={WarningIcon}
+          color={rd.color.error}
+          bg={rd.color.errorBg}
+          label={t('Yetkazilmagan')}
+          value={undelivered ?? '—'}
+          sub={t('Oxirgi 7 kun')}
+          onPress={() => navigation.navigate(SMS_SCREEN, smsScreenParams(null))}
         />
       </View>
       {sms.total > 0 ? (
@@ -199,6 +240,16 @@ const SmsStatsPanel = ({
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${usagePct}%`, backgroundColor: barColor }]} />
           </View>
+          {pools.hasSplit ? (
+            <View style={styles.poolRows}>
+              <Text allowFontScaling={false} style={styles.poolText}>
+                {`${labels.plan}: ${pools.plan.used}/${pools.plan.total}`}
+              </Text>
+              <Text allowFontScaling={false} style={styles.poolText}>
+                {`${labels.package}: ${pools.package.used}/${pools.package.total}`}
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -234,6 +285,7 @@ const styles = StyleSheet.create({
     color: rd.color.textSecondary,
   },
   statValue: { fontFamily: rd.font.bold, fontSize: rs(20), color: rd.color.text },
+  statSub: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary, marginTop: rs(2) },
   statNote: { fontFamily: rd.font.medium, fontSize: rs(10.5), marginTop: rs(2) },
   usageCard: {
     backgroundColor: rd.color.surface,
@@ -253,4 +305,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { height: '100%', borderRadius: rs(4) },
+  poolRows: { flexDirection: 'row', justifyContent: 'space-between', marginTop: rs(8) },
+  poolText: { fontFamily: rd.font.medium, fontSize: rs(11.5), color: rd.color.textSecondary },
 });

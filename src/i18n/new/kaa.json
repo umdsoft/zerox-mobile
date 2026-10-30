@@ -1,5 +1,14 @@
 {
   "translation": {
+    "Oxirgi 7 kun": "Aqırǵı 7 kún",
+    "Jami SMS": "Jami SMS",
+    "Paket": "Paket",
+    "Yetkazilmagan": "Jetkerilmegen",
+    "Nima uchun yetkazilmadi?": "Nege jetkerilmedi?",
+    "SMS yetkazilmadi": "SMS jetkerilmedi",
+    "SMS qarzdorga yetkazilmadi": "SMS qarızdarǵa jetkerilmedi",
+    "{{name}} ga qarz haqidagi SMS yetkazilmadi.": "{{name}} qarız haqqındaǵı SMS jetkerilmedi.",
+    "Qarzdorga qarz haqidagi SMS yetkazilmadi.": "Qarızdarǵa qarız haqqındaǵı SMS jetkerilmedi.",
     "Serverda bajarilgan — ma’lumotlarni yangilang": "Serverde orınlanǵan — maǵlıwmatlardı jańalań",
     "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Ishki qátelik — ámeldi biykar etip, qaytadan kiritiń",
     "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Bul klienttiń aldıńǵı ámeli jiberilmegen — aldın onı sheshiń",

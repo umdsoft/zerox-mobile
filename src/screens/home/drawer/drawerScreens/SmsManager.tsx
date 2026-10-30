@@ -13,10 +13,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { financeApi } from '../../modules/financeApi';
-import { fmtDateTimeUz } from '../../../../helper';
-import { fmtPhoneUzFull } from '../../../../helper/phone';
 import RdHeader from '../../redesign/RdHeader';
-import { ChevronLeft, ChevronRight, CloseIcon, SearchIcon } from '../../redesign/icons';
+import { CloseIcon, SearchIcon } from '../../redesign/icons';
+import SmsListRow, { SmsItem } from './SmsListRow';
 
 /**
  * SmsManager — "SMS xabarlar ro'yxati".
@@ -26,9 +25,8 @@ import { ChevronLeft, ChevronRight, CloseIcon, SearchIcon } from '../../redesign
  * tepasida SMS paket kartalari bor edi — ular SmsHistory'ning tepasiga ko'chdi,
  * qarang: SmsStatsPanel).
  *
- * - Ro'yxat oxirigacha aylantiriladigan emas: 10 tadan SAHIFALANADI
- *   (‹ oldingi · 2 / 13 · keyingi ›). Birinchi sahifada ENG YANGI SMS'lar,
- *   keyingilarida eskilari xronologik tartibda (backend `ORDER BY id DESC`).
+ * - 30.10: foydalanuvchi boshlaganidan beri BARCHA SMS'lar — cheklovsiz, pastga aylantirganda
+ *   keyingi sahifa (20 tadan) yuklanadi. Eng yangilari tepada (backend `ORDER BY id DESC`).
  * - Qidiruv: telefon raqami, summa yoki do'kon nomi — backend `q` parametri
  *   SMS matnidan va telefondan izlaydi ("300000" ham "300 000" ni topadi).
  *
@@ -37,100 +35,8 @@ import { ChevronLeft, ChevronRight, CloseIcon, SearchIcon } from '../../redesign
  *   GET /finance/subscription/sms-history → ?page&limit&q
  */
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 400;
-const VIOLET = '#6d5ae6';
-const VIOLET_TINT = '#efe9fd';
-
-type SmsItem = {
-  id?: number | string;
-  phone?: string;
-  type?: string;
-  message?: string;
-  sent_at?: string;
-  created_at?: string;
-};
-
-// sms_history.type ENUM → yorliq + rang.
-const TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
-  auto: { label: 'Avtomatik', color: rd.color.primary, bg: rd.color.primaryTint },
-  manual: { label: 'Qo‘lda', color: VIOLET, bg: VIOLET_TINT },
-  registration: { label: 'Ro‘yxatga olish', color: rd.color.textSecondary, bg: rd.color.surfaceAlt },
-  payment_link: { label: 'To‘lov havolasi', color: rd.color.warning, bg: rd.color.warningBg },
-  qarz_tolandi: { label: 'Qarz to‘landi', color: rd.color.success, bg: rd.color.successBg },
-};
-
-const SmsRow = ({ item }: { item: SmsItem }) => {
-  const { t } = useTranslation();
-  const meta = TYPE_META[String(item.type || '')];
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowTop}>
-        <Text allowFontScaling={false} style={styles.rowDate}>
-          {fmtDateTimeUz(item.sent_at || item.created_at) || '—'}
-        </Text>
-        <View style={[styles.tag, { backgroundColor: meta?.bg || rd.color.surfaceAlt }]}>
-          <Text
-            allowFontScaling={false}
-            style={[styles.tagText, { color: meta?.color || rd.color.textSecondary }]}>
-            {meta ? t(meta.label) : item.type || '—'}
-          </Text>
-        </View>
-      </View>
-      <Text allowFontScaling={false} style={styles.rowPhone}>
-        {item.phone ? fmtPhoneUzFull(item.phone) : '—'}
-      </Text>
-      {item.message ? (
-        <Text allowFontScaling={false} style={styles.rowMsg}>
-          {item.message}
-        </Text>
-      ) : null}
-    </View>
-  );
-};
-
-type PagerProps = {
-  page: number;
-  totalPages: number;
-  disabled: boolean;
-  onPrev: () => void;
-  onNext: () => void;
-};
-
-const Pager = ({ page, totalPages, disabled, onPrev, onNext }: PagerProps) => {
-  const { t } = useTranslation();
-  const canPrev = !disabled && page > 1;
-  const canNext = !disabled && page < totalPages;
-  return (
-    <View style={styles.pager}>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        disabled={!canPrev}
-        onPress={onPrev}
-        accessibilityRole="button"
-        accessibilityLabel={t('Oldingi')}
-        accessibilityState={{ disabled: !canPrev }}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        style={[styles.pagerBtn, !canPrev && styles.pagerBtnOff]}>
-        <ChevronLeft size={rs(16)} color={canPrev ? rd.color.primary : rd.color.textTertiary} />
-      </TouchableOpacity>
-      <Text allowFontScaling={false} style={styles.pagerText}>
-        {`${page} / ${totalPages}`}
-      </Text>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        disabled={!canNext}
-        onPress={onNext}
-        accessibilityRole="button"
-        accessibilityLabel={t('Keyingi')}
-        accessibilityState={{ disabled: !canNext }}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        style={[styles.pagerBtn, !canNext && styles.pagerBtnOff]}>
-        <ChevronRight size={rs(16)} color={canNext ? rd.color.primary : rd.color.textTertiary} />
-      </TouchableOpacity>
-    </View>
-  );
-};
 
 const SmsManager = () => {
   const { t } = useTranslation();
@@ -138,6 +44,7 @@ const SmsManager = () => {
   const reqId = useRef(0);
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [moreLoading, setMoreLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [items, setItems] = useState<SmsItem[]>([]);
@@ -176,14 +83,21 @@ const SmsManager = () => {
 
   const load = useCallback(async (p: number, q: string) => {
     const my = ++reqId.current;
+    const append = p > 1;
     setError(false);
-    setLoading(true);
+    if (append) setMoreLoading(true);
+    else setLoading(true);
     try {
       const res = await financeApi.getSmsHistory(p, PAGE_SIZE, q || undefined);
       if (my !== reqId.current) return;
       const body: any = res?.data || {};
       const list: SmsItem[] = Array.isArray(body.data) ? body.data : [];
-      setItems(list);
+      // 30.10: sahifalar ketma-ket qo'shiladi (cheklovsiz aylantirish), id bo'yicha takrorsiz.
+      setItems(prev => {
+        if (!append) return list;
+        const seen = new Set(prev.map(x => String(x.id)));
+        return [...prev, ...list.filter(x => !seen.has(String(x.id)))];
+      });
       setTotal(Number(body?.pagination?.total) || list.length);
       setTotalPages(Math.max(1, Number(body?.pagination?.totalPages) || 1));
     } catch (e: any) {
@@ -194,6 +108,7 @@ const SmsManager = () => {
     } finally {
       if (my === reqId.current) {
         setLoading(false);
+        setMoreLoading(false);
         setRefreshing(false);
       }
     }
@@ -206,17 +121,20 @@ const SmsManager = () => {
   // Sahifa almashganda ro'yxat boshiga qaytiladi.
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [page, query]);
+  }, [query]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    load(page, query);
+    if (page === 1) load(1, query);
+    else setPage(1); // effekt 1-sahifani qayta yuklaydi
   }, [load, page, query]);
 
-  const goPrev = useCallback(() => setPage(p => Math.max(1, p - 1)), []);
-  const goNext = useCallback(() => setPage(p => Math.min(totalPages, p + 1)), [totalPages]);
+  const onEndReached = useCallback(() => {
+    if (loading || moreLoading || error || page >= totalPages) return;
+    setPage(p => p + 1);
+  }, [loading, moreLoading, error, page, totalPages]);
 
-  const renderItem = useCallback(({ item }: { item: SmsItem }) => <SmsRow item={item} />, []);
+  const renderItem = useCallback(({ item }: { item: SmsItem }) => <SmsListRow item={item} />, []);
   const keyExtractor = useCallback(
     (item: SmsItem, index: number) => String(item.id ?? `i${index}`),
     [],
@@ -312,16 +230,12 @@ const SmsManager = () => {
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
         ListFooterComponent={
-          totalPages > 1 && !error ? (
-            <Pager
-              page={page}
-              totalPages={totalPages}
-              disabled={loading}
-              onPrev={goPrev}
-              onNext={goNext}
-            />
+          moreLoading ? (
+            <ActivityIndicator size="small" color={rd.color.primary} style={styles.footer} />
           ) : null
         }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={styles.content}
@@ -370,55 +284,6 @@ const styles = StyleSheet.create({
     marginTop: rs(10),
     marginBottom: rs(8),
   },
-  row: {
-    backgroundColor: rd.color.surface,
-    borderRadius: rd.radius.md,
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(12),
-    marginBottom: rs(8),
-  },
-  rowTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: rs(8),
-  },
-  rowDate: { fontFamily: rd.font.regular, fontSize: rs(12), color: rd.color.textTertiary },
-  tag: { borderRadius: rd.radius.pill, paddingHorizontal: rs(8), paddingVertical: rs(2) },
-  tagText: { fontFamily: rd.font.medium, fontSize: rs(11) },
-  rowPhone: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(13.5),
-    color: rd.color.text,
-    marginTop: rs(6),
-  },
-  rowMsg: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(12.5),
-    lineHeight: rs(18),
-    color: rd.color.textSecondary,
-    marginTop: rs(4),
-  },
-  pager: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(18),
-    marginTop: rs(8),
-  },
-  pagerBtn: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(12),
-    borderWidth: 1,
-    borderColor: rd.color.primary,
-    backgroundColor: rd.color.primaryTint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pagerBtnOff: { borderColor: rd.color.border, backgroundColor: rd.color.surfaceAlt },
-  pagerText: { fontFamily: rd.font.semibold, fontSize: rs(14), color: rd.color.text },
   empty: {
     fontFamily: rd.font.regular,
     fontSize: rs(12.5),

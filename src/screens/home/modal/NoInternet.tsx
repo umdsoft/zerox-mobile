@@ -28,7 +28,6 @@ export const OFFLINE_CAPABLE_ROUTES = new Set([
   'QarzDaftariMijozlar',
   'QarzDaftariMijozYangi', // yaratish — navbat; tahrirlash oflaynda o'zi rad etadi
   'QarzDaftariMijoz',
-  'QarzDaftariQarz',
   'QarzDaftariYangi',
   'QarzDaftariYopish',
   'QarzDaftariVozKechish',

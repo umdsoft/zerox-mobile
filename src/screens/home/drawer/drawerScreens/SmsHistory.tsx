@@ -1,4 +1,5 @@
 import {
+  FlatList,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -12,10 +13,12 @@ import { useNavigation } from '@react-navigation/native';
 import { rd, rs } from '../../../../theme/rd';
 import { URL } from '../../../constants';
 import { useFetch } from '../../../../hooks/useFetch';
-import { fmtDateTimeUz } from '../../../../helper';
 import RdHeader from '../../redesign/RdHeader';
 import SmsStatsPanel from './SmsStatsPanel';
 import PlanLimitModal from './PlanLimitModal';
+import BlurModal from '../../../components/BlurModal';
+import SmsListRow from './SmsListRow';
+import { categoryPools, mapType, poolLine } from './smsPools';
 import {
   BellIcon,
   CheckIcon,
@@ -53,27 +56,13 @@ const CATEGORIES = [
   { key: 'paid', label: 'Qarz to‘langanligi to‘g‘risida xabarnoma', Icon: CheckIcon, color: rd.color.success, bg: rd.color.successBg },
 ];
 
-// Backend `sms_history.type` -> mobil kategoriya kaliti.
-// Server turlari: 'registration' (ro'yxatga olish), 'auto' (muddati kelgan avtomatik
-// eslatma), 'manual'/'payment_link' (qo'lda/talab), 'qarz_tolandi' (to'landi).
-const mapType = (t: any): string => {
-  const s = String(t ?? '').toLowerCase();
-  if (s === 'registration' || s.includes('register') || s === '1') return 'register';
-  if (s === 'auto' || s.includes('due') || s.includes('muddat') || s === '2') return 'due';
-  if (s === 'manual' || s === 'payment_link' || s.includes('demand') || s.includes('talab') || s === '3')
-    return 'demand';
-  if (s === 'qarz_tolandi' || s.includes('paid') || s.includes('tolan') || s === '4') return 'paid';
-  return 'register';
-};
-
-// Sana + SOAT (DD.MM.YYYY HH:MM) — Uzbek vaqti (+5). 27.09: umumiy helper'ga
-// ko'chirildi (SmsManager ham ishlatadi).
-const dateTime = fmtDateTimeUz;
-
 const SmsHistory = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  // 30.10: kategoriya shu sahifada ochilmaydi — orqa fon xira YANGI oynada.
   const [open, setOpen] = useState<string | null>(null);
+  const [stats, setStats] = useState<any>(null);
+  const catPools = useMemo(() => categoryPools(stats?.by_type_pool), [stats]);
 
   // Backend endpoint (deploy qilingan) — SMS bo'lmasa bo'sh massiv (crash yo'q).
   const res = useFetch({ method: 'GET', url: URL + '/qarz-daftari/sms-history' });
@@ -91,6 +80,8 @@ const SmsHistory = () => {
     });
     return g;
   }, [rawItems]);
+
+  const openItems = open ? grouped[open] || [] : [];
 
   /**
    * 29.09 (2-band): kategoriya sonlari — backend `counts` (turi bo'yicha, FAQAT yuborilgan
@@ -141,67 +132,67 @@ const SmsHistory = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}>
         {/* 28.09 (5-band): SMS paket kartalari — sahifaning ENG TEPASIDA. */}
-        <SmsStatsPanel fallbackItems={rawItems} onSubscription={onSubscription} />
+        <SmsStatsPanel onSubscription={onSubscription} onStats={setStats} />
 
         <Text allowFontScaling={false} style={styles.subtitle}>
           {t('Yuborilgan SMS xabarlar kategoriyalar bo‘yicha')}
         </Text>
 
         {CATEGORIES.map(cat => {
-          const items = grouped[cat.key] || [];
-          const isOpen = open === cat.key;
+          const line = poolLine(catPools?.[cat.key] ?? null, { plan: t('Tarif'), package: t('Paket') });
           return (
             <View key={cat.key} style={styles.catCard}>
               <TouchableOpacity
                 activeOpacity={0.75}
-                onPress={() => setOpen(isOpen ? null : cat.key)}
+                onPress={() => setOpen(cat.key)}
+                accessibilityRole="button"
                 style={styles.catHead}>
                 <View style={[styles.catIcon, { backgroundColor: cat.bg }]}>
                   <cat.Icon size={rs(16)} color={cat.color} />
                 </View>
-                <Text allowFontScaling={false} numberOfLines={2} style={styles.catLabel}>
-                  {t(cat.label)}
-                </Text>
+                <View style={styles.catTextWrap}>
+                  <Text allowFontScaling={false} numberOfLines={2} style={styles.catLabel}>
+                    {t(cat.label)}
+                  </Text>
+                  {line ? (
+                    <Text allowFontScaling={false} style={styles.catPool}>
+                      {line}
+                    </Text>
+                  ) : null}
+                </View>
                 <View style={styles.catCountWrap}>
                   <Text allowFontScaling={false} style={styles.catCount}>
                     {countOf(cat.key)}
                   </Text>
-                  <View style={isOpen ? styles.chevDown : undefined}>
-                    <ChevronRight
-                      size={rs(16)}
-                      color={rd.color.textTertiary}
-                    />
-                  </View>
+                  <ChevronRight size={rs(16)} color={rd.color.textTertiary} />
                 </View>
               </TouchableOpacity>
-
-              {isOpen ? (
-                items.length ? (
-                  <View style={styles.catBody}>
-                    {items.map((it, i) => (
-                      <View key={i} style={styles.smsRow}>
-                        <Text allowFontScaling={false} style={styles.smsPhone}>
-                          {it?.phone || it?.number || '—'}
-                        </Text>
-                        <Text allowFontScaling={false} style={styles.smsDate}>
-                          {dateTime(it?.sent_at || it?.created_at) || it?.date || ''}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.catBody}>
-                    {/* 02.10: bo'sh holat — harakatli ikonka */}
-                    <AnimatedEmpty variant="list" compact />
-                    <Text allowFontScaling={false} style={styles.emptyRow}>
-                      {t('Bu kategoriyada xabar yo‘q')}
-                    </Text>
-                  </View>
-                )
-              ) : null}
             </View>
           );
         })}
+
+        <BlurModal
+          visible={open !== null}
+          tall
+          title={t(CATEGORIES.find(c => c.key === open)?.label || '')}
+          onClose={() => setOpen(null)}>
+          {openItems.length ? (
+            <FlatList
+              data={openItems}
+              keyExtractor={(it, i) => String(it?.id ?? i)}
+              renderItem={({ item }) => <SmsListRow item={item} />}
+              showsVerticalScrollIndicator={false}
+              initialNumToRender={12}
+            />
+          ) : (
+            <View>
+              <AnimatedEmpty variant="list" compact />
+              <Text allowFontScaling={false} style={styles.emptyRow}>
+                {t('Bu kategoriyada xabar yo‘q')}
+              </Text>
+            </View>
+          )}
+        </BlurModal>
 
         {/* 29.09 (2-band): "Jami yuborilgan" kartasi OLIB TASHLANDI (so'rov) — jami
             son "Ishlatilgan" kartasida. */}
@@ -292,6 +283,8 @@ const styles = StyleSheet.create({
     fontSize: rs(13),
     color: rd.color.text,
   },
+  catTextWrap: { flex: 1 },
+  catPool: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textTertiary, marginTop: rs(2) },
   catCountWrap: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
   catCount: {
     fontFamily: rd.font.bold,

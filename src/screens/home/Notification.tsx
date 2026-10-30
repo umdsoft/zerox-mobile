@@ -69,6 +69,7 @@ import FamilyInviteTaklif from './notifications/all/FamilyInviteTaklif'; // 23.1
 // SS-DEV (2026-09-26): qarz bo'yicha shikoyat (type = 42 do'kon, 43 shaxsiy) —
 // ilgari bu turlar `default` ga tushib "Xatolik sodir bo'ldi" chiqarardi.
 import Shikoyat from './notifications/all/Shikoyat';
+import SmsUndelivered from './notifications/all/SmsUndelivered'; // 30.10: type 49
 // SS-DEV (2026-09-26): noma'lum tur / render xatosi uchun umumiy karta + ErrorBoundary.
 import NotifFallback, { NotifItemBoundary } from './notifications/all/NotifFallback';
 import apiClient from '../../store/api/apiClient';
@@ -908,6 +909,9 @@ const Bildrishnoma = () => {
       // 23.10: Oila moliyasi taklifi — «Ruxsat berish» / «Rad etish».
       case 48:
         return <FamilyInviteTaklif item={item} okay={okay} navigation={navigation} />;
+      // 30.10: qarzdorga SMS yetkazilmadi — «Qarzga o'tish» (Amaliyot tafsiloti) / «Ok».
+      case 49:
+        return <SmsUndelivered item={item} okay={okay} navigation={navigation} />;
       // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
       case 42:
       case 43:

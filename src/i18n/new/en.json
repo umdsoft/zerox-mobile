@@ -1,5 +1,14 @@
 {
   "translation": {
+    "Oxirgi 7 kun": "Last 7 days",
+    "Jami SMS": "Total SMS",
+    "Paket": "Package",
+    "Yetkazilmagan": "Undelivered",
+    "Nima uchun yetkazilmadi?": "Why was it not delivered?",
+    "SMS yetkazilmadi": "SMS not delivered",
+    "SMS qarzdorga yetkazilmadi": "SMS was not delivered to the debtor",
+    "{{name}} ga qarz haqidagi SMS yetkazilmadi.": "The SMS about the debt was not delivered to {{name}}.",
+    "Qarzdorga qarz haqidagi SMS yetkazilmadi.": "The SMS about the debt was not delivered to the debtor.",
     "Serverda bajarilgan — ma’lumotlarni yangilang": "Completed on the server — refresh the data",
     "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Internal error — cancel the action and enter it again",
     "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "An earlier action for this customer was not sent — resolve it first",

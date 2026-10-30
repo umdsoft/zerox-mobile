@@ -58,7 +58,7 @@ export const mergeSmsRows = (existing: UndeliveredSms[], incoming: UndeliveredSm
 /** Ekran nomi — banner shu ekranni ochadi (Navigation.tsx da ro'yxatga olingan). */
 export const SMS_SCREEN = 'QarzDaftariYetkazilmagan';
 
-/** "Qarzni ochish" — QarzDaftariQarz `route.params.id` ni o'qiydi; qarz_id yo'q bo'lsa null. */
+/** qarz_id -> { id } (yo'q bo'lsa null). 30.10: "Qarzni ochish" endi openCreationAmaliyot orqali. */
 export const debtRouteParams = (qarzId?: number | string | null): { id: number | string } | null =>
   qarzId ? { id: qarzId } : null;
 
@@ -79,3 +79,36 @@ export const smsParams = (page: number, shopId?: number | null) => ({
  */
 export const hasMorePages = (pageRows: number, count: number, loadedTotal: number = pageRows): boolean =>
   pageRows >= SMS_PAGE_SIZE && loadedTotal < count;
+
+/** SMS yetkazilmagan deb belgilanadimi (delivery_status undelivered/rejected yoki status failed). */
+export const isSmsUndelivered = (
+  it: { delivery_status?: string | null; status?: string | null } | null | undefined,
+): boolean => {
+  const d = String(it?.delivery_status || '').toLowerCase();
+  return d === 'undelivered' || d === 'rejected' || String(it?.status || '').toLowerCase() === 'failed';
+};
+
+/** Backend `failure_reason` kodi -> foydalanuvchiga tushunarli sabab (mavjud i18n matnlari qayta ishlatiladi). */
+export const smsFailureText = (
+  t: (k: string, o?: Record<string, unknown>) => string,
+  code?: string | null,
+): string => {
+  switch (code) {
+    case 'subscriber_inactive':
+      return `${t('Operator yetkazmadi')} — ${t('abonent raqami faol emas')}`;
+    case 'blocked':
+      return `${t('Operator yetkazmadi')} — ${t('raqam bloklangan')}`;
+    case 'invalid_number':
+      return t('Yuborilmadi: {{reason}}', { reason: t('telefon raqami noto‘g‘ri') });
+    case 'provider_rejected':
+      return t('Yuborilmadi: {{reason}}', { reason: t('SMS xizmati matnni rad etdi') });
+    case 'no_package':
+      return t('Yuborilmadi: {{reason}}', { reason: t('SMS paketi tugagan') });
+    case 'plan_required':
+      return t('Yuborilmadi: {{reason}}', { reason: t('texnik xato') });
+    case 'send_error':
+      return t('Yuborilmadi: {{reason}}', { reason: t('texnik xato') });
+    default:
+      return t('Operator yetkazmadi');
+  }
+};

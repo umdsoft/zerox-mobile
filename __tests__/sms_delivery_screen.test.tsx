@@ -1,6 +1,6 @@
 /**
  * QarzDaftariYetkazilmagan ekrani: sahifalash (qo'sh bosish = 1 so'rov, oxirgi sahifada to'xtash),
- * "Qarzni ochish" -> QarzDaftariQarz { id }, do'kon id uzatilishi, oflayn (so'rovsiz), xato.
+ * "Qarzni ochish" -> Amaliyot tafsiloti (openCreationAmaliyot(qarz_id)); raqamlash 1,2,3, do'kon id uzatilishi, oflayn (so'rovsiz), xato.
  */
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
@@ -22,6 +22,9 @@ jest.mock('../src/helper', () => ({ fmtDateTimeUz: (v: string) => `D:${v}` }));
 jest.mock('../src/offline/netStatus', () => ({ isOnline: () => mockOnline, useIsOnline: () => mockOnline }));
 jest.mock('../src/store/api/token/getToken', () => ({ storage: { getString: () => 'tok' } }));
 jest.mock('../src/screens/constants', () => ({ URL: 'http://x' }));
+const mockOpen = jest.fn().mockResolvedValue(true);
+jest.mock('../src/screens/home/modules/qarzAmaliyot', () => ({ openCreationAmaliyot: (...a: unknown[]) => mockOpen(...a) }));
+jest.mock('react-native-toast-message', () => ({ __esModule: true, default: { show: jest.fn() } }));
 jest.mock('../src/offline/ui/NotSavedOffline', () => ({ __esModule: true, default: () => null }));
 jest.mock('../src/screens/components/AnimatedEmpty', () => ({ __esModule: true, default: () => null }));
 jest.mock('../src/screens/home/redesign/RdHeader', () => ({ __esModule: true, default: () => null }));
@@ -49,14 +52,18 @@ const mount = async () => {
 const press = (r: TestRenderer.ReactTestRenderer, label: string) =>
   r.root.findAll(n => n.props.accessibilityLabel === label && n.props.onPress)[0];
 
-beforeEach(() => { mockGet.mockReset(); mockNavigate.mockReset(); mockOnline = true; mockParams = { shopId: 3 }; });
+beforeEach(() => { mockGet.mockReset(); mockNavigate.mockReset(); mockOpen.mockClear(); mockOnline = true; mockParams = { shopId: 3 }; });
 
-test('do\'kon id so\'rovga uzatiladi va "Qarzni ochish" QarzDaftariQarz{id} ga o\'tadi', async () => {
+test('do\'kon id so\'rovga uzatiladi va "Qarzni ochish" Amaliyot tafsilotiga (QarzDaftariQarz emas) o\'tadi', async () => {
   mockGet.mockResolvedValueOnce(ok(2, mkRows(1, 2)));
   const r = await mount();
   expect(mockGet.mock.calls[0][1].params).toEqual({ days: 7, page: 1, limit: 20, faoliyat_id: 3 });
   await act(async () => { press(r, 'Qarzni ochish: M1').props.onPress(); });
-  expect(mockNavigate).toHaveBeenCalledWith('QarzDaftariQarz', { id: 101 });
+  expect(mockOpen).toHaveBeenCalledWith(expect.objectContaining({ navigate: mockNavigate }), 101);
+  expect(mockNavigate).not.toHaveBeenCalledWith('QarzDaftariQarz', expect.anything());
+  const hasNum = (n: string) => r.root.findAll(x => String(x.type) === 'Text' && String(x.props.children) === n).length > 0;
+  expect(hasNum('1')).toBe(true);
+  expect(hasNum('2')).toBe(true);
 });
 
 test('shopId yo\'q — faoliyat_id yuborilmaydi', async () => {

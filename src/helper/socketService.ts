@@ -403,6 +403,8 @@ class SocketService {
   }
 
   async returnzBody(item: any) {
+    // 30.10: type 49 — yetkazilmagan SMS (matn backenddan; mijozga qisqa umumiy matn).
+    if (item?.type === 49) return i18next.t('SMS qarzdorga yetkazilmadi');
     if (item.type === 21) {
       const user = Store.getState().HomeReducer.user;
       if (item.creciver === user?.data?.id) {

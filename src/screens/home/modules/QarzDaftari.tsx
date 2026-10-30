@@ -74,7 +74,7 @@ import {
   TelegramPlaneIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
-import SmsDeliveryAlert from './components/SmsDeliveryAlert';
+import { openCreationAmaliyot } from './qarzAmaliyot';
 
 type Nav = (route: string, params?: object) => void;
 
@@ -603,9 +603,6 @@ const QarzDaftari = () => {
   const [xodim, setXodim] = React.useState(isXodimSession());
   const [xodimNomi, setXodimNomi] = React.useState(xodimFaoliyatNomi());
   const firstFocus = React.useRef(true);
-  // SMS ogohlantirishi dashboard bilan birga yangilansin (fokus, qayta urinish, xodimdan chiqish).
-  const [smsRefreshKey, setSmsRefreshKey] = React.useState(0);
-  const bumpSms = React.useCallback(() => setSmsRefreshKey(k => k + 1), []);
   useFocusEffect(
     React.useCallback(() => {
       setXodim(isXodimSession());
@@ -616,7 +613,6 @@ const QarzDaftari = () => {
       }
       dashboard.onRefresh({});
       nearExp.onRefresh({});
-      bumpSms();
       // 🔴 DO'KONLAR RO'YXATI HAM yangilanishi SHART. Ilgari u faqat mount'da
       // o'qilardi, shu sabab:
       //   - do'kon NOMI tahrirlangach cardda ESKI nom qolardi;
@@ -625,7 +621,7 @@ const QarzDaftari = () => {
       // Endi ekranga har qaytganda ro'yxat qayta o'qiladi → nom/soni va
       // `syncQarzShopWithList` orqali tanlov yorlig'i ham darhol yangilanadi.
       shopsFetch.onRefresh({});
-    }, [dashboard.onRefresh, nearExp.onRefresh, shopsFetch.onRefresh, bumpSms]),
+    }, [dashboard.onRefresh, nearExp.onRefresh, shopsFetch.onRefresh]),
   );
 
   const onExitXodim = () => {
@@ -635,7 +631,6 @@ const QarzDaftari = () => {
     // Owner tokeni tiklandi — summalarni qayta o'qiymiz.
     dashboard.onRefresh({});
     nearExp.onRefresh({});
-    bumpSms();
   };
 
   const d: any = (dashboard.data as any)?.data || dashboard.data || {};
@@ -705,8 +700,7 @@ const QarzDaftari = () => {
     setShopPicker(true);
   };
   /**
-   * 08.10 (3-band): "Muddati yaqin" qatori ilgari "Qarz tafsiloti"ni
-   * (QarzDaftariQarz) ochardi. So'rov: "Qarz oluvchi/beruvchi" — MIJOZ sahifasi
+   * 08.10 (3-band): "Muddati yaqin" qatori ilgari "Qarz tafsiloti"ni ochardi. So'rov: "Qarz oluvchi/beruvchi" — MIJOZ sahifasi
    * (QarzDaftariMijoz) ochilsin, xuddi "Berilgan/Olingan qarz" ro'yxatidagidek
    * (QarzDaftariQarzlar: { id: mijoz_id, turi, fish }). mijoz_id bo'lmasa (eski
    * javob) — avvalgidek qarz sahifasi.
@@ -715,7 +709,12 @@ const QarzDaftari = () => {
     if (row?.mijozId) {
       return nav('QarzDaftariMijoz', { id: row.mijozId, turi: row.turi, fish: row.name });
     }
-    return row?.id && nav('QarzDaftariQarz', { id: row.id });
+    // 30.10: "Qarz tafsiloti" sahifasi yo'q — qarzni yaratgan amaliyot tafsiloti ochiladi.
+    if (row?.id) {
+      openCreationAmaliyot({ navigate: nav }, row.id).then(ok => {
+        if (!ok) Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+      });
+    }
   };
 
   if (dashboard.loading && nearExp.loading) {
@@ -798,12 +797,7 @@ const QarzDaftari = () => {
           <ChevronRight size={rs(20)} color={rd.color.textTertiary} />
         </TouchableOpacity>
 
-        {/* 29.10: oxirgi 7 kunda yetkazilmagan SMS — do'kon cardi tagida (faqat count > 0 va onlayn bo'lsa). */}
-        <SmsDeliveryAlert
-          shopId={effectiveShopId()}
-          refreshKey={smsRefreshKey}
-          sessionKey={xodim ? `xodim:${xodimNomi}` : 'owner'}
-        />
+        {/* 30.10: yetkazilmagan SMS kartasi bu yerdan olib tashlandi — Tariflar > SMS xabarlar tarixi sahifasida. */}
 
         {/* C. "Umumiy ko'rinish" diagrammasi Berilgan/Olingan "manba tanlash"
             sahifasiga (SearchDebitor select view) ko'chirilgan.
@@ -816,7 +810,6 @@ const QarzDaftari = () => {
             offline={dashboard.offline}
             onRetry={() => {
               dashboard.onRefresh({});
-              bumpSms();
             }}
             style={styles.notSaved}
           />

@@ -15,9 +15,10 @@ import NotSavedOffline from '../../../offline/ui/NotSavedOffline';
 import { rd, rs } from '../../../theme/rd';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 import RdHeader from '../redesign/RdHeader';
+import Toast from 'react-native-toast-message';
+import { openCreationAmaliyot } from './qarzAmaliyot';
 import { fetchUndeliveredPage } from './components/smsDeliveryApi';
 import {
-  debtRouteParams,
   hasMorePages,
   mergeSmsRows,
   SMS_DAYS,
@@ -142,13 +143,22 @@ const QarzDaftariYetkazilmagan = () => {
     return t('Yuborilmadi: {{reason}}', { reason: why });
   };
 
-  const openDebt = (qarzId?: number | string | null) => {
-    const params = debtRouteParams(qarzId);
-    if (params) navigation.navigate('QarzDaftariQarz', params);
+  // 30.10: "Qarzni ochish" -> AMALIYOT TAFSILOTI (Qarz tafsiloti sahifasi endi yo'q).
+  const [opening, setOpening] = React.useState(false);
+  const openDebt = async (qarzId?: number | string | null) => {
+    if (!qarzId || opening) return;
+    setOpening(true);
+    try {
+      const ok = await openCreationAmaliyot(navigation, qarzId);
+      if (!ok) Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+    } finally {
+      setOpening(false);
+    }
   };
 
-  const renderRow = ({ item }: { item: UndeliveredSms }) => (
+  const renderRow = ({ item, index }: { item: UndeliveredSms; index: number }) => (
     <View style={styles.row}>
+      <Text style={styles.rowNum}>{index + 1}</Text>
       <View style={styles.rowMain}>
         <Text style={styles.rowName}>{item.mijoz_fish || '—'}</Text>
         {!!item.phone && <Text style={styles.rowPhone}>{item.phone}</Text>}
@@ -259,23 +269,24 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   listContent: { paddingHorizontal: rs(20), paddingBottom: rs(12), flexGrow: 1 },
   sep: { height: 1, backgroundColor: rd.color.border },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(10), paddingVertical: rs(14) },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: rs(8), paddingVertical: rs(8) },
+  rowNum: { width: rs(22), fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.textTertiary, paddingTop: rs(1) },
   rowMain: { flex: 1 },
-  rowName: { fontFamily: rd.font.bold, fontSize: rs(14.5), color: rd.color.text },
-  rowPhone: { fontFamily: rd.font.regular, fontSize: rs(12.5), color: rd.color.textSecondary, marginTop: rs(1) },
-  rowMeta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: rs(8), marginTop: rs(6) },
-  chip: { paddingHorizontal: rs(8), paddingVertical: rs(2), borderRadius: rs(20), backgroundColor: rd.color.surfaceAlt },
-  chipText: { fontFamily: rd.font.bold, fontSize: rs(11), color: rd.color.textSecondary },
-  rowDate: { fontFamily: rd.font.regular, fontSize: rs(11.5), color: rd.color.textTertiary },
-  rowReason: { fontFamily: rd.font.bold, fontSize: rs(11.5), color: rd.color.error, marginTop: rs(4) },
+  rowName: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
+  rowPhone: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textSecondary },
+  rowMeta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: rs(6), marginTop: rs(3) },
+  chip: { paddingHorizontal: rs(6), paddingVertical: rs(1), borderRadius: rs(20), backgroundColor: rd.color.surfaceAlt },
+  chipText: { fontFamily: rd.font.bold, fontSize: rs(10), color: rd.color.textSecondary },
+  rowDate: { fontFamily: rd.font.regular, fontSize: rs(10.5), color: rd.color.textTertiary },
+  rowReason: { fontFamily: rd.font.bold, fontSize: rs(10.5), color: rd.color.error, marginTop: rs(2) },
   openBtn: {
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(8),
-    borderRadius: rs(10),
+    paddingHorizontal: rs(10),
+    paddingVertical: rs(6),
+    borderRadius: rs(8),
     backgroundColor: rd.color.primaryTint,
     maxWidth: '38%',
   },
-  openBtnText: { fontFamily: rd.font.bold, fontSize: rs(12), color: rd.color.primaryStrong, textAlign: 'center' },
+  openBtnText: { fontFamily: rd.font.bold, fontSize: rs(11), color: rd.color.primaryStrong, textAlign: 'center' },
   moreBtn: { alignItems: 'center', paddingVertical: rs(14) },
   moreText: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.primary },
   stateError: {

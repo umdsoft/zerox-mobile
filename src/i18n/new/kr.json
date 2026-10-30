@@ -1,5 +1,14 @@
 {
   "translation": {
+    "Oxirgi 7 kun": "Охирги 7 кун",
+    "Jami SMS": "Жами SMS",
+    "Paket": "Пакет",
+    "Yetkazilmagan": "Етказилмаган",
+    "Nima uchun yetkazilmadi?": "Нима учун етказилмади?",
+    "SMS yetkazilmadi": "SMS етказилмади",
+    "SMS qarzdorga yetkazilmadi": "SMS қарздорга етказилмади",
+    "{{name}} ga qarz haqidagi SMS yetkazilmadi.": "{{name}} га қарз ҳақидаги SMS етказилмади.",
+    "Qarzdorga qarz haqidagi SMS yetkazilmadi.": "Қарздорга қарз ҳақидаги SMS етказилмади.",
     "Serverda bajarilgan — ma’lumotlarni yangilang": "Серверда бажарилган — маълумотларни янгиланг",
     "Ichki xato — amalni bekor qilib, qaytadan kiriting": "Ички хато — амални бекор қилиб, қайтадан киритинг",
     "Shu mijozning oldingi amali yuborilmagan — avval uni hal qiling": "Шу мижознинг олдинги амали юборилмаган — аввал уни ҳал қилинг",
