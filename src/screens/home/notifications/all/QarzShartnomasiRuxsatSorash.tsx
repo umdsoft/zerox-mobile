@@ -18,7 +18,7 @@ import NotificationShell, {
 } from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
-const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
+const QarzShartnomasiRuxsatSorash = ({ item, okay }) => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);

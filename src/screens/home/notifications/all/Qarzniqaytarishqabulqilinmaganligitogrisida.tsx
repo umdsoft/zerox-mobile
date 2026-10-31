@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
 
@@ -12,9 +13,9 @@ import NotificationShell from '../../../components/NotificationShell';
 
 const Qarzniqaytarishqabulqilinmaganligitogrisida = ({
   item,
-  okay,
-  navigation,
+  okay
 }) => {
+  const navigation = useNavigation<any>();
   const onPress = async () => {
     okay(item.id);
   };

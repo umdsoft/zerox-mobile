@@ -8,6 +8,7 @@
  * 404 not-found → "Taklif bekor qilingan". Kontrakt: web agent, 23.10 (family_invite_contract.md).
  */
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -31,7 +32,8 @@ const ERROR_TEXT: Record<string, string> = {
   'not-found': 'Taklif topilmadi yoki bekor qilingan',
 };
 
-const FamilyInviteTaklif = ({ item, okay, navigation }: any) => {
+const FamilyInviteTaklif = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const fmId = item?.family_member_id ?? item?.familyMemberId;
   const [status, setStatus] = React.useState<FmStatus>(normStatus(item?.fm_status));
   const [busy, setBusy] = React.useState<'accept' | 'reject' | null>(null);

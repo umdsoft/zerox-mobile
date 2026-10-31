@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
 import TextBold from '../../../components/NotifBold';
@@ -11,7 +12,8 @@ import NotificationShell from '../../../components/NotificationShell';
 
 //// bu bumadi hali
 
-const QarzniQaytarishRadQilinganligi = ({ item, okay, navigation }) => {
+const QarzniQaytarishRadQilinganligi = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;
   if (!isCreditor && !isDebitor) {

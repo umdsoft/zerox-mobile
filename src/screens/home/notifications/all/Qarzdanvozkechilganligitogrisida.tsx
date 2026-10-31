@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { style } from '../../../../theme/style';
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/NotifBold';
@@ -9,7 +10,8 @@ import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
-const Qarzdanvozkechilganligitogrisida = ({ item, okay, navigation }) => {
+const Qarzdanvozkechilganligitogrisida = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   const onOkay = () => okay(item.id);
 
   const isCreditor = item.creditor === item.reciver;

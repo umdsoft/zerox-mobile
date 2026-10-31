@@ -1,12 +1,14 @@
 import {StyleSheet, Text} from 'react-native';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import {t} from 'i18next';
 import NotificationShell, {NotifButton} from '../../../components/NotificationShell';
 import {rd, rs} from '../../../../theme/rd';
 import {style} from '../../../../theme/style';
 import {debtNav} from '../../redesign/debtNav';
-const Eslatma = ({item, okay, navigation}) => {
+const Eslatma = ({item, okay}) => {
+  const navigation = useNavigation<any>();
   const onOkay = async () => {
     okay(item?.id);
   };

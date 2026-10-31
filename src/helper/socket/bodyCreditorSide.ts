@@ -35,8 +35,7 @@ export const creditorSideBody = (item: any, usd: any): string | undefined => {
         sum: money(item.amount, item.currency),
         id: item.number,
         date: item.created,
-        // DIQQAT: eski kod bu yerda SON uzatadi (obyekt emas) -> 'NaN'. Xulq o'zgarmagan.
-        summ: checkingSum(item?.amount, usd),
+        summ: checkingSum(item, usd),
       });
     case 1:
       return tr('546', {

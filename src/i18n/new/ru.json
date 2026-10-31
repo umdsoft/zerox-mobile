@@ -1,5 +1,6 @@
 {
   "translation": {
+    "USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.": "Курс USD не получен. Расчёт комиссии может быть неточным.",
     "Operator tomonidan xabar yetkazilmadi.": "Оператор не доставил сообщение.",
     "Operator tomonidan yetkazilmadi.": "Оператор не доставил.",
     "Abonent raqami faol emas.": "Номер абонента не активен.",

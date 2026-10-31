@@ -11,8 +11,7 @@ import { rd, rs } from '../../../../theme/rd';
 
 const QarzShartnomasiQabulQilinmaganligiHaqida = ({
   item,
-  okay,
-  navigation,
+  okay
 }) => {
   const onOkay = async () => {
     okay(item.id);

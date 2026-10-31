@@ -43,6 +43,7 @@ export function useGiveDebt() {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [usdRate, setUsdRate] = useState('');
+  const [rateFailed, setRateFailed] = useState(false);
   // SS-DEV (2026-10-06): yagona double-submit himoyasi (bir kadrdagi ikki bosishni ham ushlaydi).
   // `loading` (Loading ekrani) tekshiruvdan keyin yoqiladi, shuning uchun hook'ning o'z loading'i ishlatilmaydi.
   const { run } = useApiAction();
@@ -50,13 +51,20 @@ export function useGiveDebt() {
   const amountNum = parseAmount(amount, !isUzs);
 
   useEffect(() => {
-    axios.get(CBU_RATES_URL, { headers: {} }).then(
-      ({ data }) => {
-        if (data) setUsdRate(data[0].Rate);
-      },
-      () => {},
-    );
+    axios
+      .get(CBU_RATES_URL, { headers: {} })
+      .then(({ data }) => {
+        const rate = data?.[0]?.Rate;
+        if (rate) setUsdRate(rate);
+        else setRateFailed(true);
+      })
+      .catch(() => setRateFailed(true));
   }, []);
+
+  // Kurs olinmagan bo'lsa-yu USD tanlangan bo'lsa — ogohlantirish (xizmat haqi / balans tekshiruvi taxminiy bo'lmasin).
+  useEffect(() => {
+    if (!isUzs && rateFailed) showError(t('USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.'), 3500);
+  }, [isUzs, rateFailed]);
 
   // Amaldan keyin Home'ga SILLIQ qaytish (navigate — remount yo'q) + HomeApi refresh.
   const goHomeSoon = () => {

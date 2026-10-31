@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { style } from '../../../../theme/style';
 import { sortText } from '../../../components/StatisticCard';
@@ -15,9 +16,9 @@ import { rd, rs } from '../../../../theme/rd';
 const Qarzqaytarilganligitogrisida = ({
   item,
   onQismanQaytarilgan,
-  navigation,
-  onToliqQaytgan,
+  onToliqQaytgan
 }) => {
+  const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;
   if (!isCreditor && !isDebitor) {

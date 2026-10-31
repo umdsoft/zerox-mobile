@@ -1,5 +1,6 @@
 {
   "translation": {
+    "USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.": "USD rate unavailable. The fee estimate may be inaccurate.",
     "Operator tomonidan xabar yetkazilmadi.": "The operator did not deliver the message.",
     "Operator tomonidan yetkazilmadi.": "Not delivered by the operator.",
     "Abonent raqami faol emas.": "The subscriber number is not active.",

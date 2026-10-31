@@ -630,3 +630,26 @@ describe('GiveDebtUser — ishtirokchilar va sarlavha', () => {
     expect(t.indexOf('fio(Aliyeva Zarina Rustam)')).toBeLessThan(t.indexOf('fio(Valiyev Ali Karim)'));
   });
 });
+
+describe('GiveDebtUser — CBU kursi olinmadi (wave D)', () => {
+  const WARN = 'USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.';
+  const warnToasts = () => toasts().filter(x => x.props?.desc === WARN);
+  it('so\'rov xato bersa: yiqilmaydi, UZS da ogohlantirish yo\'q, USD tanlansa bor', async () => {
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await mount(0);
+    expect(warnToasts()).toHaveLength(0);
+    await tap(byText(r, 'usd'));
+    expect(warnToasts()).toHaveLength(1);
+  });
+  it('bo\'sh javob ([]) bo\'lsa ham ogohlantiradi', async () => {
+    mockGet.mockResolvedValue({ data: [] });
+    const r = await mount(0);
+    await tap(byText(r, 'usd'));
+    expect(warnToasts()).toHaveLength(1);
+  });
+  it('kurs bor bo\'lsa ogohlantirish yo\'q', async () => {
+    const r = await mount(0);
+    await tap(byText(r, 'usd'));
+    expect(warnToasts()).toHaveLength(0);
+  });
+});

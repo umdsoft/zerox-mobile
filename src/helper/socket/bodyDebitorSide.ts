@@ -82,8 +82,7 @@ export const debitorSideBody = (item: any, usd: any): string | undefined => {
         name2: creditorName(item),
         id: item.number,
         sum: money(item.amount, item.currency),
-        // DIQQAT: SON uzatiladi (obyekt emas) -> 'NaN'. Xulq o'zgarmagan.
-        sum1: checkingSum(item?.amount, usd) + ' ' + item.currency,
+        sum1: checkingSum(item, usd) + ' ' + item.currency,
       });
     case 13:
       return tr('573', base(item));

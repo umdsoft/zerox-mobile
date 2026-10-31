@@ -4,6 +4,7 @@
  * initSubscribeWithId/reciveNotification/sendNotification/returnzBody/checkingSum) qotirilgan.
  * returnzBody goldenlari (fixtures/socket_body_golden.json) eski realizatsiyadan yozilgan:
  *   SB_GEN=1 npx jest socket_service   (FAQAT eski kod bilan)
+ * DIQQAT (wave D): 34 holatda (type 0 kreditor / type 8 debitor) xizmat haqi "NaN" edi — xato tuzatilib, faqat shu summ/sum1 qiymatlari yangilandi.
  */
 import fs from 'fs';
 import path from 'path';

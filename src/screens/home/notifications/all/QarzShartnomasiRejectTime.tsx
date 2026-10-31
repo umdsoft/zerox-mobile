@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { style } from '../../../../theme/style';
 
@@ -40,7 +41,8 @@ export const getFullName = (role: string, item: any) => {
   return '';
 };
 
-const QarzShartnomasiRejectTime = ({ item, okay, navigation }) => {
+const QarzShartnomasiRejectTime = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
 

@@ -4,7 +4,7 @@ import React from 'react';
 import { style } from '../../../../theme/style';
 import { t } from 'i18next';
 import NotificationShell from '../../../components/NotificationShell';
-const NewUser = ({ item, okay, navigation }) => {
+const NewUser = ({ item, okay }) => {
   const onOkay = async () => {
     okay(item?.id);
   };

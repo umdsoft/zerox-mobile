@@ -5,7 +5,7 @@ import { settingDate } from '../../../../helper';
 import { style } from '../../../../theme/style';
 import { t } from 'i18next';
 import NotificationShell from '../../../components/NotificationShell';
-const RecoveryPassword = ({ item, okay, navigation }) => {
+const RecoveryPassword = ({ item, okay }) => {
   const onOkay = async () => {
     okay(item.id);
   };

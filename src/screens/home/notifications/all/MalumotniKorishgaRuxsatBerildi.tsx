@@ -1,5 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import TextBold from '../../../components/NotifBold';
 import axios from 'axios';
@@ -18,7 +19,8 @@ import { rd, rs } from '../../../../theme/rd';
 import { style } from '../../../../theme/style';
 import { useOfertaGuard } from '../../../../hooks/useOfertaGuard';
 
-const MalumotniKorishgaRuxsatBerildi = ({ item, navigation, okay }) => {
+const MalumotniKorishgaRuxsatBerildi = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
   const dispatch = useDispatch();

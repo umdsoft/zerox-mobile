@@ -6,6 +6,7 @@
  * Backend payload shakli o'zgarsa — faqat `parseSmsUndelivered` ni moslash kifoya.
  */
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, Text } from 'react-native';
 import { t } from 'i18next';
 import Toast from 'react-native-toast-message';
@@ -56,7 +57,8 @@ export const parseSmsUndelivered = (item: any): SmsUndeliveredInfo => {
   };
 };
 
-const SmsUndelivered = ({ item, okay, navigation }: any) => {
+const SmsUndelivered = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const info = parseSmsUndelivered(item);
   const [opening, setOpening] = React.useState(false);
 

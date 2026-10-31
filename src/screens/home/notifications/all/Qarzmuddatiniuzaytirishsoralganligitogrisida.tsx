@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
@@ -14,9 +15,9 @@ import NotificationShell from '../../../components/NotificationShell';
 
 const Qarzmuddatiniuzaytirishsoralganligitogrisida = ({
   item,
-  navigation,
-  onQarzMuddatUzaytirish,
+  onQarzMuddatUzaytirish
 }) => {
+  const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;
   if (!isCreditor && !isDebitor) {

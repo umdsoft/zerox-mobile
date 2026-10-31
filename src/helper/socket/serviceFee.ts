@@ -8,8 +8,7 @@ const FEE_RATE = 0.1 / 100;
 
 /**
  * Bildirishnoma matnidagi xizmat haqi (UZS/USD): <= 1 mln -> 1 000, > 100 mln -> 100 000, oralig'ida 0.1%.
- * DIQQAT: `item` — `{amount, currency}` obyekti. Ba'zi chaqiruvlar (eski kod) shunchaki SON uzatadi — u holda
- * natija 'NaN' (xulq o'zgarmagan; testlar bilan qotirilgan).
+ * `item` — `{amount, currency}` obyekti (2026-11: SON uzatilgan chaqiruvlar tuzatildi — avval "NaN" chiqardi).
  */
 export const checkingSum = (item: any, usd: any): string => {
   if (item.currency === 'USD') {

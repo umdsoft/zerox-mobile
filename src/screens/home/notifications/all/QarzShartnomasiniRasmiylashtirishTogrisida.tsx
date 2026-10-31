@@ -1,5 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { style } from '../../../../theme/style';
 import TextBold from '../../../components/NotifBold';
 import { settingDate } from '../../../../helper';
@@ -16,7 +17,8 @@ import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
 const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
-  ({ item, okay, navigation, onSuccess, onReject }) => {
+  ({ item, okay, onSuccess, onReject }) => {
+    const navigation = useNavigation<any>();
     const dispatch = useDispatch();
     const user = useSelector((state: any) => state.HomeReducer.user); // SS-PERF (2026-09-25): aniq selektor
     const usds = useSelector((state: any) => state.HomeReducer.usd);

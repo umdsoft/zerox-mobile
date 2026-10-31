@@ -6,6 +6,7 @@
  * Tugmalar: «To'ladim» (POST .../pay; 409 — allaqachon to'langan), «Reja» — DebtPlan, «Ok» — yopish.
  */
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -19,7 +20,8 @@ const GREEN = '#059669';
 
 type Info = { title: string; amount: number; currency: string; dueDate: string; paid: boolean };
 
-const DebtPlanEslatma = ({ item, okay, navigation }: any) => {
+const DebtPlanEslatma = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const reminderId = item?.debt_plan_reminder_id ?? item?.debtPlanReminderId;
   const [info, setInfo] = React.useState<Info | null>(null);
   const [failed, setFailed] = React.useState(false);

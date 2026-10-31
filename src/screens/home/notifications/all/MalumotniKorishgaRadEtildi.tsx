@@ -11,7 +11,7 @@ import { t } from 'i18next';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 
-const MalumotniKorishgaRadEtildi = ({ item, navigation, okay }) => {
+const MalumotniKorishgaRadEtildi = ({ item, okay }) => {
   const onPress = async () => {
     okay(item.id);
   };

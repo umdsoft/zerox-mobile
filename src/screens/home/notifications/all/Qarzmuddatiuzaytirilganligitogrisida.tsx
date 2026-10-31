@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { rd, rs } from '../../../../theme/rd';
 
 import { settingDate } from '../../../../helper';
@@ -9,7 +10,8 @@ import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 
-const Qarzmuddatiuzaytirilganligitogrisida = ({ item, okay, navigation }) => {
+const Qarzmuddatiuzaytirilganligitogrisida = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   const onPress = async () => {
     okay(item.id);
   };

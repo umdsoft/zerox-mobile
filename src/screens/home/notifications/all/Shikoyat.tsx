@@ -15,6 +15,7 @@
  * `sh_*`/`pc_*` maydonlar NULL keladi.
  */
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, Text, View } from 'react-native';
 import { t } from 'i18next';
 import NotificationShell, { NotifButton } from '../../../components/NotificationShell';
@@ -42,7 +43,8 @@ const money = (v: unknown, cur: unknown): string => {
   return `${sortText(Math.round(n))} ${String(cur || 'UZS')}`;
 };
 
-const Shikoyat = ({ item, okay, navigation }: any) => {
+const Shikoyat = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const it = item || {};
   const isShop = Number(it.type) === 42;
 

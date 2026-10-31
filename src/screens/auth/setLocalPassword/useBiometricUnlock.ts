@@ -33,7 +33,6 @@ const CLOSED_MODAL: BioModalState = { visible: false, onDone: () => {} };
 
 /** Biometrik qulf ochish + PIN o'rnatilgach opt-in modal. SEC: chaqiruvlar eski ekran bilan aynan bir xil. */
 export function useBiometricUnlock(isLocal: boolean, finishUnlock: () => void) {
-  const [, setSupportScan] = useState(false);
   // Biometrik OPT-IN — native Alert o'rniga CHIROYLI maxsus modal.
   const [bioModal, setBioModal] = useState<BioModalState>(CLOSED_MODAL);
 
@@ -55,7 +54,6 @@ export function useBiometricUnlock(isLocal: boolean, finishUnlock: () => void) {
       } else if (result === 'invalid') {
         // Yangi barmoq izi/yuz qo'shilgan (yoki sir yo'qolgan): PIN bilan kiring, qayta yoqing.
         storage.set('touch', false);
-        setSupportScan(false);
         showPinToast(
           t('Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.'),
           4000,
@@ -108,7 +106,6 @@ export function useBiometricUnlock(isLocal: boolean, finishUnlock: () => void) {
       rnBiometrics
         .isSensorAvailable()
         .then(({ available }) => {
-          setSupportScan(available);
           if (available) {
             onFingerScan();
           }

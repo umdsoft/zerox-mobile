@@ -1,5 +1,6 @@
 import { Text, StyleSheet } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { style } from '../../../../theme/style';
 
@@ -12,7 +13,8 @@ import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
-const QarzniMuddatUzaytirishQabul = ({ item, okay, navigation }) => {
+const QarzniMuddatUzaytirishQabul = ({ item, okay }) => {
+  const navigation = useNavigation<any>();
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
   const onOkay = async () => {

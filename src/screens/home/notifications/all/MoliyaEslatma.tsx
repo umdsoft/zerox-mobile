@@ -9,6 +9,7 @@
  * o'tish (eslatmaning butun maqsadi shu).
  */
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { rd, rs } from '../../../../theme/rd';
@@ -19,59 +20,62 @@ const GREEN = '#16a34a';
 
 // 13.10: `daily` — SHAXSIY MOLIYA kunlik eslatmasi (type 46: foydalanuvchi belgilagan vaqtda, bugun daromad /
 // xarajat kiritilmagan bo'lsa). Karta va tugmalar bir xil, faqat matn boshqa.
-const MoliyaEslatma = ({ item, okay, navigation, daily }: any) => (
-  <View style={styles.card}>
-    <View style={styles.head}>
-      <View style={styles.icon}>
-        <WalletIcon size={rs(18)} color={rd.color.primary} />
+const MoliyaEslatma = ({ item, okay, daily }: any) => {
+  const navigation = useNavigation<any>();
+  return (
+    <View style={styles.card}>
+      <View style={styles.head}>
+        <View style={styles.icon}>
+          <WalletIcon size={rs(18)} color={rd.color.primary} />
+        </View>
+        <Text allowFontScaling={false} style={styles.title} numberOfLines={2}>
+          Shaxsiy moliya eslatmasi
+        </Text>
       </View>
-      <Text allowFontScaling={false} style={styles.title} numberOfLines={2}>
-        Shaxsiy moliya eslatmasi
-      </Text>
-    </View>
 
-    {daily ? (
-      <Text allowFontScaling={false} style={styles.sub}>
-        {t('Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.')}
-      </Text>
-    ) : (
-      <Text allowFontScaling={false} style={styles.sub}>
-        Bir necha kundan beri daromad va xarajatlaringizni kiritmadingiz. Hisobot
-        to‘liq bo‘lishi uchun o‘tkazib yuborilgan kunlarni kiritib qo‘ying.
-      </Text>
-    )}
-
-    <View style={styles.btnRow}>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => navigation?.navigate('FinanceExpenseAdd')}
-        style={[styles.btn, { borderColor: RED + '66' }]}>
-        <ArrowDownLeft size={rs(15)} color={RED} />
-        <Text allowFontScaling={false} style={[styles.btnText, { color: RED }]}>
-          Xarajat qo‘shish
+      {daily ? (
+        <Text allowFontScaling={false} style={styles.sub}>
+          {t('Bugun hali daromad va xarajat kiritilmadi. Bugungi daromad va xarajatlaringizni kiritib qo‘ying.')}
         </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => navigation?.navigate('FinanceIncomeAdd')}
-        style={[styles.btn, { borderColor: GREEN + '66' }]}>
-        <ArrowUpRight size={rs(15)} color={GREEN} />
-        <Text allowFontScaling={false} style={[styles.btnText, { color: GREEN }]}>
-          Daromad qo‘shish
+      ) : (
+        <Text allowFontScaling={false} style={styles.sub}>
+          Bir necha kundan beri daromad va xarajatlaringizni kiritmadingiz. Hisobot
+          to‘liq bo‘lishi uchun o‘tkazib yuborilgan kunlarni kiritib qo‘ying.
         </Text>
-      </TouchableOpacity>
-    </View>
+      )}
 
-    <View style={styles.footer}>
-      <Text allowFontScaling={false} style={styles.time}>
-        {item?.created} {item?.time ? String(item.time).slice(0, 5) : ''}
-      </Text>
-      <TouchableOpacity activeOpacity={0.8} onPress={() => okay?.(item?.id, item?.type)}>
-        <Text allowFontScaling={false} style={styles.okay}>Ok</Text>
-      </TouchableOpacity>
+      <View style={styles.btnRow}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => navigation?.navigate('FinanceExpenseAdd')}
+          style={[styles.btn, { borderColor: RED + '66' }]}>
+          <ArrowDownLeft size={rs(15)} color={RED} />
+          <Text allowFontScaling={false} style={[styles.btnText, { color: RED }]}>
+            Xarajat qo‘shish
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => navigation?.navigate('FinanceIncomeAdd')}
+          style={[styles.btn, { borderColor: GREEN + '66' }]}>
+          <ArrowUpRight size={rs(15)} color={GREEN} />
+          <Text allowFontScaling={false} style={[styles.btnText, { color: GREEN }]}>
+            Daromad qo‘shish
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.footer}>
+        <Text allowFontScaling={false} style={styles.time}>
+          {item?.created} {item?.time ? String(item.time).slice(0, 5) : ''}
+        </Text>
+        <TouchableOpacity activeOpacity={0.8} onPress={() => okay?.(item?.id, item?.type)}>
+          <Text allowFontScaling={false} style={styles.okay}>Ok</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 export default MoliyaEslatma;
 

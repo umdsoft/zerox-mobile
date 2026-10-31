@@ -1,5 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 import React, { memo, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { sortText } from '../../../components/StatisticCard';
 import TextBold from '../../../components/NotifBold';
 import { t } from 'i18next';
@@ -19,9 +20,9 @@ import { useOfertaGuard } from '../../../../hooks/useOfertaGuard';
 
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
-  okay,
-  navigation,
+  okay
 }) => {
+  const navigation = useNavigation<any>();
   // SS-DEV (2026-09-29): "Qarzni qaytarish" — shartnoma amali, ommaviy oferta shart.
   const guardOferta = useOfertaGuard();
   const onOkay = async () => {

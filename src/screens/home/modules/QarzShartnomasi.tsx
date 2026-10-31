@@ -12,428 +12,31 @@
  * Literal hex faqat gradient/pie ranglarida.
  */
 import { useNavigation } from '@react-navigation/native';
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { useSelector } from 'react-redux';
+import { RefreshControl, ScrollView, StatusBar, View } from 'react-native';
 import { useFetch } from '../../../hooks/useFetch';
-import { rd, rs } from '../../../theme/rd';
-import { compactUsd, compactUzs, fmtUZS, fmtUSD, parseAmount } from '../../../helper/money';
+import { rd } from '../../../theme/rd';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
-import AnimatedEmpty from '../../components/AnimatedEmpty';
-import { dueLabel, getDueMeta, sortText } from '../../components/StatisticCard';
-import Donut from '../redesign/Donut';
-import RdHeader from '../redesign/RdHeader';
 import RdTopBar from '../redesign/RdTopBar';
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  BarChartIcon,
-  ChevronRight,
-  ClockIcon,
-  InfoIcon,
-} from '../redesign/icons';
-import DebtSummaryCard from '../redesign/DebtSummaryCard';
 import { debtNav, DebtRole, DebtTab } from '../redesign/debtNav';
 import { useOfertaGuard } from '../../../hooks/useOfertaGuard';
-import { Grad } from '../../../components/ui/Grad';
+import DebtCardsGrid from './qarzShartnoma/DebtCardsGrid';
+import NearCard from './qarzShartnoma/NearCard';
+import ReportCard from './qarzShartnoma/ReportCard';
+import ReportSectionHead from './qarzShartnoma/ReportSectionHead';
+import ShartnomaHero from './qarzShartnoma/ShartnomaHero';
+import { MyData, REPORT_NAV, sumCur } from './qarzShartnoma/shartnomaLogic';
+import { styles } from './qarzShartnoma/shartnomaStyles';
 
-// Pie/gradient ranglari (literal hex faqat shu yerda ruxsat etilgan).
-const C_JARAYON = '#2f6fed'; // jarayonda — ko'k
-const C_TUGALLANGAN = '#16a34a'; // tugallangan — yashil
-const C_RAD = '#f59e0b'; // rad etildi — sariq/orange
-const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
-
-type Row = {
-  residual_amount?: number | string;
-  amount?: number | string;
-  currency?: string;
-  end_date?: string;
-  creditor_name?: string;
-  debitor_name?: string;
-  // So'rov SS1: qatorга bosilganда aynan shu qarz kontragenti ochilsin.
-  counter_uid?: string;
-  counter_type?: number;
-};
-type MyData = {
-  chart?: { jarayon?: number; tugallangan?: number; rad?: number };
-  five?: Row[];
-  expired?: Row[];
-  data?: Row[];
-};
-
-// ---------- Yordamchi ----------
-// 01.11 (REFACTOR_DIVERGENCES): ilgari `Number(v || 0)` — 'abc' / '1 234,50' -> NaN va sumCur butunlay NaN bo'lardi.
-// Endi satrlar umumiy pul parseri (helper/money.parseAmount) orqali; manfiy belgi saqlanadi; natija har doim CHEKLI.
-// Eslatma: '0x10' endi 10 (ilgari 16) — pul maydonida hex yo'q.
-export const num = (v: any): number => {
-  if (typeof v === 'string') {
-    const t = v.trim();
-    if (!t) return 0;
-    const n = parseAmount(t, true);
-    return t.startsWith('-') && n ? -n : n;
-  }
-  const n = Number(v || 0);
-  return Number.isFinite(n) ? n : 0;
-};
-const isCur = (r: Row, cur: string) =>
-  String(r?.currency || 'UZS').toUpperCase() === cur;
-// 01.11: NaN/null qator endi TypeError/NaN bermaydi (num() chekli, `r?.` himoyasi).
-export const sumCur = (rows: Row[] | undefined, cur: string) =>
-  (rows || []).reduce((s, r) => (isCur(r, cur) ? s + num(r?.residual_amount) : s), 0);
-
-// UZS + USD matni — so'rov bo'yicha "UZS"/"USD" + K/M/B; qarz bo'lmasa ham
-// "0 UZS"/"0 USD" DOIM ko'rsatiladi (ikkala qator turadi).
-const money = (uzs: number, usd: number) => [fmtUZS(uzs), fmtUSD(usd)];
-
-// ---------- Gradient fon ----------
-// ---------- Statistika kartasi (donut + legend) ----------
-const StatCard = ({ title, chart }: { title: string; chart?: MyData['chart'] }) => {
-  const { t } = useTranslation();
-  const jarayon = num(chart?.jarayon);
-  const tugallangan = num(chart?.tugallangan);
-  const rad = num(chart?.rad);
-  const total = jarayon + tugallangan + rad;
-  const legend = [
-    { label: 'Jarayonda', color: C_JARAYON, value: jarayon },
-    { label: 'Tugallangan', color: C_TUGALLANGAN, value: tugallangan },
-    { label: 'Rad etildi', color: C_RAD, value: rad },
-  ];
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
-      <View style={styles.statBody}>
-        <Donut
-          segments={total === 0 ? [{ value: 1, color: rd.color.border }] : legend}
-          size={rs(96)}
-          centerValue={String(total)}
-          centerLabel={t('jami')}
-        />
-        <View style={styles.legend}>
-          {legend.map(l => (
-            <View key={l.label} style={styles.legendRow}>
-              <View style={[styles.dot, { backgroundColor: l.color }]} />
-              <Text style={styles.legendLabel}>{t(l.label)}</Text>
-              <Text style={styles.legendCount}>{l.value}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-};
-
-// ---------- Debitor + Kreditor diagrammalari BITTA kartada (so'rov) ----------
-// Ikki donut yonma-yon; umumiy legend SONSIZ. Donut(rang) bosilганда o'sha
-// diagrammaning sonlari ~2.5s ko'rinadi, so'ng yo'qoladi (so'rov bo'yicha).
-const DebtStatsCard = ({
-  debChart,
-  credChart,
-}: {
-  debChart?: MyData['chart'];
-  credChart?: MyData['chart'];
-}) => {
-  const { t } = useTranslation();
-  const [revealed, setRevealed] = React.useState<null | 'deb' | 'cred'>(null);
-  const timerRef = React.useRef<any>(null);
-  const reveal = (which: 'deb' | 'cred') => {
-    setRevealed(which);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setRevealed(null), 2500);
-  };
-  React.useEffect(
-    () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
-  // MUHIM: bu RENDER-FUNKSIYA (komponent EMAS) — `{renderCol(...)}` tarzида
-  // chaqiriladi. Ilgari `<Col/>` komponent edi -> `revealed` o'zgarганда Col
-  // qayta yaratilib, ichidagi Donut'lar REMOUNT bo'lib miltillardi.
-  const renderCol = (
-    which: 'deb' | 'cred',
-    title: string,
-    chart?: MyData['chart'],
-  ) => {
-    const jarayon = num(chart?.jarayon);
-    const tugallangan = num(chart?.tugallangan);
-    const rad = num(chart?.rad);
-    const total = jarayon + tugallangan + rad;
-    const segs = [
-      { label: 'Jarayonda', color: C_JARAYON, value: jarayon },
-      { label: 'Tugallangan', color: C_TUGALLANGAN, value: tugallangan },
-      { label: 'Rad etildi', color: C_RAD, value: rad },
-    ];
-    return (
-      <View style={styles.statCol}>
-        <Text style={styles.statColTitle} numberOfLines={2}>
-          {title}
-        </Text>
-        <TouchableOpacity activeOpacity={0.85} onPress={() => reveal(which)}>
-          <Donut
-            segments={total === 0 ? [{ value: 1, color: rd.color.border }] : segs}
-            size={rs(94)}
-            centerValue={String(total)}
-            centerLabel={t('jami')}
-          />
-        </TouchableOpacity>
-        {/* Sonlar — FAQAT bosilганда ~2.5s (so'rov). Joy o'zgarmasligi uchun
-            ko'rinmаганда ham bir xil balandlikda placeholder turadi. */}
-        {revealed === which ? (
-          <View style={styles.revealBox}>
-            {segs.map(s => (
-              <View key={s.label} style={styles.revealRow}>
-                <View style={[styles.dot, { backgroundColor: s.color }]} />
-                <Text style={styles.revealCount}>{s.value}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.revealBox} />
-        )}
-      </View>
-    );
-  };
-
-  return (
-    <View style={styles.statCard}>
-      <View style={styles.statPair}>
-        {renderCol('deb', t('Debitor qarzdorlik'), debChart)}
-        {renderCol('cred', t('Kreditor qarzdorlik'), credChart)}
-      </View>
-      {/* Umumiy legend — SONSIZ (sonlar diagramma bosilганда chiqadi). */}
-      <View style={styles.sharedLegend}>
-        {[
-          { label: 'Jarayonda', color: C_JARAYON },
-          { label: 'Tugallangan', color: C_TUGALLANGAN },
-          { label: 'Rad etildi', color: C_RAD },
-        ].map(l => (
-          <View key={l.label} style={styles.sharedLegendItem}>
-            <View style={[styles.dot, { backgroundColor: l.color }]} />
-            <Text style={styles.sLegendLabel}>{t(l.label)}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-// ---------- Qarzdorlik kartasi (chegara rangli) ----------
-// SS-DEV (2026-09-29): umumiy komponentga chiqarildi (Shaxsiy qarz ham ishlatadi).
-// 30.09 (6-band): tashqi ko'rinish Qarz daftari kartalari uslubida (ichki ma'lumot o'zgarmagan).
-const DebtCard = (p: React.ComponentProps<typeof DebtSummaryCard>) => (
-  <DebtSummaryCard {...p} variant="stripe" />
-);
-
-// ---------- Muddati oz qolgan (segment-toggle + jadval) ----------
-const NearCard = ({
-  title,
-  five,
-  onPress,
-  onRow,
-}: {
-  title: string;
-  five?: Row[];
-  onPress?: () => void;
-  onRow?: (uid: any, type: number) => void;
-}) => {
-  const { t } = useTranslation();
-  const [cur, setCur] = useState<'UZS' | 'USD'>('UZS');
-  const rows = useMemo(
-    () => (five || []).filter(r => isCur(r, cur)),
-    [five, cur],
-  );
-  return (
-    // Butun karta bosiladigan. Ichkaridagi UZS/USD tugmalari o'z bosishini
-    // o'zlari ushlaydi (RN'da ichki touchable ustun) -> valyuta almashtirish
-    // navigatsiyani ishga tushirmaydi.
-    <TouchableOpacity
-      activeOpacity={0.9}
-      disabled={!onPress}
-      onPress={onPress}
-      style={styles.nearCard}
-    >
-      <View style={styles.nearHead}>
-        <Text style={styles.nearTitle} numberOfLines={2}>
-          {title}
-        </Text>
-        <View style={styles.segment}>
-          {(['UZS', 'USD'] as const).map(c => {
-            const active = cur === c;
-            return (
-              <TouchableOpacity
-                key={c}
-                activeOpacity={0.8}
-                onPress={() => setCur(c)}
-                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
-              >
-                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-                  {c}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {rows.length === 0 ? (
-        // 02.10: bo'sh holat — animatsiyali (umumiy AnimatedEmpty).
-        <AnimatedEmpty
-          variant="time"
-          compact
-          text={t('Hozircha sizda muddati oz qolgan qarzdorliklar mavjud emas.')}
-        />
-      ) : (
-        <View>
-          <View style={styles.tableHead}>
-            <Text style={styles.tableHeadCol}>{t('Qolgan vaqt')}</Text>
-            <Text style={[styles.tableHeadCol, styles.tableRight]}>{t('Qarz miqdori')}</Text>
-          </View>
-          {rows.map((r, i) => {
-            const due = getDueMeta(r.end_date);
-            // So'rov SS1: qator bosilса AYNAN shu qarz (kontragent) ochiladi.
-            // Kartaning o'zi (yoki "Barchasini ko'rish") esa BARCHASINI ochadi.
-            const tappable = !!(onRow && r.counter_uid);
-            return (
-              <TouchableOpacity
-                key={i}
-                activeOpacity={tappable ? 0.6 : 1}
-                disabled={!tappable}
-                onPress={() => tappable && onRow!(r.counter_uid, Number(r.counter_type) || 0)}
-                style={styles.tableRow}>
-                <View style={[styles.dueBadge, { backgroundColor: due.bg }]}>
-                  <Text style={[styles.dueBadgeText, { color: due.color }]}>{dueLabel(due)}</Text>
-                </View>
-                <Text style={[styles.tableAmount, styles.tableRight]} numberOfLines={1}>
-                  {sortText(num(r.residual_amount))} {r.currency || 'UZS'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Bosiladigan ekanini bildiruvchi pastki qator */}
-      {onPress ? (
-        <View style={styles.nearMore}>
-          <Text style={styles.nearMoreText}>{t('Barchasini ko‘rish')}</Text>
-          <ChevronRight size={rs(15)} color={rd.color.primary} />
-        </View>
-      ) : null}
-    </TouchableOpacity>
-  );
-};
-
-// ---------- Hisobot kartasi (yonma-yon, rangli — so'rov SS4.6) ----------
-// 02.10: saytdagi kabi karta nomi "Berilgan qarzlar" / "Olingan qarzlar" (ilgari
-// "... hisoboti"). 03.10 (12-band): karta pastidagi "Ko'rish ›" OLIB TASHLANDI — kartaning
-// o'zi bosiladi (butun karta TouchableOpacity).
-const ReportCard = ({
-  label,
-  tint,
-  iconColor,
-  onPress,
-}: {
-  label: string;
-  tint: string;
-  iconColor: string;
-  onPress: () => void;
-}) => {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={[styles.reportCard, { backgroundColor: tint, borderColor: tint }]}
-      onPress={onPress}>
-      <View style={styles.reportIcon}>
-        <BarChartIcon size={rs(20)} color={iconColor} />
-      </View>
-      <Text
-        allowFontScaling={false}
-        style={styles.reportLabel}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
-
-// 03.10 (12-band): "Tugallangan qarz shartnomalari" sarlavhasi — izoh doim ko'rinmaydi,
-// sarlavha O'NGIDAGI (i) bosilganda ochiladi (Shaxsiy qarz "Yakunlangan qarzlar" —
-// FinanceDebts.FinishedSection — bilan AYNAN bir xil naqsh va uslub).
-const ReportSectionHead = () => {
-  const { t } = useTranslation();
-  const [info, setInfo] = React.useState(false);
-  const infoText = t('Ushbu qismda yakunlangan hamda voz kechilgan qarzlar aks etadi');
-  return (
-    <>
-      <View style={styles.reportSectionHead}>
-        <Text allowFontScaling={false} style={styles.reportSectionTitle} numberOfLines={2}>
-          {t('Tugallangan qarz shartnomalari')}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setInfo(v => !v)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: info }}
-          accessibilityLabel={infoText}>
-          <InfoIcon size={rs(17)} color={info ? rd.color.primary : rd.color.textTertiary} />
-        </TouchableOpacity>
-      </View>
-      {info ? (
-        <Text allowFontScaling={false} style={styles.reportSectionInfo}>
-          {infoText}
-        </Text>
-      ) : null}
-    </>
-  );
-};
-
-// Hisobot ro'yxatiga navigatsiya paramlari (Statistic.tsx bilan bir xil — SearchDebitor
-// real /contract/report endpointidan to'liq ro'yxatni yuklaydi).
-const REPORT_NAV = {
-  debitor: {
-    title: 'Hisobot (berilgan qarzlar)',
-    type: 1,
-    person: 'debitor',
-    isHave: false,
-    report: true,
-    url: '/contract/report?type=debitor&page=1&limit=1000&status=all&start=0&end=0',
-    searchUrl: '/contract/report/search?type=debitor&page=1&limit=500&search=',
-    iconType: 3,
-  },
-  creditor: {
-    title: 'Hisobot (olingan qarzlar)',
-    type: 3,
-    person: 'creditor',
-    isHave: false,
-    report: true,
-    url: '/contract/report?type=creditor&page=1&limit=1000&status=all&start=0&end=0',
-    searchUrl: '/contract/report/search?type=creditor&page=1&limit=500&search=',
-    iconType: 3,
-  },
-};
+// num / sumCur boshqa modullar va testlar tomonidan shu fayldan import qilinadi.
+export { num, sumCur } from './qarzShartnoma/shartnomaLogic';
 
 // ---------- Ekran ----------
 const QarzShartnomasi = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
-  const user = useSelector((s: any) => s.HomeReducer.user);
-  const name = user?.data?.first_name || t('foydalanuvchi');
 
   // SS-DEV (2026-09-29): "Qarz berish"/"Qarz olish" — ommaviy oferta shart
   // (tasdiqlanmagan bo'lsa oferta oynasi, tasdiqlangach amal davom etadi).
@@ -450,30 +53,31 @@ const QarzShartnomasi = () => {
   const cred: MyData = (creditor.data as any)?.data || {};
 
   // Karta bosilganda qarzlar ro'yxatiga (SearchDebitor) o'tish.
-  // `tab` mavjud filtrni darhol ochadi: 'overdue' — muddati o'tganlar,
-  // 'near' — muddati oz qolganlar, 'all' — barchasi.
+  // `tab` mavjud filtrni darhol ochadi: 'overdue' — muddati o'tganlar, 'near' — muddati oz qolganlar, 'all' — barchasi.
   const goList = (role: DebtRole, tab: DebtTab, title: string) =>
     navigation.navigate('SearchDebitor', debtNav(role, tab, title));
 
   // Qarzdorlik summalari (valyuta bo'yicha alohida).
-  const debGivenUzs = sumCur(deb.data, 'UZS');
-  const debGivenUsd = sumCur(deb.data, 'USD');
-  const debExpUzs = sumCur(deb.expired, 'UZS');
-  const debExpUsd = sumCur(deb.expired, 'USD');
-  const credTakenUzs = sumCur(cred.data, 'UZS');
-  const credTakenUsd = sumCur(cred.data, 'USD');
-  const credExpUzs = sumCur(cred.expired, 'UZS');
-  const credExpUsd = sumCur(cred.expired, 'USD');
+  const sums = {
+    debGivenUzs: sumCur(deb.data, 'UZS'),
+    debGivenUsd: sumCur(deb.data, 'USD'),
+    debExpUzs: sumCur(deb.expired, 'UZS'),
+    debExpUsd: sumCur(deb.expired, 'USD'),
+    credTakenUzs: sumCur(cred.data, 'UZS'),
+    credTakenUsd: sumCur(cred.data, 'USD'),
+    credExpUzs: sumCur(cred.expired, 'UZS'),
+    credExpUsd: sumCur(cred.expired, 'USD'),
+  };
+
+  // 03.10: muddati oz qolgan qarz qatori ham oferta talab qiladi
+  const openUser = (uid: any, type: number) =>
+    guardOferta(() => navigation.navigate('ShowUserDetails', { id: uid, type }));
 
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      {/* Endi TAB — orqaga knopkasi Asosiy tabga qaytaradi. */}
-      {/* SS24 (2026-09-15): ORQAGA tugmasi OLIB TASHLANDI — bu ekran pastki
-          menyudagi TAB, ya'ni top-level. Orqaga tugmasi "qayerga qaytadi?"
-          degan savol tug'dirardi (Home'ga sakrardi, holbuki Home ham tab). */}
-      {/* SS7 (2026-09-18): barcha asosiy bo'limlarda BIR XIL yuqori panel
-          (menyu + nom + bildirishnoma + shaxsiy kabinet). */}
+      {/* SS24 (2026-09-15): ORQAGA tugmasi OLIB TASHLANDI — bu ekran pastki menyudagi TAB (top-level). */}
+      {/* SS7 (2026-09-18): barcha asosiy bo'limlarda BIR XIL yuqori panel (menyu + nom + bildirishnoma + kabinet). */}
       <RdTopBar title={t('Qarz shartnomasi')} />
 
       <ScrollView
@@ -492,112 +96,29 @@ const QarzShartnomasi = () => {
         }
       >
         {/* 1. Hero banner */}
-        <View style={styles.hero}>
-          <Grad id="qshHero" colors={GRAD_BRAND} />
-          {/* "Xush kelibsiz, {name}!" sarlavhasi OLIB TASHLANDI (so'rov bo'yicha) —
-              kartada faqat tavsif + 2 amal tugmasi qoladi. */}
-          <Text style={styles.heroSub} numberOfLines={2}>
-            {t('Qarz shartnomalarini elektron rasmiylashtiring va oson boshqaring.')}
-          </Text>
-          <View style={styles.heroBtns}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.heroBtn, styles.heroBtnLight]}
-              onPress={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 1 }))}
-            >
-              <ArrowUpRight size={rs(18)} color={rd.color.primary} />
-              <Text style={[styles.heroBtnText, { color: rd.color.primary }]}>{t('Qarz berish')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.heroBtn, { backgroundColor: rd.color.success }]}
-              onPress={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 0 }))}
-            >
-              <ArrowDownLeft size={rs(18)} color={rd.color.onPrimary} />
-              <Text style={[styles.heroBtnText, { color: rd.color.onPrimary }]}>{t('Qarz olish')}</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Hero ostidagi 4 ta raqam olib tashlandi: aynan shu ko'rsatkichlar
-              pastdagi diagramma va kartalarda batafsil takrorlanadi. Kartochka
-              endi faqat IKKI AMALNI taklif qiladi. */}
-        </View>
+        <ShartnomaHero
+          onGive={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 1 }))}
+          onTake={() => guardOferta(() => navigation.navigate('DebtEntry', { type: 0 }))}
+        />
 
-        {/* Diagramma qismi (Debitor+Kreditor donutlar) OLIB TASHLANDI (so'rov) —
-            hero'дан keyin darhol qarz kartalari boshlanadi. */}
-
-        <View style={styles.debtGrid}>
-          {/* Yuqori qator: Berilgan qarz | Olingan qarz (yonma-yon). Past qator:
-              Muddati o'tgan (ber.) | Muddati o'tgan (ol.) — har biri o'z turi TAGIDA. */}
-          <DebtCard
-            accent={rd.color.primary}
-            Icon={ArrowUpRight}
-            label={t('Berilgan qarz')}
-            badge={t('Olish kerak')}
-            badgeBg={rd.color.primaryTint}
-            badgeColor={rd.color.primary}
-            amountColor={rd.color.text}
-            lines={money(debGivenUzs, debGivenUsd)}
-            onPress={() => goList('debitor', 'all', t('Berilgan qarz'))}
-          />
-          <DebtCard
-            accent={rd.color.success}
-            Icon={ArrowDownLeft}
-            label={t('Olingan qarz')}
-            badge={t('Berish kerak')}
-            badgeBg={rd.color.successBg}
-            badgeColor={rd.color.success}
-            amountColor={rd.color.text}
-            lines={money(credTakenUzs, credTakenUsd)}
-            onPress={() => goList('creditor', 'all', t('Olingan qarz'))}
-          />
-          <DebtCard
-            accent={rd.color.error}
-            Icon={ClockIcon}
-            label={t('Berilgan qarz')}
-            badge={t('Muddati o‘tgan')}
-            badgeBg={rd.color.errorBg}
-            badgeColor={rd.color.error}
-            amountColor={rd.color.error}
-            lines={money(debExpUzs, debExpUsd)}
-            onPress={() => goList('debitor', 'overdue', t('Muddati o‘tgan (debitor)'))}
-          />
-          <DebtCard
-            accent={rd.color.error}
-            Icon={ClockIcon}
-            label={t('Olingan qarz')}
-            badge={t('Muddati o‘tgan')}
-            badgeBg={rd.color.errorBg}
-            badgeColor={rd.color.error}
-            amountColor={rd.color.error}
-            lines={money(credExpUzs, credExpUsd)}
-            onPress={() => goList('creditor', 'overdue', t('Muddati o‘tgan (kreditor)'))}
-          />
-        </View>
+        <DebtCardsGrid sums={sums} goList={goList} />
 
         {/* 4. Muddati oz qolgan */}
         <NearCard
           title={t('Muddati oz qolgan berilgan qarzlar')}
           five={deb.five}
           onPress={() => goList('debitor', 'near', t('Muddati oz qolgan (debitor)'))}
-          onRow={(uid, type) =>
-            // 03.10: muddati oz qolgan qarz qatori ham oferta talab qiladi
-            guardOferta(() => navigation.navigate('ShowUserDetails', { id: uid, type }))
-          }
+          onRow={openUser}
         />
         <NearCard
           title={t('Muddati oz qolgan olingan qarzlar')}
           five={cred.five}
           onPress={() => goList('creditor', 'near', t('Muddati oz qolgan (kreditor)'))}
-          onRow={(uid, type) =>
-            // 03.10: muddati oz qolgan qarz qatori ham oferta talab qiladi
-            guardOferta(() => navigation.navigate('ShowUserDetails', { id: uid, type }))
-          }
+          onRow={openUser}
         />
 
         {/* 5. Hisobotlar — ikki karta yonma-yon (chap=berilgan yashil, o'ng=olingan qizil — SS4.6).
-            02.10: saytdagi (contract-dashboard) kabi bo'lim sarlavhasi "Tugallangan qarz
-            shartnomalari" + izoh; kartalar "Berilgan qarzlar" / "Olingan qarzlar". Navigatsiya
-            o'zgarmadi — hisobot ro'yxati (tugallangan + rad etilgan, status tablari bilan). */}
+            02.10: bo'lim sarlavhasi "Tugallangan qarz shartnomalari" + izoh; kartalar "Berilgan qarzlar" / "Olingan qarzlar". */}
         <View style={styles.reportSection}>
           <ReportSectionHead />
           <View style={styles.reportRow}>
@@ -631,215 +152,3 @@ const QarzShartnomasi = () => {
 };
 
 export default QarzShartnomasi;
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: rd.color.page },
-  content: { padding: rs(16), gap: rs(16), paddingBottom: rs(28) },
-
-  // Hero
-  // KICHRAYTIRILDI: hero ilgari kichik ekranlarda sahifaning yarmidan ko'pini
-  // egallardi. Barcha o'lchamlar rs() orqali — ya'ni har qanday ekranda
-  // proporsional kichrayadi, kichik telefonlarda ham mos tushadi.
-  hero: {
-    borderRadius: rs(18),
-    overflow: 'hidden',
-    padding: rs(16),
-    shadowColor: GRAD_BRAND[1],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  heroTitle: { fontFamily: rd.font.bold, fontSize: rs(14), color: rd.color.onPrimary },
-  heroSub: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(12.5),
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: rs(4),
-    lineHeight: rs(17),
-  },
-  heroBtns: { flexDirection: 'row', gap: rs(8), marginTop: rs(12) },
-  heroBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(5),
-    borderRadius: rs(12),
-    paddingVertical: rs(10),
-  },
-  heroBtnLight: { backgroundColor: rd.color.surface },
-  heroBtnText: { fontFamily: rd.font.semibold, fontSize: rs(12.5) },
-
-  // Blok sarlavhasi
-  blockTitle: {
-    fontFamily: rd.font.bold,
-    fontSize: rs(13.5),
-    color: rd.color.text,
-    marginBottom: rs(-6),
-  },
-
-  // Statistika kartasi
-  statCard: {
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(20),
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(16),
-  },
-  statTitle: { fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
-  statBody: { flexDirection: 'row', alignItems: 'center', gap: rs(16), marginTop: rs(12) },
-  legend: { flex: 1, gap: rs(10) },
-  legendRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
-  dot: { width: rs(9), height: rs(9), borderRadius: rs(4.5) },
-  legendLabel: { flex: 1, fontFamily: rd.font.regular, fontSize: rs(13), color: rd.color.textSecondary },
-  legendCount: { fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
-
-  // Birlashgan diagramma kartasi (Debitor + Kreditor yonma-yon).
-  statPair: { flexDirection: 'row', marginTop: rs(4) },
-  statCol: { flex: 1, alignItems: 'center', paddingHorizontal: rs(4) },
-  statColTitle: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(13.5),
-    color: rd.color.text,
-    textAlign: 'center',
-    marginBottom: rs(10),
-    minHeight: rs(36),
-  },
-  // Sonlar bloki — bosilганда chiqadi; joy tebranmasligi uchun doim shu balandlik.
-  revealBox: {
-    minHeight: rs(74),
-    marginTop: rs(10),
-    gap: rs(6),
-    alignSelf: 'stretch',
-    paddingHorizontal: rs(10),
-    justifyContent: 'center',
-  },
-  revealRow: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
-  revealCount: { fontFamily: rd.font.bold, fontSize: rs(13), color: rd.color.text },
-  // Umumiy legend — sonsiz, gorizontal, markazда.
-  sharedLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: rs(14),
-    marginTop: rs(14),
-    paddingTop: rs(12),
-    borderTopWidth: 1,
-    borderTopColor: rd.color.border,
-  },
-  sharedLegendItem: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
-  sLegendLabel: { fontFamily: rd.font.medium, fontSize: rs(12.5), color: rd.color.textSecondary },
-
-  // Qarzdorlik kartalari
-  // 2×2 GRID (so'rov): yuqori qatorда Berilgan | Olingan (yonma-yon), past
-  // qatorда Muddati o'tgan (ber.) | Muddati o'tgan (ol.). Har muddati-o'tgan
-  // o'z qarz-turi TAGIDA (bir ustunда). JSX tartibi: Berilgan, Olingan,
-  // Muddati-ber, Muddati-ol -> qator-wrap shu grid'ni beradi.
-  debtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: rs(12) },
-  // Muddati oz qolgan
-  nearCard: {
-    backgroundColor: rd.color.surface,
-    borderRadius: rs(20),
-    borderWidth: 1,
-    borderColor: rd.color.border,
-    padding: rs(16),
-  },
-  // "Barchasini ko'rish" pastki qatori — kartaning bosiladiganini bildiradi.
-  nearMore: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: rs(4),
-    marginTop: rs(12),
-    paddingTop: rs(10),
-    borderTopWidth: 1,
-    borderTopColor: rd.color.border,
-  },
-  nearMoreText: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(12.5),
-    color: rd.color.primary,
-  },
-  nearHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
-  nearTitle: { flex: 1, fontFamily: rd.font.semibold, fontSize: rs(13), color: rd.color.text },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: rd.color.page,
-    borderRadius: rd.radius.pill,
-    padding: rs(3),
-  },
-  segmentBtn: {
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(5),
-    borderRadius: rd.radius.pill,
-  },
-  segmentBtnActive: { backgroundColor: rd.color.primary },
-  segmentText: { fontFamily: rd.font.semibold, fontSize: rs(11.5), color: rd.color.textSecondary },
-  segmentTextActive: { color: rd.color.onPrimary },
-  tableHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: rs(14),
-    paddingBottom: rs(8),
-    borderBottomWidth: 1,
-    borderBottomColor: rd.color.border,
-  },
-  tableHeadCol: { fontFamily: rd.font.medium, fontSize: rs(12), color: rd.color.textTertiary },
-  tableRight: { textAlign: 'right' },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: rs(10),
-    borderBottomWidth: 1,
-    borderBottomColor: rd.color.border,
-    gap: rs(10),
-  },
-  dueBadge: { paddingHorizontal: rs(9), paddingVertical: rs(4), borderRadius: rd.radius.pill },
-  dueBadgeText: { fontFamily: rd.font.semibold, fontSize: rs(11) },
-  tableAmount: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(12.5), color: rd.color.text },
-
-  // Hisobot kartasi
-  // 02.10: "Tugallangan qarz shartnomalari" bo'limi (sarlavha + izoh + 2 karta).
-  // 03.10: sarlavha + (i) bir qatorda; izoh (ochilganda) — FinanceDebts `finishedInfo` uslubi.
-  reportSection: { gap: rs(12) },
-  reportSectionHead: { flexDirection: 'row', alignItems: 'center', gap: rs(10) },
-  reportSectionTitle: { flex: 1, fontFamily: rd.font.bold, fontSize: rs(15), color: rd.color.text },
-  reportSectionInfo: {
-    fontFamily: rd.font.regular,
-    fontSize: rs(12),
-    lineHeight: rs(17),
-    color: rd.color.textSecondary,
-    backgroundColor: rd.color.primaryTint,
-    borderRadius: rd.radius.md,
-    paddingHorizontal: rs(12),
-    paddingVertical: rs(8),
-  },
-  reportRow: { flexDirection: 'row', gap: rs(12) },
-  reportCard: {
-    flex: 1,
-    alignItems: 'center',
-    gap: rs(10),
-    borderRadius: rs(16),
-    borderWidth: 1,
-    paddingVertical: rs(16),
-    // So'rov SS7.2: "hisoboti" so'zi to'liq sig'sin — yon-padding kamaytirildi.
-    paddingHorizontal: rs(8),
-  },
-  reportIcon: {
-    width: rs(44),
-    height: rs(44),
-    borderRadius: rs(22),
-    backgroundColor: rd.color.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reportLabel: {
-    fontFamily: rd.font.semibold,
-    fontSize: rs(13),
-    color: rd.color.text,
-    textAlign: 'center',
-  },
-});

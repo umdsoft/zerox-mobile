@@ -12,6 +12,7 @@
  */
 import { safeOpenURL } from '@helper/safeOpenURL';
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { Clipboard, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -44,7 +45,8 @@ const isInviteExpired = (info: any): boolean => {
   return due < today;
 };
 
-const GapTaklif = ({ item, okay, navigation }: any) => {
+const GapTaklif = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const roundId = item?.gap_round_id;
   const [info, setInfo] = React.useState<any>(null);
   /**

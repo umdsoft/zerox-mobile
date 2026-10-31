@@ -7,6 +7,7 @@
  * sahifasi; «Ok» — bildirishnomani yopish. (Ko'rinish — Qarz daftari eslatmasi, type 44, bilan bir xil.)
  */
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { rd, rs } from '../../../../theme/rd';
@@ -14,7 +15,8 @@ import { BellIcon, PersonalDebtIcon } from '../../redesign/icons';
 
 const AMBER = '#b45309';
 
-const ShaxsiyQarzEslatma = ({ item, okay, navigation }: any) => {
+const ShaxsiyQarzEslatma = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const openDebts = () => navigation?.navigate('BottomTabNavigator', { screen: 'ShaxsiyQarz' });
 
   return (

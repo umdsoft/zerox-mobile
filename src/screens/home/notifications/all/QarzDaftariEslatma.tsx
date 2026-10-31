@@ -6,6 +6,7 @@
  * sahifasi; «Ok» — bildirishnomani yopish.
  */
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { t } from 'i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { setQarzShop } from '../../../../store/api/token/qarzShop';
@@ -14,7 +15,8 @@ import { BellIcon, LedgerIcon } from '../../redesign/icons';
 
 const AMBER = '#b45309';
 
-const QarzDaftariEslatma = ({ item, okay, navigation }: any) => {
+const QarzDaftariEslatma = ({ item, okay }: any) => {
+  const navigation = useNavigation<any>();
   const shopId = Number(item?.rem_faoliyat_id) || 0;
   const shop = String(item?.rem_faoliyat_nomi || '').trim();
 

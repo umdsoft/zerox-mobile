@@ -1,5 +1,6 @@
 import { Text } from 'react-native';
 import React, { memo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { style } from '../../../../theme/style';
 import { rd } from '../../../../theme/rd';
@@ -13,9 +14,9 @@ import NotificationShell from '../../../components/NotificationShell';
 
 const QarzShartnomasiningQabulQilinganligiTogrisida = ({
   item,
-  okay,
-  navigation,
+  okay
 }) => {
+  const navigation = useNavigation<any>();
   const user = useSelector((state: any) => state.HomeReducer.user); // SS-PERF (2026-09-25): aniq selektor
     const usds = useSelector((state: any) => state.HomeReducer.usd);
 

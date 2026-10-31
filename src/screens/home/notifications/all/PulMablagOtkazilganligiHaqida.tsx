@@ -8,7 +8,7 @@ import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 
-const PulMablagOtkazilganligiHaqida = ({ item, okay, navigation }) => {
+const PulMablagOtkazilganligiHaqida = ({ item, okay }) => {
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
   const onOkay = async () => {
