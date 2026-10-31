@@ -2311,6 +2311,10 @@
     "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Активные группы Гап, которые вы организовали: {{n}}",
     "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "Аккаунт администратора нельзя удалить через приложение",
     "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "Эта функция пока недоступна. Попробуйте позже.",
-    "Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta": "Группы Гап с вашей очередью или неоплаченными взносами: {{n}}"
+    "Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta": "Группы Гап с вашей очередью или неоплаченными взносами: {{n}}",
+    "Hisobingizga kirish butunlay yopiladi: ilova, sayt va Telegram bot orqali kira olmaysiz": "Доступ к аккаунту будет закрыт навсегда: вы не сможете войти через приложение, сайт и Telegram-бот",
+    "Hisobni ilova orqali qayta tiklab bo‘lmaydi": "Восстановить аккаунт через приложение будет невозможно",
+    "Boshqalar bilan tuzilgan shartnomalaringiz va ulardagi ma‘lumotlaringiz qonuniy talab bo‘yicha saqlanib qoladi": "Ваши договоры с другими пользователями и данные в них сохраняются согласно требованиям закона",
+    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "Аккаунт, привязанный к этому номеру, удалён. Для помощи обратитесь в службу поддержки."
   }
 }

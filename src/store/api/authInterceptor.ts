@@ -262,10 +262,45 @@ export const installOfertaRequired = (instance: AxiosInstance): void => {
   );
 };
 
+/**
+ * 01.11: backend o'chirilgan hisobni (ro'yxatdan o'tish, kirish, tiklash, Telegram...) 403
+ * `code: 'ACCOUNT_DELETED'` bilan rad etadi. Qaysi ekrandan kelmasin bitta tushunarli xabar
+ * (3 s ichida takrorlanmaydi); sessiya bo'lsa — majburiy chiqish. Xato chaqiruvchiga qaytadi.
+ */
+export const isAccountDeletedError = (error: any): boolean =>
+  error?.response?.status === 403 && error?.response?.data?.code === 'ACCOUNT_DELETED';
+let lastDeletedToastAt = 0;
+export const installAccountDeleted = (instance: AxiosInstance): void => {
+  instance.interceptors.response.use(
+    response => response,
+    error => {
+      if (isAccountDeletedError(error)) {
+        error.accountDeleted = true;
+        if (storage.getString('token')) {
+          forceLogout('account-deleted');
+        } else if (Date.now() - lastDeletedToastAt > 3000) {
+          lastDeletedToastAt = Date.now();
+          try {
+            Toast.show({
+              autoHide: true,
+              visibilityTime: 5000,
+              position: 'bottom',
+              type: 'error2',
+              props: { desc: i18next.t('Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.') },
+            });
+          } catch {}
+        }
+      }
+      return Promise.reject(error);
+    },
+  );
+};
+
 // Default global axios instansiyasi — barcha xom `axios.get/post(URL + ...)` chaqiruvlari.
 installAuthRefresh(axios);
 installGetRetry(axios);
 installOfertaRequired(axios);
+installAccountDeleted(axios);
 installOfertaToastGuard();
 // SS-PERF (2026-09-25): xom axios chaqiruvlari ham osilib qolmasin (ilgari timeout yo'q
 // edi — sekin tarmoqda spinner cheksiz aylanardi). Fayl yuklash joyida alohida uzunroq.

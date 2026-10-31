@@ -2311,6 +2311,10 @@
     "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Active Gap groups you organize: {{n}}",
     "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "An admin account cannot be deleted from the app",
     "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "This feature is not available yet. Please try again later.",
-    "Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta": "Gap groups where your turn or payment is pending: {{n}}"
+    "Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta": "Gap groups where your turn or payment is pending: {{n}}",
+    "Hisobingizga kirish butunlay yopiladi: ilova, sayt va Telegram bot orqali kira olmaysiz": "Access to your account will be closed permanently: you will not be able to sign in via the app, website or Telegram bot",
+    "Hisobni ilova orqali qayta tiklab bo‘lmaydi": "The account cannot be restored from the app",
+    "Boshqalar bilan tuzilgan shartnomalaringiz va ulardagi ma‘lumotlaringiz qonuniy talab bo‘yicha saqlanib qoladi": "Your contracts with other users and the data in them are retained as required by law",
+    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "The account linked to this phone number has been deleted. Please contact support for help."
   }
 }

@@ -187,15 +187,15 @@ const DeleteAccount = () => {
           <Text style={styles.cardTitle}>{t('Hisobni o‘chirsangiz')}</Text>
           <Text style={styles.bullet}>
             {'• '}
-            {t('Hisobingiz anonimlashtiriladi: ism, telefon va shaxsiy ma‘lumotlaringiz o‘chiriladi')}
+            {t('Hisobingizga kirish butunlay yopiladi: ilova, sayt va Telegram bot orqali kira olmaysiz')}
           </Text>
           <Text style={styles.bullet}>
             {'• '}
-            {t('Ma‘lumotlarni qayta tiklab bo‘lmaydi')}
+            {t('Hisobni ilova orqali qayta tiklab bo‘lmaydi')}
           </Text>
           <Text style={styles.bullet}>
             {'• '}
-            {t('Yakunlangan shartnomalar qonuniy talab bo‘yicha qarshi tomonda saqlanib qoladi')}
+            {t('Boshqalar bilan tuzilgan shartnomalaringiz va ulardagi ma‘lumotlaringiz qonuniy talab bo‘yicha saqlanib qoladi')}
           </Text>
         </View>
 

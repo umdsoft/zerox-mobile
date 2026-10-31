@@ -33,7 +33,8 @@ import { setAnalyticsUser } from './analytics';
 
 // 08.10: 'password-changed' — foydalanuvchi O'Z parolini o'zgartirgan va sessiyani jim
 // tiklab bo'lmagan holat: neytral xabar ("boshqa qurilmadan" EMAS).
-export type ForceLogoutReason = 'revoked' | 'refresh-failed' | 'user' | 'password-changed' | 'pin-lockout';
+export type ForceLogoutReason =
+  | 'revoked' | 'refresh-failed' | 'user' | 'password-changed' | 'pin-lockout' | 'account-deleted';
 
 // 08.10: sabab -> toast (foydalanuvchi o'zi chiqsa — toast yo'q).
 const LOGOUT_TOAST: Record<Exclude<ForceLogoutReason, 'user'>, { type: string; text: string }> = {
@@ -42,6 +43,8 @@ const LOGOUT_TOAST: Record<Exclude<ForceLogoutReason, 'user'>, { type: string; t
   'password-changed': { type: 'omad', text: "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring." },
   // SEC (2026-10-31): PIN 10 marta ketma-ket xato kiritildi.
   'pin-lockout': { type: 'error2', text: 'PIN-kod ko‘p marta xato kiritildi. Xavfsizlik uchun qayta kiring.' },
+  // 01.11: hisob o'chirilgan (backend 403 ACCOUNT_DELETED).
+  'account-deleted': { type: 'error2', text: 'Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.' },
 };
 
 let inProgress = false;

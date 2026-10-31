@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
-import { installAuthRefresh, installGetRetry, installOfertaRequired } from './authInterceptor';
+import { installAccountDeleted, installAuthRefresh, installGetRetry, installOfertaRequired } from './authInterceptor';
 import { getDeviceUserAgent } from '../../helper/userAgent';
 import { getDeviceIntegrity, INTEGRITY_HEADER } from '../../helper/deviceIntegrity';
 
@@ -46,5 +46,6 @@ installAuthRefresh(apiClient);
 // SS-PERF (2026-09-25): GET so'rovlar tarmoq xatosi/timeout/5xx'da 1 marta qayta uriniladi.
 installGetRetry(apiClient);
 installOfertaRequired(apiClient); // SS-DEV (2026-09-29): 403 OFERTA_REQUIRED → oferta oynasi
+installAccountDeleted(apiClient); // 01.11: 403 ACCOUNT_DELETED → xabar / majburiy chiqish
 
 export default apiClient;
