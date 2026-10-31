@@ -6,10 +6,10 @@ import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign/icons';
-import { parseApiDate } from '../../helper';
+import { apiDateTkYmd } from '../../helper';
 import { groupMoney } from '../../helper/money';
 import { useFio } from '../../helper/useFio';
-import { tkYmdFromMs } from '../../helper/date';
+import { tkYmdFromMs, tkDayNumber } from '../../helper/date';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -51,12 +51,11 @@ export const dueLabel = (meta: { label: string; cat?: DueCat; diff?: number }): 
   }
   return t(meta.label);
 };
-export const getDueMeta = (endDate: any): DueMeta => {
+export const getDueMeta = (endDate: any, nowMs: number = Date.now()): DueMeta => {
   // SS-DEV (2026-09-24): "YYYY-MM-DD HH:MM:SS.mmm" (talab dalolatnomasidan
   // keyingi end_date) Hermes'da `new Date` bilan parse bo'lmasdi -> mustahkam parser.
-  const parsed = parseApiDate(endDate);
-  const d = parsed ? new Date(parsed.getTime()) : new Date(NaN);
-  if (!endDate || isNaN(d.getTime())) {
+  const dueYmd = endDate ? apiDateTkYmd(endDate) : null;
+  if (!dueYmd) {
     return {
       cat: 'active',
       label: 'Jarayonda',
@@ -66,16 +65,11 @@ export const getDueMeta = (endDate: any): DueMeta => {
       diff: 99999,
     };
   }
-  // NOTE(refactor): mixes local midnight (parseApiDate + setHours) with a +5h shift for the label — differs from helper/date Tashkent-only helpers; 
-  // Sana matni — ilovaning mavjud +5s (UZS) siljishi bilan (kun chegarasida to'g'ri).
-  const iso = tkYmdFromMs(d.getTime());
-  const [y, m, dd] = iso.split('-');
+  // 01.11: muddat va "bugun" ikkalasi ham TOSHKENT kalendar kuni bo'yicha (ilgari lokal yarim tun
+  // + 5s siljish aralash edi: g'arbiy TZ'da sana/qolgan kun 1 kunga siljirdi). Toshkentda natija bir xil.
+  const [y, m, dd] = dueYmd.split('-');
   const date = `${dd}.${m}.${y}`;
-
-  const now = new Date();
-  d.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diff = Math.round((d.getTime() - now.getTime()) / 86400000);
+  const diff = tkDayNumber(dueYmd) - tkDayNumber(tkYmdFromMs(nowMs));
   if (diff < 0)
     return { cat: 'overdue', label: 'Muddati o‘tgan', color: rd.color.error, bg: rd.color.errorBg, date, diff };
   if (diff === 0)

@@ -709,6 +709,34 @@
     "paid": 500,
     "total": 2500
    }
+  },
+  {
+   "name": "xx5 amounts round half-up with EPSILON (backend money.js parity)",
+   "amount": 1.005,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1.005,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     1
+    ],
+    "reasons": [
+     "highest_rate"
+    ],
+    "pays": [
+     1.01
+    ],
+    "paid": 1.01,
+    "total": 1.01
+   }
   }
  ]
 }

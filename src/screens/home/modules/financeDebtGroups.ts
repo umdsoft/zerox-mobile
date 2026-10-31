@@ -24,7 +24,7 @@
  */
 import { phoneLast9 } from '../../../helper/phone';
 import { URL } from '../../constants';
-import { isDebtOpen, isDebtOverdue, num, parseLocalDate } from './financeMoney';
+import { isDebtOpen, isDebtOverdue, num, parseLocalDate, tkDiffDays } from './financeMoney';
 
 /** Ro'yxat sahifasi turlari (sayt `/finance/debts/list/:kind` bilan bir xil nomlar). */
 export type DebtListKind =
@@ -110,8 +110,7 @@ export const summarizeDebts = (debts: any[]): DebtSummary => {
 export const daysLeft = (due?: string | null, now: Date = new Date()): number | null => {
   const d = parseLocalDate(due || undefined);
   if (!d) return null;
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.round((d.getTime() - today.getTime()) / 86400000);
+  return tkDiffDays(d, now); // 01.11: "bugun" Toshkent kuni (g'arbiy TZ'da -1 bo'lmaydi)
 };
 
 /**

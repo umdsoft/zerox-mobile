@@ -13,6 +13,7 @@
  */
 import { num } from './financeMoney';
 import { tkYmdFromMs } from '../../../helper/date';
+import { toCents as moneyToCents } from '../../../helper/money';
 
 export type AllocationReason = 'overdue' | 'due_now' | 'highest_rate' | 'zero_rate';
 export const ORDER_RULE = 'economic_v1';
@@ -40,7 +41,9 @@ const DEFAULT_DEVALUATION_PCT = 8;
 const DAY_MS = 86400000;
 const RATE_EPS = 1e-9;
 
-const toCents = (v: any): number => Math.round(num(v) * 100);
+// 01.11: backend utils/money.toCents bilan AYNAN bir xil (Number.EPSILON, NaN/Infinity -> 0): 1.005 -> 101 tiyin.
+// Ilgari `Math.round(num(v) * 100)` edi -> .xx5 kiritishda serverdan 1 tiyin farq qilardi.
+const toCents = (v: any): number => moneyToCents(v);
 const fromCents = (c: number): number => Math.round(c) / 100;
 
 const dateRank = (v: any): number => {

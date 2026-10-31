@@ -6,8 +6,7 @@
 /**
  * Chekli songa aylantirish: NaN/Infinity/aylantirib bo'lmaydigan -> 0 (-0 saqlanadi).
  * offline/derive va offline/projection nusxalari shu yerga ko'chirilgan (xulq bir xil).
- * Diqqat: boshqa `num` nusxalari (financeMoney, smsPools, QarzShartnomasi) Infinity/-0
- * bo'yicha FARQ qiladi — ular o'z joyida qoldi.
+ * financeMoney/smsPools/QarzShartnomasi `num` lari ham endi chekli qiymat qaytaradi (01.11).
  */
 export const toFiniteNum = (v: unknown): number => {
   const n = Number(v);

@@ -34,6 +34,7 @@ import Loading from '../components/Loading';
 import Eye from '../../images/auth/Eye';
 import EyeClose from '../../images/auth/CloseEye';
 import { URL } from '../constants';
+import { useCountdown } from '../../hooks/useCountdown';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon, MessageIcon } from '../home/redesign/icons';
 import { GradientIconBadge } from '../components/BrandLockup';
@@ -114,31 +115,22 @@ const RecoverySmsReset = () => {
   const [eye2, setEye2] = useState(true);
   const [loading, setLoading] = useState(false); // 2-qadam submit (to'liq ekran)
   const [verifying, setVerifying] = useState(false); // 1-qadam tugma spinneri
-  const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
+  // 01.11: sanoq deadline (Date.now) asosida — fonga o'tib qaytganda/tizim vaqti sakraganda ham aniq (useCountdown).
+  const { remaining: timer, start: startCountdown, stop: stopCountdown } = useCountdown(RESEND_SECONDS, () =>
+    setCanResend(true),
+  );
   const [focused, setFocused] = useState<'p' | 'c' | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const otpRef = useRef<any>(null);
 
   const unmountedRef = useRef(false);
 
   const startTimer = useCallback(() => {
-    // sendSms unmount'dan KEYIN tugasa, interval qolib ketmasin.
+    // sendSms unmount'dan KEYIN tugasa, sanoq boshlanmasin (hook ham himoya qiladi).
     if (unmountedRef.current) return;
     setCanResend(false);
-    setTimer(RESEND_SECONDS);
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
+    startCountdown(RESEND_SECONDS);
+  }, [startCountdown]);
 
   // Tiklash SMS'ini yuborish (ochilganda + qayta yuborishda). Backend endi SMS haqiqatan
   // ketmasa xato qaytaradi (502) → catch ishlaydi, taймer boshlanmaydi.
@@ -165,7 +157,7 @@ const RecoverySmsReset = () => {
     sendSms();
     return () => {
       unmountedRef.current = true;
-      if (timerRef.current) clearInterval(timerRef.current);
+      stopCountdown();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -34,7 +34,7 @@ import { font } from '../../theme/font';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
-import { fmtYmdLocal } from '../../helper/date';
+import { fmtYmdTk } from '../../helper/date';
 import { AnimatedIconCircle, RequestExtendIcon } from '../../images/debtActionIcons';
 
 const DebtDateLengthAsk = () => {
@@ -393,7 +393,8 @@ const plus_day = date => {
   return today;
 };
 export function formatDate(date) {
-  return fmtYmdLocal(new Date(date));
+  // Date (DatePicker) -> lokal kun; server satr/son -> Toshkent kuni (helper/date.fmtYmdTk).
+  return fmtYmdTk(date);
 }
 export function checkingDate(date) {
   let now = new Date();

@@ -6,8 +6,16 @@
  *
  * Ikki oila bor — ARALASHTIRMANG:
  *  - Toshkent (UTC+5, DST yo'q): tkYmdFromMs, fmtDateTimeUz — qurilma TZ'iga bog'liq EMAS.
- *  - Lokal (qurilma TZ): fmtDmyLocal, fmtYmdLocal, fmtLocalDate, fmtLocalDateTime.
- *    Qurilma UTC+5 dan boshqa mintaqada bo'lsa, '...T19:30Z' boshqa kunni ko'rsatadi.
+ *  - Lokal (qurilma TZ): fmtDmyLocal, fmtYmdLocal — FAQAT foydalanuvchi tanlagan `Date`
+ *    (DatePicker) uchun: tanlangan kun = qurilmaning kalendar kuni.
+ *
+ * 01.11 (REFACTOR_DIVERGENCES, egasi tasdiqlagan): server satr/son sanalarini ko'rsatuvchi
+ * fmtLocalDate*, fmtDmyTk/fmtYmdTk, tkWall, tkCalendarYmd endi qurilma TZ'iga bog'liq EMAS:
+ *   - zonasiz 'YYYY-MM-DD[ T]HH:mm[:ss[.f]]'  -> Toshkent devor vaqti (backend VARCHAR/raw ustunlari,
+ *     knexfile mysql2 timezone '+05:00'), maydonlar to'g'ridan-to'g'ri o'qiladi;
+ *   - sof 'YYYY-MM-DD'  -> o'sha kalendar kun (UTC yarim tun + 5s = Toshkent 05:00, eski Toshkent natijasi bilan bir xil);
+ *   - 'Z' / ofsetli satr, epoch son, Date -> oniy vaqt (instant) + 5s.
+ * Toshkentdagi qurilmada natija o'zgarmagan (__tests__/refactor_tz_proof.test.ts).
  */
 
 export const TASHKENT_OFFSET_MS = 5 * 3600 * 1000;
@@ -59,32 +67,87 @@ export const fmtYmdLocal = (d: Date): string => {
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
 
+const ZONELESS_RE = /^(\d{4})-(\d{2})-(\d{2})(?:([T ])(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?)?$/;
+
+/**
+ * Qiymatni "Toshkent devor vaqti" ko'rinishida qaytaradi: natija Date'ning UTC getter'lari
+ * (getUTCDate, getUTCHours ...) Toshkentdagi kalendar kun/soatni beradi. Yaroqsiz -> null.
+ * Qurilma TZ'iga bog'liq emas (qoidalar fayl boshidagi izohda).
+ */
+export const tkWall = (v: unknown): Date | null => {
+  if (typeof v === 'string') {
+    const m = ZONELESS_RE.exec(v.trim());
+    if (m) {
+      const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+      // sof sana: UTC yarim tun + 5s (Toshkent 05:00) — eski natija bilan bir xil.
+      const hasTime = m[4] !== undefined;
+      const [h, mi, s] = hasTime ? [Number(m[5]), Number(m[6]), Number(m[7] || 0)] : [5, 0, 0];
+      const w = new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+      const ok =
+        w.getUTCFullYear() === y && w.getUTCMonth() === mo - 1 && w.getUTCDate() === d &&
+        w.getUTCHours() === h && w.getUTCMinutes() === mi && w.getUTCSeconds() === s;
+      return ok ? w : null;
+    }
+  }
+  const t = new Date(v as any).getTime();
+  return Number.isFinite(t) ? new Date(t + TASHKENT_OFFSET_MS) : null;
+};
+
+/** Toshkent kalendar kuni 'YYYY-MM-DD'; yaroqsiz -> null. */
+export const tkCalendarYmd = (v: unknown): string | null => {
+  const w = tkWall(v);
+  return w ? w.toISOString().slice(0, 10) : null;
+};
+
+/** 'YYYY-MM-DD' -> epoch'dan beri kun raqami (kunlar farqi uchun, DST/TZ'siz). */
+export const tkDayNumber = (ymd: string): number => Math.round(Date.parse(`${ymd}T00:00:00Z`) / 86400000);
+
+/** Toshkent kalendar kuni qismlari; yaroqsiz -> null. */
+export const tkYmdParts = (v: unknown): { y: number; mo: number; d: number } | null => {
+  const w = tkWall(v);
+  return w ? { y: w.getUTCFullYear(), mo: w.getUTCMonth() + 1, d: w.getUTCDate() } : null;
+};
+
+const dmyOfWall = (w: Date): string => `${p2(w.getUTCDate())}.${p2(w.getUTCMonth() + 1)}.${w.getUTCFullYear()}`;
+
+/**
+ * "DD.MM.YYYY": `Date` nusxasi (DatePicker) -> LOKAL kun; satr/son (server) -> Toshkent kuni.
+ * Yaroqsiz -> "NaN.NaN.NaN" (eski xulq).
+ */
+export const fmtDmyTk = (v: unknown): string => {
+  if (v instanceof Date) return fmtDmyLocal(v);
+  const w = tkWall(v);
+  return w ? dmyOfWall(w) : 'NaN.NaN.NaN';
+};
+
+/** "YYYY-MM-DD": `Date` nusxasi (DatePicker) -> LOKAL kun; satr/son (server) -> Toshkent kuni. Yaroqsiz -> "NaN-NaN-NaN". */
+export const fmtYmdTk = (v: unknown): string => {
+  if (v instanceof Date) return fmtYmdLocal(v);
+  return tkCalendarYmd(v) ?? 'NaN-NaN-NaN';
+};
+
 export interface LocalFmtOpts {
   /** Bo'sh/yaroqsiz kirishda qaytadigan matn (default ''). */
   fallback?: string;
-  /** true: `new Date(String(s).replace(' ', 'T'))`; false: `new Date(s)` (eski ikki nusxaning farqi). */
+  /** true: `String(s).replace(' ', 'T')` (son kirish -> String -> yaroqsiz); false: kirish o'zgarishsiz (eski ikki nusxaning farqi). */
   spaceToT?: boolean;
 }
 
-const parseLoose = (s: any, spaceToT: boolean): Date =>
-  spaceToT ? new Date(String(s).replace(' ', 'T')) : new Date(s);
+const wallOfLoose = (s: any, spaceToT: boolean): Date | null =>
+  tkWall(spaceToT ? String(s).replace(' ', 'T') : s);
 
-/** LOKAL "DD.MM.YYYY"; bo'sh/yaroqsiz -> fallback. */
+/** Toshkent "DD.MM.YYYY" (nomi tarixiy); bo'sh/yaroqsiz -> fallback. */
 export const fmtLocalDate = (s?: any, opts: LocalFmtOpts = {}): string => {
   const { fallback = '', spaceToT = false } = opts;
   if (!s) return fallback;
-  const d = parseLoose(s, spaceToT);
-  if (isNaN(d.getTime())) return fallback;
-  return `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()}`;
+  const w = wallOfLoose(s, spaceToT);
+  return w ? dmyOfWall(w) : fallback;
 };
 
-/** LOKAL "DD.MM.YYYY HH:mm"; bo'sh/yaroqsiz -> fallback. */
+/** Toshkent "DD.MM.YYYY HH:mm" (nomi tarixiy); bo'sh/yaroqsiz -> fallback. */
 export const fmtLocalDateTime = (s?: any, opts: LocalFmtOpts = {}): string => {
   const { fallback = '', spaceToT = false } = opts;
   if (!s) return fallback;
-  const d = parseLoose(s, spaceToT);
-  if (isNaN(d.getTime())) return fallback;
-  return `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()} ${p2(d.getHours())}:${p2(
-    d.getMinutes(),
-  )}`;
+  const w = wallOfLoose(s, spaceToT);
+  return w ? `${dmyOfWall(w)} ${p2(w.getUTCHours())}:${p2(w.getUTCMinutes())}` : fallback;
 };

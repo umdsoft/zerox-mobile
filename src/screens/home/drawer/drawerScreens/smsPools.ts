@@ -23,8 +23,11 @@ export interface PoolPair {
   package: number;
 }
 
-// NOTE(refactor): differs from helper/num.toFiniteNum — Infinity stays Infinity, -0 -> 0; 
-export const num = (v: unknown): number => Number(v) || 0;
+// 01.11: Infinity endi 0 (ilgari saqlanib qolardi); -0 -> 0 avvalgidek.
+export const num = (v: unknown): number => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n || 0 : 0;
+};
 
 const toPart = (raw: any): PoolPart => ({
   total: num(raw?.total),

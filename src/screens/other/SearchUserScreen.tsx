@@ -57,7 +57,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop, Circle } from 'react-native-svg'
 import Person from '../../images/home/person';
 import Famale from '../../images/Famale';
 import { useFio } from '../../helper/useFio';
-import { fmtDmyLocal } from '../../helper/date';
+import { fmtDmyTk } from '../../helper/date';
 const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
@@ -709,7 +709,8 @@ const UserInfo = ({ user, navigation, type }) => {
 };
 
 export function formatDate(date) {
-  return fmtDmyLocal(new Date(date));
+  // Date (DatePicker) -> lokal kun; server satr/son -> Toshkent kuni (helper/date.fmtDmyTk).
+  return fmtDmyTk(date);
 }
 export default SearchUserScreen;
 

@@ -59,6 +59,9 @@ const ClockSkewGate = () => {
   useEffect(() => {
     installClockSkewWatcher();
     const unsub = subscribeClockSkew(setBlocked);
+    // apiClient kuzatuvi modul yuklanganda boshlanadi: render va obuna orasida o'rnatilgan
+    // holatni yo'qotmaslik uchun obunadan keyin joriy qiymatni darhol olamiz (fail-open bo'lmasin).
+    setBlocked(isClockBlocked());
     verifyClock();
     const sub = AppState.addEventListener('change', s => {
       if (s === 'active') verifyClock();

@@ -30,7 +30,7 @@ import { HomeApi, getNotificationWithPage } from '../../../store/api/home';
 import { setAnalytics } from '../../../store/reducers/HomeReducer';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
-import { compactMoney, fmtUZS, fmtUSD } from '../../../helper/money';
+import { compactMoney, fmtUZS, fmtUSD, round2 } from '../../../helper/money';
 import { sortText } from '../../components/StatisticCard';
 import socketService from '../../../helper/socketService';
 import { DEBT_NAV } from './debtNav';
@@ -570,14 +570,15 @@ let dashboardCache: any = null;
 let dashboardCacheScope: string | null = null;
 
 // Bitta valyuta bo'yicha yig'indi (konvertatsiyasiz — USD'ni alohida ko'rsatish uchun).
-// NOTE(refactor): differs from QarzShartnomasi.sumCur (rounds to integer); 
-export const sumCur = (rows: any[] | undefined, cur: string) =>
-  Math.round(
-    (rows || []).reduce((s, r) => {
-      const isCur = String(r?.currency || 'UZS').toUpperCase() === cur;
-      return s + (isCur ? Number(r?.residual_amount || 0) : 0);
-    }, 0),
-  );
+// 01.11: USD tsentlari saqlanadi (round2) — ilgari butun songa yaxlitlanib 10.7 USD -> 11 bo'lardi.
+// Ko'rsatish (compactKMB) 1000 dan past qiymatda tsentni o'zi ko'rsatadi, K/M/B da 1-2 xona; UZS esa avvalgidek butun.
+export const sumCur = (rows: any[] | undefined, cur: string) => {
+  const total = (rows || []).reduce((s, r) => {
+    const isCur = String(r?.currency || 'UZS').toUpperCase() === cur;
+    return s + (isCur ? Number(r?.residual_amount || 0) : 0);
+  }, 0);
+  return cur === 'USD' ? round2(total) : Math.round(total);
+};
 
 // Ixcham summa — yagona manba (src/helper/money.ts).
 const shortAmt = (n: number) => compactMoney(n);

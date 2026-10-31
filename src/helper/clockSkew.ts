@@ -136,35 +136,66 @@ const onPassiveSample = (skew: number | null): void => {
   verifyClock();
 };
 
-const isOwnApi = (url: unknown): boolean => typeof url === 'string' && url.startsWith(URL);
+/** `http(s)://host[:port]` yoki protokolsiz `//host[:port]` -> {scheme, host} (kichik harf); boshqasi -> null. */
+const parseOrigin = (url: string): { scheme: string | null; host: string } | null => {
+  const m = /^(?:(https?):)?\/\/([^/?#\\]+)/i.exec(url.trim());
+  return m ? { scheme: m[1] ? m[1].toLowerCase() : null, host: m[2].toLowerCase() } : null;
+};
+
+/**
+ * 31.10: so'rov BIZNING API'ga ketganmi? Prefiks (`startsWith`) EMAS — origin (sxema+host+port) solishtiriladi,
+ * aks holda `https://app.zerox.uz.evil.com` ham "o'zimizniki" bo'lib qolardi.
+ *  - mutlaq `https://host/...` -> origin solishtiriladi;
+ *  - protokolsiz `//host/...` (axios buni ham mutlaq deb hisoblaydi, baseURL e'tiborsiz) -> host solishtiriladi,
+ *    sxema o'zimizniki deb olinadi;
+ *  - nisbiy `/path` -> baseURL (mutlaq/protokolsiz) origin'i solishtiriladi; baseURL bo'lmasa — noma'lum -> false.
+ */
+export const isOwnApi = (cfg: { url?: unknown; baseURL?: unknown } | undefined, ownUrl: string = URL): boolean => {
+  const own = parseOrigin(ownUrl);
+  const url = cfg?.url;
+  if (!own || typeof url !== 'string') return false;
+  // Boshqa sxemali mutlaq URL (ftp://, ws:// ...) — axios uni mutlaq deb oladi: o'zimizniki emas.
+  if (/^[a-z][a-z\d+\-.]*:\/\//i.test(url) && !/^https?:\/\//i.test(url)) return false;
+  const target = parseOrigin(url) ?? (typeof cfg?.baseURL === 'string' ? parseOrigin(cfg.baseURL) : null);
+  if (!target) return false;
+  return target.host === own.host && (target.scheme === null || target.scheme === own.scheme);
+};
 
 const samplePassively = (res: AxiosResponse | undefined): void => {
   try {
     const cfg: any = res?.config;
-    if (!res || !cfg || !isOwnApi(cfg.url) || typeof cfg.__clockSentAt !== 'number') return;
+    if (!res || !cfg || !isOwnApi(cfg) || typeof cfg.__clockSentAt !== 'number') return;
     const serverMs = parseHttpDate(res.headers);
     if (serverMs === null) return;
     onPassiveSample(computeSkewMs(cfg.__clockSentAt, Date.now(), serverMs));
   } catch {}
 };
 
-let installed = false;
-/** 08.10: default axios instansiyasiga passiv `Date` kuzatuvchisini o'rnatadi (bir marta). */
-export const installClockSkewWatcher = (): void => {
-  if (installed) return;
-  installed = true;
-  axios.interceptors.request.use(config => {
-    (config as any).__clockSentAt = Date.now();
+const installedOn = new WeakSet<object>();
+/**
+ * 31.10: passiv `Date` kuzatuvchisini ISTALGAN axios instansiyasiga o'rnatadi (har instansiyaga BIR marta —
+ * WeakSet himoyasi). Ilgari faqat default `axios` kuzatilardi, aslida esa ilova `apiClient` orqali so'raydi.
+ */
+export const installClockSkewWatcherOn = (client: {
+  interceptors: { request: { use: Function }; response: { use: Function } };
+}): void => {
+  if (installedOn.has(client)) return;
+  installedOn.add(client);
+  client.interceptors.request.use((config: any) => {
+    config.__clockSentAt = Date.now();
     return config;
   });
-  axios.interceptors.response.use(
-    response => {
+  client.interceptors.response.use(
+    (response: AxiosResponse) => {
       samplePassively(response);
       return response;
     },
-    error => {
+    (error: any) => {
       samplePassively(error?.response);
       return Promise.reject(error);
     },
   );
 };
+
+/** 08.10: default axios instansiyasiga o'rnatadi (bir marta). */
+export const installClockSkewWatcher = (): void => installClockSkewWatcherOn(axios);

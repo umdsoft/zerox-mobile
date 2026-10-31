@@ -6,7 +6,10 @@
  * TZ ofseti bo'yicha (getTimezoneOffset) saqlanadi: -300 (Asia/Tashkent), 0 (UTC) va
  * 240 (EST5EDT). Boshqa TZ'da jadval yo'q -> o'sha qism o'tkazib yuboriladi.
  *   Windows'da TZ faqat buyruq qatorida ishlaydi:  TZ=UTC npx jest refactor_
- * Golden'ni qayta yozish (FAQAT refaktordan oldingi kodda): REFACTOR_GEN=1.
+ * Golden'ni qayta yozish: REFACTOR_GEN=1 (har TZ uchun alohida: TZ=UTC / TZ=EST5EDT / TZ=Asia/Tashkent).
+ * 01.11: golden tuzatishlardan keyin qayta yaratilgan; tuzatishdan OLDINGI jadval fixtures/refactor_golden_pre.json da
+ * o'zgarmas saqlanadi va refactor_tz_proof.test.ts eski/yangi farqni qator-qator isbotlaydi. Yangi o'zgarishda golden'ni
+ * qayta yozishdan oldin farqni shu yerda ataylab ro'yxatga kiriting.
  */
 import fs from 'fs';
 import path from 'path';

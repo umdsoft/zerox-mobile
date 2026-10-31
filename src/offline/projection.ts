@@ -57,7 +57,8 @@ const DAY_MS = 86400000;
 const NEAR_WINDOW_DAYS = 30;
 const NEAR_LIMIT = 20;
 const FULL_CLOSE = 1e12;
-const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
+// backend utils/money.round2 bilan bir xil: EPSILON, NaN/Infinity -> 0.
+const round2 = (n: number): number => (Number.isFinite(n) ? Math.round((n + Number.EPSILON) * 100) / 100 : 0);
 export const num = toFiniteNum;
 const curKey = (v: unknown): 'uzs' | 'usd' => (v === 'USD' ? 'usd' : 'uzs');
 /**

@@ -26,7 +26,7 @@ import {
 import { useSelector } from 'react-redux';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
-import { compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
+import { compactUsd, compactUzs, fmtUZS, fmtUSD, parseAmount } from '../../../helper/money';
 import { URL } from '../../constants';
 import Loading from '../../components/Loading';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
@@ -72,13 +72,24 @@ type MyData = {
 };
 
 // ---------- Yordamchi ----------
-// NOTE(refactor): differs from helper/num.toFiniteNum — 'abc'/'1 234,50' -> NaN (looks like a latent bug: sumCur total becomes NaN), Infinity kept; 
-export const num = (v: any) => Number(v || 0);
+// 01.11 (REFACTOR_DIVERGENCES): ilgari `Number(v || 0)` — 'abc' / '1 234,50' -> NaN va sumCur butunlay NaN bo'lardi.
+// Endi satrlar umumiy pul parseri (helper/money.parseAmount) orqali; manfiy belgi saqlanadi; natija har doim CHEKLI.
+// Eslatma: '0x10' endi 10 (ilgari 16) — pul maydonida hex yo'q.
+export const num = (v: any): number => {
+  if (typeof v === 'string') {
+    const t = v.trim();
+    if (!t) return 0;
+    const n = parseAmount(t, true);
+    return t.startsWith('-') && n ? -n : n;
+  }
+  const n = Number(v || 0);
+  return Number.isFinite(n) ? n : 0;
+};
 const isCur = (r: Row, cur: string) =>
   String(r?.currency || 'UZS').toUpperCase() === cur;
-// NOTE(refactor): differs from HomeRedesign.sumCur (no Math.round, NaN/throws on null row); 
+// 01.11: NaN/null qator endi TypeError/NaN bermaydi (num() chekli, `r?.` himoyasi).
 export const sumCur = (rows: Row[] | undefined, cur: string) =>
-  (rows || []).reduce((s, r) => (isCur(r, cur) ? s + num(r.residual_amount) : s), 0);
+  (rows || []).reduce((s, r) => (isCur(r, cur) ? s + num(r?.residual_amount) : s), 0);
 
 // UZS + USD matni — so'rov bo'yicha "UZS"/"USD" + K/M/B; qarz bo'lmasa ham
 // "0 UZS"/"0 USD" DOIM ko'rsatiladi (ikkala qator turadi).

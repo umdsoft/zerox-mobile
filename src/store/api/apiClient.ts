@@ -3,6 +3,7 @@ import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { installAccountDeleted, installAuthRefresh, installGetRetry, installOfertaRequired } from './authInterceptor';
 import { getDeviceUserAgent } from '../../helper/userAgent';
+import { installClockSkewWatcherOn } from '../../helper/clockSkew';
 import { getDeviceIntegrity, INTEGRITY_HEADER } from '../../helper/deviceIntegrity';
 
 /**
@@ -47,5 +48,6 @@ installAuthRefresh(apiClient);
 installGetRetry(apiClient);
 installOfertaRequired(apiClient); // SS-DEV (2026-09-29): 403 OFERTA_REQUIRED → oferta oynasi
 installAccountDeleted(apiClient); // 01.11: 403 ACCOUNT_DELETED → xabar / majburiy chiqish
+installClockSkewWatcherOn(apiClient); // 01.11: server `Date` sarlavhasi orqali soat-siljish signali (apiClient so'rovlari ham)
 
 export default apiClient;

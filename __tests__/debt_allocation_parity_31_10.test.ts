@@ -27,6 +27,17 @@ describe('debtAllocation (mobil) — economic_v1, backend bilan umumiy fixture',
     expect(r.allocations.every(a => a.closes)).toBe(true);
   });
 
+  // backend utils/money: toCents(1.005)=101, round2(1.005)=1.01, NaN/Infinity -> 0 (Number.EPSILON).
+  test('tiyin yaxlitlash backend bilan bir xil (EPSILON): .xx5 kiritishda 1 tiyin farq yo‘q', () => {
+    const one = allocatePayment([{ id: 1, remaining_amount: 1.005 }], 1.01);
+    expect(one.over).toBe(false);
+    expect(one.total).toBe(1.01);
+    expect(one.allocations.map(a => a.pay)).toEqual([1.01]);
+    expect(allocatePayment([{ id: 1, remaining_amount: '1.005' }], 1.005).paid).toBe(1.01);
+    expect(allocatePayment([{ id: 1, remaining_amount: 10 }], 1.005).paid).toBe(1.01);
+    expect(allocatePayment([{ id: 1, remaining_amount: NaN }, { id: 2, remaining_amount: 5 }], Infinity).total).toBe(5);
+  });
+
   test('sana: ISO(Z) Toshkent sanasiga, matn sanasi o\'zgarmaydi', () => {
     expect(ymdOf('2026-11-01')).toBe('2026-11-01');
     expect(ymdOf('2026-11-01 00:00:00')).toBe('2026-11-01');

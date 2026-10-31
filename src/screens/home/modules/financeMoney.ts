@@ -9,12 +9,11 @@
 
 import { t } from 'i18next';
 import { fmtAmountByCurrency } from '../../../helper/money';
+import { toFiniteNum } from '../../../helper/num';
+import { tkYmdParts, tkYmdFromMs, tkDayNumber } from '../../../helper/date';
 
-// NOTE(refactor): differs from helper/num.toFiniteNum — Infinity stays Infinity; 
-export const num = (v: any): number => {
-  const n = Number(v);
-  return isNaN(n) ? 0 : n;
-};
+// 01.11: Infinity endi 0 (chekli son kafolati) — helper/num.toFiniteNum bilan bir xil.
+export const num = (v: any): number => toFiniteNum(v);
 
 // "1 500 000 UZS" — to'liq mingtalik (probel) + valyuta kodi.
 // USD da tsentlar ko'rinadi: "655,77 USD" (2026-10-18); UZS — butun.
@@ -92,14 +91,13 @@ export const localDateKey = (d: Date): string => {
 
 // Server DATE ustunlari ("expense_date"/"income_date"/"deadline") mysql2'dan Date obyekti
 // -> ISO-TZ sifatida keladi (masalan Toshkent yarim tuni = "...T19:00:00.000Z", ya'ni -5s).
-// LOKAL kalendar kunni olish uchun `new Date()` + LOKAL getter ishlatamiz (UZ +5 qurilmada
-// to'g'ri kun). Bu web `localDateKey` bilan bir xil yondashuv. Sof "YYYY-MM-DD" ham ishlaydi.
+// 01.11 (REFACTOR_DIVERGENCES): kalendar kun endi TOSHKENT bo'yicha (helper/date.tkYmdParts) —
+// qurilma TZ'iga bog'liq emas: G'arbiy TZ'da sof "YYYY-MM-DD" bir kun erta chiqardi. Sof
+// "YYYY-MM-DD" = o'sha kun. Toshkentdagi qurilmada natija o'zgarmagan.
 const dateParts = (s?: string): { y: number; mo: number; d: number } | null => {
   if (!s) return null;
-  const dt = new Date(s);
-  if (!isNaN(dt.getTime())) {
-    return { y: dt.getFullYear(), mo: dt.getMonth() + 1, d: dt.getDate() };
-  }
+  const p = tkYmdParts(s);
+  if (p) return p;
   const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]) } : null;
 };
@@ -115,7 +113,7 @@ const dateParts = (s?: string): { y: number; mo: number; d: number } | null => {
  * Shu bois formalar ham SHU yordamchidan foydalanadi — sanani o'qishning
  * yagona usuli qoladi.
  */
-// NOTE(refactor): LOCAL-TZ parse (not Tashkent) — differs from helper/date.tkYmdFromMs; 
+// Natija: Toshkent kalendar kunining LOKAL yarim tuni (DatePicker/hisob uchun) — qurilma TZ'ida kun siljimaydi.
 export const parseLocalDate = (s?: string | null): Date | null => {
   const p = dateParts(s || undefined);
   return p ? new Date(p.y, p.mo - 1, p.d) : null;
@@ -132,14 +130,20 @@ export const parseLocalDate = (s?: string | null): Date | null => {
 export const isDebtOpen = (d: any): boolean =>
   (d?.status === 'active' || d?.status === 'overdue') && num(d?.remaining_amount) > 0;
 
-/** Ochiq qarz, muddati (LOKAL kun bo'yicha) bugundan oldin. */
+/**
+ * 01.11: `due` (parseLocalDate natijasi: lokal yarim tun, Toshkent y/m/d) va `now` ning TOSHKENT "bugun"i
+ * orasidagi kunlar farqi (due - bugun). G'arbiy TZ'da "bugun" -1 bo'lib qolmaydi.
+ */
+export const tkDiffDays = (due: Date, now: Date): number =>
+  tkDayNumber(`${String(due.getFullYear()).padStart(4, '0')}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`) -
+  tkDayNumber(tkYmdFromMs(now.getTime()));
+
+/** Ochiq qarz, muddati (TOSHKENT kun bo'yicha) bugundan oldin. */
 export const isDebtOverdue = (d: any): boolean => {
   if (!isDebtOpen(d) || !d?.due_date) return false;
   const due = parseLocalDate(String(d.due_date));
   if (!due) return false;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return due.getTime() < today.getTime();
+  return tkDiffDays(due, new Date()) < 0;
 };
 
 export const dateKeyOf = (s?: string): string => {

@@ -1,5 +1,10 @@
 # Refaktoring: birlashtirilmagan (natijasi farq qiladigan) nusxalar
 
+> 01.11 YANGILANISH: quyidagi barcha xatolar tuzatildi (egasi tasdiqlagan): sanalar Toshkent kuni bo'yicha (qurilma TZ'ga bog'liq emas),
+> num/sumCur chekli va xavfsiz, `HomeRedesign.sumCur` USD tsentni saqlaydi, soat-siljish kuzatuvi `apiClient` ga o'rnatildi,
+> `RecoverySmsReset` taymeri deadline asosida (`useCountdown`). Isbot: `__tests__/refactor_tz_proof.test.ts` (golden: `refactor_golden_pre.json` = tuzatishdan oldingi).
+> Faqat `sumByCur`, `formatThousands`, `formatMln` ataylab alohida qoldi. Quyidagi matn — TARIXIY tavsif.
+
 2026-11-01, DRY 1-bosqich. Quyidagilar umumiy helperdan farqli natija beradi va ataylab o'zgartirilmadi
 (foydalanuvchi ko'radigan xulq saqlansin). Xulq `__tests__/refactor_characterization.test.ts` va
 `__tests__/fixtures/refactor_golden.json` da (Tashkent, UTC, EST5EDT) qayd etilgan.

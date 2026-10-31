@@ -1,6 +1,6 @@
 import { t } from 'i18next';
 import type { User, CompanyUser, PersonUser } from '../types';
-import { fmtDateTimeUz, fmtDmyLocal } from './date';
+import { fmtDateTimeUz, fmtDmyLocal, fmtYmdLocal, tkYmdFromMs } from './date';
 
 /**
  * Formats a number with space-separated thousands
@@ -82,13 +82,19 @@ export const settingDate = (text: string | Date): string => {
  */
 export const parseApiDate = (
   value?: string | number | Date | null,
-): Date | null => {
+): Date | null => parseApiDateInfo(value)?.date ?? null;
+
+/**
+ * `wall: true` — Date LOKAL devor vaqtidan qurilgan (zonasiz satr / DD.MM.YYYY): maydonlari
+ * serverdagi Toshkent devor vaqti. `wall: false` — haqiqiy oniy vaqt (instant).
+ */
+const parseApiDateInfo = (
+  value?: string | number | Date | null,
+): { date: Date; wall: boolean } | null => {
+  const ok = (d: Date, wall: boolean) => (isNaN(d.getTime()) ? null : { date: d, wall });
   if (value == null || value === '') return null;
-  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  if (typeof value === 'number') {
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : d;
-  }
+  if (value instanceof Date) return ok(value, false);
+  if (typeof value === 'number') return ok(new Date(value), false);
   const s = String(value).trim();
   if (!s) return null;
 
@@ -97,27 +103,37 @@ export const parseApiDate = (
     /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?)?$/,
   );
   if (ymd) {
-    const d = new Date(
-      Number(ymd[1]),
-      Number(ymd[2]) - 1,
-      Number(ymd[3]),
-      Number(ymd[4] || 0),
-      Number(ymd[5] || 0),
-      Number(ymd[6] || 0),
+    return ok(
+      new Date(
+        Number(ymd[1]),
+        Number(ymd[2]) - 1,
+        Number(ymd[3]),
+        Number(ymd[4] || 0),
+        Number(ymd[5] || 0),
+        Number(ymd[6] || 0),
+      ),
+      true,
     );
-    return isNaN(d.getTime()) ? null : d;
   }
 
   // "DD.MM.YYYY" yoki "DD-MM-YYYY"
   const dmy = s.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
   if (dmy) {
-    const d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
-    return isNaN(d.getTime()) ? null : d;
+    return ok(new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1])), true);
   }
 
   // ISO (TZ bilan) va boshqa standart formatlar — avvalgidek `new Date`.
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
+  return ok(new Date(s), false);
+};
+
+/**
+ * 01.11: parseApiDate qiymatining TOSHKENT kalendar kuni 'YYYY-MM-DD' (qurilma TZ'ga bog'liq emas).
+ * Zonasiz satr / DD.MM.YYYY -> o'sha kun; oniy vaqt -> +5s. Yaroqsiz -> null.
+ */
+export const apiDateTkYmd = (value?: string | number | Date | null): string | null => {
+  const info = parseApiDateInfo(value);
+  if (!info) return null;
+  return info.wall ? fmtYmdLocal(info.date) : tkYmdFromMs(info.date.getTime());
 };
 
 // fmtDateTimeUz / fmtDmyLocal -> helper/date.ts (yagona manba); eski import yo'li saqlanadi.
