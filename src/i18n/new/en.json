@@ -1827,8 +1827,8 @@
     "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.": "Which debt(s) did you repay to «{{name}}»? Choose one or several debts and enter the full or partial amount.",
     "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.": "Which debt(s) did «{{name}}» repay? Choose one or several debts and close them fully or partially.",
     "Voz kechish ({{n}})": "Waive ({{n}})",
-    "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.": "Enter the amount separately for each currency; it is applied to the debts due soonest first.",
-    "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.": "The amount is applied to the debts due soonest first; any remainder stays on the debt due last.",
+    "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.": "Enter the amount separately for each currency; overdue and soon-due debts are paid first, then the highest-interest debt.",
+    "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.": "The amount goes first to overdue and soon-due debts, then to the debt with the highest interest.",
     "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.": "If the amount equals the balance, the debt is closed in full.",
     "Qarz sanasi:": "Debt date:",
     "Muddat:": "Due:",
@@ -2267,6 +2267,8 @@
     "SMS xizmati matnni rad etdi": "the SMS service rejected the text",
     "SMS xizmati sozlanmagan": "the SMS service is not configured",
     "texnik xato": "technical error",
-    "Oxirgi {{days}} kunda {{count}} ta SMS mijozga yetkazilmadi_plural": "{{count}} SMS were not delivered to customers in the last {{days}} days"
+    "Oxirgi {{days}} kunda {{count}} ta SMS mijozga yetkazilmadi_plural": "{{count}} SMS were not delivered to customers in the last {{days}} days",
+    "Eng qimmat foiz": "Highest interest",
+    "Foizsiz": "Interest-free"
   }
 }

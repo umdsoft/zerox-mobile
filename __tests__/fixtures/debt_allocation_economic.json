@@ -1,0 +1,714 @@
+{
+ "today": "2026-10-31",
+ "cases": [
+  {
+   "name": "overdue beats high rate",
+   "amount": 1200,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 80,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 500,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-10-01",
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 300,
+     "currency": "UZS",
+     "status": "overdue",
+     "interest_rate": 12,
+     "due_date": "2026-10-20",
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     3,
+     1
+    ],
+    "reasons": [
+     "overdue",
+     "overdue",
+     "highest_rate"
+    ],
+    "pays": [
+     500,
+     300,
+     400
+    ],
+    "paid": 1200,
+    "total": 1800
+   }
+  },
+  {
+   "name": "due now beats high rate",
+   "amount": 900,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 80,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 400,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-11-15",
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 400,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-11-30",
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     3,
+     1
+    ],
+    "reasons": [
+     "due_now",
+     "due_now",
+     "highest_rate"
+    ],
+    "pays": [
+     400,
+     400,
+     100
+    ],
+    "paid": 900,
+    "total": 1800
+   }
+  },
+  {
+   "name": "due in 31 days is not due now",
+   "amount": 100,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 48,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 400,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-12-01",
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     1,
+     2
+    ],
+    "reasons": [
+     "highest_rate",
+     "zero_rate"
+    ],
+    "pays": [
+     100,
+     0
+    ],
+    "paid": 100,
+    "total": 1400
+   }
+  },
+  {
+   "name": "avalanche by rate",
+   "amount": 2500,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 60,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 36,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     3,
+     1
+    ],
+    "reasons": [
+     "highest_rate",
+     "highest_rate",
+     "highest_rate"
+    ],
+    "pays": [
+     1000,
+     1000,
+     500
+    ],
+    "paid": 2500,
+    "total": 3000
+   }
+  },
+  {
+   "name": "tie smaller balance first",
+   "amount": 700,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 900,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 600,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 600,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     3,
+     1
+    ],
+    "reasons": [
+     "highest_rate",
+     "highest_rate",
+     "highest_rate"
+    ],
+    "pays": [
+     600,
+     100,
+     0
+    ],
+    "paid": 700,
+    "total": 2100
+   }
+  },
+  {
+   "name": "zero rate last nearest due first",
+   "amount": 3500,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-12-20",
+     "start_date": "2026-01-01",
+     "debt_kind": "installment",
+     "term_months": 6
+    },
+    {
+     "id": 2,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2027-01-10",
+     "start_date": "2026-01-01",
+     "debt_kind": "dated"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 4,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 12,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     4,
+     1,
+     2,
+     3
+    ],
+    "reasons": [
+     "highest_rate",
+     "zero_rate",
+     "zero_rate",
+     "zero_rate"
+    ],
+    "pays": [
+     1000,
+     1000,
+     1000,
+     500
+    ],
+    "paid": 3500,
+    "total": 4000
+   }
+  },
+  {
+   "name": "USD devaluation: 0% open USD is a cost, 0% USD installment is not",
+   "amount": 1500,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "debt_kind": "installment",
+     "term_months": 4
+    },
+    {
+     "id": 2,
+     "remaining_amount": 1000,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 1000,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 5,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     3,
+     2,
+     1
+    ],
+    "reasons": [
+     "highest_rate",
+     "highest_rate",
+     "zero_rate"
+    ],
+    "pays": [
+     1000,
+     500,
+     0
+    ],
+    "paid": 1500,
+    "total": 3000
+   }
+  },
+  {
+   "name": "prepay fee lowers rank",
+   "amount": 1000,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 36,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "prepay_fee_pct": 5,
+     "term_months": 6
+    },
+    {
+     "id": 2,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 30,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     1
+    ],
+    "reasons": [
+     "highest_rate",
+     "highest_rate"
+    ],
+    "pays": [
+     1000,
+     0
+    ],
+    "paid": 1000,
+    "total": 2000
+   }
+  },
+  {
+   "name": "exact tiyin sum",
+   "amount": 1234.56,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 333.33,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 10,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 777.77,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 20,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 3,
+     "remaining_amount": 222.22,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 30,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     3,
+     2,
+     1
+    ],
+    "reasons": [
+     "highest_rate",
+     "highest_rate",
+     "highest_rate"
+    ],
+    "pays": [
+     222.22,
+     777.77,
+     234.57
+    ],
+    "paid": 1234.56,
+    "total": 1333.32
+   }
+  },
+  {
+   "name": "full close when amount is null",
+   "amount": null,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 10.01,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 10,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 20.02,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-10-30",
+     "start_date": "2026-01-01"
+    }
+   ],
+   "expected": {
+    "order": [
+     2,
+     1
+    ],
+    "reasons": [
+     "overdue",
+     "highest_rate"
+    ],
+    "pays": [
+     20.02,
+     10.01
+    ],
+    "paid": 30.03,
+    "total": 30.03
+   }
+  },
+  {
+   "name": "cycle payment due now beats high rate; rest competes in avalanche",
+   "amount": 400,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 80,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 2000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "debt_kind": "annuity",
+     "term_months": 12
+    }
+   ],
+   "opts": {
+    "tranches": {
+     "2": {
+      "overdue": 0,
+      "due_now": 300,
+      "overdue_since": null,
+      "due_on": "2026-11-05"
+     }
+    }
+   },
+   "expected": {
+    "order": [
+     2,
+     1
+    ],
+    "reasons": [
+     "due_now",
+     "highest_rate"
+    ],
+    "pays": [
+     300,
+     100
+    ],
+    "paid": 400,
+    "total": 3000
+   }
+  },
+  {
+   "name": "missed cycle is overdue before everything",
+   "amount": 600,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 1000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 80,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 2000,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 24,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "debt_kind": "annuity",
+     "term_months": 12
+    },
+    {
+     "id": 3,
+     "remaining_amount": 150,
+     "currency": "UZS",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": "2026-11-10",
+     "start_date": "2026-01-01"
+    }
+   ],
+   "opts": {
+    "tranches": {
+     "2": {
+      "overdue": 500,
+      "due_now": 200,
+      "overdue_since": "2026-10-05",
+      "due_on": "2026-11-05"
+     }
+    }
+   },
+   "expected": {
+    "order": [
+     2,
+     3,
+     1
+    ],
+    "reasons": [
+     "overdue",
+     "due_now",
+     "highest_rate"
+    ],
+    "pays": [
+     600,
+     0,
+     0
+    ],
+    "paid": 600,
+    "total": 3150
+   }
+  },
+  {
+   "name": "plan devaluation 8: 0% open USD is a cost (first)",
+   "amount": 500,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 2000,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 500,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "debt_kind": "installment",
+     "term_months": 3
+    }
+   ],
+   "opts": {
+    "devaluationPct": 8
+   },
+   "expected": {
+    "order": [
+     1,
+     2
+    ],
+    "reasons": [
+     "highest_rate",
+     "zero_rate"
+    ],
+    "pays": [
+     500,
+     0
+    ],
+    "paid": 500,
+    "total": 2500
+   }
+  },
+  {
+   "name": "plan devaluation 0: 0% open USD is zero rate (smaller first)",
+   "amount": 500,
+   "debts": [
+    {
+     "id": 1,
+     "remaining_amount": 2000,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01"
+    },
+    {
+     "id": 2,
+     "remaining_amount": 500,
+     "currency": "USD",
+     "status": "active",
+     "interest_rate": 0,
+     "due_date": null,
+     "start_date": "2026-01-01",
+     "debt_kind": "installment",
+     "term_months": 3
+    }
+   ],
+   "opts": {
+    "devaluationPct": 0
+   },
+   "expected": {
+    "order": [
+     2,
+     1
+    ],
+    "reasons": [
+     "zero_rate",
+     "zero_rate"
+    ],
+    "pays": [
+     500,
+     0
+    ],
+    "paid": 500,
+    "total": 2500
+   }
+  }
+ ]
+}

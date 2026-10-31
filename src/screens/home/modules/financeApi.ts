@@ -117,6 +117,9 @@ export const financeApi = {
   // Serverda bitta tranzaksiya; summa muddati yaqin qarzlardan boshlab taqsimlanadi.
   allocateDebtPayment: (body: { ids: any[]; amount?: number; payment_date?: string }) =>
     axios.post(`${base}/debts/allocate-payment`, body, auth()),
+  // 31.10: oldindan ko'rish uchun serverdagi bilan BIR XIL kirishlar (davriy to'lov qismlari + reja qadrsizlanishi).
+  getAllocationParams: (ids: any[]) =>
+    axios.get(`${base}/debts/allocation-params`, { ...auth(), params: { ids: ids.join(',') } }),
   // SS-AUDIT (2026-09-25): "ko'zgu bo'lsa mirror-*, aks holda oddiy" tarmoqlanishi
   // 4 joyda (FinanceDebtDetail demand/forgive, FinanceDebtGroup runAction) takrorlanardi.
   demandDebtAny: (id: any, mirror: boolean) =>

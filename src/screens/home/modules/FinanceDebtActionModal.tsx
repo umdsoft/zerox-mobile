@@ -34,7 +34,8 @@ import {
 import Svg, { Circle, Line } from 'react-native-svg';
 import { rd, rs } from '../../../theme/rd';
 import { CheckIcon, HandCoinReturnIcon, LockIcon } from '../redesign/icons';
-import { allocatePayment, Allocation } from './debtAllocation';
+import { allocatePayment, Allocation, AllocationOpts } from './debtAllocation';
+import { financeApi } from './financeApi';
 import { fDate, fMoney, isDebtOverdue, num } from './financeMoney';
 import {
   exceedsAmount,
@@ -103,6 +104,8 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
   const [partial, setPartial] = React.useState(false);
   const [amounts, setAmounts] = React.useState<Record<string, string>>({});
   const [sms, setSms] = React.useState(false);
+  // 31.10: serverdan oldindan ko'rish kirishlari (davriy to'lov qismlari + reja qadrsizlanishi); yo'q bo'lsa sana bo'yicha.
+  const [allocOpts, setAllocOpts] = React.useState<AllocationOpts>({});
 
   // Har ochilishda toza holat; bitta qarz bo'lsa — darhol tanlangan (sayt `created`).
   React.useEffect(() => {
@@ -112,6 +115,22 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
     setAmounts({});
     setSms(false); // 03.10: har ochilishda O'CHIQ
   }, [visible, debts]);
+
+  React.useEffect(() => {
+    setAllocOpts({});
+    if (!visible || isForgive || debts.length < 2) return undefined;
+    let alive = true;
+    financeApi
+      .getAllocationParams(debts.map(d => d.id))
+      .then((res: any) => {
+        const p = res?.data?.data;
+        if (alive && p) setAllocOpts({ today: p.today, devaluationPct: p.devaluation_pct, tranches: p.tranches });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [visible, isForgive, debts]);
 
   const selectedDebts = debts.filter(d => selected.includes(debtKey(d)));
   const selectedCurrencies = sortCurrencies(selectedDebts.map(curOf));
@@ -148,11 +167,11 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
       const list = selectedDebts.filter(d => curOf(d) === cur);
       const a = amountOf(cur);
       if (list.length < 2 || !(a > 0) || isOver(cur)) continue;
-      for (const x of allocatePayment(list, a).allocations) map[debtKey(x.debt)] = x;
+      for (const x of allocatePayment(list, a, allocOpts).allocations) map[debtKey(x.debt)] = x;
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isForgive, partial, selected, amounts, debts]);
+  }, [isForgive, partial, selected, amounts, debts, allocOpts]);
 
   // 03.10: SMS — telefoni bor tanlangan qarz bo'lsagina (raqam ko'rsatiladi).
   const smsPhone = isForgive ? '' : String(selectedDebts.find(d => !!d?.phone)?.phone || '');
@@ -193,11 +212,22 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
     if (!busy) onCancel();
   };
 
+  const reasonText = (r: string) =>
+    r === 'overdue'
+      ? t('Muddati o‘tgan')
+      : r === 'due_now'
+      ? t('Muddati yaqin')
+      : r === 'highest_rate'
+      ? t('Eng qimmat foiz')
+      : r === 'zero_rate'
+      ? t('Foizsiz')
+      : '';
+
   const partialHint =
     selectedCurrencies.length > 1
-      ? t('Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.')
+      ? t('Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.')
       : selectedDebts.length > 1
-      ? t('Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.')
+      ? t('Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.')
       : t('Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.');
 
   const HeadIcon = isForgive ? BanIcon : mode === 'pay' ? HandCoinReturnIcon : CheckIcon;
@@ -276,6 +306,7 @@ const FinanceDebtActionModal = ({ visible, mode, debts, name, busy, onCancel, on
                             : pv.pay > 0
                             ? `− ${fMoney(pv.pay, curOf(d))} · ${t('qoladi:')} ${fMoney(pv.remainingAfter, curOf(d))}`
                             : t('o‘zgarmaydi')}
+                          {pv.reason ? ` · ${reasonText(pv.reason)}` : ''}
                         </Text>
                       ) : null}
                     </View>

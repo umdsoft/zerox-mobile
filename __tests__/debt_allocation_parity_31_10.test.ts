@@ -1,36 +1,36 @@
 /**
- * 31.10 — mobil `debtAllocation.ts` backend `personalDebtAllocation.service` bilan AYNAN bir xil
+ * 31.10 — mobil `debtAllocation.ts` backend `personalDebtAllocationOrder` ('economic_v1') bilan AYNAN bir xil
  * natija berishi shart (oldindan ko'rish va serverdagi haqiqiy taqsimot farq qilmasin).
- * Backend tomonidagi egizak: backend/tests/unit/debt_money_allocation_2026_10_31.test.js (bir xil kirish va
- * kutilgan qiymatlar). Ikkalasidan biri o'zgarsa, ikkinchisi ham o'zgartirilishi kerak.
+ * Fixture backend/tests/unit/fixtures/debt_allocation_economic.json nusxasi (o'zgarsa — ikkalasini yangilang).
  */
 jest.mock('../src/i18n', () => ({ t: (k: string) => k }));
-import { allocatePayment } from '../src/screens/home/modules/debtAllocation';
+import { allocatePayment, ymdOf } from '../src/screens/home/modules/debtAllocation';
 
-const debts = [
-  { id: 3, remaining_amount: 700, due_date: null, start_date: '2026-01-01' },
-  { id: 1, remaining_amount: 500.55, due_date: '2026-12-01', start_date: '2026-02-01' },
-  { id: 2, remaining_amount: 300.1, due_date: '2026-11-01', start_date: '2026-03-01' },
-];
+const fixture = require('./fixtures/debt_allocation_economic.json');
 
-describe('debtAllocation (mobil) — backend bilan bir xil kutilgan qiymatlar', () => {
-  test('muddati yaqin birinchi, muddatsiz oxirida, yig\'indi tiyinda aniq', () => {
-    const r = allocatePayment(debts, 600.33);
-    expect(r.allocations.map(a => a.debt.id)).toEqual([2, 1, 3]);
-    expect(r.allocations.map(a => a.pay)).toEqual([300.1, 300.23, 0]);
-    expect(r.allocations.map(a => a.closes)).toEqual([true, false, false]);
+describe('debtAllocation (mobil) — economic_v1, backend bilan umumiy fixture', () => {
+  test.each(fixture.cases.map((c: any) => [c.name, c]))('%s', (_n: string, c: any) => {
+    const r = allocatePayment(c.debts, c.amount, { today: fixture.today, ...(c.opts || {}) });
+    expect(r.over).toBe(false);
+    expect(r.order_rule).toBe('economic_v1');
+    expect(r.allocations.map(a => a.debt.id)).toEqual(c.expected.order);
+    expect(r.allocations.map(a => a.reason)).toEqual(c.expected.reasons);
+    expect(r.allocations.map(a => a.pay)).toEqual(c.expected.pays);
+    expect(r.paid).toBe(c.expected.paid);
+    expect(r.total).toBe(c.expected.total);
   });
 
-  test('summa berilmasa hammasi yopiladi; qoldiqdan oshsa over=true', () => {
-    const all = allocatePayment(debts, null);
-    expect(all.paid).toBe(1500.65);
-    expect(all.allocations.every(a => a.closes && a.remainingAfter === 0)).toBe(true);
-    expect(allocatePayment(debts, 1500.66).over).toBe(true);
-  });
-
-  test('0.1 + 0.2 kasr xatosi yo\'q', () => {
+  test('qoldiqdan oshsa over=true; 0.1 + 0.2 kasr xatosi yo\'q', () => {
+    expect(allocatePayment([{ id: 1, remaining_amount: 10 }], 10.01).over).toBe(true);
     const r = allocatePayment([{ id: 1, remaining_amount: 0.1 }, { id: 2, remaining_amount: 0.2 }], 0.3);
     expect(r.paid).toBe(0.3);
     expect(r.allocations.every(a => a.closes)).toBe(true);
+  });
+
+  test('sana: ISO(Z) Toshkent sanasiga, matn sanasi o\'zgarmaydi', () => {
+    expect(ymdOf('2026-11-01')).toBe('2026-11-01');
+    expect(ymdOf('2026-11-01 00:00:00')).toBe('2026-11-01');
+    expect(ymdOf('2026-10-31T19:00:00.000Z')).toBe('2026-11-01');
+    expect(ymdOf(null)).toBeNull();
   });
 });

@@ -1827,8 +1827,8 @@
     "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.": "«{{name}}»га қайси қарз(лар)ни қайтардингиз? Бир ёки бир нечта қарзни танланг ва тўлиқ ёки қисман суммани киритинг.",
     "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.": "«{{name}}» қайси қарз(лар)ни қайтарди? Бир ёки бир нечта қарзни танланг ва тўлиқ ёки қисман ёпинг.",
     "Voz kechish ({{n}})": "Воз кечиш ({{n}})",
-    "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.": "Ҳар бир валюта учун сумма алоҳида киритилади; сумма аввал муддати яқин қарзларга тақсимланади.",
-    "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.": "Сумма аввал муддати яқин қарзларга тақсимланади; қолдиқ муддати узоқ қарзда қолади.",
+    "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.": "Ҳар бир валюта учун сумма алоҳида киритилади; аввал муддати ўтган ва яқин қарзлар, сўнг энг қиммат фоизли қарз ёпилади.",
+    "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.": "Сумма аввал муддати ўтган ва муддати яқин қарзларга, қолгани энг қиммат фоизли қарзга тақсимланади.",
     "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.": "Қолдиққа тенг сумма киритилса — қарз тўлиқ ёпилади.",
     "Qarz sanasi:": "Қарз санаси:",
     "Muddat:": "Муддат:",
@@ -2266,6 +2266,8 @@
     "telefon raqami noto‘g‘ri": "телефон рақами нотўғри",
     "SMS xizmati matnni rad etdi": "SMS хизмати матнни рад этди",
     "SMS xizmati sozlanmagan": "SMS хизмати созланмаган",
-    "texnik xato": "техник хато"
+    "texnik xato": "техник хато",
+    "Eng qimmat foiz": "Энг қиммат фоиз",
+    "Foizsiz": "Фоизсиз"
   }
 }

@@ -1828,8 +1828,8 @@
     "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.": "Какие долги вы вернули «{{name}}»? Выберите один или несколько долгов и укажите полную или частичную сумму.",
     "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.": "Какие долги вернул(а) «{{name}}»? Выберите один или несколько долгов и закройте полностью или частично.",
     "Voz kechish ({{n}})": "Простить ({{n}})",
-    "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.": "Сумма указывается отдельно для каждой валюты; сначала гасятся долги с ближайшим сроком.",
-    "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.": "Сумма сначала гасит долги с ближайшим сроком; остаток останется на долге с самым дальним сроком.",
+    "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.": "Сумма указывается отдельно для каждой валюты; сначала гасятся просроченные и близкие по сроку долги, затем долг с самым дорогим процентом.",
+    "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.": "Сумма сначала идёт на просроченные и близкие по сроку долги, остаток — на долг с самым дорогим процентом.",
     "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.": "Если сумма равна остатку — долг закроется полностью.",
     "Qarz sanasi:": "Дата долга:",
     "Muddat:": "Срок:",
@@ -2267,6 +2267,8 @@
     "telefon raqami noto‘g‘ri": "неверный номер телефона",
     "SMS xizmati matnni rad etdi": "SMS-сервис отклонил текст",
     "SMS xizmati sozlanmagan": "SMS-сервис не настроен",
-    "texnik xato": "техническая ошибка"
+    "texnik xato": "техническая ошибка",
+    "Eng qimmat foiz": "Самый дорогой процент",
+    "Foizsiz": "Без процентов"
   }
 }

@@ -1827,8 +1827,8 @@
     "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.": "«{{name}}»ǵa qaysı qarız(lar)dı qaytardıńız? Bir yamasa bir neshe qarızdı tańlań hám tolıq yamasa bólek summanı kiritiń.",
     "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.": "«{{name}}» qaysı qarız(lar)dı qaytardı? Bir yamasa bir neshe qarızdı tańlań hám tolıq yamasa bólek jabıń.",
     "Voz kechish ({{n}})": "Waz keshiw ({{n}})",
-    "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.": "Hár bir valyuta ushın summa bólek kiritiledi; summa aldın múddeti jaqın qarızlarǵa bólistiriledi.",
-    "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.": "Summa aldın múddeti jaqın qarızlarǵa bólistiriledi; qaldıq múddeti alıs qarızda qaladı.",
+    "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.": "Hár bir valyuta ushın summa bólek kiritiledi; aldın múddeti ótken hám jaqın qarızlar, soń eń qımbat procentli qarız jabıladı.",
+    "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.": "Summa aldın múddeti ótken hám jaqın qarızlarǵa, qalǵanı eń qımbat procentli qarızǵa bólistiriledi.",
     "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.": "Qaldıqqa teń summa kiritilse — qarız tolıq jabıladı.",
     "Qarz sanasi:": "Qarız sánesi:",
     "Muddat:": "Múddet:",
@@ -2266,6 +2266,8 @@
     "telefon raqami noto‘g‘ri": "telefon nomeri qáte",
     "SMS xizmati matnni rad etdi": "SMS xızmeti tekstti biykarladı",
     "SMS xizmati sozlanmagan": "SMS xızmeti sazlanbaǵan",
-    "texnik xato": "texnikalıq qáte"
+    "texnik xato": "texnikalıq qáte",
+    "Eng qimmat foiz": "Eń qımbat procent",
+    "Foizsiz": "Procentsiz"
   }
 }

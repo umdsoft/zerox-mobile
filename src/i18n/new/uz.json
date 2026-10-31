@@ -992,8 +992,8 @@
     "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.": "«{{name}}»ga qaysi qarz(lar)ni qaytardingiz? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman summani kiriting.",
     "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.": "«{{name}}» qaysi qarz(lar)ni qaytardi? Bir yoki bir nechta qarzni tanlang va to‘liq yoki qisman yoping.",
     "Voz kechish ({{n}})": "Voz kechish ({{n}})",
-    "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.": "Har bir valyuta uchun summa alohida kiritiladi; summa avval muddati yaqin qarzlarga taqsimlanadi.",
-    "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.": "Summa avval muddati yaqin qarzlarga taqsimlanadi; qoldiq muddati uzoq qarzda qoladi.",
+    "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.": "Har bir valyuta uchun summa alohida kiritiladi; avval muddati o‘tgan va yaqin qarzlar, so‘ng eng qimmat foizli qarz yopiladi.",
+    "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.": "Summa avval muddati o‘tgan va muddati yaqin qarzlarga, qolgani eng qimmat foizli qarzga taqsimlanadi.",
     "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.": "Qoldiqqa teng summa kiritilsa — qarz to‘liq yopiladi.",
     "Qarz sanasi:": "Qarz sanasi:",
     "Muddat:": "Muddat:",
@@ -1471,6 +1471,10 @@
     "SMS xizmati sozlanmagan": "SMS xizmati sozlanmagan",
     "texnik xato": "texnik xato",
     "Reyting": "Reyting",
-    "Boshqa": "Boshqa"
+    "Boshqa": "Boshqa",
+    "Muddati o‘tgan": "Muddati o‘tgan",
+    "Muddati yaqin": "Muddati yaqin",
+    "Eng qimmat foiz": "Eng qimmat foiz",
+    "Foizsiz": "Foizsiz"
   }
 }
