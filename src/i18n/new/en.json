@@ -2310,6 +2310,7 @@
     "Yakunlanmagan to‘lovlar: {{n}} ta": "Unfinished payments: {{n}}",
     "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Active Gap groups you organize: {{n}}",
     "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "An admin account cannot be deleted from the app",
-    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "This feature is not available yet. Please try again later."
+    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "This feature is not available yet. Please try again later.",
+    "Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta": "Gap groups where your turn or payment is pending: {{n}}"
   }
 }

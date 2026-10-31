@@ -80,20 +80,21 @@ describe('normalizeDeletionCheck', () => {
       }),
     ).toEqual({
       canDelete: false, activeContracts: 2, pendingContracts: 1, qarzDaftariOpen: 3,
-      pendingPayments: 0, gapOrganizer: 0, balance: 1500, hasPassword: false,
+      pendingPayments: 0, gapOrganizer: 0, gapObligations: 0, balance: 1500, hasPassword: false,
     });
   });
 
   test('yetishmagan maydonlar: canDelete hisoblanadi, hasPassword=true, balans 0', () => {
     expect(normalizeDeletionCheck({data: {}})).toEqual({
       canDelete: true, activeContracts: 0, pendingContracts: 0, qarzDaftariOpen: 0,
-      pendingPayments: 0, gapOrganizer: 0, balance: 0, hasPassword: true,
+      pendingPayments: 0, gapOrganizer: 0, gapObligations: 0, balance: 0, hasPassword: true,
     });
     expect(normalizeDeletionCheck({data: {activeContracts: '3'}}).canDelete).toBe(false);
   });
 
   test('yangi to‘siqlar (to‘lov, Gap) canDelete ni yopadi', () => {
-    const r = normalizeDeletionCheck({data: {blockers: {pendingPayments: 1, gapOrganizer: 2}}});
+    const r = normalizeDeletionCheck({data: {blockers: {pendingPayments: 1, gapOrganizer: 2, gapObligations: 1}}});
+    expect(r.gapObligations).toBe(1);
     expect(r.pendingPayments).toBe(1);
     expect(r.gapOrganizer).toBe(2);
     expect(r.canDelete).toBe(false);

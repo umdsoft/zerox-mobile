@@ -248,6 +248,12 @@ const DeleteAccount = () => {
             {t('Siz tashkil qilgan faol Gap guruhlari: {{n}} ta', {n: c.gapOrganizer})}
           </Text>
         ) : null}
+        {c.gapObligations > 0 ? (
+          <Text style={styles.bannerErrorText}>
+            {'• '}
+            {t('Navbati yoki to‘lovi qolgan Gap guruhlari: {{n}} ta', {n: c.gapObligations})}
+          </Text>
+        ) : null}
         <Text style={[styles.bannerErrorText, styles.mt8]}>
           {t('Avval shartnomalarni yakunlang yoki bekor qiling va qarz daftaridagi qoldiqlarni yoping, so‘ng qayta urinib ko‘ring.')}
         </Text>

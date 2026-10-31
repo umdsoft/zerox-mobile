@@ -3,7 +3,7 @@
  *
  * Dizayn: docs/ACCOUNT_DELETION_DESIGN.md (4-5-6 bo'limlar). Backend endpointlari (backend 01.11):
  *   GET  /user/account/deletion-check -> { success, data:{ canDelete, blockers:{ activeContracts, pendingContracts,
- *                                          qarzDaftariOpen, pendingPayments, gapOrganizer }, balance, balanceWarning,
+ *                                          qarzDaftariOpen, pendingPayments, gapOrganizer, gapObligations }, balance, balanceWarning,
  *                                          requiresPassword } }
  *   POST /user/account/delete/send-otp { lang? } -> { success, data:{ ttl, cooldown } }
  *        | 429 OTP_COOLDOWN|TOO_MANY_ATTEMPTS|SMS_RATE_LIMIT (+retryAfter) | 502 SMS_FAILED | 403 FORBIDDEN
@@ -25,6 +25,7 @@ export interface DeletionCheck {
   qarzDaftariOpen: number;
   pendingPayments: number;
   gapOrganizer: number;
+  gapObligations: number;
   balance: number;
   hasPassword: boolean;
 }
@@ -84,7 +85,9 @@ export function normalizeDeletionCheck(raw: any): DeletionCheck {
   const qarzDaftariOpen = toCount(b.qarzDaftariOpen);
   const pendingPayments = toCount(b.pendingPayments);
   const gapOrganizer = toCount(b.gapOrganizer);
-  const noBlockers = activeContracts + pendingContracts + qarzDaftariOpen + pendingPayments + gapOrganizer === 0;
+  const gapObligations = toCount(b.gapObligations);
+  const noBlockers =
+    activeContracts + pendingContracts + qarzDaftariOpen + pendingPayments + gapOrganizer + gapObligations === 0;
   const balance = Number(d.balance);
   return {
     // canDelete kelmasa — hisoblarga qarab; server baribir qayta tekshiradi.
@@ -94,6 +97,7 @@ export function normalizeDeletionCheck(raw: any): DeletionCheck {
     qarzDaftariOpen,
     pendingPayments,
     gapOrganizer,
+    gapObligations,
     balance: Number.isFinite(balance) ? balance : 0,
     // Kelmasa parol so'raymiz (xavfsiz default).
     hasPassword: typeof d.requiresPassword === 'boolean' ? d.requiresPassword
