@@ -29,15 +29,15 @@ let secureKey: string | undefined;
  * 23.10: alohida SHIFRLANGAN MMKV instansiyasi (o'sha Keychain kaliti bilan).
  * Oflayn navbat (outbox) shu yerda turadi: logout'dagi `storage.clearAll()` uni
  * O'CHIRMAYDI — sinxronlanmagan amallar jim yo'qolmasin. `initSecureStorage()` dan
- * KEYIN chaqirilishi kerak. Degraded rejimda (Keychain yo'q) — shifrsiz instansiya.
+ * KEYIN chaqirilishi kerak. Degraded rejimda (Keychain yo'q) — vaqtinchalik instansiya.
  */
 export function openSecureMMKV(id: string): MMKV {
   if (secureKey) return new MMKV({ id, encryptionKey: secureKey });
-  // Store ALLAQACHON shifrlangan, lekin kalit hozir o'qilmadi (vaqtinchalik Keychain xatosi):
-  // shifrlangan faylni kalitsiz OCHMAYMIZ (MMKV uni buzilgan deb tozalashi mumkin) — alohida
-  // vaqtinchalik instansiya; keyingi ishga tushishda asl navbat o'qiladi.
-  if (prefsStorage.getBoolean(SECURE_FLAG) === true) return new MMKV({ id: `${id}-degraded` });
-  return new MMKV({ id });
+  // Keychain yo'q: navbat ochiq faylga YOZILMAYDI — tasodifiy, saqlanmaydigan kalitli
+  // vaqtinchalik instansiya (shifrlangan haqiqiy fayl kalitsiz ochilmaydi).
+  const eph = new MMKV({ id: `${id}-degraded`, encryptionKey: generateEncryptionKey() });
+  eph.clearAll();
+  return eph;
 }
 
 const KEYCHAIN_SERVICE = 'com.zeroxuz.securestore';
@@ -49,34 +49,64 @@ const SECURE_FLAG = 'secureStoreEncrypted';
 
 /**
  * MMKV shifrlash kaliti — STRING bayt uzunligi <= 16 bo'lishi SHART (MMKV AES-128
- * limiti: 16 baytdan uzun kalit native tomonda throw/truncate qiladi). Oldin 64 hex
- * (64 bayt) yaratilardi -> recrypt/ochishda nomuvofiqlik -> migration buzilib k2/PIN
- * yo'qolardi -> update'dan keyin majburiy full login. Endi 8 bayt CSPRNG -> 16 hex
- * belgi = aniq 16 bayt (barchasi ASCII), MMKV bilan to'liq mos.
- * Mavjud qurilmalar Keychain'dagi ESKI kalitni o'zgartirmasdan qayta ishlatadi
- * (1-shox `existing.password`) — bu o'zgarish faqat yangi/recrypt yo'liga ta'sir qiladi.
+ * limiti). SEC (2026-10-31): ilgari 8 bayt CSPRNG -> 16 hex belgi (64 bit entropiya).
+ * Endi 16 belgi, 62 belgili alifbodan (a-zA-Z0-9) — CSPRNG + rejection sampling
+ * (bayt < 248 qabul qilinadi, mod 62: modul og'ishi yo'q) -> ~95 bit entropiya.
  */
+const KEY_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const KEY_LENGTH = 16;
+const KEY_ACCEPT_BELOW = 248; // 62 * 4
+
 function generateEncryptionKey(): string {
-  const bytes = new Uint8Array(8); // 8 bayt -> 16 hex belgi = 16-baytli string
-  // react-native-get-random-values global.crypto ni polyfill qiladi.
-  (globalThis as any).crypto.getRandomValues(bytes);
-  let hex = '';
-  for (let i = 0; i < bytes.length; i++) {
-    hex += bytes[i].toString(16).padStart(2, '0');
+  let out = '';
+  while (out.length < KEY_LENGTH) {
+    const bytes = new Uint8Array(32);
+    // react-native-get-random-values global.crypto ni polyfill qiladi.
+    (globalThis as any).crypto.getRandomValues(bytes);
+    for (let i = 0; i < bytes.length && out.length < KEY_LENGTH; i++) {
+      if (bytes[i] < KEY_ACCEPT_BELOW) out += KEY_ALPHABET[bytes[i] % KEY_ALPHABET.length];
+    }
   }
-  return hex;
+  return out;
+}
+
+// Kalit zaxiraga ko'chmaydi (THIS_DEVICE_ONLY); birinchi qulf ochilishidan keyin fon
+// FCM handler'iga ham o'qiladi.
+const KEY_ACCESSIBLE = Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY;
+// prefsStorage (shifrlanmagan, SINXRON) bayrog'i: kalit yangi (62 belgili) formatda yaratilgan.
+// Mavjud o'rnatishlar ESKI kalitda qoladi (ataylab): MMKV'da joyida recrypt jarayon o'ldirilsa
+// fayl yo'qotilishi mumkin, kalit esa baribir Keychain/Keystore himoyasida.
+const KEY_V2_FLAG = 'secureKeyV2';
+
+let storageDegraded = false;
+/** Keychain mavjud emas -> ilova tokenlarsiz (har ishga tushganda qayta kirish) ishlayapti. */
+export const isStorageDegraded = (): boolean => storageDegraded;
+
+async function writeKey(service: string, key: string): Promise<void> {
+  await Keychain.setGenericPassword(KEYCHAIN_USERNAME, key, {
+    service,
+    accessible: KEY_ACCESSIBLE,
+  });
+}
+
+function reportStorageIssue(err: unknown, where: string): void {
+  try {
+    const crashlytics = require('@react-native-firebase/crashlytics').default;
+    crashlytics().log(`secure storage: ${where}`);
+    crashlytics().recordError(err instanceof Error ? err : new Error(`secure storage: ${where}`));
+  } catch {}
 }
 
 let initPromise: Promise<void> | null = null;
 
 /**
  * Maxfiy storage'ni shifrlangan holatga keltiradi. Idempotent (bir marta bajariladi).
- * - Keychain'da kalit BOR  → fayl allaqachon shifrlangan, kalit bilan ochamiz.
+ * - Keychain'da kalit BOR  → fayl allaqachon shifrlangan, kalit bilan ochamiz
+ *   (eski formatdagi kalit ham shunday qoladi — joyida recrypt qilinmaydi).
  * - Keychain'da kalit YO'Q → birinchi marta: kalit yarat → keychain'ga saqla →
- *   mavjud SHIFRLANMAGAN faylni JOYIDA shifrla (recrypt). Foydalanuvchining
- *   token/PIN'i saqlanadi (qayta login SHART EMAS).
- * - Keychain mavjud emas/xato (masalan, native rebuild'dan oldin) → degraded rejim:
- *   shifrlanmagan storage (ilova bricklanmaydi; rebuild'dan keyin shifrlanadi).
+ *   mavjud SHIFRLANMAGAN faylni JOYIDA shifrla (recrypt).
+ * - Keychain mavjud emas/xato → degraded: tokenlar saqlanmaydi (har ishga tushishda
+ *   qayta kirish), crashlytics'ga xabar.
  */
 export function initSecureStorage(): Promise<void> {
   if (!initPromise) {
@@ -105,28 +135,26 @@ async function doInitSecureStorage(): Promise<void> {
   try {
     const existing = await readKeychainKeyWithRetry();
     const wasEncrypted = prefsStorage.getBoolean(SECURE_FLAG) === true;
+    const mainKey = existing && existing.password ? existing.password : undefined;
 
     // 1) Kalit BOR → shifrlangan store'ni kalit bilan ochamiz (odatiy yo'l).
-    if (existing && existing.password) {
-      secureKey = existing.password;
-      storage = new MMKV({ id: 'storage', encryptionKey: existing.password });
+    if (mainKey) {
+      secureKey = mainKey;
+      storage = new MMKV({ id: 'storage', encryptionKey: mainKey });
       if (!wasEncrypted) prefsStorage.set(SECURE_FLAG, true);
       return;
     }
 
     // 2) Kalit YO'Q, lekin flag bor → oldin shifrlangan, kalit YO'QOLGAN (reinstall EMAS;
     //    reinstall'da flag ham o'chardi). Shifrlangan data'ni ochib bo'lmaydi → uni
-    //    tozalab, yangi kalit bilan boshlaymiz (recrypt qilib BUZMAYMIZ). Foydalanuvchi
-    //    qayta login + PIN o'rnatadi (juda kamdan-kam holat, masalan Keystore reset).
+    //    tozalab, yangi kalit bilan boshlaymiz. Foydalanuvchi qayta login + PIN o'rnatadi.
     if (wasEncrypted) {
       const broken = new MMKV({ id: 'storage' });
       broken.clearAll();
       const newKey = generateEncryptionKey();
-      await Keychain.setGenericPassword(KEYCHAIN_USERNAME, newKey, {
-        service: KEYCHAIN_SERVICE,
-        accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK,
-      });
+      await writeKey(KEYCHAIN_SERVICE, newKey);
       broken.recrypt(newKey);
+      prefsStorage.set(KEY_V2_FLAG, true);
       secureKey = newKey;
       storage = broken;
       return;
@@ -146,30 +174,34 @@ async function doInitSecureStorage(): Promise<void> {
     const key = generateEncryptionKey();
     // Kalitni AVVAL keychain'ga saqlaymiz: recrypt yarmida uzilsa ham keyingi ishga
     // tushishda kalit topiladi va shifrlangan fayl o'qiladi (data yo'qolmaydi).
-    await Keychain.setGenericPassword(KEYCHAIN_USERNAME, key, {
-      service: KEYCHAIN_SERVICE,
-      accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK,
-    });
+    await writeKey(KEYCHAIN_SERVICE, key);
     legacy.recrypt(key);
     prefsStorage.set(SECURE_FLAG, true);
+    prefsStorage.set(KEY_V2_FLAG, true);
     secureKey = key;
     storage = legacy;
   } catch (err) {
     if (__DEV__) {
       console.warn('Secure storage init failed; using degraded fallback:', err);
     }
-    // SS-SEC (2026-09-25): store ALLAQACHON shifrlangan bo'lsa, uni kalitsiz
-    // OCHMAYMIZ — MMKV shifrlangan faylni "buzilgan" deb tozalab yuborishi
-    // (token/PIN yo'qolishi) mumkin edi. Vaqtinchalik ALOHIDA bo'sh instansiya
-    // bilan davom etamiz (ilova bricklanmaydi, hech narsa ochiq yozilmaydi);
-    // keyingi ishga tushishda Keychain tiklansa asl shifrlangan data o'qiladi.
-    if (prefsStorage.getBoolean(SECURE_FLAG) === true) {
-      storage = new MMKV({ id: 'storage-degraded' });
-      return;
-    }
-    // Hali hech qachon shifrlanmagan (Keychain mavjud emas, masalan native
-    // rebuild'dan oldin) → eski shifrlanmagan store; flag o'rnatilmaydi.
-    storage = new MMKV({ id: 'storage' });
+    reportStorageIssue(err, 'init');
+    storageDegraded = true;
+    // SEC (2026-10-31): Keychain ishlamasa tokenlar HECH QACHON ochiq faylda turmaydi.
+    // Har ishga tushishda tasodifiy, saqlanmaydigan kalitli vaqtinchalik instansiya —
+    // ilova "chiqqan" holatda ishlaydi (qayta kirish). Hech qachon shifrlanmagan bo'lsa
+    // eski ochiq 'storage' (token bo'lishi mumkin) tozalanadi; ALLAQACHON shifrlangan
+    // bo'lsa tegilmaydi (kalitsiz ochish uni buzadi).
+    try {
+      if (prefsStorage.getBoolean(SECURE_FLAG) !== true) {
+        new MMKV({ id: 'storage' }).clearAll();
+      }
+    } catch {}
+    const ephemeral = new MMKV({
+      id: 'storage-degraded',
+      encryptionKey: generateEncryptionKey(),
+    });
+    ephemeral.clearAll();
+    storage = ephemeral;
   }
 }
 

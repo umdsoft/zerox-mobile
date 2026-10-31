@@ -18,6 +18,7 @@ import { generatePDF } from 'react-native-html-to-pdf';
 
 import Share from 'react-native-share';
 import FileViewer from 'react-native-file-viewer';
+import { pdfCachePath } from '../../../../helper/pdfCache';
 import ScreenLayout from '../../../components/ScreenLayout';
 
 import MainText from '../../../components/MainText';
@@ -78,45 +79,16 @@ const QrCode = () => {
         // Generate PDF
         const file = await generatePDF(options);
 
-        let baseFileName = user?.data?.uid;
-        let fileExtension = 'pdf';
-        let fileName = `${baseFileName}.${fileExtension}`;
-
-        // Path for Downloads folder (Android) or Documents (iOS)
-        const downloadDir =
-          Platform.OS === 'android'
-            ? RNBlobUtil.fs.dirs.DownloadDir
-            : RNBlobUtil.fs.dirs.DocumentDir;
-
-        let filePath = `${downloadDir}/${fileName}`;
-
-        // Check if file exists and create unique name
-        let counter = 0;
-        while (await RNBlobUtil.fs.exists(filePath)) {
-          counter++;
-          fileName = `${baseFileName}(${counter}).${fileExtension}`;
-          filePath = `${downloadDir}/${fileName}`;
-        }
-        // Copy the generated PDF into Downloads (or Documents on iOS)
-        const destPath = `${RNBlobUtil.fs.dirs.CacheDir}/${fileName}`;
-
-        if (Platform.OS === 'android') {
-          await RNBlobUtil.MediaCollection.copyToMediaStore(
-            {
-              name: fileName,
-              parentFolder: 'Zerox',
-              mimeType: 'application/pdf',
-            },
-            'Download',
-            file.filePath!,
-          );
-        } else {
-          await RNBlobUtil.fs.cp(file.filePath!, filePath);
-          await RNBlobUtil.fs.cp(filePath!, destPath);
+        // SEC (2026-10-31): QR PDF ommaviy Download/Documents papkaga emas, ilova keshiga
+        // (zx_pdf/); saqlash/ulashishni foydalanuvchi FileViewer oynasida tanlaydi.
+        const cached = await pdfCachePath(`${user?.data?.uid}.pdf`);
+        if (await RNBlobUtil.fs.exists(cached)) await RNBlobUtil.fs.unlink(cached);
+        await RNBlobUtil.fs.cp(file.filePath!, cached);
+        if (file.filePath && file.filePath !== cached) {
+          RNBlobUtil.fs.unlink(file.filePath).catch(() => {});
         }
 
-
-        await FileViewer.open(file.filePath!);
+        await FileViewer.open(cached, { showOpenWithDialog: true });
 
         // await Share.open({
         //   url: `file://${destPath}`,

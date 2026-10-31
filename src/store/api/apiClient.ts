@@ -3,6 +3,7 @@ import { URL } from '../../screens/constants';
 import { storage } from './token/getToken';
 import { installAuthRefresh, installGetRetry, installOfertaRequired } from './authInterceptor';
 import { getDeviceUserAgent } from '../../helper/userAgent';
+import { getDeviceIntegrity, INTEGRITY_HEADER } from '../../helper/deviceIntegrity';
 
 /**
  * Markaziy API klient.
@@ -32,6 +33,10 @@ apiClient.interceptors.request.use(config => {
   const token = storage.getString('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // SEC (2026-10-31): root/jailbreak signali (ilova bloklanmaydi, backend cheklay oladi).
+  if (getDeviceIntegrity() === 'compromised') {
+    config.headers[INTEGRITY_HEADER] = 'compromised';
   }
   return config;
 });

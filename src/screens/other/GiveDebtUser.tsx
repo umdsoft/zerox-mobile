@@ -42,6 +42,7 @@ import {
   adaptAmountInputToCurrency,
   formatAmountInput,
   parseAmount,
+  contractFee,
   sanitizeAmountInput,
 } from '../../helper/money';
 import MainText from '../components/MainText';
@@ -189,20 +190,7 @@ const GiveDebtUser = () => {
     }
   };
   const submitContract = async () => {
-    let a;
-    if (active) {
-      if (amountNum >= 100000000) {
-        a = 100000;
-      } else {
-        if (amountNum <= 1000000) {
-          a = 1000;
-        } else {
-          a = Number(amountNum * 0.001).toFixed(0);
-        }
-      }
-    } else {
-      a = Number(amountNum * usdd * 0.001).toFixed(0);
-    }
+    const a = contractFee(amountNum, active, usdd);
 
     try {
       if (
@@ -226,7 +214,7 @@ const GiveDebtUser = () => {
       if (type === 0) {
         //qarz olish
         if (user.data.cnt === 0) {
-          if (a >= user.data.balance) {
+          if (a >= Number(user.data.balance)) {
             Toast.show({
               autoHide: true,
               visibilityTime: 3000,
@@ -369,30 +357,7 @@ const GiveDebtUser = () => {
     return arr.join('').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
   const pay = useCallback(
-    sum => {
-      let a = Number(sum.replace(/\s/g, ''));
-      if (active) {
-        if (a >= 100000000) {
-          return 100000;
-        } else {
-          if (a <= 1000000) {
-            return 1000;
-          } else {
-            return Number(a * 0.001).toFixed(0);
-          }
-        }
-      } else {
-        if (a * usdd <= 1000000) {
-          return Number(1000);
-        } else {
-          if (a * usdd >= 100000000) {
-            return Number(100000);
-          } else {
-            return Number(a * usdd * 0.001).toFixed(0);
-          }
-        }
-      }
-    },
+    (sum: number) => contractFee(sum, active, usdd),
     [active, usdd],
   );
   const renderRadioButtons = useMemo(() => {
@@ -470,7 +435,7 @@ const GiveDebtUser = () => {
             textAlign="left"
             tKey={291}
             values={{
-              amount: onValue(pay(amount)),
+              amount: onValue(pay(amountNum)),
             }}
             components={{
               amount: (
@@ -485,7 +450,7 @@ const GiveDebtUser = () => {
         </View>
       </View>
     );
-  }, [pay, amount]);
+  }, [pay, amountNum]);
 
   if (loading) {
     return <Loading />;

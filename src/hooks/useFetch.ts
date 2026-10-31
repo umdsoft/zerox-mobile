@@ -22,13 +22,34 @@ export const clearFetchCache = () => {
   inflight.clear();
 };
 
+/**
+ * Yozuvdan (POST/PUT/DELETE) keyin: URL shu prefiks bilan boshlanadigan barcha keshlar
+ * va in-flight so'rovlar bekor qilinadi — keyingi o'qish YANGI ma'lumot oladi.
+ * `invalidateFetchCache('')` — hammasi.
+ */
+export const invalidateFetchCache = (prefix: string) => {
+  const urlOf = (key: string) => key.slice(key.indexOf(':') + 1);
+  for (const key of Array.from(cache.keys())) {
+    if (urlOf(key).startsWith(prefix)) cache.delete(key);
+  }
+  for (const key of Array.from(inflight.keys())) {
+    if (urlOf(key).startsWith(prefix)) inflight.delete(key);
+  }
+};
+
 const cacheKey = (url: string, method: string) => `${method}:${url}`;
 
 // SS-DEV (2026-10-05): bitta (dedupe qilingan) so'rov — useFetch ham, prefetch ham
 // shu orqali ketadi, shuning uchun login/PIN vaqtidagi prefetch bosh sahifa
 // mount'idagi so'rov bilan ULASHILADI (ikki marta ketmaydi).
-const request = (url: string, m: string): Promise<any> => {
+const request = (url: string, m: string, force = false): Promise<any> => {
   const key = cacheKey(url, m);
+  // force: eski in-flight (u yozuvdan OLDIN ketgan bo'lishi mumkin) ulashilmaydi va
+  // 30s kesh o'tkazib yuboriladi.
+  if (force) {
+    inflight.delete(key);
+    cache.delete(key);
+  }
   let p = inflight.get(key);
   if (!p) {
     const token = storage.getString('token');
@@ -41,12 +62,17 @@ const request = (url: string, m: string): Promise<any> => {
       method: m,
     })
       .then(res => {
-        if (res.status === 200) cache.set(key, {data: res.data, ts: Date.now()});
+        // Faqat hali o'zimiz in-flight bo'lsak keshlaymiz: invalidate/force bilan
+        // bekor qilingan eski (stale) javob yangisining ustiga yozilmasin.
+        if (res.status === 200 && inflight.get(key) === req) {
+          cache.set(key, {data: res.data, ts: Date.now()});
+        }
         return res;
       })
       .finally(() => {
-        inflight.delete(key);
+        if (inflight.get(key) === req) inflight.delete(key);
       });
+    const req = p;
     inflight.set(key, p);
   }
   return p;
@@ -79,10 +105,22 @@ export const peekFetchCache = (url: string, method = 'GET') =>
 export const useFetch = ({url, method}) => {
   const m = String(method || 'GET').toUpperCase();
   const initial = url ? cache.get(cacheKey(url, m)) : undefined;
-  const [loading, setLoading] = useState(false);
+  // url bor va keshda ma'lumot yo'q -> birinchi renderdanoq loading=true (ekran
+  // "ro'yxat bo'sh" deb o'ylab flash qilmasin). url bo'sh -> so'rov yo'q, loading=false.
+  const [loading, setLoading] = useState(!!url && !initial);
   const [data, setData] = useState(initial ? initial.data : []);
   const [error, setError] = useState(false);
-  const [shouldRefresh, onRefresh] = useState({});
+  const [shouldRefresh, setShouldRefresh] = useState({});
+  const forceRef = useRef(false);
+  /**
+   * Majburiy qayta yuklash: in-flight dedupe va 30s keshni chetlab o'tadi (yozuvdan
+   * keyingi yangilash uchun). Eski `onRefresh({})` chaqiruvlari ham shu — argument
+   * e'tiborga olinmaydi; `refresh({force:true})` ham mos.
+   */
+  const onRefresh = useCallback((_arg?: unknown) => {
+    forceRef.current = true;
+    setShouldRefresh({});
+  }, []);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -92,9 +130,9 @@ export const useFetch = ({url, method}) => {
   }, []);
 
   const ApiFetch = useCallback(
-    async (signal?: AbortSignal) => {
+    async (signal?: AbortSignal, force = false) => {
       const key = cacheKey(url, m);
-      const hit = cache.get(key);
+      const hit = force ? undefined : cache.get(key);
       const fresh = !!hit && Date.now() - hit.ts <= CACHE_TTL_MS;
       try {
         if (fresh) {
@@ -106,7 +144,7 @@ export const useFetch = ({url, method}) => {
         }
         setError(false);
 
-        const p = request(url, m);
+        const p = request(url, m, force);
         const res = await p;
         // Bekor qilingan (unmount / url o'zgardi) — eski javobni yozmaymiz.
         if (signal?.aborted || !mounted.current) return;
@@ -128,14 +166,20 @@ export const useFetch = ({url, method}) => {
     // SS-AUDIT (2026-09-25): bo'sh URL (masalan FinanceDebtDetail ko'zgu qarzda
     // `url: ''`) — so'rov YUBORILMAYDI. Ilgari har mount/fokusda axios({url:''})
     // ketib rad etilar va `error=true` qolib ketardi.
-    if (!url) return;
+    if (!url) {
+      // url bo'shga o'tdi (uchib yurgan so'rov abort bo'ladi) — loading qolib ketmasin.
+      setLoading(false);
+      return;
+    }
     // C-008: url/method o'zgarganda (har harfda) OLDINGI so'rov natijasi tashlab
     // yuboriladi — eski (sekin) javob yangisining ustiga yozib qo'ymasin (race).
     // Dedupe tufayli so'rovning o'zi ulashilgan bo'lishi mumkin, shuning uchun
     // tarmoqni emas, NATIJANI bekor qilamiz (signal.aborted tekshiruvi).
     const controller = new AbortController();
-    ApiFetch(controller.signal);
+    const force = forceRef.current;
+    forceRef.current = false;
+    ApiFetch(controller.signal, force);
     return () => controller.abort();
   }, [url, m, shouldRefresh, ApiFetch]);
-  return {loading, error, data, onRefresh};
+  return {loading, error, data, onRefresh, refresh: onRefresh};
 };

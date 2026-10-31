@@ -8,6 +8,7 @@ import type { NavigationProp } from '@react-navigation/native';
 import Navigation from './src/navigation/Navigation';
 import GlobalBottomBar from './src/navigation/GlobalBottomBar';
 import { navigationRef } from './src/navigation/NavigationRef';
+import { installCaptureGuard } from './src/helper/captureGuard';
 import { useNetInfo } from '@react-native-community/netinfo';
 import './src/store/api/token/getToken';
 import './src/store/api/authInterceptor'; // 401 token-expired -> avto refresh
@@ -26,6 +27,7 @@ import useAppStateListener from './src/hooks/useAppStateListener';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import ForceUpdateGate from './src/screens/components/ForceUpdateGate'; // SS-DEV (2026-10-04)
 import ClockSkewGate from './src/screens/components/ClockSkewGate'; // 08.10: vaqt tafovuti
+import DeviceIntegrityModal from './src/screens/components/DeviceIntegrityModal'; // SEC 31.10: root/jailbreak ogohlantirishi
 import DeviceInfo from 'react-native-device-info';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
@@ -139,6 +141,9 @@ const App: React.FC = () => {
       appSub.remove();
     };
   }, [isLoading]);
+
+  // SEC (2026-10-31): maxfiy ekranlarda screenshot/yozib olish himoyasi (route nomi bo'yicha).
+  useEffect(() => installCaptureGuard(navigationRef), [isLoading]);
 
   // Klaviatura ochilish/yopilishini kuzatamiz (Android: did-show/did-hide ishonchli).
   useEffect(() => {
@@ -265,6 +270,7 @@ const App: React.FC = () => {
         <ExpirePassportModal />
         {/* 08.10: server/qurilma vaqti tafovuti — bloklovchi oyna (login ekranlari ham). */}
         <ClockSkewGate />
+        <DeviceIntegrityModal />
         {/* SS-DEV (2026-10-04): majburiy yangilanish — eng OXIRIDA (boshqa oynalar ustida). */}
         <ForceUpdateGate />
       </I18nextProvider>

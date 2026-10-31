@@ -252,3 +252,19 @@ export const fmtAmountByCurrency = (
   n: number | string | null | undefined,
   currency: unknown,
 ): string => (isUsd(currency) ? groupMoney(n) : groupDigits(Number(n) || 0));
+
+/** Shartnoma komissiyasi (UZS): 0.1%, min 1 000, max 100 000. Faqat SON qaytaradi. */
+export const MIN_CONTRACT_FEE = 1000;
+export const MAX_CONTRACT_FEE = 100000;
+export const contractFee = (
+  amount: number,
+  isUzs: boolean,
+  usdRate: number | string = 0,
+): number => {
+  const a = Number(amount);
+  if (!Number.isFinite(a) || a <= 0) return MIN_CONTRACT_FEE;
+  const uzs = isUzs ? a : a * Number(usdRate || 0);
+  if (!Number.isFinite(uzs) || uzs <= 1000000) return MIN_CONTRACT_FEE;
+  if (uzs >= 100000000) return MAX_CONTRACT_FEE;
+  return Math.round(uzs * 0.001);
+};

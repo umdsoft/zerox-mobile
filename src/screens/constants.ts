@@ -2,13 +2,17 @@ import { sortText } from './components/StatisticCard';
 // SS-AUDIT (2026-09-25): sana formatlagich helper'dan (ekran modulidan emas).
 import { settingDate } from '../helper';
 import { t } from 'i18next';
+import { USE_TEST_HOST_IN_RELEASE } from '../config/buildHost';
 
 // ⚙️ YAGONA JOY — REST API va Socket BIR serverdan boshqariladi.
-//   Test:        https://tb.zerox.uz
-//   Production:  https://app.zerox.uz
-// Server almashtirish uchun FAQAT shu HOST qatorini o'zgartiring.
-const HOST = 'https://tb.zerox.uz';
-// const HOST = 'https://app.zerox.uz'; // PRODUCTION
+//   Production (RELEASE build, standart): https://app.zerox.uz
+//   Test (DEV/debug build):               https://tb.zerox.uz
+// Ichki TEST release build kerak bo'lsa: `npm run deploy:test` (src/config/buildHost.ts).
+// Hamma hosting-bog'liq konstantalar (HOST, WEB_URL, PDF_*) BIR booleandan — IS_TEST_ENV — hosil bo'ladi.
+const PROD_HOST = 'https://app.zerox.uz';
+const TEST_HOST = 'https://tb.zerox.uz';
+const IS_TEST_ENV = __DEV__ || USE_TEST_HOST_IN_RELEASE;
+const HOST = IS_TEST_ENV ? TEST_HOST : PROD_HOST;
 
 const URL = `${HOST}/api/v1`;
 export const SOCKET_URL = HOST;
@@ -24,14 +28,13 @@ export const SUPPORT_TG_URL = 'https://t.me/zeroxuz_bot';
 export const BOT_TG_USERNAME = 'ZeroXuzbot';
 export const BOT_TG_APP_URL = `tg://resolve?domain=${BOT_TG_USERNAME}`;
 export const BOT_TG_URL = `https://t.me/${BOT_TG_USERNAME}`;
-export const WEB_URL = HOST.includes('tb.zerox.uz') ? 'https://test.zerox.uz' : 'https://zerox.uz';
+export const WEB_URL = IS_TEST_ENV ? 'https://test.zerox.uz' : 'https://zerox.uz';
 
 // PDF xizmati (pdf.zerox.uz) HAM prod, HAM test'ga xizmat qiladi, lekin har biri
 // O'Z bazasidan o'qiydi: prod act.php/index.php -> admin_zerox; test
 // act_test.php/index_test.php -> admin_zerox_test. Shu bois DB-bog'liq PDF'lar
 // (dalolatnoma, to'liq shartnoma) test build'da `*_test.php` variantini chaqiradi.
-// HOST 'app.zerox.uz' ga almashtirilganda AVTOMATIK prod act.php/index.php ga qaytadi.
-const IS_TEST_ENV = HOST.includes('tb.zerox.uz');
+// Release (prod) build'da AVTOMATIK prod act.php/index.php ishlatiladi.
 export const PDF_HOST = 'https://pdf.zerox.uz';
 export const PDF_ACT_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'act_test.php' : 'act.php'}`;
 export const PDF_INDEX_URL = `${PDF_HOST}/${IS_TEST_ENV ? 'index_test.php' : 'index.php'}`;

@@ -22,6 +22,7 @@ import {Appearance, AppRegistry, LogBox} from 'react-native';
 import crashlytics from '@react-native-firebase/crashlytics';
 // 16.10: Firebase Analytics — ekranlar avtomatik (onReady/onStateChange)
 import {setAnalyticsUser, trackScreen} from './src/helper/analytics';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import {logDebug, logError} from './src/log';
 import {isUpdateNotification, SCREENS} from './src/constants';
 
@@ -122,6 +123,7 @@ const MainApp = () => {
   }
 
   return (
+    <ErrorBoundary>
     <NavigationContainer
       ref={navigationRef}
       linking={linking}
@@ -133,6 +135,7 @@ const MainApp = () => {
         </Provider>
       </SafeAreaProvider>
     </NavigationContainer>
+    </ErrorBoundary>
   );
 };
 

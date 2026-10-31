@@ -5,12 +5,13 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import ListCard from '../components/ListCard';
 import ScreenLayout from '../components/ScreenLayout';
 import {useTranslation} from 'react-i18next';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 const {width} = Dimensions.get('screen');
-const MuddatOzQolgan = () => {
+const MuddatOzQolganInner = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {t} = useTranslation();
-  const {creditor, debitor, type} = route.params;
+  const {creditor, debitor, type} = (route.params ?? {}) as any;
   return (
     <ScreenLayout title={type === 'debitor' ? t('168') : t('171')} scroll={false}>
       <View style={styles.cardViewContainer}>
@@ -43,6 +44,8 @@ const MuddatOzQolgan = () => {
     </ScreenLayout>
   );
 };
+
+const MuddatOzQolgan = withRequiredParams(MuddatOzQolganInner, ['type']);
 
 export default MuddatOzQolgan;
 

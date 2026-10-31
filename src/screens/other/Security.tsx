@@ -8,6 +8,10 @@ import PasswordIcon from '../../images/Password';
 import FingerIcon from '../../images/Finger';
 import { Switch } from 'react-native-paper';
 import { storage } from '../../store/api/token/getToken';
+import {
+  disableBiometricUnlock,
+  enrollBiometricUnlock,
+} from '../../helper/biometricUnlock';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import AnimatedSecurityShield from '../components/AnimatedSecurityShield';
 import { t } from 'i18next';
@@ -24,22 +28,28 @@ const Security = () => {
   const [support, setSupport] = useState(false);
   const [value, setValue] = useState(() => {
     let a = storage.getBoolean('touch');
-    if (a === undefined || a) {
+    if (a === true) {
       return true;
     } else {
       return false;
     }
   });
 
-  const setTouch = useCallback(() => {
-    let a = storage.getBoolean('touch');
-    if (a) {
+  // SEC (2026-10-31): yoqishda biometrik-bog'langan sir yaratiladi (tasdiq so'raladi);
+  // o'chirishda Keychain'dagi sir ham o'chadi.
+  const setTouch = useCallback(async () => {
+    if (storage.getBoolean('touch')) {
       storage.set('touch', false);
       setValue(false);
-    } else {
-      storage.set('touch', true);
-      setValue(true);
+      await disableBiometricUnlock();
+      return;
     }
+    const ok = await enrollBiometricUnlock({
+      title: t('Face ID / Touch ID bilan tasdiqlang') as string,
+      cancel: t('Bekor qilish') as string,
+    });
+    storage.set('touch', ok);
+    setValue(ok);
   }, []);
 
   const onSupportScan = async () => {

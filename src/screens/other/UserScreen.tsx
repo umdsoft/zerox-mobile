@@ -34,6 +34,7 @@ import {useTranslation} from 'react-i18next';
 import { PDF_OFERTA_URL } from '../constants';
 import {expire_passport_check} from '../../helper/timeChecker';
 import {forceLogout} from '../../helper/forceLogout';
+import {isXodimSession} from '../../store/api/token/xodimSession';
 import {unsyncedCount} from '../../offline/hooks';
 import {storage} from '../../store/api/token/getToken';
 import { useFio } from '../../helper/useFio';
@@ -248,6 +249,27 @@ const UserScreen = () => {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Hisobni o'chirish (Google Play / App Store talabi). Xodim rejimida yashirin. */}
+        {!isXodimSession() && (
+          <View style={styles.menuCard}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('Hisobni o‘chirish')}
+              activeOpacity={0.7}
+              onPress={() => {
+                navigateScreen('DeleteAccount');
+              }}
+              style={[styles.row, styles.rowLast]}>
+              <View style={styles.rowIconWrapError}>
+                <UserIcon size={rs(20)} color={rd.color.error} />
+              </View>
+              <Text style={[styles.rowLabel, styles.rowLabelError]} numberOfLines={1}>
+                {t('Hisobni o‘chirish')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
       <ExitModal hide={hide} setHide={setHide} />
     </View>

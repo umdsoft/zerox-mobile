@@ -1,5 +1,5 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import Svg, {Defs, LinearGradient, Rect, Stop} from 'react-native-svg';
 
 import {useNavigation} from '@react-navigation/native';
@@ -14,7 +14,8 @@ import {
   ClockIcon,
   ChevronRight,
 } from '../home/redesign/icons';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import {getMe} from '../../store/api/home';
 import SmsBalanceCard from '../components/SmsBalanceCard';
 
 const GradientBg = () => (
@@ -48,6 +49,13 @@ const UserMoneyResult = () => {
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
 
   const user = useSelector(state => state.HomeReducer.user);
+  const dispatch = useDispatch<any>();
+
+  // Deep link (zeroxuz://UserMoneyResult) orqali ham ochilishi mumkin — route param'larga
+  // ISHONILMAYDI: balans/holat faqat serverdan (getMe) olinadi va shu ekranda ko'rsatiladi.
+  useEffect(() => {
+    dispatch(getMe());
+  }, [dispatch]);
 
   return (
     <ScreenLayout title={t('135')} scroll>

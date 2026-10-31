@@ -22,6 +22,7 @@ class MainApplication : Application(), ReactApplication {
                     add(BiometricPackage())
                     add(NotificationBadgePackage())
                     add(ContactPickerPackage())
+                    add(DeviceIntegrityPackage())
                 }
 
             override fun getJSMainModuleName(): String = "index"

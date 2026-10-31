@@ -13,6 +13,12 @@ export type PdfSignType = 'oferta' | 'contract' | 'act' | 'free_contract';
 
 const SIGN_TIMEOUT_MS = 3500;
 
+// SEC (2026-10-31): imzolangan havola FAQAT https://pdf.zerox.uz bo'lishi shart. Regex
+// (new URL() emas: `URL` bu faylda API bazasi stringi) `@evil.com`, `:port`, `.evil.com`
+// kabi hiylarni rad etadi: host'dan keyin faqat '/', '?', '#' yoki satr oxiri.
+const PDF_HOST_RE = /^https:\/\/pdf\.zerox\.uz(?=[/?#]|$)/i;
+export const isPdfHostUrl = (u: unknown): u is string => typeof u === 'string' && PDF_HOST_RE.test(u);
+
 /** Query satridagi (`?a=1&b=2`) parametrlarni obyektga ajratadi (lang/download/exp/sig siz). */
 export const paramsFromUrl = (url: string): Record<string, string> => {
   const out: Record<string, string> = {};
@@ -44,7 +50,9 @@ export const signPdfUrl = async (
       timeout: SIGN_TIMEOUT_MS,
     });
     const url = res?.data?.url;
-    return res?.data?.success && typeof url === 'string' && url.startsWith('https://') ? url : fallback;
+    // Boshqa host qaytsa — imzosiz havolaga qaytamiz (u ham faqat pdf.zerox.uz'ga ishora qilishi kerak).
+    if (res?.data?.success && isPdfHostUrl(url)) return url;
+    return fallback;
   } catch (_e) {
     return fallback;
   }

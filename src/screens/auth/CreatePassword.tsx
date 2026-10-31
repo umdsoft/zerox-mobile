@@ -24,6 +24,7 @@ import Loading from '../components/Loading';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft, LockIcon } from '../home/redesign/icons';
 import { GradientIconBadge } from '../components/BrandLockup';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 
 // Kichik "check" ikonkasi — checklist uchun (bajarilgan shart yashil ✓ bilan).
 const Check = ({ color }: { color: string }) => (
@@ -41,12 +42,12 @@ const Check = ({ color }: { color: string }) => (
   </Svg>
 );
 
-const CreatePassword = () => {
+const CreatePasswordInner = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const route = useRoute();
-  const { phone, code } = route.params;
+  const { phone, code } = (route.params ?? {}) as any;
 
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState('');
@@ -120,6 +121,9 @@ const CreatePassword = () => {
           desc: t('738'),
         },
       });
+    } finally {
+      // success:false yo'lida ham spinner abadiy qolib ketmasin.
+      setLoading(false);
     }
   };
 
@@ -324,6 +328,8 @@ const CreatePassword = () => {
     </View>
   );
 };
+
+const CreatePassword = withRequiredParams(CreatePasswordInner, ['phone', 'code'], 'LoginWithPhone');
 
 export default CreatePassword;
 

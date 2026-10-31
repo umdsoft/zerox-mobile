@@ -96,6 +96,9 @@ const NewPasswordEnter = () => {
         }, 2000);
       }
     } catch (error) {
+      // xato toast'i yo'q — avvalgidek jim
+    } finally {
+      // 'suc-password' bo'lmagan javobda ham spinner abadiy qolib ketmasin.
       setLoading(false);
     }
   }, [key, navigation, password]);

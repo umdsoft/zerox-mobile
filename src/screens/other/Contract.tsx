@@ -16,6 +16,7 @@ import Pdf from 'react-native-pdf';
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
+import { pdfCachePath } from '../../helper/pdfCache';
 import { t } from 'i18next';
 import { useSelector } from 'react-redux';
 
@@ -90,45 +91,18 @@ const Contract = () => {
     });
 
     try {
-      const path =
-        Platform.OS === 'android'
-          ? ReactNativeBlobUtil.fs.dirs.DownloadDir +
-            `/${user.data.last_name}_${user.data.first_name}_${user.data.middle_name}-oferta.pdf`
-          : ReactNativeBlobUtil.fs.dirs.DocumentDir +
-            `/${user.data.last_name}_${user.data.first_name}_${user.data.middle_name}-oferta.pdf`;
+      // SEC (2026-10-31): PDF ommaviy Download/Document papkasiga emas, ilova keshiga
+      // (zx_pdf/) tushadi; saqlash/ulashish FileViewer oynasi orqali foydalanuvchi ixtiyorida.
+      const path = await pdfCachePath(
+        `${user.data.last_name}_${user.data.first_name}_${user.data.middle_name}-oferta.pdf`,
+      );
 
-      ReactNativeBlobUtil.config({
+      const resp = await ReactNativeBlobUtil.config({
         appendExt: 'pdf',
         overwrite: true,
-        addAndroidDownloads: {
-          notification: true,
-          title: `${user?.data?.last_name}_${user?.data?.first_name}_${user?.data?.middle_name}-oferta.pdf`,
-          mediaScannable: false,
-          mime: 'application/pdf',
-          useDownloadManager: true,
-          path: path,
-        },
         path: path,
-      })
-        .fetch('GET', url)
-        .then(async resp => {
-          async function forAndroid() {
-            await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
-              {
-                name: `${user?.data?.last_name}_${user?.data?.first_name}_${user?.data?.middle_name}-oferta.pdf`, // name of the file
-                parentFolder: 'Zerox/Oferta', // subdirectory in the Media Store, e.g. HawkIntech/Files to create a folder HawkIntech with a subfolder Files and save the image within this folder
-                mimeType: 'application/pdf',
-              },
-              'Download',
-              resp.path(),
-            );
-            await FileViewer.open(resp.path(), { showOpenWithDialog: true });
-          }
-
-          Platform.OS === 'ios'
-            ? await FileViewer.open(resp.path(), { showOpenWithDialog: true })
-            : await forAndroid();
-        });
+      }).fetch('GET', url);
+      await FileViewer.open(resp.path(), { showOpenWithDialog: true });
     } catch (error) {
       Toast.show({
         autoHide: true,

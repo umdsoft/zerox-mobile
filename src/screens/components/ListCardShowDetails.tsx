@@ -12,6 +12,7 @@ import { t as tt } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { sortText } from './StatisticCard';
 import { compactKMB } from '../../helper/money';
+import { tashkentDayDiff } from '../../helper/dayDiff';
 import { ClockIcon } from '../home/redesign/icons';
 
 // kmb=true: summa >= 1 mln bo'lsa M/B qisqartma (so'rov SS17.5), aks holda to'liq.
@@ -151,18 +152,8 @@ const ListCardShowDetails = ({ title, width, disabled, data = [], kmb }) => {
   );
 };
 
-const CheckDate = date => {
-  const nowMonth = new Date().getMonth();
-  const getMonth = new Date(date).getMonth();
-  const dd1 = new Date(date).getDate();
-  const dd2 = new Date(Date.now()).getDate();
+const CheckDate = date => pp(tashkentDayDiff(date));
 
-  if (nowMonth - getMonth === 0) {
-    return pp(dd1 - dd2);
-  }
-
-  return pp(getMonth - nowMonth);
-};
 const pp = (day: number) => {
   switch (Math.abs(day)) {
     case 1:

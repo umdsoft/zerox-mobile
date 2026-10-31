@@ -24,6 +24,7 @@ import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import { PDF_INDEX_URL } from '../../constants';
+import { pdfCachePath } from '../../../helper/pdfCache';
 
 const DownloadStatistic = () => {
   // paramssiz ochilsa ham crash bermasin (guard).
@@ -32,55 +33,24 @@ const DownloadStatistic = () => {
 
   const onShare = async () => {
     const lang = storage.getString('lang');
-    ReactNativeBlobUtil.config({
-      fileCache: true,
-      overwrite: true,
-      appendExt: 'pdf',
-      path:
-        ReactNativeBlobUtil.fs.dirs.DocumentDir +
-        `/${item?.number?.split('/')?.join('_')}${setNameByLang(lang!)}`,
-    })
-      .fetch(
-        'GET',
-        `${PDF_INDEX_URL}?id=${item?.uid}&download=0&lang=${lang}`,
-      )
-      .then(async res => {
-        ReactNativeBlobUtil.fs.cp(
-          res.path(),
-          `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${item?.number
-            ?.split('/')
-            ?.join('_')}${setNameByLang(lang!)}`,
-        )
-          .then(() => {
-          })
-          .catch(err => {
-            console.error('Error copying file:', err);
-          });
-
-        if (Platform.OS === 'android') {
-          await Share.open({
-            failOnCancel: false,
-            url: `${
-              `file://` +
-              `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${item?.number
-                ?.split('/')
-                ?.join('_')}${setNameByLang(lang!)}`
-            }`,
-          });
-        } else {
-          await Share.open({ url: res.path() });
-        }
-      })
-      .catch(err => {
-        console.error('Share error:', err);
-        // Toast.show({
-        //   autoHide: true,
-        //   visibilityTime: 3000,
-        //   position: 'bottom',
-        //   type: 'error2',
-        //   props: {desc: 'Ulashish amalga oshmadi.'},
-        // });
+    try {
+      // SEC (2026-10-31): PDF ilova keshida (zx_pdf/) — Document papkada emas.
+      const path = await pdfCachePath(
+        `${item?.number?.split('/')?.join('_')}${setNameByLang(lang!)}`,
+      );
+      const res = await ReactNativeBlobUtil.config({
+        fileCache: true,
+        overwrite: true,
+        appendExt: 'pdf',
+        path,
+      }).fetch('GET', `${PDF_INDEX_URL}?id=${item?.uid}&download=0&lang=${lang}`);
+      await Share.open({
+        failOnCancel: false,
+        url: Platform.OS === 'android' ? `file://${res.path()}` : res.path(),
       });
+    } catch (err) {
+      // Ulashish bekor qilindi yoki yuklab bo'lmadi — jim.
+    }
   };
 
   const onDownload = async () => {
@@ -96,56 +66,19 @@ const DownloadStatistic = () => {
       const fileName = `${item?.number?.split('/').join('_')}${setNameByLang(
         lang!,
       )}`;
-      const filePath =
-        Platform.OS === 'android'
-          ? `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`
-          : `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`;
+      // SEC (2026-10-31): ommaviy Download/MediaStore o'rniga ilova keshi; saqlash/ulashishni
+      // foydalanuvchi FileViewer oynasidan o'zi tanlaydi.
+      const filePath = await pdfCachePath(fileName);
       const downloadUrl = `${PDF_INDEX_URL}?id=${
         item?.uid
       }&download=0&lang=${storage.getString('lang') || 'uz'}`;
 
-      // Check if the file exists
-      const fileExists = await ReactNativeBlobUtil.fs.exists(filePath);
-
-      // Delete the existing file if overwrite is true
-      if (fileExists) {
-        await ReactNativeBlobUtil.fs.unlink(filePath);
-      }
-
-      // Configure and fetch the file
-      ReactNativeBlobUtil.config({
+      const resp = await ReactNativeBlobUtil.config({
         appendExt: 'pdf',
         overwrite: true,
-        addAndroidDownloads: {
-          notification: true,
-          title: fileName,
-          mediaScannable: false,
-          mime: 'application/pdf',
-          useDownloadManager: true,
-          path: filePath,
-        },
         path: filePath,
-      })
-        .fetch('GET', downloadUrl)
-        .then(async resp => {
-          async function forAndroid() {
-            await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
-              {
-                name: fileName, // name of the file
-                parentFolder: 'Zerox/Contracts', // subdirectory in the Media Store, e.g. HawkIntech/Files to create a folder HawkIntech with a subfolder Files and save the image within this folder
-                mimeType: 'application/pdf',
-              },
-              'Download',
-              resp.path(),
-            );
-            await FileViewer.open(resp.path(), { showOpenWithDialog: true });
-          }
-
-          Platform.OS === 'ios'
-            ? await FileViewer.open(resp.path(), { showOpenWithDialog: true })
-            : await forAndroid();
-        });
-
+      }).fetch('GET', downloadUrl);
+      await FileViewer.open(resp.path(), { showOpenWithDialog: true });
     } catch (error) {
       console.error('Download or open file error:', error);
 

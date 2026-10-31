@@ -33,6 +33,7 @@ import {
   authStyles,
 } from './authKit';
 import PrivacyConsentNote from './PrivacyConsentNote';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 
 const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -54,11 +55,11 @@ const checkPhoneTime = async () => {
   return count < 3;
 };
 
-const RegisterWithPeople = () => {
+const RegisterWithPeopleInner = () => {
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const route = useRoute();
-  const { type } = route.params;
+  const { type } = (route.params ?? {}) as any;
   const navigation = useNavigation();
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(false);
@@ -190,8 +191,10 @@ const RegisterWithPeople = () => {
       }
     } catch (e) {
       console.error(e, 'asdsa');
-      setLoading(false);
       setError(true);
+    } finally {
+      // Noma'lum server javobi / checkPhoneTime=false yo'llarida ham spinner qolib ketmasin.
+      setLoading(false);
     }
   };
 
@@ -287,6 +290,8 @@ const RegisterWithPeople = () => {
     </View>
   );
 };
+
+const RegisterWithPeople = withRequiredParams(RegisterWithPeopleInner, ['type'], 'LoginWithPhone');
 
 export default RegisterWithPeople;
 

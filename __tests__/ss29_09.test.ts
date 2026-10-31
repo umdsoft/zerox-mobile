@@ -7,6 +7,7 @@
  */
 jest.mock('../src/screens/constants', () => ({ URL: 'https://example.test/api/v1' }));
 jest.mock('i18next', () => ({ t: (k: string) => k }));
+jest.mock('../src/i18n', () => ({ __esModule: true, default: { t: (k: string) => k, language: 'uz' } }));
 jest.mock('react-native-toast-message', () => {
   const Toast: any = () => null;
   Toast.show = jest.fn();

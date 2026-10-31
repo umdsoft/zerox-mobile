@@ -16,6 +16,7 @@
 		74D4A1872E8FF38300E36EDF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 74D4A1862E8FF38300E36EDF /* GoogleService-Info.plist */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		A1C0FFEE21102026C0A10002 /* ContactPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE21102026C0A10001 /* ContactPicker.m */; };
+		A1C0FFEE31102026C0A20002 /* DeviceIntegrity.m in Sources */ = {isa = PBXBuildFile; fileRef = A1C0FFEE31102026C0A20001 /* DeviceIntegrity.m */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		921C7C4668E14714B6118ED7 /* Inter-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9BE4522260194B57AC8F49C4 /* Inter-Bold.ttf */; };
 		9C6FF65A54844FACEF562972 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -42,6 +43,7 @@
 		74D4A1882E8FF79B00E36EDF /* ZeroX.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = ZeroX.entitlements; path = ZeroX/ZeroX.entitlements; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ZeroX/AppDelegate.swift; sourceTree = "<group>"; };
 		A1C0FFEE21102026C0A10001 /* ContactPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ContactPicker.m; path = ZeroX/ContactPicker.m; sourceTree = "<group>"; };
+		A1C0FFEE31102026C0A20001 /* DeviceIntegrity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DeviceIntegrity.m; path = ZeroX/DeviceIntegrity.m; sourceTree = "<group>"; };
 		78DB2CCA484D4D5F831C6BC1 /* Montserrat-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Regular.ttf"; path = "../assets/fonts/Montserrat-Regular.ttf"; sourceTree = "<group>"; };
 		79EA2B52D1DF4703B38B10B1 /* Inter-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Regular.ttf"; path = "../assets/fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
 		7A470944DACC43A3920AF0EB /* Montserrat-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Montserrat-Light.ttf"; path = "../assets/fonts/Montserrat-Light.ttf"; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				A1C0FFEE21102026C0A10001 /* ContactPicker.m */,
+				A1C0FFEE31102026C0A20001 /* DeviceIntegrity.m */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -334,6 +337,7 @@
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				A1C0FFEE21102026C0A10002 /* ContactPicker.m in Sources */,
+				A1C0FFEE31102026C0A20002 /* DeviceIntegrity.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -347,7 +351,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ZeroX/ZeroX.entitlements;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_TEAM = 4HTX59NRUR;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZeroX/Info.plist;
@@ -358,7 +362,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -384,7 +388,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ZeroX/ZeroX.entitlements;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_TEAM = 4HTX59NRUR;
 				INFOPLIST_FILE = ZeroX/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ZeroX;
@@ -394,7 +398,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

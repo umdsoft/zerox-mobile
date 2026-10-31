@@ -1,6 +1,6 @@
 {
   "name": "ZeroX",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -10,10 +10,14 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "deploy": "cd android && ./gradlew assembleRelease && cd .. ",
-    "publish": "npx react-native build-android --mode=release",
-    "google": "cd android && ./gradlew bundleRelease && cd ..",
-    "pod": "cd ios && pod install && cd .."
+    "deploy": "node scripts/check-release-host.js && cd android && ./gradlew assembleRelease && cd ..",
+    "publish": "node scripts/check-release-host.js && npx react-native build-android --mode=release",
+    "google": "node scripts/check-release-host.js && cd android && ./gradlew bundleRelease && cd ..",
+    "pod": "cd ios && pod install && cd ..",
+    "postinstall": "patch-package",
+    "deploy:test": "node scripts/set-host.js test && (cd android && ./gradlew assembleRelease); node scripts/set-host.js prod",
+    "set-host:prod": "node scripts/set-host.js prod",
+    "check:release-host": "node scripts/check-release-host.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -26,19 +30,17 @@
     "@react-native-firebase/app": "^23.5.0",
     "@react-native-firebase/crashlytics": "^23.5.0",
     "@react-native-firebase/messaging": "^23.5.0",
-    "@react-native/new-app-screen": "0.81.4",
-    "@react-navigation/bottom-tabs": "^7.4.7",
-    "@react-navigation/drawer": "^7.5.8",
-    "@react-navigation/material-top-tabs": "^7.3.7",
-    "@react-navigation/native": "^7.1.17",
-    "@react-navigation/native-stack": "^7.3.26",
-    "@react-navigation/stack": "^7.4.8",
+    "@react-navigation/bottom-tabs": "^7.21.0",
+    "@react-navigation/drawer": "^7.14.4",
+    "@react-navigation/material-top-tabs": "^7.8.1",
+    "@react-navigation/native": "^7.5.1",
+    "@react-navigation/native-stack": "^7.21.0",
+    "@react-navigation/stack": "^7.12.1",
     "@reduxjs/toolkit": "^2.9.0",
     "@sayem314/react-native-keep-awake": "^1.3.1",
     "@shopify/react-native-skia": "^2.3.0",
-    "axios": "^1.15.2",
+    "axios": "^1.21.0",
     "base-64": "^1.0.0",
-    "deprecated-react-native-prop-types": "^5.0.0",
     "i18next": "^25.5.3",
     "js-sha256": "^0.11.1",
     "lottie-react-native": "^7.3.4",
@@ -48,7 +50,6 @@
     "react-native": "0.81.4",
     "react-native-advanced-input-mask": "^1.4.5",
     "react-native-background-timer": "^2.4.1",
-    "react-native-base64": "^0.2.2",
     "react-native-biometrics": "^3.0.1",
     "react-native-blob-util": "^0.22.2",
     "react-native-capture-protection": "^2.3.1",
@@ -62,7 +63,7 @@
     "react-native-keychain": "^10.0.0",
     "react-native-mmkv": "3.3.3",
     "react-native-nitro-modules": "^0.33.5",
-    "react-native-nitro-myid": "^0.1.3",
+    "react-native-nitro-myid": "0.1.3",
     "react-native-otp-entry": "^1.8.5",
     "react-native-otp-verify": "^1.1.8",
     "react-native-pager-view": "^6.9.1",
@@ -70,17 +71,14 @@
     "react-native-pdf": "^7.0.1",
     "react-native-permissions": "^5.4.2",
     "react-native-popover-view": "^6.1.0",
-    "react-native-push-notification": "^8.1.1",
     "react-native-qrcode-svg": "^6.3.15",
     "react-native-reanimated": "4.3.1",
     "react-native-responsive-screen": "^1.4.2",
     "react-native-safe-area-context": "^5.6.1",
-    "react-native-screens": "^4.16.0",
-    "react-native-send-intent": "^1.3.0",
+    "react-native-screens": "~4.16.0",
     "react-native-share": "^12.2.0",
     "react-native-svg": "^15.13.0",
     "react-native-svg-transformer": "^1.5.1",
-    "react-native-tab-view": "^4.1.3",
     "react-native-toast-message": "^2.3.3",
     "react-native-view-shot": "^4.0.3",
     "react-native-vision-camera": "^4.7.2",
@@ -111,18 +109,17 @@
     "jest": "^29.6.3",
     "prettier": "2.8.8",
     "react-test-renderer": "19.1.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "patch-package": "^8.0.0"
   },
   "engines": {
     "node": ">=20"
-  },
-  "patchedDependencies": {
-    "react-native-nitro-myid@0.1.3": "patches/react-native-nitro-myid@0.1.3.patch"
   },
   "overrides": {
     "socket.io-parser": "^4.2.7",
     "form-data": "^4.0.6",
     "follow-redirects": "^1.16.0",
-    "nanoid": "^3.3.19"
+    "nanoid": "^3.3.19",
+    "@grpc/grpc-js": "^1.14.7"
   }
 }

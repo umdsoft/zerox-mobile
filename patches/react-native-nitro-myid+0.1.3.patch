@@ -1,7 +1,7 @@
-diff --git a/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt b/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
+diff --git a/node_modules/react-native-nitro-myid/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt b/node_modules/react-native-nitro-myid/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
 index ac4245bd056ad825e5990da0b76b4a80d400fe03..4c99a52b13ef44a898fc4a1083c83423122eac8a 100644
---- a/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
-+++ b/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
+--- a/node_modules/react-native-nitro-myid/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
++++ b/node_modules/react-native-nitro-myid/android/src/main/java/com/margelo/nitro/nitromyid/NitroMyid.kt
 @@ -40,6 +40,23 @@ class NitroMyid : HybridNitroMyidSpec(), MyIdResultListener {
  
      private var currentActivity: Activity? = null
@@ -37,10 +37,10 @@ index ac4245bd056ad825e5990da0b76b4a80d400fe03..4c99a52b13ef44a898fc4a1083c83423
      // Build SDK config
      val sdkConfigBuilder =
              SdkConfig.Builder(config.sessionId)
-diff --git a/android/build.gradle b/android/build.gradle
+diff --git a/node_modules/react-native-nitro-myid/android/build.gradle b/node_modules/react-native-nitro-myid/android/build.gradle
 index 5217909..add31e9 100644
---- a/android/build.gradle
-+++ b/android/build.gradle
+--- a/node_modules/react-native-nitro-myid/android/build.gradle
++++ b/node_modules/react-native-nitro-myid/android/build.gradle
 @@ -124,6 +124,6 @@ dependencies {
    implementation project(":react-native-nitro-modules")
    

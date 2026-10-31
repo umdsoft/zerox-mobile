@@ -19,17 +19,27 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
-import { CaptureProtection } from 'react-native-capture-protection';
 
 import Toast from 'react-native-toast-message';
 import { storage } from '../../store/api/token/getToken';
 import { warmHome } from '../../helper/homeCache';
 // SS-SEC (2026-09-25): PIN ochiq matnda emas — salt+SHA-256 (pin.ts).
 import { hasPin, setPin, verifyPin } from '../../store/api/token/pin';
+import {
+  attemptPin,
+  formatRemaining,
+  getLockState,
+} from '../../store/api/token/pinLockout';
+import { forceLogout } from '../../helper/forceLogout';
+import {
+  disableBiometricUnlock,
+  enrollBiometricUnlock,
+  isBiometricEnrolled,
+  unlockWithBiometrics,
+} from '../../helper/biometricUnlock';
 import MainText from '../components/MainText';
 import { fontSize } from '../../theme/font';
 import { t } from 'i18next';
-import BiometricModule from '../../../BiometricModule';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import MarkIcon from '../../images/mark';
 import { scale } from '../../helper/scale';
@@ -68,7 +78,9 @@ const SetLocalPassword = () => {
   const [isLocal] = useState(() => !hasPin());
   // Birinchi qadamda terilgan PIN — faqat xotirada (ilgari MMKV'ga `k1` ochiq yozilardi).
   const firstPinRef = useRef('');
-  const [count, setCount] = useState(3);
+  // SEC (2026-10-31): urinishlar/qulf shifrlangan MMKV'da (pinLockout.ts) — qayta
+  // ishga tushirish hisobni nollamaydi. Qolgan qulf vaqti (ms), 0 = qulf yo'q.
+  const [lockRemaining, setLockRemaining] = useState(() => getLockState().remainingMs);
   // Biometrik OPT-IN — native Alert o'rniga CHIROYLI maxsus modal.
   const [bioModal, setBioModal] = useState<{
     visible: boolean;
@@ -81,7 +93,8 @@ const SetLocalPassword = () => {
   // qaytariladi, shunda QrCode ViewShot va boshqa ekranlar buzilmaydi).
   useFocusEffect(
     useCallback(() => {
-      CaptureProtection.prevent().catch(() => {});
+      // SEC (2026-10-31): screenshot/yozib olish himoyasi endi markaziy
+      // (helper/captureGuard.ts, navigatsiya holati bo'yicha) — bu yerda alohida emas.
 
       // QULF EKRANIDA MENYU OCHIQ QOLMASIN.
       // Drawer BUTUN ilovani o'raydi (DrawerNavigator > StackNavigator), shuning
@@ -91,9 +104,6 @@ const SetLocalPassword = () => {
       // Fokusda majburan yopamiz.
       navigation.dispatch(DrawerActions.closeDrawer());
 
-      return () => {
-        CaptureProtection.allow().catch(() => {});
-      };
     }, [navigation]),
   );
 
@@ -115,58 +125,58 @@ const SetLocalPassword = () => {
     navigation.reset({ routes: [{ name: 'BottomTabNavigator' }], index: 0 });
   }, [navigation]);
 
+  const finishUnlock = useCallback(() => {
+    storage.set('appLocked', false);
+    if (storage.getString('pendingNavigation') !== undefined) {
+      // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
+      // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
+      // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
+      navigation.dispatch(StackActions.replace('Notification'));
+      storage.delete('pendingNavigation');
+      return;
+    }
+    setTimeout(() => {
+      restoreAfterUnlock();
+    }, 500);
+  }, [navigation, restoreAfterUnlock]);
+
+  const bioPrompt = useCallback(
+    () => ({
+      title: t('Face ID / Touch ID bilan tasdiqlang') as string,
+      cancel: t('Bekor qilish') as string,
+    }),
+    [],
+  );
+
+  // SEC (2026-10-31): biometrik qulf ochish — Keychain/Keystore'dagi, faqat haqiqiy
+  // biometrik tasdiqdan keyin chiqadigan sir orqali (helper/biometricUnlock.ts).
   const onFingerScan = useCallback(async () => {
     try {
-      if (Platform.OS === 'android') {
-        // result are success, failed, error
-        const result = await BiometricModule.authenticate();
-
-        if (result === 'success') {
-          storage.set('appLocked', false);
-          if (storage.getString('pendingNavigation') !== undefined) {
-            // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
-            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
-            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
-            navigation.dispatch(StackActions.replace('Notification'));
-            storage.delete('pendingNavigation');
-            return;
-          }
-          setTimeout(() => {
-            restoreAfterUnlock();
-          }, 500);
-        }
-      } else {
-        // iOS: Face ID YOKI Touch ID — IKKALASI ham. Oldin faqat FaceID tekshirilardi,
-        // shuning uchun Touch ID li iPhone/iPad'да biometrik umuman ishlamasdi.
-        const { available } = await rnBiometrics.isSensorAvailable();
-        if (available) {
-          const result = await rnBiometrics.simplePrompt({
-            promptMessage: t('Face ID / Touch ID bilan tasdiqlang'),
-            cancelButtonText: t('Bekor qilish'),
-          });
-
-          if (result.success) {
-            storage.set('appLocked', false);
-
-            if (storage.getString('pendingNavigation') !== undefined) {
-              // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
-            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
-            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
-            navigation.dispatch(StackActions.replace('Notification'));
-              storage.delete('pendingNavigation');
-              return;
-            }
-
-            setTimeout(() => {
-              restoreAfterUnlock();
-            }, 500);
-          }
-        }
+      if (getLockState().locked) return;
+      const result = await unlockWithBiometrics(bioPrompt());
+      if (result === 'ok') {
+        finishUnlock();
+      } else if (result === 'invalid') {
+        // Yangi barmoq izi/yuz qo'shilgan (yoki sir yo'qolgan): PIN bilan kiring, qayta yoqing.
+        storage.set('touch', false);
+        setSupportScan(false);
+        Toast.show({
+          type: 'error2',
+          position: 'top',
+          props: {
+            desc: t(
+              'Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.',
+            ),
+          },
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: Platform.OS === 'android' ? 5 : normalize(50),
+        });
       }
-    } catch (error) {
-      console.error('Error', error);
+    } catch {
+      // Biometrik muvaffaqiyatsiz — PIN bilan davom etiladi.
     }
-  }, [navigation, restoreAfterUnlock]);
+  }, [bioPrompt, finishUnlock]);
 
   // Biometrik OPT-IN: PIN o'rnatilgach (ro'yxatdan o'tish) foydalanuvchidan Touch/Face
   // ID ni yoqishni SO'RAYMIZ (avtomatik yoqmaymiz — oldin oferta tasdiqlashda kutilmagan
@@ -190,12 +200,20 @@ const SetLocalPassword = () => {
   // Modal tugmalari: tanlovni saqlab, davom etadi.
   const onBioChoose = useCallback(
     (yes: boolean) => {
-      storage.set('touch', yes);
       const done = bioModal.onDone;
       setBioModal({ visible: false, onDone: () => {} });
-      done();
+      if (!yes) {
+        storage.set('touch', false);
+        done();
+        return;
+      }
+      // Sirni biometrik-bog'langan holda yaratamiz; muvaffaqiyatsiz bo'lsa — o'chiq.
+      enrollBiometricUnlock(bioPrompt())
+        .then(ok => storage.set('touch', ok))
+        .catch(() => storage.set('touch', false))
+        .finally(done);
     },
-    [bioModal],
+    [bioModal, bioPrompt],
   );
 
   const onSetCode = val => {
@@ -261,37 +279,45 @@ const SetLocalPassword = () => {
     } else {
       setPassword(password + val);
       if ((password + val).length === 4) {
-        // SS-SEC (2026-09-25): hash solishtirish; eski ochiq k2 bo'lsa shu yerda
-        // birinchi muvaffaqiyatli kirishda hash'ga migratsiya qilinadi.
-        if (verifyPin(password + val)) {
-          // askForBiometric();
+        // SEC (2026-10-31): urinish tekshiruvdan OLDIN shifrlangan MMKV'ga yoziladi;
+        // ketma-ket xatolarda o'sib boruvchi qulf, 10-xatoda sessiya o'chiriladi.
+        const attempt = attemptPin(verifyPin, password + val);
+        if (attempt.result === 'ok') {
           storage.delete('isLoginScreen');
           storage.set('appLocked', false);
+          // Biometrik sir hali yaratilmagan (eski foydalanuvchi, touch=true): PIN muvaffaqiyatidan
+          // keyin bir marta ro'yxatdan o'tkazamiz; bekor qilinsa o'chiriladi (takror so'ramaymiz).
+          if (storage.getBoolean('touch') === true && !isBiometricEnrolled()) {
+            enrollBiometricUnlock(bioPrompt())
+              .then(ok => {
+                if (!ok) storage.set('touch', false);
+              })
+              .catch(() => storage.set('touch', false));
+          }
           if (storage.getString('pendingNavigation') !== undefined) {
-            // NAV-FIX: qulf OCHILDI (appLocked=false) — `replace` bilan qulf ekrani
-            // stekdan chiqadi. Aks holda bildirishnomadan orqaga bosilganda yana
-            // PIN so'rash ekrani chiqib qolardi (ilova ochiq bo'lsa ham).
             navigation.dispatch(StackActions.replace('Notification'));
             storage.delete('pendingNavigation');
             return;
           }
           // J: qulf oldidagi ekranga qaytamiz (bosh sahifa emas).
           restoreAfterUnlock();
+        } else if (attempt.result === 'wipe') {
+          setPassword('');
+          disableBiometricUnlock();
+          forceLogout('pin-lockout');
+        } else if (attempt.result === 'locked') {
+          setPassword('');
+          setLockRemaining(attempt.remainingMs);
         } else {
           setPassword('');
-          setCount(prevCount => {
-            const newCount = prevCount - 1;
-            if (newCount === 0) {
-              storage.set('time', Date.now());
-            }
-            return newCount;
-          });
-          if (count - 1 !== 0) {
+          if (attempt.lockMs > 0) {
+            setLockRemaining(getLockState().remainingMs);
+          } else {
             Toast.show({
               type: 'error2',
               position: 'top',
               props: {
-                desc: t('parol', { count: count - 1 }),
+                desc: t('parol', { count: attempt.attemptsLeft }),
               },
               visibilityTime: 3000,
               autoHide: true,
@@ -344,24 +370,22 @@ const SetLocalPassword = () => {
     } catch {}
   }, []);
 
+  // Qulf taymeri: har soniya qolgan vaqtni yangilaydi, tugagach PIN kiritish ochiladi.
   useEffect(() => {
-    const lockTime = storage.getNumber('time');
-    if (lockTime !== undefined) {
-      // 30 daqiqalik bloklash tugadimi?
-      if (Date.now() - lockTime > 1800000) {
-        setCount(3);
-        storage.delete('time');
-      } else {
-        setCount(0);
-      }
-    }
+    if (lockRemaining <= 0) return;
+    const id = setInterval(() => {
+      const st = getLockState();
+      setLockRemaining(st.locked ? st.remainingMs : 0);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [lockRemaining > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // BIOMETRIK: PIN o'rnatilgan (!isLocal), bloklanmagan, va foydalanuvchi ochiq
-    // O'CHIRMAGAN (touch !== false — default YOQILGAN) bo'lsa — mavjudligini tekshirib,
-    // app ochilishi bilan DARHOL so'raymiz. Muvaffaqiyatli bo'lsa PIN kiritish shart emas.
-    // Mavjud bo'lsa tugma ham ko'rsatiladi (auto-so'rov bekor qilinsa qayta urinish uchun).
+  useEffect(() => {
+    // BIOMETRIK: PIN o'rnatilgan (!isLocal), bloklanmagan, foydalanuvchi YOQQAN
+    // (touch === true) va sir ro'yxatdan o'tgan bo'lsa — app ochilishi bilan so'raymiz.
+    // Sir yo'q eski foydalanuvchilar PIN kiritadi; ro'yxatdan o'tish PIN'dan keyin (onSetCode).
     const touch = storage.getBoolean('touch');
-    if (!isLocal && lockTime === undefined && touch !== false) {
+    if (!isLocal && !getLockState().locked && touch === true && isBiometricEnrolled()) {
       rnBiometrics
         .isSensorAvailable()
         .then(({ available }) => {
@@ -392,7 +416,11 @@ const SetLocalPassword = () => {
         <MarkIcon width={100} height={100} color={'#fff'} />
 
         <MainText size={fontSize[12]} mTop={10} ft={rd.font.bold}>
-          {t('Ilovaga kirish 30 daqiqaga cheklandi')}
+          {t('Ilovaga kirish vaqtincha cheklandi')}
+        </MainText>
+
+        <MainText size={fontSize[12]} mTop={10} ft={rd.font.medium}>
+          {t('Qolgan vaqt: {{time}}', { time: formatRemaining(lockRemaining) })}
         </MainText>
 
         <MainText size={fontSize[12]} mTop={10} ft={rd.font.medium}>
@@ -439,12 +467,12 @@ const SetLocalPassword = () => {
         </View>
       </View>
     );
-  }, [navigation]);
+  }, [navigation, lockRemaining]);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={rd.color.page} />
-      {count !== 0 ? (
+      {lockRemaining <= 0 ? (
         <View style={{ flex: 1 }}>
           {!isLocal && (
             // "PIN-kodni tiklash" — burchakka tiqilib qolmasin: MARKAZDA,

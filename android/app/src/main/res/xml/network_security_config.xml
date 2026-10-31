@@ -1,11 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SS-SEC (2026-09-25): RELEASE — faqat HTTPS (cleartext butunlay taqiqlanadi).
      Debug varianti: src/debug/res/xml/network_security_config.xml (Metro uchun
-     localhost/10.0.2.2 cleartext ruxsat). -->
+     localhost/10.0.2.2 cleartext ruxsat; PIN'lar faqat RELEASE'da).
+
+     Certificate pinning (2026-10-31): LEAF emas, CA SPKI sha256 pin'lari — leaf yangilanishi ilovani
+     buzmaydi. Pin-set'da kamida bitta pin zanjirdagi sertifikatga mos kelsa yetarli.
+     Pin'lar `expiration` dan keyin e'tiborsiz qoldiriladi (fail-open) — shu sanagacha yangilang.
+     Hisoblash: openssl x509 -pubkey -noout | openssl pkey -pubin -outform der |
+                openssl dgst -sha256 -binary | openssl enc -base64
+     Sectigo (app/pdf/zerox.uz):
+       a9khLOZJ... = Sectigo Public Server Authentication CA DV R36 (hozirgi intermediate)
+       Douxi77v... = Sectigo Public Server Authentication Root R46
+       x4QzPSC8... = USERTrust RSA Certification Authority (R46 cross-sign ildizi)
+       sLVjNUaF... = Sectigo Public Server Authentication Root E46 (zaxira)
+       ICGRfpgm... = USERTrust ECC Certification Authority (zaxira)
+     Let's Encrypt (tb.zerox.uz — TEST):
+       LoMHBott... = LE YR1 (hozirgi intermediate), fk6IOKit... = ISRG Root YR,
+       C5+lpZ7t... = ISRG Root X1, diGVwiVY... = ISRG Root X2 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">app.zerox.uz</domain>
+        <domain includeSubdomains="false">pdf.zerox.uz</domain>
+        <domain includeSubdomains="false">zerox.uz</domain>
+        <pin-set expiration="2027-10-01">
+            <pin digest="SHA-256">a9khLOZJxlnJyrxstg/P+seiDCm+Yf3OsrXyFocBaI0=</pin>
+            <pin digest="SHA-256">Douxi77vs4G+Ib/BogbTFymEYq0QSFXwSgVCaZcI09Q=</pin>
+            <pin digest="SHA-256">x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=</pin>
+            <pin digest="SHA-256">sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=</pin>
+            <pin digest="SHA-256">ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=</pin>
+        </pin-set>
+    </domain-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">tb.zerox.uz</domain>
+        <pin-set expiration="2027-10-01">
+            <pin digest="SHA-256">LoMHBotttiDko50Gi13uXW71eIy7LAttI+rYT8wXF4w=</pin>
+            <pin digest="SHA-256">fk6IOKit1ild5647BH06ujSIq5XbCgqlbYl6ANhhi88=</pin>
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+        </pin-set>
+    </domain-config>
 </network-security-config>

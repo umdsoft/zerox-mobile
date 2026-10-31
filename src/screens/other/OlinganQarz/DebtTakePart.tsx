@@ -134,6 +134,9 @@ const DebtTakePart = () => {
           type: 'omad',
         });
         goHomeSmooth(navigation, t('456'));
+      } else {
+        // Kutilmagan javob — spinner abadiy qolib ketmasin.
+        setLoading(false);
       }
 
       // socketService.sendNotification({

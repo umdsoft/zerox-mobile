@@ -91,8 +91,28 @@ const Register = () => {
   );
 
   useEffect(() => {
-    DeviceEventEmitter.addListener('eimzo', data => {
-      let a = JSON.parse(data.data);
+    const eimzoErrorToast = () => {
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: {
+          desc: t(
+            'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
+          ),
+        },
+      });
+    };
+    const eimzoSub = DeviceEventEmitter.addListener('eimzo', data => {
+      let a;
+      try {
+        a = JSON.parse(data?.data);
+      } catch (_) {
+        setLoading(false);
+        eimzoErrorToast();
+        return;
+      }
       const subj = a?.subjectCertificateInfo?.subjectName ?? {};
       // Yuridik shaxs sertifikatida tashkilot nomi (company / O) bo'ladi; jismoniy
       // shaxs sertifikatida yo'q. Ilgari `code.slice(0,1)===2 || 3` sharti DOIM rost
@@ -116,23 +136,14 @@ const Register = () => {
       }
     });
 
-    DeviceEventEmitter.addListener('eimzo_error', () => {
+    const eimzoErrorSub = DeviceEventEmitter.addListener('eimzo_error', () => {
       setLoading(false);
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          desc: t(
-            'E-imzo sertifikatini o‘qishda xatolik yuz berdi. Qayta urinib ko‘ring.',
-          ),
-        },
-      });
+      eimzoErrorToast();
     });
 
     return () => {
-      DeviceEventEmitter.removeAllListeners('eimzo');
+      eimzoSub.remove();
+      eimzoErrorSub.remove();
     };
   }, []);
 

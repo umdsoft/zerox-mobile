@@ -118,6 +118,26 @@ const buildHtml = (c: Coord, hasInitial: boolean) => `<!DOCTYPE html><html><head
   boot();
 </script></body></html>`;
 
+// SEC (2026-10-31): WebView faqat Yandex Maps origin'lariga (https) yo'naltiriladi.
+// originWhitelist prefiks regex bo'lgani uchun (`https://evil.com/x.yandex.ru` ham mos kelardi)
+// asosiy tekshiruv onShouldStartLoadWithRequest'da hostni qat'iy ajratib qiladi.
+// yastatic.net / yandex.st — Yandex Maps API statik resurslari (iOS'da iframe'lar ham shu tekshiruvdan o'tadi)
+const MAP_ALLOWED_DOMAINS = ['yandex.uz', 'yandex.ru', 'yandex.net', 'yandex.com', 'yandex.by', 'yandex.kz', 'yastatic.net', 'yandex.st'];
+const MAP_ORIGIN_WHITELIST = [
+  ...MAP_ALLOWED_DOMAINS.map(d => `https://*.${d}`),
+  ...MAP_ALLOWED_DOMAINS.map(d => `https://${d}`),
+  'about:blank',
+];
+const HTTPS_HOST_RE = /^https:\/\/([a-z0-9.-]+)(?::\d+)?(?:[/?#]|$)/i;
+export const isAllowedMapNavigation = (req: { url?: string; isTopFrame?: boolean }): boolean => {
+  const url = String(req?.url || '');
+  if (url === 'about:blank') return true;
+  const m = HTTPS_HOST_RE.exec(url);
+  if (!m) return false; // http:, intent:, file:, javascript:, data: ... bloklanadi
+  const host = m[1].toLowerCase();
+  return MAP_ALLOWED_DOMAINS.some(d => host === d || host.endsWith(`.${d}`));
+};
+
 const MapPicker = ({
   visible,
   initial,
@@ -221,7 +241,8 @@ const MapPicker = ({
              * https origin berilishi bilan geolokatsiya ruxsat so'rovi ishlaydi.
              */
             source={{ html, baseUrl: 'https://yandex.uz' }}
-            originWhitelist={['https://*', 'http://*']}
+            originWhitelist={MAP_ORIGIN_WHITELIST}
+            onShouldStartLoadWithRequest={isAllowedMapNavigation}
             style={{ flex: 1, backgroundColor: '#e9eef5' }}
             onLoadEnd={() => setLoading(false)}
             javaScriptEnabled

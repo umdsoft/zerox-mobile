@@ -17,7 +17,11 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../../i18n';
-import { Linking, Platform, Share } from 'react-native';
+import { Platform, Share } from 'react-native';
+import { safeOpenURL } from '../../../helper/safeOpenURL';
+
+// SEC (2026-10-31): menyu havolalari faqat shu hostlarga ochiladi.
+const DRAWER_URL_HOSTS = ['zerox.uz', 'facebook.com', 'instagram.com', 't.me', 'x.com', 'youtube.com'];
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '../../../store/reducers/HomeReducer';
 import { SUPPORT_TG_URL } from '../../constants';
@@ -151,7 +155,7 @@ const DrawerMenu = () => {
       return;
     }
     if (item.url) {
-      Linking.openURL(item.url);
+      safeOpenURL(item.url, DRAWER_URL_HOSTS);
       return;
     }
     // Pastki tab (masalan Statistika) — BottomTabNavigator ichidagi ekranga o'tamiz.
@@ -248,7 +252,7 @@ const DrawerMenu = () => {
               key={item.key}
               activeOpacity={0.8}
               style={styles.socialBtn}
-              onPress={() => Linking.openURL(item.url)}
+              onPress={() => safeOpenURL(item.url, DRAWER_URL_HOSTS)}
             >
               {/* Har ikona o'z brend rangi + squircle bilan keladi. */}
               <item.Icon size={rs(42)} />

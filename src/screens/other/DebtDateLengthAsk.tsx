@@ -165,6 +165,8 @@ const DebtDateLengthAsk = () => {
         setLoading1(false);
         return;
       }
+      // Kutilmagan javob (201 ham, 'ex' ham emas) — spinner abadiy qolib ketmasin.
+      setLoading1(false);
     } catch (err) {
       console.error(err, 'err');
       setLoading1(false);

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { sanitizePhone } from '../../helper/safeOpenURL';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -45,6 +46,7 @@ import {
   StarIcon,
 } from '../home/redesign/icons';
 import { useFio } from '../../helper/useFio';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 
 // Reyting trendi (rating_type): 1=▲, 2=▼, 3=▲▲ (3 ketma-ket oshish), 4=▼▼; 0/null — belgi yo'q.
 // Sayt (cabinet/user sahifasi) va UserDetails bilan bir xil mantiq.
@@ -111,11 +113,11 @@ const sortContracts = (rows: any[]): any[] => {
   return rows.slice().sort((a, b) => finished(a) - finished(b) || ts(b) - ts(a));
 };
 
-const ShowUserDetails = () => {
+const ShowUserDetailsInner = () => {
   const { fio } = useFio();
   const navigation = useNavigation();
   const route = useRoute();
-  const { id, type } = route.params;
+  const { id, type } = (route.params ?? {}) as any;
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   // R5: shu foydalanuvchi bilan tuzilgan shartnomalar.
@@ -296,10 +298,10 @@ const ShowUserDetails = () => {
             <PhoneIcon size={rs(15)} color={rd.color.textTertiary} />
             <Text allowFontScaling={false} style={[styles.hValue, { flex: 1 }]} numberOfLines={1}>{data?.phone}</Text>
             <View style={styles.phoneActions}>
-              <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`sms:${data?.phone}`)} style={styles.smsBtn}>
+              <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`sms:${sanitizePhone(data?.phone)}`)} style={styles.smsBtn}>
                 <MessageIcon size={rs(16)} color={rd.color.onPrimary} />
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${data?.phone}`)} style={styles.callBtn}>
+              <TouchableOpacity activeOpacity={0.85} onPress={() => Linking.openURL(`tel:${sanitizePhone(data?.phone)}`)} style={styles.callBtn}>
                 <PhoneCallIcon size={rs(16)} color={rd.color.onPrimary} />
               </TouchableOpacity>
             </View>
@@ -380,6 +382,8 @@ const ShowUserDetails = () => {
     </ScreenLayout>
   );
 };
+
+const ShowUserDetails = withRequiredParams(ShowUserDetailsInner, ['id']);
 
 export default ShowUserDetails;
 

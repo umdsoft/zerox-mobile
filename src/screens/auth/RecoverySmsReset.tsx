@@ -120,7 +120,11 @@ const RecoverySmsReset = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const otpRef = useRef<any>(null);
 
+  const unmountedRef = useRef(false);
+
   const startTimer = useCallback(() => {
+    // sendSms unmount'dan KEYIN tugasa, interval qolib ketmasin.
+    if (unmountedRef.current) return;
     setCanResend(false);
     setTimer(RESEND_SECONDS);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -157,8 +161,10 @@ const RecoverySmsReset = () => {
   }, [phone, startTimer]);
 
   useEffect(() => {
+    unmountedRef.current = false;
     sendSms();
     return () => {
+      unmountedRef.current = true;
       if (timerRef.current) clearInterval(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

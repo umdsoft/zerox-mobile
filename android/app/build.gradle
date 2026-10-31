@@ -88,13 +88,30 @@ android {
         applicationId "com.zeroxuz"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 13
-        versionName "1.6"
-        missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
-        ndk {
-            // x86_64 emulyator testi uchun qo'shildi. Production release uchun
-            // (kichikroq APK) x86_64'ni olib tashlasangiz bo'ladi — real qurilmalar ARM.
-            abiFilters 'arm64-v8a'
+        versionCode 23
+        versionName "2.0.2"
+        missingDimensionStrategy "react-native-capture-protection", "base"
+        // ABI cheklovi endi splits.abi orqali (pastda) — ndk.abiFilters bilan splits
+        // BIRGA bo'lolmaydi (Gradle "Conflicting configuration" xatosi beradi).
+    }
+
+    // LOKAL (skip-worktree): faqat arm64-v8a paketlansin (real telefonlar).
+    // ndk.abiFilters yangi arxitektura + AAR prebuilt .so (skia/camerax/pdfium/face_detector)
+    // larni filtrlamaydi -> APK 4 ABI bilan 228MB bo'lib ketgan. splits.abi BARCHA jniLibs'ni
+    // ABI bo'yicha kesadi -> arm64 uchun ~90-100MB. Chiqish: app-arm64-v8a-release.apk.
+    // ABI ro'yxati `-PreactNativeArchitectures=...` dan o'qiladi:
+    //   (berilmasa)                              -> arm64-v8a  (production, real telefonlar)
+    //   -PreactNativeArchitectures=x86_64        -> x86_64     (Windows emulyatori)
+    splits {
+        abi {
+            reset()
+            // AAB (bundleRelease) da splits bo'lmasligi shart (AGP: "Multiple shrunk-resources");
+            // Play o'zi ABI bo'yicha ajratadi.
+            enable !gradle.startParameter.taskNames.any { it.toLowerCase().contains('bundle') }
+            universalApk false
+            include(*(project.hasProperty('reactNativeArchitectures')
+                ? project.reactNativeArchitectures.split(',')
+                : ['arm64-v8a']))
         }
     }
     signingConfigs {
@@ -146,6 +163,14 @@ android {
             // SS-PERF (2026-09-25): proguard-android-optimize — kodni ham optimallashtiradi
             // (inlining/dead-code); RN/Hermes bilan mos (keep-rule'lar proguard-rules.pro da).
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    // LOKAL (skip-worktree): bu Windows mashinada build uchun. Nitro modullar libNitroModules.so ni
+    // ikki marta eksport qiladi -> "2 files found"; pickFirst bittasini oladi. Mac'da kerak emas.
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ['**/libNitroModules.so']
         }
     }
 }

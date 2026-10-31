@@ -28,6 +28,9 @@ import {
   waitForOwnPasswordChange,
 } from '../../helper/passwordChangeSession';
 import { getDeviceUserAgent } from '../../helper/userAgent';
+import { endXodimSessionOnExpiry, isEndedXodimAuth, isXodimSession } from './token/xodimSession';
+import Toast from 'react-native-toast-message';
+import i18next from 'i18next';
 import {
   installOfertaToastGuard,
   isOfertaRequiredError,
@@ -78,6 +81,8 @@ const setAuthHeader = (config: any, token: string): void => {
 // refreshToken bilan yangi access token olamiz. Muvaffaqiyatsiz bo'lsa null.
 export const refreshAccessToken = (): Promise<string | null> => {
   if (refreshPromise) return refreshPromise;
+  // SEC (2026-10-31): xodim rejimida shaxsiy refreshToken'ni xodim tokeni uchun ISHLATMAYMIZ.
+  if (isXodimSession()) return Promise.resolve(null);
   const refreshToken = storage.getString('refreshToken');
   if (!refreshToken) return Promise.resolve(null);
 
@@ -128,10 +133,12 @@ const requestUsesCurrentToken = (error: any): boolean => {
   return String(auth) === `Bearer ${cur}`;
 };
 
-const isExpiredError = (error: any): boolean => {
+// Backend hozir {code:'UNAUTHORIZED', message:'Token has expired'} qaytaradi; kelajakda
+// code:'TOKEN_EXPIRED' qo'shilishi mumkin — ikkalasi ham qabul qilinadi.
+export const isExpiredError = (error: any): boolean => {
   const status = error?.response?.status;
-  const msg = error?.response?.data?.message;
-  return status === 401 && /expired/i.test(String(msg || ''));
+  const data = error?.response?.data;
+  return status === 401 && (data?.code === 'TOKEN_EXPIRED' || /expired/i.test(String(data?.message || '')));
 };
 
 // Berilgan axios instansiyasiga refresh-on-401 interceptorini o'rnatadi.
@@ -170,6 +177,29 @@ export const installAuthRefresh = (instance: AxiosInstance): void => {
         isExpiredError(error) &&
         !String(original.url || '').includes(REFRESH_PATH)
       ) {
+        // SEC (2026-10-31): xodim tokeni tugadi -> xodim seansini tugatamiz (egasining tokeni
+        // tiklanadi) va so'rovni QAYTA YUBORMAYMIZ: aks holda xodim kontekstidagi amal
+        // (qarz daftari yozuvi) egasining shaxsiy tokeni bilan bajarilib ketardi.
+        const reqAuth =
+          typeof original.headers?.get === 'function'
+            ? original.headers.get('Authorization')
+            : original.headers?.Authorization;
+        if (isXodimSession() || isEndedXodimAuth(reqAuth)) {
+          if (endXodimSessionOnExpiry()) {
+            try {
+              Toast.show({
+                autoHide: true,
+                visibilityTime: 4500,
+                position: 'bottom',
+                type: 'error2',
+                props: {
+                  desc: i18next.t('Xodim seansi tugadi. Shaxsiy hisobingizga qaytdingiz.'),
+                },
+              });
+            } catch {}
+          }
+          return Promise.reject(error);
+        }
         original._retry = true;
         const newToken = await refreshAccessToken();
         if (newToken) {

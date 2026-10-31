@@ -112,6 +112,9 @@ const DebtTakeFull = () => {
           type: 'omad',
         });
         goHomeSmooth(navigation, t('447'));
+      } else {
+        // Kutilmagan javob — spinner abadiy qolib ketmasin.
+        setLoading(false);
       }
 
       // socketService.sendNotification({id: item.debitor});

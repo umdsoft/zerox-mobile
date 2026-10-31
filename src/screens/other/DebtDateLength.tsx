@@ -151,6 +151,7 @@ const DebtDateLength = () => {
       });
     } catch (error) {
       console.error(error);
+      setLoading1(false);
       Toast.show({
         autoHide: true,
         visibilityTime: 3000,
@@ -274,7 +275,7 @@ const DebtDateLength = () => {
                 navigation.navigate('Dalol', {
                   type: 3,
                   data: info,
-                  date: date,
+                  date: date instanceof Date && !isNaN(date.getTime()) ? date.toISOString() : undefined,
                 });
               }}
               style={styles.checkText}

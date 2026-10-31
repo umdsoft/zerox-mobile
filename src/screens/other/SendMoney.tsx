@@ -44,6 +44,13 @@ const SendMoney = () => {
   });
   const dispatch = useDispatch();
 
+  // Server xabari faqat matn (bo'shliqli jumla) bo'lsa ko'rsatiladi: obyekt Text ichida
+  // crash beradi, 'database-error' kabi xom kodlar foydalanuvchiga chiqmasin.
+  const pickServerMessage = (d: any): string => {
+    const m = d?.message;
+    return typeof m === 'string' && /\s/.test(m.trim()) ? m : '';
+  };
+
   const _sendMoney = async () => {
     const token = storage.getString('token');
     if (user.uid === id.split('/').join('')) {
@@ -112,10 +119,20 @@ const SendMoney = () => {
               middle_name: '',
               id: '',
             });
-            setLoading(false);
             // Toast o'qilsin -> yo'qolsin -> so'ng HOME (matn uzunligiga qarab
             // o'qish vaqti; freeze yo'q — navigate).
             goHomeSmooth(navigation, t('639'));
+          } else {
+            // 200 + success:false — serverdagi xabarni ko'rsatamiz (loading finally'da tushadi).
+            Toast.show({
+              autoHide: true,
+              visibilityTime: 3000,
+              position: 'bottom',
+              type: 'error2',
+              props: {
+                desc: pickServerMessage(data) || t('Xatolik'),
+              },
+            });
           }
         } else {
           setSum('');
@@ -125,7 +142,6 @@ const SendMoney = () => {
             middle_name: '',
             id: '',
           });
-          setLoading(false);
           Toast.show({
             autoHide: true,
             visibilityTime: 3000,
@@ -138,7 +154,6 @@ const SendMoney = () => {
         }
       }
     } catch (error) {
-      setLoading(false);
       console.error(error.message, 'eror');
       Toast.show({
         autoHide: true,
@@ -146,9 +161,11 @@ const SendMoney = () => {
         position: 'bottom',
         type: 'error2',
         props: {
-          desc: t('826'),
+          desc: pickServerMessage((error as any)?.response?.data) || t('826'),
         },
       });
+    } finally {
+      setLoading(false);
     }
   };
 

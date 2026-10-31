@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import RdHeader from '../redesign/RdHeader';
 import Pdf from 'react-native-pdf';
 import { rd, rs } from '../../../theme/rd';
@@ -10,20 +10,30 @@ import { signExistingUrl } from '../../../helper/pdfSign';
 
 const Dalol = () => {
   const route = useRoute();
-  const { type, data, date, sum } = route.params;
+  const navigation = useNavigation<any>();
+  // Push / tiklangan nav state'dan params bo'sh kelishi mumkin — crash o'rniga orqaga.
+  const { type, data, date, sum } = (route.params ?? {}) as any;
   const { t, i18n } = useTranslation();
-  const unsignedUrl = returnURL(
-    type,
-    data,
-    i18n.language,
-    date?.toString() || '',
-    sum,
-  );
+  const missingParams = !data || type == null;
+  useEffect(() => {
+    if (missingParams && navigation.canGoBack()) navigation.goBack();
+  }, [missingParams, navigation]);
+  // `date` — ISO satr (nav param serializatsiyalanadigan bo'lishi uchun); eski Date ham qabul.
+  const unsignedUrl = missingParams
+    ? ''
+    : returnURL(
+        type,
+        data,
+        i18n.language,
+        date instanceof Date ? date.toISOString() : date?.toString() || '',
+        sum,
+      );
   // 31.10: imzolangan havola (3.5 s gacha kutiladi; xato/timeout bo'lsa eski imzosiz havola)
   const [uri, setUri] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
     setUri(null);
+    if (!unsignedUrl) return;
     signExistingUrl('act', unsignedUrl).then(u => alive && setUri(u));
     return () => {
       alive = false;
@@ -66,8 +76,7 @@ const returnURL = (type, data, lang, date, sum) => {
     case 2:
       return `${PDF_ACT_URL}?debitor=${data.duid}&creditor=${data.cuid}&act_type=4&vos_summa=${data.residual_amount}&uid=${data.uid}&lang=${lang}`;
     case 3:
-      const dd = new Date(date);
-      const date2 = dd.toISOString().slice(0, 10);
+      const date2 = fmt(date);
       return `${PDF_ACT_URL}?debitor=${data.duid}&creditor=${data.cuid}&act_type=6&refundable_amount=0&residual_amount=${data.residual_amount}&end_date=${date2}&uid=${data.uid}&lang=${lang}`;
     case 4:
       return `${PDF_ACT_URL}?debitor=${data.duid}&creditor=${data.cuid}&act_type=2&amount=${data.amount}&residual_amount=0&refundable_amount=${data.residual_amount}&end_date=${fmt(

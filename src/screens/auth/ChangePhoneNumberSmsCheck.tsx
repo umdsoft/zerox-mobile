@@ -24,8 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import Svg, { Path } from 'react-native-svg';
 
-import _BackgroundTimer from 'react-native-background-timer';
-import { useKeepAwake } from '@sayem314/react-native-keep-awake';
+import { startDeadlineCountdown } from '../../helper/deadlineCountdown';
 import { OtpInput } from 'react-native-otp-entry';
 import {
   getHash,
@@ -41,6 +40,7 @@ import { normalize } from '../../theme/style';
 import { secToMin } from '../other/SaveUserDetails';
 import { rd, rs } from '../../theme/rd';
 import { ChevronLeft } from '../home/redesign/icons';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 
 // Hero uchun xabar (SMS) ikonasi — Feather uslubi.
 const MessageIcon = ({ size = rs(34), color = rd.color.primary }) => (
@@ -58,14 +58,13 @@ const MessageIcon = ({ size = rs(34), color = rd.color.primary }) => (
   </Svg>
 );
 
-const ChangePhoneNumberSmsCheck = () => {
-  useKeepAwake();
+const ChangePhoneNumberSmsCheckInner = () => {
   const route = useRoute();
   const dispatch = useDispatch();
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState('');
-  const { phone } = route.params;
+  const { phone } = (route.params ?? {}) as any;
   const navigation = useNavigation();
   const { i18n } = useTranslation();
 
@@ -76,7 +75,7 @@ const ChangePhoneNumberSmsCheck = () => {
   const [isRetry, setIsRetry] = useState(true);
   const [autoFocus, setAutoFocus] = useState(false);
 
-  let timerRef = useRef<number | null>(null);
+  const stopCountdownRef = useRef<(() => void) | null>(null);
 
   const refI = useRef(null);
 
@@ -168,22 +167,15 @@ const ChangePhoneNumberSmsCheck = () => {
   }, [timer]);
 
   const startTimer = useCallback(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    timerRef.current = _BackgroundTimer.setInterval(() => {
-      setTimer(v => {
-        if (v === 0) {
-          _BackgroundTimer.clearInterval(timerRef.current!);
-          _BackgroundTimer.stopBackgroundTimer();
-          _BackgroundTimer.stop();
-
-          setIsRetry(false);
-          return 120;
-        } else {
-          return v - 1;
-        }
-      });
-    }, 1000);
+    stopCountdownRef.current?.();
+    stopCountdownRef.current = startDeadlineCountdown(
+      120,
+      setTimer,
+      () => {
+        setIsRetry(false);
+        setTimer(120);
+      },
+    );
   }, []);
 
   const resendSms = async () => {
@@ -243,9 +235,8 @@ const ChangePhoneNumberSmsCheck = () => {
   useEffect(() => {
     startTimer();
     return () => {
-      _BackgroundTimer.clearInterval(timerRef.current!);
-      _BackgroundTimer.stopBackgroundTimer();
-      _BackgroundTimer.stop();
+      stopCountdownRef.current?.();
+      stopCountdownRef.current = null;
     };
   }, [startTimer]);
 
@@ -388,6 +379,8 @@ const ChangePhoneNumberSmsCheck = () => {
     </View>
   );
 };
+
+const ChangePhoneNumberSmsCheck = withRequiredParams(ChangePhoneNumberSmsCheckInner, ['phone']);
 
 export default ChangePhoneNumberSmsCheck;
 

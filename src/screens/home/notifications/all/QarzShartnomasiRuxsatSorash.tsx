@@ -59,8 +59,9 @@ const QarzShartnomasiRuxsatSorash = ({ item, navigation, okay }) => {
         setLoading(false);
       }
     } catch (error) {
-      setLoading(false);
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }, [dispatch, item, user.data.id]);
   //237

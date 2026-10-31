@@ -33,13 +33,15 @@ import { setAnalyticsUser } from './analytics';
 
 // 08.10: 'password-changed' — foydalanuvchi O'Z parolini o'zgartirgan va sessiyani jim
 // tiklab bo'lmagan holat: neytral xabar ("boshqa qurilmadan" EMAS).
-export type ForceLogoutReason = 'revoked' | 'refresh-failed' | 'user' | 'password-changed';
+export type ForceLogoutReason = 'revoked' | 'refresh-failed' | 'user' | 'password-changed' | 'pin-lockout';
 
 // 08.10: sabab -> toast (foydalanuvchi o'zi chiqsa — toast yo'q).
 const LOGOUT_TOAST: Record<Exclude<ForceLogoutReason, 'user'>, { type: string; text: string }> = {
   revoked: { type: 'error2', text: 'Sessiya boshqa qurilmadan tugatildi. Iltimos, qayta kiring.' },
   'refresh-failed': { type: 'error2', text: 'Sessiya muddati tugadi. Iltimos, qayta kiring.' },
   'password-changed': { type: 'omad', text: "Parol o'zgartirildi. Iltimos, yangi parol bilan kiring." },
+  // SEC (2026-10-31): PIN 10 marta ketma-ket xato kiritildi.
+  'pin-lockout': { type: 'error2', text: 'PIN-kod ko‘p marta xato kiritildi. Xavfsizlik uchun qayta kiring.' },
 };
 
 let inProgress = false;
@@ -90,6 +92,13 @@ export const forceLogout = (reason: ForceLogoutReason = 'revoked'): Promise<void
         if (actor) getOutbox().dropDone(actor.key);
       } catch {}
     }
+    // SEC (2026-10-31): biometrik sir (Keychain) va yuklab olingan PDF'lar logout'da o'chadi.
+    try {
+      require('./biometricUnlock').disableBiometricUnlock?.();
+    } catch {}
+    try {
+      require('./pdfCache').clearPdfCache?.();
+    } catch {}
     // 2) MMKV
     try {
       storage.clearAll();

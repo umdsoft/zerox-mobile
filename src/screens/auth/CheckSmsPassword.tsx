@@ -17,8 +17,7 @@ import React, {
   useState,
 } from 'react';
 import { useNavigation, useRoute, StackActions } from '@react-navigation/native';
-import BackgroundTimer from 'react-native-background-timer';
-import { useKeepAwake } from '@sayem314/react-native-keep-awake';
+import { startDeadlineCountdown } from '../../helper/deadlineCountdown';
 import Toast from 'react-native-toast-message';
 import { t } from 'i18next';
 import { useDispatch, useSelector } from 'react-redux';
@@ -65,6 +64,7 @@ import {
   removeListener,
   startOtpListener,
 } from 'react-native-otp-verify';
+import { withRequiredParams } from '../../helper/withRequiredParams';
 
 const CODE_LENGTH = 5;
 
@@ -83,13 +83,11 @@ const resendErrMsg = (m?: string): string => {
   return t('Kod yuborishda xatolik. Birozdan so‘ng qayta urinib ko‘ring.');
 };
 
-const CheckSmsPassword = () => {
-  useKeepAwake();
-
+const CheckSmsPasswordInner = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { phone } = route.params;
+  const { phone } = (route.params ?? {}) as any;
 
   // OTP input imperative handle (setValue) — SMS avtomatik to'ldirish uchun.
   const inputRefs = useRef<any>(null);
@@ -98,7 +96,7 @@ const CheckSmsPassword = () => {
   const [code, setCode] = useState('');
   const [timer, setTimer] = useState(120);
   const [isRetryEnabled, setIsRetryEnabled] = useState(false);
-  const timerRef = useRef<number | null>(null);
+  const stopCountdownRef = useRef<(() => void) | null>(null);
   const [autoFocus, setAutoFocus] = useState(false);
 
   // Redux state
@@ -106,32 +104,23 @@ const CheckSmsPassword = () => {
     state => state.RegisterWithPeopleCheckSmsCodeReducer,
   );
 
-  // Timer management
+  // Timer management — deadline asosida (orqa fonda ham to'g'ri; BackgroundTimer/KeepAwake kerak emas).
   const startTimer = useCallback(() => {
     setIsRetryEnabled(false);
-    setTimer(120);
-
-    if (timerRef.current) {
-      BackgroundTimer.clearInterval(timerRef.current);
-    }
-
-    timerRef.current = BackgroundTimer.setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) {
-          BackgroundTimer.clearInterval(timerRef.current!);
-          setIsRetryEnabled(true);
-          return 120;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    stopCountdownRef.current?.();
+    stopCountdownRef.current = startDeadlineCountdown(
+      120,
+      setTimer,
+      () => {
+        setIsRetryEnabled(true);
+        setTimer(120);
+      },
+    );
   }, []);
 
   const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      BackgroundTimer.clearInterval(timerRef.current);
-      BackgroundTimer.stopBackgroundTimer();
-    }
+    stopCountdownRef.current?.();
+    stopCountdownRef.current = null;
   }, []);
 
   // Initialize timer on mount
@@ -398,6 +387,8 @@ const CheckSmsPassword = () => {
     </View>
   );
 };
+
+const CheckSmsPassword = withRequiredParams(CheckSmsPasswordInner, ['phone'], 'LoginWithPhone');
 
 export default CheckSmsPassword;
 

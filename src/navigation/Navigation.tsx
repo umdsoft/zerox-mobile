@@ -223,6 +223,7 @@ const AllNavigators = [
   { name: 'CreditorDebitor', component: CreditorDebitor },
   { name: 'DownloadStatistic', component: lazyScreen(() => require('../screens/home/statisticScreens/DownloadStatistic')) },
   { name: 'UserScreen', component: UserScreen },
+  { name: 'DeleteAccount', component: lazyScreen(() => require('../screens/other/DeleteAccount')) },
   { name: 'RegisterWithPeople', component: RegisterWithPeople },
   { name: 'CreatePassword', component: CreatePassword },
   //7

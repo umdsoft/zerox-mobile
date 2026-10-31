@@ -11,6 +11,7 @@ import LottieView from 'lottie-react-native';
 import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { sortText } from './StatisticCard';
+import { tashkentDayDiff } from '../../helper/dayDiff';
 import { ClockIcon } from '../home/redesign/icons';
 
 // REDIZAYN: eski jadval (style.blue chiziq, MainText) o'rniga zamonaviy detail karta —
@@ -169,16 +170,7 @@ const ListCard = ({
   );
 };
 
-const CheckDate = date => {
-  // Haqiqiy kun farqini hisoblaymiz. Oldin oy chegarasida oy-farqini kun deb olardi
-  // (masalan 30-iyul → 2-avgust = 3 kun, lekin "1 kun" ko'rsatardi).
-  const d = new Date(date);
-  const now = new Date();
-  d.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((d.getTime() - now.getTime()) / 86400000);
-  return pp(diffDays);
-};
+const CheckDate = date => pp(tashkentDayDiff(date));
 
 const pp = (day: number) => {
   switch (Math.abs(day)) {

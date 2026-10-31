@@ -45,17 +45,150 @@
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSPinnedDomains</key>
+		<dict>
+			<key>app.zerox.uz</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>a9khLOZJxlnJyrxstg/P+seiDCm+Yf3OsrXyFocBaI0=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>Douxi77vs4G+Ib/BogbTFymEYq0QSFXwSgVCaZcI09Q=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</string>
+					</dict>
+				</array>
+			</dict>
+			<key>pdf.zerox.uz</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>a9khLOZJxlnJyrxstg/P+seiDCm+Yf3OsrXyFocBaI0=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>Douxi77vs4G+Ib/BogbTFymEYq0QSFXwSgVCaZcI09Q=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</string>
+					</dict>
+				</array>
+			</dict>
+			<key>zerox.uz</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>a9khLOZJxlnJyrxstg/P+seiDCm+Yf3OsrXyFocBaI0=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>Douxi77vs4G+Ib/BogbTFymEYq0QSFXwSgVCaZcI09Q=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>x4QzPSC810K5/cMjb05Qm4k3Bw5zBn4lTdO/nEW/Td4=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</string>
+					</dict>
+				</array>
+			</dict>
+			<key>tb.zerox.uz</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>LoMHBotttiDko50Gi13uXW71eIy7LAttI+rYT8wXF4w=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>fk6IOKit1ild5647BH06ujSIq5XbCgqlbYl6ANhhi88=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSContactsUsageDescription</key>
 	<string>Qarz oluvchi yoki beruvchini kontaktlaringizdan tanlash uchun: ism va telefon raqami formaga to‘ldiriladi.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>This app uses Face ID to securely authenticate you.</string>
+	<string>Face ID ilovaga kirishda shaxsingizni xavfsiz tasdiqlash uchun ishlatiladi.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Zerox needs access to your camera to scan QR codes.</string>
+	<string>Kamera QR-kodlarni (chek va mijoz kodi) skanerlash hamda MyID orqali shaxsni tasdiqlash uchun ishlatiladi.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Zerox may use your location to improve connectivity features and provide location-based services.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Zerox needs access to your photo library for image picker functionality.</string>
+	<string>Gap uchrashuv joyini xaritada tanlash uchun joriy joylashuvingiz ishlatiladi.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>

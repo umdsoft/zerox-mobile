@@ -1,4 +1,4 @@
-import notifee from '@notifee/react-native';
+import notifee, { AndroidVisibility } from '@notifee/react-native';
 import { io, Socket } from 'socket.io-client';
 import { storage } from '../store/api/token/getToken';
 import { onTokenRefreshed } from '../store/api/authInterceptor';
@@ -352,12 +352,18 @@ class SocketService {
                   const channelId = await notifee.createChannel({
                     id: 'default',
                     name: 'Default Channel',
+                    visibility: AndroidVisibility.PRIVATE,
                   });
                   await notifee.displayNotification({
                     title: 'ZeroX',
                     body: body1 ?? 'Yangi bildirishnoma',
                     android: {
                       channelId: channelId,
+                      // SEC (2026-10-31): qulflangan ekranda summa/ism ko'rinmasin (notifee'da
+                      // publicVersion yo'q — PRIVATE da tizim umumiy "kontent yashirilgan" matnini
+                      // ko'rsatadi). Kanal ilgari yaratilgan bo'lsa uning sozlamasi o'zgarmaydi,
+                      // shuning uchun bildirishnomaning o'zida ham beriladi.
+                      visibility: AndroidVisibility.PRIVATE,
                       smallIcon: 'ic_launcher',
                       pressAction: {
                         id: 'default',

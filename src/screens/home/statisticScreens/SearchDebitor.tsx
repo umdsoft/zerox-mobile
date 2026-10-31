@@ -37,6 +37,7 @@ import {groupDigits} from '../../../helper/money';
 // Shartnoma va daftari nisbati diagrammasi (Qarz daftari sahifasidan ko'chirildi) —
 // Berilgan/Olingan qarz "manba tanlash" sahifasida ko'rsatiladi.
 import {DashboardChartCard} from '../modules/QarzDaftari';
+import { withRequiredParams } from '../../../helper/withRequiredParams';
 
 // Qarz daftari uslubidagi ikkilamchi (binafsha) urg'u.
 const LEDGER_ACCENT = '#6d5ae6';
@@ -73,7 +74,7 @@ const SourceCardWide = ({Icon, label, uzs, usd, onPress, tint, accent}: any) => 
   </TouchableOpacity>
 );
 
-const SearchDebitor = () => {
+const SearchDebitorInner = () => {
   const {t, i18n} = useTranslation();
   // useRoute<any>() — bu ekran paramlari tiplanmagan (navigator ParamList'i yo'q).
   const route = useRoute<any>();
@@ -90,7 +91,7 @@ const SearchDebitor = () => {
     view, // 'select' -> 2 vertikal manba kartasi; aks holda -> qarzlar ro'yxati
     report, // true -> HISOBOT rejimi (tugallangan+rad ham ko'rinadi, status tablar)
     lockTab, // 'near'|'overdue' -> FAQAT o'sha kategoriya, tablar YASHIRILADI
-  } = route.params;
+  } = (route.params ?? {}) as any;
   const isSelect = view === 'select';
   const isReport = report === true;
   // Muddati o'tgan/oz qolgan MAXSUS sahifalari — bitta kategoriyaga qulflangan.
@@ -483,6 +484,8 @@ const SearchDebitor = () => {
     </View>
   );
 };
+
+const SearchDebitor = withRequiredParams(SearchDebitorInner, []);
 
 export default SearchDebitor;
 

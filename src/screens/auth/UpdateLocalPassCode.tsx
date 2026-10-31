@@ -5,6 +5,8 @@ import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 // SS-SEC (2026-09-25): PIN hash (pin.ts); terilayotgan raqamlar MMKV'ga yozilmaydi.
 import {setPin, verifyPin} from '../../store/api/token/pin';
+import {attemptPin, formatRemaining} from '../../store/api/token/pinLockout';
+import {forceLogout} from '../../helper/forceLogout';
 import {storage} from '../../store/api/token/getToken';
 import {t} from 'i18next';
 
@@ -38,9 +40,31 @@ const UpdateLocalPassCode = () => {
         //     });
         //   }
         // }
-        if (step === 1 && verifyPin(password + val)) {
+        // SEC (31.10): joriy PIN tekshiruvi ham umumiy urinish/qulf hisobidan o'tadi (cheksiz sinov yo'q)
+        if (step === 1) {
+          const attempt = attemptPin(verifyPin, password + val);
           setPassword('');
-          setStep(2);
+          if (attempt.result === 'wipe') {
+            forceLogout('pin-lockout');
+            return;
+          }
+          if (attempt.result === 'ok') {
+            setStep(2);
+          } else {
+            Toast.show({
+              type: 'error2',
+              position: 'top',
+              props: {
+                desc: attempt.result === 'locked'
+                  ? t('Qolgan vaqt: {{time}}', {time: formatRemaining(attempt.remainingMs)})
+                  : t('777'),
+              },
+              visibilityTime: 3000,
+              autoHide: true,
+              topOffset: Platform.OS === 'android' ? 5 : normalize(50),
+            });
+          }
+          return;
         }
 
         if (step === 2) {

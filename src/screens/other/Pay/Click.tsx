@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {rd, rs} from '../../../theme/rd';
 import Toast from 'react-native-toast-message';
 import {useNavigation, useRoute, StackActions } from '@react-navigation/native';
@@ -24,125 +24,172 @@ import PaymeIcon from '../../../images/Payme';
 import {URL} from '../../constants';
 import {storage} from '../../../store/api/token/getToken';
 import Loading from '../../components/Loading';
-import axios from 'axios';
 import { beginExternalFlow } from '../../../helper/externalFlow';
+import {withRequiredParams} from '../../../helper/withRequiredParams';
+import {
+  buildClickUrl,
+  buildPaymeUrl,
+  digitsOnly,
+  isPaymentCredited,
+  validatePayAmount,
+} from '../../../helper/payAmount';
 
-const Pay = () => {
+// To'lovni kuzatish: 2s oraliq (dastlabki 5 urinish), keyin 5s; jami 10 daqiqadan keyin to'xtaydi.
+const POLL_FAST_MS = 2000;
+const POLL_SLOW_MS = 5000;
+const POLL_FAST_TICKS = 5;
+const POLL_MAX_MS = 10 * 60 * 1000;
+
+type PendingPayment = {baseline: number; amount: number; startedAt: number};
+
+const PayInner = () => {
   const navigation = useNavigation();
-  const {type, title} = useRoute().params;
+  const {type, title} = (useRoute().params ?? {}) as any;
   // SS-PERF (2026-09-25): aniq selektor (butun slice emas — ortiqcha re-render yo'q).
   const user = useSelector(state => state.HomeReducer.user);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [polling, setPolling] = useState(false);
   const dispatch = useDispatch();
   const [amount, setAmount] = useState('');
-  // const [warnings, setWarnings] = useState(0);
+  // Kutilayotgan to'lov: boshlang'ich balans va kiritilgan summa (store yangilansa ham o'zgarmaydi).
+  const pendingRef = useRef<PendingPayment | null>(null);
+  // Tugmani ikki marta bosishdan himoya.
+  const payingRef = useRef(false);
+
+  const showError = (desc: string) =>
+    Toast.show({
+      autoHide: true,
+      position: 'bottom',
+      props: {desc},
+      type: 'error2',
+      visibilityTime: 3000,
+    });
 
   const PayUser = () => {
+    if (payingRef.current) return;
+    payingRef.current = true;
     try {
-      const nums = String(amount).split(' ').join('');
-      if (nums.length <= 3) {
-        if (Number(nums) <= 1000) {
-          Toast.show({
-            autoHide: true,
-            position: 'bottom',
-            props: {desc: t('828')},
-            type: 'error2',
-            visibilityTime: 3000,
-          });
-        }
-      } else {
-        if (type === 0) {
-          // SS-DEV (2026-10-06, 06.10 1(b)): to'lov brauzeridan qaytishda PIN qulfi yo'q.
-          beginExternalFlow();
-          Linking.openURL(
-            `https://my.click.uz/services/pay?service_id=24899&merchant_id=17375&amount=${nums}&transaction_param=${user.data.uid}&return_url=zeroxuz://UserMoneyResult`,
-          );
-        } else {
-          if (type === 1) {
-            setIsLoading(true);
-            // let str = `m=62fa657ea12ad7a48f4b2dd9;ac.user_id=${
-            //   user.data.uid
-            // };a=${Number(nums) * 100};c=zeroxuz://UserMoneyResult/;ct=1000`;
-            // let url = btoa(str);
-
-            const paycomParams = {
-              m: '62fa657ea12ad7a48f4b2dd9',
-              'ac.user_id': user.data.uid,
-              a: Number(nums) * 100,
-              c: 'https://alisherrahimov.github.io/redirect-html/',
-              ct: 200,
-              l: 'uz',
-            };
-
-            const url = `https://checkout.paycom.uz/${btoa(
-              Object.entries(paycomParams)
-                .map(([k, v]) => `${k}=${v}`)
-                .join(';'),
-            )}`;
-            beginExternalFlow();
-            Linking.openURL(url);
-          }
-        }
+      const res = validatePayAmount(amount);
+      if (!res.ok) {
+        showError(
+          res.reason === 'max'
+            ? t('Summa juda katta. Maksimal miqdor — 100 000 000 UZS.')
+            : t('828'),
+        );
+        return;
       }
+      const uid = user?.data?.uid;
+      if (uid == null) return;
+      if (type !== 0 && type !== 1) return;
+      pendingRef.current = {
+        baseline: Number(user?.data?.balance),
+        amount: res.amount,
+        startedAt: Date.now(),
+      };
+      // SS-DEV (2026-10-06, 06.10 1(b)): to'lov brauzeridan qaytishda PIN qulfi yo'q.
+      beginExternalFlow();
+      Linking.openURL(
+        type === 0
+          ? buildClickUrl(res.amount, uid)
+          : buildPaymeUrl(res.amount, uid, btoa),
+      ).catch(() => {
+        pendingRef.current = null;
+        showError(t('Xatolik'));
+      });
     } catch (error) {
       console.error('Err', error);
+    } finally {
+      // Brauzer ochilgach foydalanuvchi qaytadi — qisqa kechikishdan keyin tugma yana faol.
+      setTimeout(() => {
+        payingRef.current = false;
+      }, 1500);
     }
   };
-  // const setPayment = (nums) => {
-  //   if (nums.length <= 3) {
-  //     if (nums < 1000) {
-  //       Toast.show({ autoHide: true, position: 'bottom', props: { desc: t('822') }, type: 'error2', visibilityTime: 3000, })
-  //     }
-  //   }
-  // }
 
+  // Ilova orqa fonga o'tsa kuzatuv to'xtaydi; qaytganda (kutilayotgan to'lov bo'lsa) davom etadi.
   useEffect(() => {
-    let appState = AppState.addEventListener('change', nextAppState => {
+    const sub = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
-        fetchData();
+        if (pendingRef.current) {
+          setIsLoading(true);
+          setPolling(true);
+        }
       } else {
+        setPolling(false);
         setIsLoading(false);
       }
     });
+    return () => sub.remove();
+  }, []);
 
-    async function fetchData() {
-      const token = storage.getString('token');
-      if (!token) {
+  useEffect(() => {
+    if (!polling) return;
+    let stopped = false;
+    let inFlight = false;
+    let ticks = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const finish = () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      setPolling(false);
+      setIsLoading(false);
+    };
+    const schedule = () => {
+      if (stopped) return;
+      timer = setTimeout(tick, ticks < POLL_FAST_TICKS ? POLL_FAST_MS : POLL_SLOW_MS);
+    };
+    const tick = async () => {
+      const pending = pendingRef.current;
+      if (stopped) return;
+      if (!pending || !storage.getString('token')) {
+        finish();
         return;
       }
+      if (Date.now() - pending.startedAt > POLL_MAX_MS) {
+        pendingRef.current = null;
+        finish();
+        showError(t('To‘lov hali tasdiqlanmadi. Balansni keyinroq tekshiring.'));
+        return;
+      }
+      if (inFlight) {
+        schedule();
+        return;
+      }
+      inFlight = true;
+      ticks += 1;
       try {
-        setIsLoading(true);
         const userData = await dispatch(getMe()).unwrap();
-
-        if (userData.user.data?.balance > user?.data?.balance) {
+        if (stopped) return;
+        if (
+          isPaymentCredited(
+            pending.baseline,
+            userData?.user?.data?.balance,
+            pending.amount,
+          )
+        ) {
+          pendingRef.current = null;
+          finish();
           // NAV-FIX: to'lov TUGADI. `replace` — natija ekranidan orqaga bosilganda
-          // to'lov (Click WebView) sahifasiga qaytmasin: bu chalkash va xavfli
-          // (foydalanuvchi to'lovni takrorlashga urinishi mumkin).
-          navigation.dispatch(StackActions.replace('UserMoneyResult', {user: userData.user.data}));
-          setIsLoading(false);
-        } else {
-          setIsLoading(false);
+          // to'lov sahifasiga qaytmasin (to'lovni takrorlash xavfi). Param YO'Q:
+          // natija ekrani balansni serverdan o'zi oladi.
+          navigation.dispatch(StackActions.replace('UserMoneyResult'));
+          return;
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        setIsLoading(false);
+      } finally {
+        inFlight = false;
       }
-    }
-    let ref = null;
-
-    if (isLoading) {
-      ref = setInterval(() => {
-        fetchData();
-      }, 1000);
-    }
-    return () => {
-      if (ref !== null) {
-        clearInterval(ref);
-      }
-      appState.remove();
+      schedule();
     };
-  }, [isLoading, navigation, user.data.balance]);
+    tick();
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [polling, navigation, dispatch]);
 
   if (isLoading) {
     return <Loading />;
@@ -175,8 +222,10 @@ const Pay = () => {
             placeholderTextColor={rd.color.textTertiary}
             keyboardType="numeric"
             onChangeText={val => {
-              setAmount(val);
+              // Faqat raqamlar; 10 xonadan ortiq kiritilmaydi.
+              setAmount(digitsOnly(val).slice(0, 10));
             }}
+            maxLength={14}
             style={styles.input}
             allowFontScaling={false}
           />
@@ -194,6 +243,8 @@ const Pay = () => {
     </View>
   );
 };
+
+const Pay = withRequiredParams(PayInner, ['type']);
 
 export default Pay;
 

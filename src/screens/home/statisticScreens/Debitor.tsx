@@ -11,11 +11,12 @@ import CharityDollar from '../../../images/CharityDollar';
 import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
 import {useOfertaGuard} from '../../../hooks/useOfertaGuard';
+import { withRequiredParams } from '../../../helper/withRequiredParams';
 
-const Debitor = () => {
+const DebitorInner = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {type, item, status, person, isHave, report} = route.params;
+  const {type, item, status, person, isHave, report} = (route.params ?? {}) as any;
   // SS-DEV (2026-09-29): berilgan qarz AMALLARI — ommaviy oferta shart (ko'rish ochiq).
   const guardOferta = useOfertaGuard();
 
@@ -92,6 +93,8 @@ const Debitor = () => {
     </ScreenLayout>
   );
 };
+
+const Debitor = withRequiredParams(DebitorInner, ['item']);
 
 export default Debitor;
 

@@ -23,9 +23,9 @@
 
 ## HIGH (4)
 
-### V-001 — Release keystore paroli tracked faylda (`zerox2024`)
+### V-001 — Release keystore paroli tracked faylda (`[REDACTED]`)
 - **Joy:** `android/gradle.properties:50-53`
-- **Muammo:** `MYAPP_UPLOAD_STORE_PASSWORD=zerox2024`, `MYAPP_UPLOAD_KEY_PASSWORD=zerox2024` — kuchsiz parol, git'da. Keystore fayli oqib ketsa, hujumchi haqiqiy ZeroX imzosi bilan soxta APK yaratadi.
+- **Muammo:** `MYAPP_UPLOAD_STORE_PASSWORD=[REDACTED]`, `MYAPP_UPLOAD_KEY_PASSWORD=[REDACTED]` — kuchsiz parol, git'da. Keystore fayli oqib ketsa, hujumchi haqiqiy ZeroX imzosi bilan soxta APK yaratadi.
 - **✅ Yechim:**
   1. Bu qatorlarni `gradle.properties`dan o'chiring.
   2. Parolni `~/.gradle/gradle.properties` (untracked) yoki CI secret/env orqali bering.

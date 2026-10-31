@@ -13,6 +13,7 @@
  * urinish, backoff), bo'lmasa — ilova ichidagi zaxira PDF (ofertaBundled.*).
  */
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { pdfCachePath } from './pdfCache';
 
 export type OfertaDocLang = 'uz' | 'ru' | 'kr';
 
@@ -48,7 +49,8 @@ const downloadOnce = async (
   url: string,
   onTask: (task: any) => void,
 ): Promise<string> => {
-  const path = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/oferta_${Date.now()}.pdf`;
+  // SEC (2026-10-31): kesh ichidagi maxsus papka (logout'da tozalanadi).
+  const path = await pdfCachePath(`oferta_${Date.now()}.pdf`);
   const task: any = ReactNativeBlobUtil.config({
     path,
     timeout: OFERTA_TIMEOUT_MS,

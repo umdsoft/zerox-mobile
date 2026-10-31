@@ -20,12 +20,40 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Reklama/atribut ruxsatlari: ilovada reklama yo'q (Firebase Analytics keltiradi) — olib tashlanadi -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" tools:node="remove" />
+    <!-- Aniq budilnik (notifee keltiradi): ilovada createTriggerNotification/alarmManager ishlatilmaydi -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+    <!-- Umumiy xotira: faqat Android 9 (API 28) va undan eski qurilmalarda Download'ga yozish uchun
+         (react-native-blob-util cheklovsiz e'lon qiladi — shu yerda maxSdkVersion bilan almashtiriladi) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:node="replace" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:node="replace" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <!-- If you don't know the MIME type in advance, set "mimeType" to "*/*". -->
             <data android:mimeType="application/pdf" />
         </intent>
+        <!-- SEC (31.10): DeviceIntegrityModule — Android 11+ paket ko'rinishi (root boshqaruv ilovalari) -->
+        <package android:name="com.topjohnwu.magisk" />
+        <package android:name="eu.chainfire.supersu" />
+        <package android:name="com.noshufou.android.su" />
+        <package android:name="com.koushikdutta.superuser" />
+        <package android:name="com.thirdparty.superuser" />
+        <package android:name="com.yellowes.su" />
+        <package android:name="com.kingouser.com" />
+        <package android:name="me.phh.superuser" />
+        <package android:name="com.zachspong.temprootremovejb" />
     </queries>
 
     <application
@@ -62,9 +90,6 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
             <meta-data
-                android:name="com.dieam.reactnativepushnotification.notification_color"
-                android:resource="@color/white" />
-            <meta-data
                 android:name="com.google.firebase.messaging.default_notification_icon"
                 android:resource="@drawable/ic_launcher" />
             <meta-data
@@ -78,7 +103,7 @@
 
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
             </intent-filter>
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />

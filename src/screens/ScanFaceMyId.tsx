@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 
-import { StackActions, useFocusEffect, useNavigation } from '@react-navigation/native';
-import { CaptureProtection } from 'react-native-capture-protection';
+import { StackActions, useNavigation } from '@react-navigation/native';
 
 import LottieView from 'lottie-react-native';
 import { rd, rs } from '../theme/rd';
@@ -172,16 +171,7 @@ const ScanFaceMyId = () => {
   const meNowRef = React.useRef<any>(meNow);
   meNowRef.current = meNow;
 
-  // V-012: MyID (yuz/passport) ekranida screenshot/record himoyasi — faqat shu ekranda
-  // (chiqishda qaytariladi, QrCode ViewShot va boshqa ekranlar buzilmaydi).
-  useFocusEffect(
-    useCallback(() => {
-      CaptureProtection.prevent().catch(() => {});
-      return () => {
-        CaptureProtection.allow().catch(() => {});
-      };
-    }, []),
-  );
+  // SEC (2026-10-31): screenshot/record himoyasi markaziy (helper/captureGuard.ts, route nomi bo'yicha).
 
   // P-002: MyID sessiyasini OLDINDAN olib qo'yamiz (tugma bosilganda kamera kutmasin).
   // Endi umumiy useMyIdSession hook orqali (parol-tiklash bilan bir xil manba).

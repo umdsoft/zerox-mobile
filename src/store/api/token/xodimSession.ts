@@ -23,6 +23,7 @@
 import { storage } from './getToken';
 import { URL } from '../../../screens/constants';
 import { getDeviceUserAgent } from '../../../helper/userAgent';
+import { getDeviceIntegrity, INTEGRITY_HEADER } from '../../../helper/deviceIntegrity';
 
 const K_TOKEN = 'token';
 const K_OWNER_PREV = 'owner_prev_token';
@@ -65,6 +66,8 @@ export async function enterXodimSession(
         Authorization: `Bearer ${token}`,
         // SS-AUDIT (2026-09-25): xom fetch axios default'larini olmaydi — UA qo'lda.
         'User-Agent': getDeviceUserAgent(),
+        // SEC (31.10): apiClient bilan bir xil — root/jailbreak belgisi xom fetch'da ham yuboriladi
+        ...(getDeviceIntegrity() === 'compromised' ? { [INTEGRITY_HEADER]: 'compromised' } : {}),
       },
       body: JSON.stringify({ faoliyat_id: faoliyatId }),
     });
@@ -89,15 +92,62 @@ export async function enterXodimSession(
   }
 }
 
-/** Xodim rejimidan chiqish — owner tokenini tiklaydi. */
-export function exitXodimSession(): void {
+// Oxirgi tugatilgan xodim tokeni (xotirada): parallel 401'lar flag o'chgandan keyin kelsa ham
+// ularni xodim so'rovi deb taniymiz va shaxsiy token bilan QAYTA yubormaymiz.
+let endedXodimToken: string | undefined;
+/** Berilgan Authorization sarlavhasi ('Bearer x') tugatilgan xodim tokeniga tegishlimi? */
+export function isEndedXodimAuth(authHeader: unknown): boolean {
+  return !!endedXodimToken && String(authHeader || '') === `Bearer ${endedXodimToken}`;
+}
+
+/**
+ * Xodim rejimidan chiqish — owner tokenini tiklaydi. Idempotent: parallel 401'lar
+ * bir necha marta chaqirsa ham faqat BIRINCHISI amal bajaradi (true qaytaradi).
+ */
+export function exitXodimSession(): boolean {
   try {
+    if (storage.getString(K_XODIM_FLAG) !== '1') return false;
+    endedXodimToken = storage.getString(K_TOKEN);
     const prev = storage.getString(K_OWNER_PREV);
     if (prev) storage.set(K_TOKEN, prev);
     storage.delete(K_OWNER_PREV);
     storage.delete(K_XODIM_FLAG);
     storage.delete(K_XODIM_NOMI);
+    return true;
   } catch {
     // storage yo'q bo'lsa ham ilova buzilmasin.
+    return false;
   }
+}
+
+// SEC (2026-10-31): xodim tokeni tugaganda sessiya o'zi tugaydi (authInterceptor).
+type EndedListener = () => void;
+const endedListeners: EndedListener[] = [];
+/** Xodim seansi (token tugashi tufayli) avtomatik tugaganda xabardor bo'lish. */
+export const onXodimSessionEnded = (cb: EndedListener): (() => void) => {
+  endedListeners.push(cb);
+  return () => {
+    const i = endedListeners.indexOf(cb);
+    if (i >= 0) endedListeners.splice(i, 1);
+  };
+};
+
+/**
+ * Xodim tokeni eskirganda chaqiriladi. Shaxsiy refreshToken xodim tokenini YANGILAMAYDI
+ * (aks holda xodim rejimi jimgina oddiy shaxsiy sessiyaga aylanib, UI esa xodim
+ * rejimini ko'rsatib turardi). Egasining shaxsiy tokeni tiklanadi; u eskirgan bo'lsa
+ * keyingi so'rovda odatdagidek refresh qilinadi. Eslatma: xodim rejimida shaxsiy token
+ * hech qachon rotatsiya qilinmaydi (refresh bloklangan), shuning uchun `owner_prev_token`
+ * eskirishi mumkin — bu normal holat, tiklangandan keyin yangilanadi.
+ */
+export function endXodimSessionOnExpiry(): boolean {
+  const did = exitXodimSession();
+  if (did) {
+    endedListeners.slice().forEach(l => {
+      try {
+        l();
+      } catch {}
+    });
+  }
+  return did;
 }
