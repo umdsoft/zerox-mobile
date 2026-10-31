@@ -37,6 +37,7 @@ import {forceLogout} from '../../helper/forceLogout';
 import {unsyncedCount} from '../../offline/hooks';
 import {storage} from '../../store/api/token/getToken';
 import { useFio } from '../../helper/useFio';
+import { signExistingUrl } from '../../helper/pdfSign';
 
 const UserScreen = () => {
   const route = useRoute();
@@ -192,12 +193,14 @@ const UserScreen = () => {
           <Row
             icon={<CoinIcon size={rs(20)} color={rd.color.primary} />}
             label={t('681')}
-            onPress={() => {
+            onPress={async () => {
               let lang = storage.getString('lang') || 'uz';
-              navigation.navigate('Contract', {
-                url: `${PDF_OFERTA_URL}?id=${user.data.uid}&lang=${lang}&download=0`,
-                title: t('681'),
-              });
+              // 31.10: imzolangan havola (xato/timeout bo'lsa eski imzosiz havola)
+              const url = await signExistingUrl(
+                'oferta',
+                `${PDF_OFERTA_URL}?id=${user.data.uid}&lang=${lang}&download=0`,
+              );
+              navigation.navigate('Contract', { url, title: t('681') });
             }}
           />
           <View style={styles.divider} />

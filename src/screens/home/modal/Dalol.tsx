@@ -1,38 +1,50 @@
 import { StyleSheet, View } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRoute } from '@react-navigation/native';
 import RdHeader from '../redesign/RdHeader';
 import Pdf from 'react-native-pdf';
 import { rd, rs } from '../../../theme/rd';
 import { useTranslation } from 'react-i18next';
 import { PDF_ACT_URL } from '../../constants';
+import { signExistingUrl } from '../../../helper/pdfSign';
 
 const Dalol = () => {
   const route = useRoute();
   const { type, data, date, sum } = route.params;
   const { t, i18n } = useTranslation();
+  const unsignedUrl = returnURL(
+    type,
+    data,
+    i18n.language,
+    date?.toString() || '',
+    sum,
+  );
+  // 31.10: imzolangan havola (3.5 s gacha kutiladi; xato/timeout bo'lsa eski imzosiz havola)
+  const [uri, setUri] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setUri(null);
+    signExistingUrl('act', unsignedUrl).then(u => alive && setUri(u));
+    return () => {
+      alive = false;
+    };
+  }, [unsignedUrl]);
 
 
   return (
     <View style={styles.container}>
       <RdHeader title={t('Dalolatnoma')} />
       <View style={styles.card}>
+        {uri ? (
         <Pdf
           trustAllCerts={false}
-          source={{
-            uri: returnURL(
-              type,
-              data,
-              i18n.language,
-              date?.toString() || '',
-              sum,
-            ),
-          }}
+          source={{ uri }}
           onError={error => {
             console.error(error, 'error');
           }}
           style={styles.pdf}
         />
+        ) : null}
       </View>
     </View>
   );

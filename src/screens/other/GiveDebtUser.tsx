@@ -58,6 +58,7 @@ import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { UserIcon, CoinIcon } from '../home/redesign/icons';
 import { useFio } from '../../helper/useFio';
+import { signExistingUrl } from '../../helper/pdfSign';
 
 const GiveDebtUser = () => {
   const { fio } = useFio();
@@ -163,18 +164,18 @@ const GiveDebtUser = () => {
   //     title: t('300'),
   //   });
   // }, [navigation]);
-  const toggleModal = () => {
+  const toggleModal = async () => {
     const lang = storage.getString('lang');
-    navigation.navigate('Contract', {
-      url: `https://pdf.zerox.uz/free_contract.php?debitor=${
+    const unsignedUrl = `https://pdf.zerox.uz/free_contract.php?debitor=${
         type === 0 ? qarzoluvchi?.uid : user?.data?.uid
       }&creditor=${
         type !== 1 ? user?.data?.uid : qarzoluvchi?.uid
       }&download=0&amount=${amountNum}&currency=${
         active ? 'UZS' : 'USD'
-      }&day=${formatDateMinus(date)}&lang=${lang}`,
-      title: t('306'),
-    });
+      }&day=${formatDateMinus(date)}&lang=${lang}`;
+    // 31.10: imzolangan havola (xato/timeout bo'lsa eski imzosiz havola)
+    const url = await signExistingUrl('free_contract', unsignedUrl);
+    navigation.navigate('Contract', { url, title: t('306') });
   };
 
   // console.log(user);
