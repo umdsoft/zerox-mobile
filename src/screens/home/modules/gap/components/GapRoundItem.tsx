@@ -31,7 +31,7 @@ const GapRoundItem = ({ d, r, roundKey, isOpen }: Props) => {
 
   return (
     <View style={styles.round}>
-      <TouchableOpacity activeOpacity={0.8} onPress={() => d.toggleRound(roundKey)}>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => d.toggleRound(roundKey, isOpen)}>
         <View style={styles.roundHead}>
           <Text allowFontScaling={false} style={styles.roundNo}>{r.round_no}-{t('davra')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(8) }}>
@@ -50,7 +50,7 @@ const GapRoundItem = ({ d, r, roundKey, isOpen }: Props) => {
       {isOpen && r.card_number ? (
         <GapRoundCardBox r={r} canSet={canSet} onCopy={d.copyCard} onEdit={d.openCard} />
       ) : null}
-      {invite && <GapRoundInvite r={r} asInvite={invite.asInvite} invitingRound={d.invitingRound} onInvite={d.sendInvite} />}
+      {invite && <GapRoundInvite r={r} asInvite={invite.asInvite} sending={!!d.sendingRounds[String(r.id)]} onInvite={d.sendInvite} />}
       {hasAttendance ? <GapAttendance attendance={att} /> : null}
       {isOpen && (r.payments || []).map((p: any, j: number) => (
         <GapPaymentRow key={p.id ?? j} p={p} mayManage={mayManage} busy={d.busy} onPay={d.pay} onUnpay={d.unpay} />

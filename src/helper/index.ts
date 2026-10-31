@@ -62,8 +62,7 @@ export const checkningPeople = (item: User): string | undefined => {
  */
 export const settingDate = (text: string | Date): string => {
   // SS-DEV (2026-09-24): noto'g'ri/bo'sh qiymatda "NaN.NaN.NaN" qaytmasin.
-  const d = parseApiDate(text);
-  return d ? fmtDmyLocal(d) : '';
+  return fmtApiDmy(text);
 };
 
 /**
@@ -136,6 +135,17 @@ export const apiDateTkYmd = (value?: string | number | Date | null): string | nu
   return info.wall ? fmtYmdLocal(info.date) : tkYmdFromMs(info.date.getTime());
 };
 
+/**
+ * "DD.MM.YYYY" (server sanasi): zonasiz satr / DD.MM.YYYY -> o'sha kun; 'Z'/ofsetli satr va son -> TOSHKENT kuni
+ * (01.11: ilgari qurilma kuni — Toshkentdan tashqaridagi qurilmada 'Z' sana bir kunga siljirdi);
+ * `Date` nusxasi (DatePicker) -> LOKAL kun. Yaroqsiz -> ''.
+ */
+const fmtApiDmy = (value?: string | number | Date | null): string => {
+  if (value instanceof Date) return isNaN(value.getTime()) ? '' : fmtDmyLocal(value);
+  const ymd = apiDateTkYmd(value);
+  return ymd ? `${ymd.slice(8, 10)}.${ymd.slice(5, 7)}.${ymd.slice(0, 4)}` : '';
+};
+
 // fmtDateTimeUz / fmtDmyLocal -> helper/date.ts (yagona manba); eski import yo'li saqlanadi.
 export { fmtDateTimeUz };
 
@@ -148,8 +158,7 @@ export { fmtDateTimeUz };
  */
 export const checkDate = (text?: string | null): string => {
   // SS-DEV (2026-09-24): ilgari `split('.').join('-')` ISO/ms-li sanani buzar edi.
-  const d = parseApiDate(text);
-  return d ? fmtDmyLocal(d) : '';
+  return fmtApiDmy(text);
 };
 
 // Import ReturnName for backward compatibility

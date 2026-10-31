@@ -47,6 +47,8 @@ const INTENDED_TK_CHANGES: Record<string, (row: { in: any }, idx: number) => boo
 // Joriy qoida har doim +5 (Toshkent 1991 yildan beri UTC+5) -> '1970-01-01T00:00:00Z' 06:00 emas 05:00.
 const HISTORICAL_1970 = '1970-01-01T00:00:00Z';
 const FIXED_DATE_SUBJECTS = [
+  // Wave B (01.11): checkDate 'Z' sanalari Toshkent kuni; tkYmdOf zonasiz satr = Toshkent devor vaqti (Toshkent jadvali o'zgarmagan).
+  'helper.checkDate', 'projection.tkYmdOf',
   'QarzDaftariAmaliyot.fmtDate', 'QarzDaftariAmaliyot.fmtDateTime', 'QarzDaftariAmaliyotlar.fmtDateTime',
   'QarzDaftariMijoz.fmtDate', 'DebtDateLengthAsk.formatDate', 'SearchUserScreen.formatDate',
 ];
@@ -78,7 +80,7 @@ describe('1) Toshkent jadvali tuzatishdan oldingi bilan bir xil', () => {
   });
   test('ymdOf va StatisticCard/sana yordamchilari: hech bir TZ jadvalida o\'zgarmagan', () => {
     for (const tz of Object.keys(pre)) {
-      for (const s of ['debtAllocation.ymdOf', 'projection.tkYmdOf', 'helper.fmtDateTimeUz', 'helper.checkDate', 'debtAllocation.todayTashkent']) {
+      for (const s of ['debtAllocation.ymdOf', 'helper.fmtDateTimeUz', 'debtAllocation.todayTashkent']) {
         expect(post[tz][s]).toEqual(pre[tz][s]);
       }
     }

@@ -63,7 +63,7 @@ export const useGapDetail = () => {
   const [openRounds, setOpenRounds] = React.useState<Record<string, boolean>>({});
   const [membersOpen, setMembersOpen] = React.useState(true); // R17: akkordeon
   const [venueForm, setVenueForm] = React.useState<any>(null);
-  const [invitingRound, setInvitingRound] = React.useState<any>(null); // SS4
+  const [sendingRounds, setSendingRounds] = React.useState<Record<string, boolean>>({}); // SS4: davra id -> yuborilmoqda
   const [coOrg, setCoOrg] = React.useState<{ member: any; add: boolean } | null>(null); // SS6
   const [showMap, setShowMap] = React.useState(false); // img8
   const [orderMode, setOrderMode] = React.useState<'random' | 'manual'>('random'); // SS11
@@ -88,7 +88,7 @@ export const useGapDetail = () => {
   const isOrganizer = !!g?.is_organizer;
   const isDraft = g?.status === 'draft';
 
-  const toggleRound = (k: string) => setOpenRounds(s => toggleRoundOpen(s, k));
+  const toggleRound = (k: string, isOpen: boolean) => setOpenRounds(s => toggleRoundOpen(s, k, isOpen));
   const moveMember = (idx: number, dir: -1 | 1) => {
     const next = moveInList(effectiveOrder, idx, dir);
     if (next) setManualOrder(next);
@@ -127,10 +127,21 @@ export const useGapDetail = () => {
 
   // SS4: "Taklif yuborish" — ma'lumot saqlangach a'zolarga Telegram taklifini YUBORADI.
   const sendInvite = async (r: Json) => {
-    if (invitingRound || !r) return;
-    setInvitingRound(r.id);
-    try {
-      await inviteAction.run(() => financeApi.notifyGapRound(id, r.id), {
+    if (!r || sendingRounds[String(r.id)]) return;
+    const key = String(r.id);
+    const mark = (on: boolean) => setSendingRounds(s => ({ ...s, [key]: on }));
+    // 01.11: "yuborilmoqda" faqat amal HAQIQATAN boshlangan davra uchun (run ichida) yoqiladi/o'chadi —
+    // boshqa davradagi tezkor 2-bosish birinchisining belgisini o'chirmaydi (ilgari umumiy null edi).
+    await inviteAction.run(
+      async () => {
+        mark(true);
+        try {
+          return await financeApi.notifyGapRound(id, r.id);
+        } finally {
+          mark(false);
+        }
+      },
+      {
         // SS-DEV (2026-09-24): muddati o'tgan davrada bu "to'lov haqida ogohlantirish" (ishtirok so'ralmaydi).
         success: () =>
           isRoundOverdue(r)
@@ -143,10 +154,8 @@ export const useGapDetail = () => {
               : apiErrorMessage(e),
           ),
         errorVisibilityTime: 5000,
-      });
-    } finally {
-      setInvitingRound(null);
-    }
+      },
+    );
   };
 
   const saveSettings = async () => {
@@ -286,7 +295,7 @@ export const useGapDetail = () => {
     // forma
     addName, setAddName, addPhone, onAddPhoneChange, addAmount, setAddAmount,
     // holat
-    busy, pdfBusy: pdfAction.loading, savingVenue: venueAction.loading, savingSet: settingsAction.loading, invitingRound,
+    busy, pdfBusy: pdfAction.loading, savingVenue: venueAction.loading, savingSet: settingsAction.loading, sendingRounds,
     showDel, setShowDel, delMember, setDelMember, coOrg, setCoOrg,
     membersOpen, setMembersOpen, openRounds, toggleRound,
     venueForm, setVenueForm, showMap, setShowMap, settings, setSettings,

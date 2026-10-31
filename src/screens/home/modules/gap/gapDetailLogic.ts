@@ -3,6 +3,7 @@
  * ko'chirilgan; xulq o'zgarmagan (__tests__/finance_gap_detail.test.tsx + gapDetailLogic.test.ts).
  */
 import { localDateKey, parseLocalDate } from '../financeMoney';
+import { TASHKENT_OFFSET_MS, tkCalendarYmd, tkWall, tkYmdFromMs } from '../../../../helper/date';
 
 type Json = Record<string, any>;
 
@@ -34,17 +35,16 @@ export const locationUrl = (loc: string): string =>
   /^https:\/\//i.test(loc) ? loc : `https://maps.google.com/?q=${encodeURIComponent(loc)}`;
 
 /**
- * SS1: davra muddati o'tganmi. Sana DATE ustunidan keladi (mysql2 +05:00) —
- * shu bois faqat KUN qismi solishtiriladi. `round_expired` bayrog'i bo'lsa o'sha (server vaqti).
+ * SS1: davra muddati o'tganmi. Sana DATE ustunidan keladi (mysql2 +05:00) — shu bois faqat KUN qismi
+ * solishtiriladi, TOSHKENT kalendar kuni bo'yicha (01.11: ilgari qurilma kuni). `round_expired` bayrog'i bo'lsa o'sha.
  */
 export const isRoundOverdue = (r: Json, now: Date = new Date()): boolean => {
   if (typeof r?.round_expired === 'boolean') return r.round_expired;
   const raw = r?.due_date;
   if (!raw) return false;
-  const d = new Date(String(raw).replace(' ', 'T'));
-  if (isNaN(d.getTime())) return false;
-  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  return day(d) < day(now);
+  const due = tkCalendarYmd(String(raw));
+  if (!due || isNaN(now.getTime())) return false;
+  return due < tkYmdFromMs(now.getTime());
 };
 
 /** Barcha to'lovlar to'langanmi (jami > 0 va to'langan >= jami). */
@@ -58,12 +58,16 @@ export const isRoundDefaultOpen = (rounds: Json[], i: number): boolean => {
 };
 
 /**
- * Davra ochiq/yopiq almashtirish. MAVJUD XULQ saqlangan: `?? false` — standart-ochiq davrani
- * birinchi bosish uni YOPMAYDI (kalit true bo'ladi), ikkinchisi yopadi.
+ * Davra ochiq/yopiq almashtirish. `isOpen` — davraning HOZIRGI ko'rinadigan holati (standart-ochiq ham hisobda):
+ * 01.11: ilgari `open[key] ?? false` standart-ochiq davrani 1-bosishda yopmasdi.
  */
-export const toggleRoundOpen = (open: Record<string, boolean>, key: string): Record<string, boolean> => ({
+export const toggleRoundOpen = (
+  open: Record<string, boolean>,
+  key: string,
+  isOpen: boolean = open[key] ?? false,
+): Record<string, boolean> => ({
   ...open,
-  [key]: !(open[key] ?? false),
+  [key]: !isOpen,
 });
 
 /**
@@ -158,7 +162,9 @@ export const inviteButtonState = (
 /** SS3: bekor qilish oynasi — faqat tashkilotchi/qabul qiluvchida, belgilangandan keyin 24 soat ichida. */
 export const canUnpayPayment = (p: Json, mayManage: boolean, nowMs: number = Date.now()): boolean => {
   if (!mayManage || p.status !== 'paid') return false;
-  const ms = p.paid_at ? new Date(String(p.paid_at).replace(' ', 'T')).getTime() : 0;
+  // 01.11: zonasiz paid_at = Toshkent devor vaqti (qurilma TZ'si emas); 'Z'/ofsetli = oniy vaqt.
+  const wall = p.paid_at ? tkWall(String(p.paid_at)) : null;
+  const ms = wall ? wall.getTime() - TASHKENT_OFFSET_MS : 0;
   if (!ms || isNaN(ms)) return true; // sana noma'lum — backend hal qiladi
   return nowMs - ms <= UNPAY_WINDOW_MS;
 };

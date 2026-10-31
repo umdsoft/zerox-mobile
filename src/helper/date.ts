@@ -151,3 +151,21 @@ export const fmtLocalDateTime = (s?: any, opts: LocalFmtOpts = {}): string => {
   const w = wallOfLoose(s, spaceToT);
   return w ? `${dmyOfWall(w)} ${p2(w.getUTCHours())}:${p2(w.getUTCMinutes())}` : fallback;
 };
+
+/**
+ * Server qiymati -> Toshkent kalendar kuni 'YYYY-MM-DD' (yagona qoida; 01.11 egasi tasdiqlagan):
+ *  - zonasiz satr ('YYYY-MM-DD[ T]HH:mm...') = Toshkent devor vaqti (knexfile mysql2 timezone '+05:00') -> o'sha kun (kesiladi);
+ *  - 'Z' / ofsetli satr, son, Date -> oniy vaqt + 5s.
+ * Yaroqsiz/bo'sh -> null. projection.tkYmdOf va debtAllocation.ymdOf shu yerga ulanadi.
+ */
+export const tkYmdLoose = (v: unknown): string | null => {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s) && !/(Z|[+-]\d{2}:?\d{2})$/.test(s.replace(/^\d{4}-\d{2}-\d{2}/, ''))) {
+      return s.slice(0, 10);
+    }
+  }
+  const t = typeof v === 'number' ? v : new Date(v as any).getTime();
+  return Number.isFinite(t) ? tkYmdFromMs(t) : null;
+};

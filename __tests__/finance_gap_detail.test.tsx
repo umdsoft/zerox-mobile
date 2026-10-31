@@ -153,6 +153,13 @@ const tap = async (node: any, ...args: unknown[]) => {
     await node.props.onPress(...args);
   });
 };
+// onPress natijasini KUTMAYDI (tugallanmagan so'rov bilan tekshirish uchun).
+const tapNoWait = async (node: any) => {
+  expect(node).toBeDefined();
+  await act(async () => {
+    void node.props.onPress();
+  });
+};
 const type = async (node: any, v: string) => {
   expect(node).toBeDefined();
   await act(async () => {
@@ -384,12 +391,12 @@ describe('FinanceGapDetail — faol gap (davralar)', () => {
     const r = await mount(activeGap());
     await tap(findPress(r, n => textOf(n).includes('2-davra')));
     expect(allText(r)).toContain('Uchrashuv joyini kiritish');
-    // MAVJUD XULQ (o'zgartirilmagan): toggleRound `?? false` ishlatadi, standart-ochiq davrani 1-bosish YOPMAYDI
-    // (openRounds[k]=true bo'ladi), 2-bosish yopadi.
-    await tap(findPress(r, n => textOf(n).includes('1-davra')));
+    // 01.11 tuzatish: standart-ochiq davrani 1-bosish YOPADI, 2-bosish qayta ochadi.
     expect(allText(r)).toContain('Kafe Navo');
     await tap(findPress(r, n => textOf(n).includes('1-davra')));
     expect(allText(r)).not.toContain('Kafe Navo');
+    await tap(findPress(r, n => textOf(n).includes('1-davra')));
+    expect(allText(r)).toContain('Kafe Navo');
   });
 
   test('yakunlangan davra standart YOPIQ, birinchi yakunlanmagani OCHIQ', async () => {
@@ -442,6 +449,26 @@ describe('FinanceGapDetail — faol gap (davralar)', () => {
     expect(byText(r2, '📨 Taklif yuborish')).toBeUndefined();
     await tap(byText(r2, '💳 To‘lov haqida ogohlantirish'));
     expect(toasts()).toContainEqual(['omad', 'Ogohlantirish yuborildi (muddat o‘tgan — ishtirok so‘ralmaydi)']);
+  });
+
+  test('taklif: tezkor 2-bosish (boshqa davra) birinchi davraning Yuborilmoqda belgisini o‘chirmaydi (01.11)', async () => {
+    let resolveFirst: (v?: unknown) => void = () => {};
+    mockApi.notifyGapRound.mockReturnValueOnce(new Promise(res => { resolveFirst = res; }));
+    const r = await mount(activeGap());
+    await tap(findPress(r, n => textOf(n).includes('2-davra'))); // 2-davra ham ochiq
+    // ikkala bosish BIR renderdan oldin (eskirgan closure): ESKI kodda 2-bosish umumiy holatni null'ga qaytarardi
+    const first = byText(r, '📨 Taklif yuborish');
+    const second = byText(r, '💳 To‘lov haqida ogohlantirish');
+    await act(async () => {
+      void first.props.onPress();
+      void second.props.onPress();
+    });
+    expect(mockApi.notifyGapRound).toHaveBeenCalledTimes(1);
+    expect(allText(r)).toContain('Yuborilmoqda…'); // ESKI xulq: bu yerda belgi o'chib ketardi
+    expect(allText(r).split('Yuborilmoqda…').length - 1).toBe(1); // faqat 1-davrada
+    await act(async () => { resolveFirst({}); });
+    expect(allText(r)).not.toContain('Yuborilmoqda…');
+    expect(allText(r)).toContain('📨 Taklif yuborish');
   });
 
   test('taklif: round_expired kodi tushunarli xabar bilan, 5s', async () => {
@@ -582,9 +609,9 @@ describe('FinanceGapDetail — render daraxti (vizual chiqish o\'zgarmagan)', ()
       await tap(findPress(r, n => textOf(n).includes('2-davra')));
       return r;
     }],
+    // 01.11 tuzatish: standart-ochiq davrani 1-bosish YOPADI (eski komponentda 2-bosish kerak edi; yopiq daraxt bir xil).
     ['active round 1 closed (2 taps)', async () => {
       const r = await mountC(activeGap());
-      await tap(findPress(r, n => textOf(n).includes('1-davra')));
       await tap(findPress(r, n => textOf(n).includes('1-davra')));
       return r;
     }],

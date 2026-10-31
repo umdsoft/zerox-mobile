@@ -456,8 +456,8 @@ const GiveDebtUser = () => {
     return <Loading />;
   }
   const isDisabled =
-    disabled || settingDate(date) === settingDate(Date.now());
-  const dateIsPlaceholder = settingDate(date) === settingDate(Date.now());
+    disabled || settingDate(date) === settingDate(new Date());
+  const dateIsPlaceholder = settingDate(date) === settingDate(new Date());
   const debtorName =
     type !== 1
       ? user?.data?.last_name +

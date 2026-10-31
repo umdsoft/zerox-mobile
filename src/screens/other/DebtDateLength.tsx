@@ -162,7 +162,7 @@ const DebtDateLength = () => {
     }
   };
 
-  const isPlaceholder = settingDate(date) === settingDate(Date.now());
+  const isPlaceholder = settingDate(date) === settingDate(new Date());
   const canSubmit = check === true && loading1 === false;
 
   // XAVFSIZ sanalar: DatePicker HAR DOIM mount bo'ladi (open=false bo'lsa ham). `info`

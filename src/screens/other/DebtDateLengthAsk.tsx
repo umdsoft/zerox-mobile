@@ -189,7 +189,7 @@ const DebtDateLengthAsk = () => {
   // console.log(plus_day(date), 'plus_day(info?.end_date)');
   // console.log(formatDate(plus_day(date)), 'checkingDate(date)');
 
-  const isPlaceholder = settingDate(date) === settingDate(Date.now());
+  const isPlaceholder = settingDate(date) === settingDate(new Date());
   const disabled = checkingDate(date) || loading1;
 
   // XAVFSIZ sanalar: DatePicker `info` yuklanmasdan ochilsa (foydalanuvchi tez bossa)

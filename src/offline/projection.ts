@@ -18,7 +18,7 @@
  * (applyRepayment / customerDebts) tayanadi — bo'lib tashlansa aylanma import paydo bo'ladi.
  */
 import { normalizeUrl } from './responseCache';
-import { tkYmdFromMs } from '../helper/date';
+import { tkYmdLoose } from '../helper/date';
 import { toFiniteNum } from '../helper/num';
 import { OutboxOp, Turi, Valyuta } from './types';
 
@@ -93,14 +93,11 @@ const apiPrefix = (url: string): string => {
   return i >= 0 ? p.slice(0, i) : '';
 };
 
-/** Toshkent (UTC+5) bo'yicha 'YYYY-MM-DD' (backend tkYmd/tkYmdOf bilan bir xil). */
-export const tkYmdOf = (v: unknown): string | null => {
-  if (v === null || v === undefined || v === '') return null;
-  const s = String(v);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const t = typeof v === 'number' ? v : new Date(s).getTime();
-  return Number.isFinite(t) ? tkYmdFromMs(t) : null;
-};
+/**
+ * Toshkent (UTC+5) bo'yicha 'YYYY-MM-DD' (backend tkYmd/tkYmdOf bilan bir xil). Zonasiz satr = Toshkent devor
+ * vaqti (knexfile '+05:00') -> o'sha kun; 'Z'/ofsetli/son/Date -> oniy vaqt + 5s. Yagona qoida: helper/date.tkYmdLoose.
+ */
+export const tkYmdOf = (v: unknown): string | null => tkYmdLoose(v);
 const daysBetween = (fromYmd: string, toYmd: string): number =>
   Math.round((Date.parse(`${toYmd}T00:00:00Z`) - Date.parse(`${fromYmd}T00:00:00Z`)) / DAY_MS);
 

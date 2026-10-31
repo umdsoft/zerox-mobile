@@ -7,7 +7,8 @@ interface InviteProps {
   r: Record<string, any>;
   /** inviteButtonState().asInvite: true -> "Taklif yuborish", false -> "To'lov haqida ogohlantirish". */
   asInvite: boolean;
-  invitingRound: any;
+  /** Shu davra uchun yuborish davom etmoqda (davra bo'yicha kuzatiladi). */
+  sending: boolean;
   onInvite: (r: any) => void;
 }
 
@@ -16,9 +17,8 @@ interface InviteProps {
  * aks holda to'lov haqida ogohlantirish. Ko'rinish sharti — gapDetailLogic.inviteButtonState.
  * ⚠️ Xabar NAVBATI KELGAN a'zoga yuborilmaydi (backend ta'minlaydi).
  */
-export const GapRoundInvite = ({ r, asInvite, invitingRound, onInvite }: InviteProps) => {
+export const GapRoundInvite = ({ r, asInvite, sending, onInvite }: InviteProps) => {
   const { t } = useTranslation();
-  const sending = invitingRound === r.id;
   return (
     <TouchableOpacity
       style={[styles.inviteBtn, sending && { opacity: 0.6 }]}

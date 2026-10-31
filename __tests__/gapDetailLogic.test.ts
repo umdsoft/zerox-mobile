@@ -35,7 +35,12 @@ describe('sana yordamchilari', () => {
     expect(isRoundOverdue({ round_expired: true, due_date: '2099-01-01' }, NOW)).toBe(true);
     expect(isRoundOverdue({ round_expired: false, due_date: '2000-01-01' }, NOW)).toBe(false);
     expect(isRoundOverdue({ due_date: '2026-10-31' }, NOW)).toBe(true);
-    expect(isRoundOverdue({ due_date: '2026-11-01 00:00:00' }, new Date(2026, 10, 1, 23, 59))).toBe(false); // shu kun — o'tmagan
+    // 01.11: kun TOSHKENT bo'yicha (qurilma TZ'siga bog'liq emas): 18:59Z = 23:59 Toshkent, 19:00Z = ertasi 00:00
+    expect(isRoundOverdue({ due_date: '2026-11-01 00:00:00' }, new Date('2026-11-01T18:59:00Z'))).toBe(false); // shu kun — o'tmagan
+    expect(isRoundOverdue({ due_date: '2026-11-01 00:00:00' }, new Date('2026-11-01T19:00:00Z'))).toBe(true);
+    expect(isRoundOverdue({ due_date: '2026-11-01' }, new Date('2026-11-01T18:59:59Z'))).toBe(false);
+    expect(isRoundOverdue({ due_date: '2026-11-01T19:00:00.000Z' }, new Date('2026-11-02T10:00:00Z'))).toBe(false); // = 02.11 Toshkent, shu kun
+    expect(isRoundOverdue({ due_date: '2026-11-01T19:00:00.000Z' }, new Date('2026-11-02T19:00:00Z'))).toBe(true);
     expect(isRoundOverdue({ due_date: 'bad' }, NOW)).toBe(false);
     expect(isRoundOverdue({}, NOW)).toBe(false);
   });
@@ -55,12 +60,14 @@ describe('davralar', () => {
     expect([0, 1].map(i => isRoundDefaultOpen(all, i))).toEqual([false, false]);
     expect(isRoundDefaultOpen([{ status: 'pending' }, { status: 'pending' }], 0)).toBe(true);
   });
-  test('toggleRoundOpen: `?? false` xulqi (standart-ochiqni 1-bosish yopmaydi) va immutable', () => {
+  test('toggleRoundOpen: standart-ochiqni 1-bosish YOPADI (01.11 tuzatish), immutable', () => {
     const a = {};
-    const b = toggleRoundOpen(a, 'r1');
-    expect(b).toEqual({ r1: true });
+    const b = toggleRoundOpen(a, 'r1', true); // hozir ochiq (standart) -> yopiladi
+    expect(b).toEqual({ r1: false });
     expect(a).toEqual({});
-    expect(toggleRoundOpen(b, 'r1')).toEqual({ r1: false });
+    expect(toggleRoundOpen(b, 'r1', false)).toEqual({ r1: true });
+    expect(toggleRoundOpen({}, 'r2', false)).toEqual({ r2: true }); // yopiq davra ochiladi
+    expect(toggleRoundOpen({ r3: true }, 'r3')).toEqual({ r3: false }); // isOpen berilmasa — kalit holati
   });
   test('canSetVenue / mayManageRound', () => {
     const g = { my_member_id: 5 };
@@ -87,6 +94,12 @@ describe('davralar', () => {
     expect(canUnpayPayment(paid('2026-11-01 08:00:00'), true, t0)).toBe(true);
     expect(canUnpayPayment(paid(new Date(t0 - UNPAY_WINDOW_MS).toISOString()), true, t0)).toBe(true); // chegarada
     expect(canUnpayPayment(paid(new Date(t0 - UNPAY_WINDOW_MS - 1).toISOString()), true, t0)).toBe(false);
+    // 01.11: zonasiz paid_at = Toshkent devor vaqti (UTC+5), qurilma TZ'iga bog'liq emas
+    const wallAt = (h: number, m = 0) => Date.UTC(2026, 10, 1, h - 5, m); // Toshkent h:m -> epoch
+    expect(canUnpayPayment(paid('2026-10-31 15:00:00'), true, wallAt(15))).toBe(true); // aynan 24 soat
+    expect(canUnpayPayment(paid('2026-10-31 15:00:00'), true, wallAt(15, 1))).toBe(false);
+    expect(canUnpayPayment(paid('2026-10-31T15:00:00'), true, wallAt(15, 1))).toBe(false);
+    expect(canUnpayPayment(paid('2026-10-31T10:00:00.000Z'), true, Date.UTC(2026, 10, 1, 10, 0))).toBe(true);
     expect(canUnpayPayment(paid(undefined), true, t0)).toBe(true); // sana noma'lum — backend hal qiladi
     expect(canUnpayPayment(paid('garbage'), true, t0)).toBe(true);
     expect(canUnpayPayment(paid('2026-11-01 08:00:00'), false, t0)).toBe(false);
