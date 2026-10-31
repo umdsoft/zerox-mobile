@@ -1,3 +1,4 @@
+import type { NotifContractProps } from './notificationProps';
 import { StyleSheet, Text } from 'react-native';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -17,7 +18,7 @@ import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
 const QarzShartnomasiniRasmiylashtirishTogrisida = React.memo(
-  ({ item, okay, onSuccess, onReject }) => {
+  ({ item, okay, onSuccess, onReject }: NotifContractProps) => {
     const navigation = useNavigation<any>();
     const dispatch = useDispatch();
     const user = useSelector((state: any) => state.HomeReducer.user); // SS-PERF (2026-09-25): aniq selektor

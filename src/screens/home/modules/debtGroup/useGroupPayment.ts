@@ -1,5 +1,6 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
+import { useApiAction } from '../../../../hooks/useApiAction';
 import { DebtActionResult } from '../FinanceDebtActionModal';
 import { handlePlanRequiredError, isFeatureLocked, isPlanRequiredError, showPlanRequired } from '../planGate';
 import { payDebtsWithSms, smsNoticeText, SmsPayError } from '../debtSms';
@@ -24,7 +25,7 @@ export function useGroupPayment(g: GroupData) {
    * SMS yoqilganda har qarz alohida `/payments` + `notify_sms` (allocate-payment SMS yubormaydi) — debtSms.payDebtsWithSms.
    */
   const smsLocked = isFeatureLocked(plan, 'auto_sms_reminder');
-  const [smsBusy, setSmsBusy] = React.useState(false);
+  const { run: runSmsPay, loading: smsBusy } = useApiAction();
   const onSmsLocked = () => {
     setActModal(''); // Modal Tariflar ekrani ustida qolib ketmasin
     showPlanRequired({ expired: plan?.expired }, { t, navigation });
@@ -41,30 +42,29 @@ export function useGroupPayment(g: GroupData) {
         : d.message || t('Xatolik yuz berdi');
     Toast.show({ type: 'error2', visibilityTime: 4000, props: { desc: String(msg) } });
   };
-  const payWithSms = async ({ debts, amounts }: DebtActionResult) => {
+  const payWithSms = ({ debts, amounts }: DebtActionResult) => {
     if (smsBusy || actBusy || !debts.length) return;
-    setSmsBusy(true);
-    try {
-      const r = await payDebtsWithSms(debts, amounts);
-      setActModal('');
-      const okMsg = r.allClosed ? t('Qarz yopildi') : t('To‘lov qayd etildi');
-      const note = smsNoticeText(r.outcomes, r.resData, t);
-      Toast.show(
-        note
-          ? { type: 'omad', visibilityTime: 5000, props: { title: okMsg, desc: note } }
-          : { type: 'omad', props: { desc: okMsg } },
-      );
-      await reload();
-    } catch (e) {
-      const err = e instanceof SmsPayError ? e : null;
-      if (err?.done) {
+    return runSmsPay(async () => {
+      try {
+        const r = await payDebtsWithSms(debts, amounts);
         setActModal('');
+        const okMsg = r.allClosed ? t('Qarz yopildi') : t('To‘lov qayd etildi');
+        const note = smsNoticeText(r.outcomes, r.resData, t);
+        Toast.show(
+          note
+            ? { type: 'omad', visibilityTime: 5000, props: { title: okMsg, desc: note } }
+            : { type: 'omad', props: { desc: okMsg } },
+        );
         await reload();
+      } catch (e) {
+        const err = e instanceof SmsPayError ? e : null;
+        if (err?.done) {
+          setActModal('');
+          await reload();
+        }
+        showPayError(err ? err.cause : e);
       }
-      showPayError(err ? err.cause : e);
-    } finally {
-      setSmsBusy(false);
-    }
+    });
   };
   const onConfirmAct = (r: DebtActionResult) =>
     r.sms && actModal !== 'forgive' ? payWithSms(r) : onActConfirm(r);

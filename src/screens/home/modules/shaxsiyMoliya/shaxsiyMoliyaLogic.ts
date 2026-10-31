@@ -11,7 +11,7 @@ export const CAT_COLORS = ['#2f6fed', '#22c55e', '#f59e0b', '#e11d48', '#7c3aed'
 export interface MenuItem {
   key: string;
   route: string;
-  Icon: (p: IconProps) => JSX.Element;
+  Icon: (p: IconProps) => React.JSX.Element;
   accent: string;
   tint: string;
   title: string;

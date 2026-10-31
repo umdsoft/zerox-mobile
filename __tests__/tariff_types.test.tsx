@@ -192,6 +192,18 @@ describe('Types — xarid payloadlari va oqim (QOTIRILGAN)', () => {
     expect(mockPost.mock.calls[0][1]).toEqual({ plan: 'start' });
     expect(mockPost.mock.calls[0]).toHaveLength(2);
   });
+  it('wave E: bir renderda ikki marta Tasdiqlash - bitta POST', async () => {
+    setup({ balance: { data: { balance: 150000 } } });
+    mockPost.mockReturnValue(new Promise(() => {}));
+    const r = await mount();
+    await tap(connect(r, 0));
+    const node = byText(r, 'Tasdiqlash');
+    await act(async () => {
+      node.props.onPress();
+      node.props.onPress();
+    });
+    expect(mockPost).toHaveBeenCalledTimes(1);
+  });
   it('Premium: body {plan:"premium"}', async () => {
     setup({ balance: { data: { balance: 250000 } } });
     const r = await mount();

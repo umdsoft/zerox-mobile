@@ -497,6 +497,39 @@ describe('QarzDaftari — amallar', () => {
     await tap(dueRows(r)[1]);
     expect(mockToast).toHaveBeenCalledWith({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } });
   });
+  it('wave E: bir renderda ikki marta bosish - amaliyot tafsiloti bitta marta ochiladi', async () => {
+    setup();
+    const r = await mount();
+    mockOpenCreation.mockReturnValue(new Promise(() => {}));
+    const row = dueRows(r)[1];
+    await act(async () => {
+      row.props.onPress();
+      row.props.onPress();
+    });
+    expect(mockOpenCreation).toHaveBeenCalledTimes(1);
+  });
+  it('wave E: A qator kutayotganda B qator ishlaydi (kalit = qarz id); A ga ikkinchi bosish yuborilmaydi', async () => {
+    const near = ok({
+      data: {
+        debitor: [
+          { qarz_id: 31, mijoz_id: null, mijoz_fish: 'Aaa', turi: 'berish', end_date: d(1), residual_amount: 5, currency: 'UZS' },
+          { qarz_id: 32, mijoz_id: null, mijoz_fish: 'Bbb', turi: 'berish', end_date: d(2), residual_amount: 6, currency: 'UZS' },
+        ],
+        kreditor: [],
+      },
+    });
+    setup({ near });
+    const r = await mount();
+    mockOpenCreation.mockReturnValue(new Promise(() => {}));
+    const rows = dueRows(r);
+    expect(rows.length).toBeGreaterThan(1);
+    await act(async () => {
+      rows[0].props.onPress();
+      rows[0].props.onPress();
+      rows[1].props.onPress();
+    });
+    expect(mockOpenCreation.mock.calls.map(c => c[1])).toEqual([31, 32]);
+  });
   it('amaliyotga uzatilgan navigate route+params uzatadi', async () => {
     setup();
     const r = await mount();

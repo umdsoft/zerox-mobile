@@ -17,7 +17,7 @@ const MetricCard = ({
 }: {
   accent: string;
   accentBg: string;
-  Icon: (p: IconProps) => JSX.Element;
+  Icon: (p: IconProps) => React.JSX.Element;
   label: string;
   lines: string[]; // per-currency (yoki 1 element)
   sub?: string;

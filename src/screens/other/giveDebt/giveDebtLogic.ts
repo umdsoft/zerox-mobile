@@ -46,9 +46,15 @@ export const minAmountError = (isUzs: boolean, amountNum: number): string | null
   return null;
 };
 
+/**
+ * Xizmat haqi (fee) va balans tekshiruvi qo'llanadigan holat: faqat qarz olish (type 0) va bepul shartnomalar
+ * tugagan (cnt === 0). Kurs ham faqat shunda kerak; aks holatda backend o'zi hal qiladi.
+ */
+export const feeApplies = (type: unknown, cnt: unknown): boolean => type === 0 && cnt === 0;
+
 /** Qarz olishda (cnt === 0) komissiya balansdan kam bo'lmasa — rad etiladi. */
 export const isBalanceInsufficient = (user: any, amountNum: number, isUzs: boolean, usdRate: number | string): boolean =>
-  user.data.cnt === 0 && contractFee(amountNum, isUzs, usdRate) >= Number(user.data.balance);
+  feeApplies(0, user.data.cnt) && contractFee(amountNum, isUzs, usdRate) >= Number(user.data.balance);
 
 // SS-DEV (2026-10-06): muvaffaqiyat toast'i FAQAT `success:true` da; success=false javoblar shu xarita bilan.
 export const failMessage = (msg?: string): string => {

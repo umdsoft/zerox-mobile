@@ -11,6 +11,7 @@ import path from 'path';
 
 const mockNavigate = jest.fn();
 const mockGen = jest.fn();
+const mockToast = jest.fn();
 const mockCopy = jest.fn();
 const mockWrite = jest.fn();
 const mockExists = jest.fn();
@@ -21,6 +22,7 @@ let mockFetch: Record<string, any> = {};
 
 jest.mock('i18next', () => ({ t: (k: string) => k }));
 jest.mock('../src/i18n', () => ({ t: (k: string) => k }));
+jest.mock('react-native-toast-message', () => ({ __esModule: true, default: { show: (...a: unknown[]) => mockToast(...a) } }));
 jest.mock('react-i18next', () => ({
   useTranslation: () => [(k: string) => k, { language: mockLang }],
 }));
@@ -73,11 +75,11 @@ jest.mock('../src/images/Success', () => ({ __esModule: true, default: (p: any) 
 jest.mock('react-native-paper', () => ({
   Modal: (p: any) => require('react').createElement('PaperModal', { visible: p.visible, dismissable: p.dismissable, onDismiss: p.onDismiss }, p.visible ? p.children : null),
 }));
-// jest.config moduleNameMapper `.pdf$` ikkala yo'lni ham (images/pdf va react-native-html-to-pdf) bitta fileMock modulga yo'naltiradi —
-// shu sababli ikkalasi uchun bitta mock: default = PdfIcon, generatePDF = PDF generator.
+// jest.config moduleNameMapper endi faqat haqiqiy fayl kengaytmasini (`x.pdf`) fileMock'ga yo'naltiradi: PdfIcon va
+// react-native-html-to-pdf alohida mock qilinadi.
+jest.mock('../src/images/pdf', () => ({ __esModule: true, default: () => require('react').createElement('Img', { name: 'pdf' }) }));
 jest.mock('react-native-html-to-pdf', () => ({
   __esModule: true,
-  default: () => require('react').createElement('Img', { name: 'pdf' }),
   generatePDF: (...a: unknown[]) => mockGen(...a),
 }));
 jest.mock('react-native-file-viewer', () => ({ __esModule: true, default: { open: (...a: unknown[]) => mockOpenFile(...a) } }));
@@ -240,6 +242,18 @@ describe('SendMoneyHistory — amallar', () => {
       await tap(btn);
       return r;
     };
+    it('wave E: bir renderda ikki marta yuklash - PDF bitta marta yaratiladi', async () => {
+      setup({ enter: ok(ENTER) });
+      const r = await mount();
+      await open(r, 0);
+      mockGen.mockReturnValue(new Promise(() => {}));
+      const btn = r.root.findAll(n => typeof n.props.onPress === 'function' && /download/.test(textOf(n)))[0];
+      await act(async () => {
+        btn.props.onPress();
+        btn.props.onPress();
+      });
+      expect(mockGen).toHaveBeenCalledTimes(1);
+    });
     it('android: nom, MediaStore nusxa, FileViewer', async () => {
       await dl(0);
       expect(mockHtml).toHaveBeenCalledWith(ENTER[0]);
@@ -282,6 +296,19 @@ describe('SendMoneyHistory — amallar', () => {
       await dl(0);
       expect(mockOpenFile).not.toHaveBeenCalled();
       expect(console.error).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith({
+        autoHide: true, visibilityTime: 3000, position: 'bottom', type: 'error2', props: { desc: 'Yuklab olish amalga oshmadi' },
+      });
+    });
+    it('wave E: fayl saqlandi, lekin FileViewer ochilmadi -> xato EMAS, "saqlandi" xabari (android)', async () => {
+      mockOpenFile.mockRejectedValue(new Error('no viewer'));
+      await dl(0);
+      expect(mockCopy).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledTimes(1);
+      expect(mockToast).toHaveBeenCalledWith({
+        type: 'omad', position: 'bottom', visibilityTime: 2500,
+        props: { title: 'Yuklab olindi', desc: 'Download/Zerox papkasiga saqlandi' },
+      });
     });
   });
 });

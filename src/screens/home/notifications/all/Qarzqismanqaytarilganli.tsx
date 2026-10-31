@@ -1,3 +1,4 @@
+import type { NotifPartialProps } from './notificationProps';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from 'react-native';
@@ -13,7 +14,7 @@ import ReturnName from '../../../../helper/returnName';
 import MainText from '../../../components/MainText';
 import NotificationShell from '../../../components/NotificationShell';
 
-const Qarzqaytarilganligitogrisida = ({ item, onToliqQaytgan }) => {
+const Qarzqaytarilganligitogrisida = ({ item, onToliqQaytgan }: NotifPartialProps) => {
   const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;

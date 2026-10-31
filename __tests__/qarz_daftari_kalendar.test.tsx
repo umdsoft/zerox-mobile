@@ -270,6 +270,18 @@ describe('QarzDaftariKalendar — amallar', () => {
     expect(mockFetchTx).toHaveBeenCalledWith(expect.objectContaining({ id: 1, qarz_id: 101, _date: '2026-11-15' }));
     expect(mockNavigate).toHaveBeenCalledWith('QarzDaftariAmaliyot', { tx: { id: 1 }, qarz: { id: 2 } });
   });
+  it('wave E: bir renderda ikki marta amaliyot qatori - fetchTxParams bitta marta', async () => {
+    const r = await mount();
+    await tap(reportRow(r, '15-Noyabr'));
+    await flush();
+    mockFetchTx.mockReturnValue(new Promise(() => {}));
+    const row = press(r, n => n.props.activeOpacity === 0.75 && /Mijoz 1/.test(textOf(n)));
+    await act(async () => {
+      row.props.onPress();
+      row.props.onPress();
+    });
+    expect(mockFetchTx).toHaveBeenCalledTimes(1);
+  });
   it('qarz_id yo\'q bo\'lsa hech narsa qilmaydi; ochilayotganda ikkinchi bosish e\'tiborsiz', async () => {
     setupGet({ '/kalendar/kun': () => Promise.resolve({ data: { data: { berilgan: [AMAL(1, { qarz_id: 0 }), AMAL(2)], qaytarilgan: [] } } }) });
     const r = await mount();

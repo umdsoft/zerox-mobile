@@ -1,3 +1,4 @@
+import type { NotifBaseProps } from './notificationProps';
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +11,7 @@ import TransText from '../../../components/NotifTransText';
 import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 
-const Qarzmuddatiuzaytirilganligitogrisida = ({ item, okay }) => {
+const Qarzmuddatiuzaytirilganligitogrisida = ({ item, okay }: NotifBaseProps) => {
   const navigation = useNavigation<any>();
   const onPress = async () => {
     okay(item.id);

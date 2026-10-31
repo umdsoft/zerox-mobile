@@ -82,7 +82,7 @@ export const debitorSideBody = (item: any, usd: any): string | undefined => {
         name2: creditorName(item),
         id: item.number,
         sum: money(item.amount, item.currency),
-        sum1: checkingSum(item, usd) + ' ' + item.currency,
+        sum1: checkingSum(item, usd) + ' ' + 'UZS',
       });
     case 13:
       return tr('573', base(item));

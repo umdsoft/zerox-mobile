@@ -217,6 +217,17 @@ describe('FinanceFamily — amallar', () => {
     await tap(byText(r, 'Qabul qilish'));
     expect(toasts().pop()).toEqual({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } });
   });
+  it('wave E: bir renderda ikki marta bosish — respond bitta sorov yuboradi', async () => {
+    setup();
+    const r = await mount();
+    mockApi.respondFamily.mockReturnValue(new Promise(() => {}));
+    const node = byText(r, 'Qabul qilish');
+    await act(async () => {
+      node.props.onPress();
+      node.props.onPress();
+    });
+    expect(mockApi.respondFamily).toHaveBeenCalledTimes(1);
+  });
   describe('taklif yuborish', () => {
     const open = async (cta = 'Taklif yuborish') => {
       setup();

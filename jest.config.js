@@ -1,7 +1,8 @@
 module.exports = {
   preset: 'react-native',
   moduleNameMapper: {
-    '\.(pdf|ttf|otf|mp3|mp4|lottie)$': '<rootDir>/__mocks__/fileMock.js',
+    // Faqat haqiqiy fayl kengaytmasi (`/x.pdf`); '\\.' — aks holda `react-native-html-to-pdf` ham fileMock'ga tushardi.
+    '[^/]+\\.(pdf|ttf|otf|mp3|mp4|lottie)$': '<rootDir>/__mocks__/fileMock.js',
   },
   setupFiles: ['<rootDir>/jest.setup.js'],
   // Faqat __tests__/*.test.* ; fixtures va ildizdagi tasodifiy fayllar test emas.

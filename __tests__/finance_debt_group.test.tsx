@@ -429,6 +429,19 @@ describe('FinanceDebtGroup — amallar', () => {
       await tap(byText(r, 'Saqlash'));
       expect(toasts()).toEqual([{ type: 'error2', props: { desc: 'Telefon raqamini to‘liq kiriting' } }]);
     });
+    it('wave E: bir renderda ikki marta Saqlash - updateDebt bitta marta', async () => {
+      const r = await open();
+      await act(async () => {
+        inputs(r)[0].props.onChangeText('  Vali Aliyev ');
+      });
+      mockApi.updateDebt.mockReturnValue(new Promise(() => {}));
+      const node = byText(r, 'Saqlash');
+      await act(async () => {
+        node.props.onPress();
+        node.props.onPress();
+      });
+      expect(mockApi.updateDebt).toHaveBeenCalledTimes(1);
+    });
     it('muvaffaqiyat: faqat o\'z qarzlari yangilanadi, modal yopiladi, toast', async () => {
       const r = await open();
       await act(async () => {

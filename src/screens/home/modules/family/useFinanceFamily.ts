@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../../hooks/useFetch';
+import { apiErrorMessage, useApiAction } from '../../../../hooks/useApiAction';
 import { URL } from '../../../constants';
 import { financeApi } from '../financeApi';
 import { catLabel } from '../financeMoney';
@@ -26,37 +27,40 @@ function useFamilyBudget() {
   // SS11: oila budjeti a'zolari + ko'rish huquqini boshqarish.
   const [showBudgetMgr, setShowBudgetMgr] = React.useState(false);
   const [viewerSel, setViewerSel] = React.useState<any[]>([]);
-  const [busyBudget, setBusyBudget] = React.useState(false);
+  // Uch amal (qo'shish / olib tashlash / saqlash) bir-birini istisno qiladi — bitta `run`/`loading`.
+  const { run: runBudget, loading: busyBudget } = useApiAction();
   const [limitDetail, setLimitDetail] = React.useState<any>(null); // SS11c: limit alohida ko'rinish
   const openBudgetMgr = () => {
     setViewerSel(Array.isArray(budget?.viewers) ? budget.viewers.map((x: any) => String(x)) : []);
     setShowBudgetMgr(true);
   };
-  const addBudgetMember = async (mid: any) => {
-    if (busyBudget) return;
-    try { setBusyBudget(true); await financeApi.addBudgetMember({ member_id: mid }); refreshBudget({}); }
-    catch (e: any) { Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik' } }); }
-    finally { setBusyBudget(false); }
-  };
-  const removeBudgetMember = async (mid: any) => {
-    if (busyBudget) return;
-    try { setBusyBudget(true); await financeApi.removeBudgetMember(mid); refreshBudget({}); }
-    catch (e: any) { Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik' } }); }
-    finally { setBusyBudget(false); }
-  };
+  const budgetError = (e: unknown) => apiErrorMessage(e, 'Xatolik');
+  const addBudgetMember = (mid: any) =>
+    runBudget(
+      async () => {
+        await financeApi.addBudgetMember({ member_id: mid });
+        refreshBudget({});
+      },
+      { error: budgetError },
+    );
+  const removeBudgetMember = (mid: any) =>
+    runBudget(
+      async () => {
+        await financeApi.removeBudgetMember(mid);
+        refreshBudget({});
+      },
+      { error: budgetError },
+    );
   const toggleViewer = (id: any) =>
     setViewerSel((s) => (s.includes(String(id)) ? s.filter((x) => x !== String(id)) : [...s, String(id)]));
-  const saveViewers = async () => {
-    if (busyBudget) return;
-    try {
-      setBusyBudget(true);
-      await financeApi.setBudgetViewers({ viewer_ids: viewerSel });
-      refreshBudget({});
-      Toast.show({ type: 'omad', props: { desc: 'Saqlandi' } });
-      setShowBudgetMgr(false);
-    } catch (e: any) { Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik' } }); }
-    finally { setBusyBudget(false); }
-  };
+  const saveViewers = () =>
+    runBudget(
+      async () => {
+        await financeApi.setBudgetViewers({ viewer_ids: viewerSel });
+        refreshBudget({});
+      },
+      { success: 'Saqlandi', onSuccess: () => setShowBudgetMgr(false), error: budgetError },
+    );
 
   return {
     budget, catName, showBudgetMgr, setShowBudgetMgr, viewerSel, busyBudget, limitDetail, setLimitDetail,
@@ -89,8 +93,9 @@ export function useFinanceFamily() {
   const [phone, setPhone] = React.useState('');
   const [relation, setRelation] = React.useState('');
   const [role, setRole] = React.useState<'watched' | 'watcher'>('watched');
-  const [saving, setSaving] = React.useState(false);
-  const [busy, setBusy] = React.useState(false);
+  const { run: runInvite, loading: saving } = useApiAction();
+  const { run: runRespond, loading: busy } = useApiAction();
+  const { run: runDelete } = useApiAction();
   const [delTarget, setDelTarget] = React.useState<any>(null);
 
   // So'rov N8: ruxsatlar (sayt kabi) — qaysi bo'lim + qanday (to'liq/summa) ko'rinadi.
@@ -104,59 +109,54 @@ export function useFinanceFamily() {
 
   // So'rov: kuzatuvchiga berilgan RUXSATlarni tahrirlash (as_target link).
   const [editTarget, setEditTarget] = React.useState<any>(null);
-  const [savingPerms, setSavingPerms] = React.useState(false);
+  const { run: runPerms, loading: savingPerms } = useApiAction();
   const openPermsEdit = (it: any) => {
     setPerms(parsePermissions(it));
     setEditTarget(it);
   };
-  const savePerms = async () => {
-    if (savingPerms || !editTarget) return;
-    try {
-      setSavingPerms(true);
-      await financeApi.updateFamily(editTarget.id, { permissions: perms });
-      setEditTarget(null);
-      refresh({});
-      Toast.show({ type: 'omad', props: { desc: 'Ruxsatlar saqlandi' } });
-    } catch (e: any) {
-      Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } });
-    } finally {
-      setSavingPerms(false);
-    }
+  const savePerms = () => {
+    if (!editTarget) return;
+    return runPerms(
+      async () => {
+        await financeApi.updateFamily(editTarget.id, { permissions: perms });
+        setEditTarget(null);
+        refresh({});
+      },
+      { success: 'Ruxsatlar saqlandi', error: e => apiErrorMessage(e, 'Xatolik yuz berdi') },
+    );
   };
 
-  const submitInvite = async () => {
-    if (saving) return;
+  const submitInvite = () => {
     if (phone.length < 9) { Toast.show({ type: 'error2', props: { desc: 'Telefon raqamini to‘liq kiriting' } }); return; }
-    try {
-      setSaving(true);
-      await financeApi.inviteFamily({ phone: `+998${phone}`, relation_label: relation.trim() || null, role, permissions: perms });
-      closeInvite();
-      refresh({});
-      Toast.show({ type: 'omad', props: { desc: 'Taklif yuborildi' } });
-    } catch (e: any) {
-      Toast.show({ type: 'error2', props: { desc: e?.response?.data?.message || 'Xatolik yuz berdi' } });
-    } finally { setSaving(false); }
+    return runInvite(
+      async () => {
+        await financeApi.inviteFamily({ phone: `+998${phone}`, relation_label: relation.trim() || null, role, permissions: perms });
+        closeInvite();
+        refresh({});
+      },
+      { success: 'Taklif yuborildi', error: e => apiErrorMessage(e, 'Xatolik yuz berdi') },
+    );
   };
 
-  const respond = async (item: any, action: 'accept' | 'reject') => {
-    if (busy) return;
-    try {
-      setBusy(true);
-      await financeApi.respondFamily(item.id, { action });
-      refresh({});
-      Toast.show({ type: 'omad', props: { desc: action === 'accept' ? 'Qabul qilindi' : 'Rad etildi' } });
-    } catch (e) { Toast.show({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } }); }
-    finally { setBusy(false); }
-  };
+  const respond = (item: any, action: 'accept' | 'reject') =>
+    runRespond(
+      async () => {
+        await financeApi.respondFamily(item.id, { action });
+        refresh({});
+      },
+      { success: action === 'accept' ? 'Qabul qilindi' : 'Rad etildi', error: 'Xatolik yuz berdi' },
+    );
 
-  const doDelete = async () => {
+  const doDelete = () => {
     if (!delTarget) return;
-    try {
-      await financeApi.deleteFamily(delTarget.id);
-      setDelTarget(null);
-      refresh({});
-      Toast.show({ type: 'omad', props: { desc: 'O‘chirildi' } });
-    } catch (e) { Toast.show({ type: 'error2', props: { desc: 'Xatolik yuz berdi' } }); }
+    return runDelete(
+      async () => {
+        await financeApi.deleteFamily(delTarget.id);
+        setDelTarget(null);
+        refresh({});
+      },
+      { success: 'O‘chirildi', error: 'Xatolik yuz berdi' },
+    );
   };
 
   // 21.10: bo'sh holat CTA'si mos MAQOM bilan taklif oynasini ochadi.

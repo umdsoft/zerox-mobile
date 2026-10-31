@@ -1,3 +1,4 @@
+import type { NotifBaseProps } from './notificationProps';
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +11,7 @@ import ReturnName from '../../../../helper/returnName';
 import NotificationShell from '../../../components/NotificationShell';
 import { rd, rs } from '../../../../theme/rd';
 
-const Qarzdanvozkechilganligitogrisida = ({ item, okay }) => {
+const Qarzdanvozkechilganligitogrisida = ({ item, okay }: NotifBaseProps) => {
   const navigation = useNavigation<any>();
   const onOkay = () => okay(item.id);
 

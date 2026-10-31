@@ -1,3 +1,4 @@
+import type { NotifExtendAskProps } from './notificationProps';
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +17,7 @@ import NotificationShell from '../../../components/NotificationShell';
 const Qarzmuddatiniuzaytirishsoralganligitogrisida = ({
   item,
   onQarzMuddatUzaytirish
-}) => {
+}: NotifExtendAskProps) => {
   const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;

@@ -26,7 +26,7 @@ const DashboardChartCard = ({
   shaxsiyUsd = 0,
 }: {
   accent: string;
-  Icon: (p: IconProps) => JSX.Element;
+  Icon: (p: IconProps) => React.JSX.Element;
   title: string;
   usdRate: number;
   shartnomaUzs: number;

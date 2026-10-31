@@ -11,6 +11,7 @@ import { PartyCard } from './giveDebt/PartyCard';
 import { AgreeRow, AmountField, CntRow, CurrencyToggle, DateRow, FeeCard } from './giveDebt/GiveDebtFields';
 import { useGiveDebt } from './giveDebt/useGiveDebt';
 import { styles } from './giveDebt/giveDebtStyles';
+import { feeApplies } from './giveDebt/giveDebtLogic';
 
 export { formatDateMinus } from './giveDebt/giveDebtLogic';
 
@@ -30,7 +31,7 @@ const GiveDebtUser = () => {
   const creditor = type !== 1 ? qarzoluvchi : me;
   const creditorName = type === 0 ? qarzoluvchi : me;
   const showCnt = type === 0 && me?.cnt !== 0;
-  const showFee = g.checked && g.amount.length > 0 && type === 0 && me.cnt === 0;
+  const showFee = g.checked && g.amount.length > 0 && feeApplies(type, me.cnt);
 
   return (
     <View style={styles.container}>

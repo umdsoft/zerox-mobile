@@ -297,6 +297,25 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     expect(mockSocketEmit).toHaveBeenCalledWith('notification', { userId: 7 });
     expect(mockToast).toHaveBeenCalledWith({ autoHide: true, position: 'bottom', props: { desc: 'toast:3' }, type: 'omad', visibilityTime: 2000 });
   });
+  it('wave E: bir renderda ikki marta okay — bitta PUT (ikkinchi bosish hech narsa yubormaydi)', async () => {
+    mockPut.mockReturnValue(new Promise(() => {}));
+    await mount([mk(25, 5)]);
+    await act(async () => {
+      H('NewUser').okay(5, 3);
+      H('NewUser').okay(5, 3);
+    });
+    expect(mockPut).toHaveBeenCalledTimes(1);
+  });
+  it('wave E: A karta kutayotganda B karta ishlaydi; A ga ikkinchi okay yuborilmaydi (kalit = karta id)', async () => {
+    mockPut.mockReturnValue(new Promise(() => {}));
+    await mount([mk(25, 5), mk(25, 6)]);
+    await act(async () => {
+      H('NewUser').okay(5, 3);
+      H('NewUser').okay(5, 3);
+      H('NewUser').okay(6, 3);
+    });
+    expect(mockPut.mock.calls.map(c => c[0])).toEqual(['http://x/notification/ok/5', 'http://x/notification/ok/6']);
+  });
   it('okay: status 200 emas -> toast yo\'q; xato -> error2 toast', async () => {
     await mount([mk(25, 5)]);
     mockPut.mockResolvedValue({ status: 204 });
@@ -311,6 +330,18 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     expect(mockToast).toHaveBeenCalledWith({ autoHide: true, position: 'bottom', props: { desc: 'Xatolik sodir bo‘ldi' }, type: 'error2', visibilityTime: 2000 });
   });
   const itm = { id: 55, creditor: 1, debitor: 2, reciver: 1, contract: 'C1', act: 'A1' };
+  it('wave E: bir kartada onSuccess kutayotganda onReject va okay yutiladi; boshqa karta (id) ishlaydi', async () => {
+    mockPut.mockReturnValue(new Promise(() => {}));
+    await mount([mk(0, 55)]);
+    const C = H('QarzShartnomasiniRasmiylashtirishTogrisida');
+    await act(async () => {
+      C.onSuccess(itm, 1, 'creditor');
+      C.onReject(itm, 2, 1);
+      C.okay(55, 3);
+      C.onReject({ ...itm, id: 56 }, 2, 1);
+    });
+    expect(mockPut.mock.calls.map(c => c[0])).toEqual(['http://x/notification/success/55', 'http://x/notification/success/56']);
+  });
   it('onSuccess creditor: payload + toast 264 + dispatch', async () => {
     await mount([mk(0, 1)]);
     await act(async () => {

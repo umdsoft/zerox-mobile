@@ -20,7 +20,7 @@ const DebtSumCard = ({
 }: {
   accent: string;
   accentBg: string;
-  Icon: (p: IconProps) => JSX.Element;
+  Icon: (p: IconProps) => React.JSX.Element;
   label: string;
   pill: string;
   pillColor: string;

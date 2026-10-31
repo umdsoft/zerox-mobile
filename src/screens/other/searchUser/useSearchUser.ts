@@ -10,6 +10,7 @@ import { storage } from '../../../store/api/token/getToken';
 import { birthPickerDefault } from '../../../helper/birthDate';
 import { checkExpire } from '../../../store/reducers/HomeReducer';
 import { expire_passport_check } from '../../../helper/timeChecker';
+import { useApiAction } from '../../../hooks/useApiAction';
 import { ACCENT_GIVE, ACCENT_TAKE, formatDate } from './searchUserLogic';
 
 const TOAST_BASE = { autoHide: true, position: 'bottom' as const, visibilityTime: 3000, type: 'error2' };
@@ -73,7 +74,8 @@ export function useSearchUser() {
   const accent = type === 1 ? ACCENT_GIVE : ACCENT_TAKE;
 
   // Foydalanuvchini qidirish
-  const searchUser = async () => {
+  const { run } = useApiAction();
+  const searchUserBody = async () => {
     try {
       if (expire_passport_check(user.data.expiry_date)) {
         dispatch(checkExpire({ expire: true }));
@@ -123,6 +125,8 @@ export function useSearchUser() {
     }
     setLoading(false);
   };
+  // Ikki marta bosish himoyasi: bajarilayotganda ikkinchi chaqiruv hech narsa yubormaydi.
+  const searchUser = () => run(searchUserBody);
 
   return {
     type,

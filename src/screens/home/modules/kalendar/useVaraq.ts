@@ -2,6 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { URL } from '../../../constants';
 import { storage } from '../../../../store/api/token/getToken';
+import { useApiAction } from '../../../../hooks/useApiAction';
 import { fetchTxParams } from '../qarzAmaliyot';
 import { dateKey, KunAmal, MONTHS, Varaq } from './kalendarLogic';
 
@@ -99,19 +100,22 @@ export function useVaraq({ y, m, cur, bazaKun, haftaBosh, haftaOxir, t, navigati
    * tafsilotidan olinadi. `opening` — ikki marta bosilib ikki ekran ochilmasin.
    */
   const [opening, setOpening] = React.useState<number | null>(null);
+  const { run: runOpen } = useApiAction();
   const goAmaliyot = React.useCallback(
-    async (r: KunAmal) => {
+    (r: KunAmal) => {
       if (!r?.qarz_id || opening != null) return;
-      setOpening(r.id);
-      try {
-        const params = await fetchTxParams(r);
-        closeVaraq();
-        navigation.navigate('QarzDaftariAmaliyot', params);
-      } finally {
-        setOpening(null);
-      }
+      return runOpen(async () => {
+        setOpening(r.id);
+        try {
+          const params = await fetchTxParams(r);
+          closeVaraq();
+          navigation.navigate('QarzDaftariAmaliyot', params);
+        } finally {
+          setOpening(null);
+        }
+      });
     },
-    [navigation, closeVaraq, opening],
+    [navigation, closeVaraq, opening, runOpen],
   );
 
   const varaqJamiBer = varaqBer.reduce((s, r) => s + (Number(r.summa) || 0), 0);

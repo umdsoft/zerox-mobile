@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { t } from 'i18next';
 import { URL } from '../../constants';
+import { useApiAction } from '../../../hooks/useApiAction';
 import { storage } from '../../../store/api/token/getToken';
 
 /** Topilgan foydalanuvchidan "ma'lumotlarini ko'rishga ruxsat" so'rash (POST /notification/reqquest). */
@@ -17,7 +18,8 @@ export function useRequestAccess(user: any, navigation: any) {
   const [reject, setReject] = useState(false);
   const [, setCheck] = useState(true);
 
-  const startTimer = async () => {
+  const { run } = useApiAction();
+  const startTimerBody = async () => {
     const token = storage.getString('token');
     const obj = {
       creditor: userInfo?.user?.data?.id,
@@ -55,6 +57,8 @@ export function useRequestAccess(user: any, navigation: any) {
       console.error(error);
     }
   };
+  // Ikki marta bosish himoyasi: bitta so'rov.
+  const startTimer = () => run(startTimerBody);
 
   return { active, resolve, reject, requestDisabled: active && first, startTimer };
 }

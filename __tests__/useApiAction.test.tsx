@@ -99,4 +99,68 @@ describe('useApiAction', () => {
     });
     expect(second).toHaveBeenCalledTimes(1);
   });
+
+  test('wave E kalit: bir xil kalit ikki marta -> bitta; boshqa kalit va kalitsiz bloklanmaydi; finally kalitni bosatadi', async () => {
+    mount();
+    let release!: () => void;
+    const gate = new Promise<void>(r => {
+      release = r;
+    });
+    const a = jest.fn(() => gate);
+    const b = jest.fn(async () => 1);
+    const c = jest.fn(async () => 2);
+    const a2 = jest.fn(async () => 3);
+    await act(async () => {
+      api.run(a, { key: 'A' });
+      api.run(a2, { key: 'A' });
+      await api.run(b, { key: 'B' });
+      await api.run(c);
+    });
+    expect([a.mock.calls.length, a2.mock.calls.length, b.mock.calls.length, c.mock.calls.length]).toEqual([1, 0, 1, 1]);
+    expect(api.loading).toBe(true); // A hali kutmoqda
+    await act(async () => {
+      release();
+      await gate;
+    });
+    expect(api.loading).toBe(false);
+    await act(async () => {
+      await api.run(a2, { key: 'A' });
+    });
+    expect(a2).toHaveBeenCalledTimes(1);
+  });
+
+  test('wave E kalit normalizatsiyasi: 5 va "5" bir xil element', async () => {
+    mount();
+    const first = jest.fn(() => new Promise<void>(() => {}));
+    const second = jest.fn(async () => 1);
+    await act(async () => {
+      api.run(first, { key: 5 });
+      api.run(second, { key: '5' });
+    });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  test('wave E: key null/undefined — kalitsiz rejim ("null" kalitiga aylanmaydi); kalitli chaqiruv ularni bloklamaydi', async () => {
+    mount();
+    let release!: () => void;
+    const gate = new Promise<void>(r => {
+      release = r;
+    });
+    const a = jest.fn(() => gate);
+    const b = jest.fn(async () => 1);
+    const c = jest.fn(async () => 2);
+    const d = jest.fn(async () => 3);
+    await act(async () => {
+      api.run(a, { key: null as any });
+      api.run(b, { key: undefined }); // kalitsiz: a band -> yutiladi
+      await api.run(c, { key: 'null' }); // 'null' kalitli: kalitsiz a ni bloklamaydi va ular uni
+      await api.run(d, { key: null as any }); // hali band
+    });
+    expect([a.mock.calls.length, b.mock.calls.length, c.mock.calls.length, d.mock.calls.length]).toEqual([1, 0, 1, 0]);
+    await act(async () => {
+      release();
+      await gate;
+    });
+  });
 });

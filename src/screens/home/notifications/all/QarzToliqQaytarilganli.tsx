@@ -1,3 +1,4 @@
+import type { NotifRepaidProps } from './notificationProps';
 import { Text } from 'react-native';
 import React, { memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -17,7 +18,7 @@ const Qarzqaytarilganligitogrisida = ({
   item,
   onQismanQaytarilgan,
   onToliqQaytgan
-}) => {
+}: NotifRepaidProps) => {
   const navigation = useNavigation<any>();
   const isCreditor = item.creditor === item.reciver;
   const isDebitor = item.debitor === item.reciver;

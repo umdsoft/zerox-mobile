@@ -5,6 +5,7 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { useTranslation } from 'react-i18next';
 import { URL } from '../../../../constants';
 import { useFetch } from '../../../../../hooks/useFetch';
+import { useApiAction } from '../../../../../hooks/useApiAction';
 import apiClient from '../../../../../store/api/apiClient';
 import { PLAN_AMOUNT } from './tariffsData';
 
@@ -58,25 +59,29 @@ export function useTariffs() {
 
   // Tarif/SMS xarid MODALI — balans yetsa "Tasdiqlash", aks holda "Mobil hisobni to'ldirish".
   const closePay = () => setPayModal(null);
-  const confirmPay = async () => {
+  // Ikki marta bosish himoyasi (ref-asosli); `busy` (xarid kaliti) esa UI uchun saqlanadi.
+  const { run: runPay } = useApiAction();
+  const confirmPay = () => {
     if (!payModal || busy) return;
-    setBusy(payModal.key);
-    try {
-      await apiClient.post(payModal.path, payModal.body);
-      toastOk(payModal.successText);
-      refetchAll();
-      closePay();
-    } catch (e: any) {
-      const r = e?.response;
-      closePay();
-      if (r?.status === 402 && r?.data?.code === 'insufficient-balance') {
-        toastErr(t('Mobil hisobda mablag‘ yetarli emas'));
-      } else {
-        toastErr(t('Amalni bajarib bo‘lmadi. Birozdan so‘ng urinib ko‘ring'));
+    return runPay(async () => {
+      setBusy(payModal.key);
+      try {
+        await apiClient.post(payModal.path, payModal.body);
+        toastOk(payModal.successText);
+        refetchAll();
+        closePay();
+      } catch (e: any) {
+        const r = e?.response;
+        closePay();
+        if (r?.status === 402 && r?.data?.code === 'insufficient-balance') {
+          toastErr(t('Mobil hisobda mablag‘ yetarli emas'));
+        } else {
+          toastErr(t('Amalni bajarib bo‘lmadi. Birozdan so‘ng urinib ko‘ring'));
+        }
+      } finally {
+        setBusy(null);
       }
-    } finally {
-      setBusy(null);
-    }
+    });
   };
 
   // Tarifga ulanish — modal ochadi (balansdan yechim tasdiq oynasida).

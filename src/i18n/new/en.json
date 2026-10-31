@@ -1,5 +1,6 @@
 {
   "translation": {
+    "Dollar kursi olinmadi, shartnomani yuborib bo‘lmaydi. Internetni tekshirib, qayta urinib ko‘ring.": "The dollar rate could not be retrieved, so the contract can't be sent. Check your internet connection and try again.",
     "USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.": "USD rate unavailable. The fee estimate may be inaccurate.",
     "Operator tomonidan xabar yetkazilmadi.": "The operator did not deliver the message.",
     "Operator tomonidan yetkazilmadi.": "Not delivered by the operator.",

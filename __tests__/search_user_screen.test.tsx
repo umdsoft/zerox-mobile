@@ -236,6 +236,17 @@ describe('SearchUserScreen — qidirish', () => {
     );
     expect(tree(r)).toContain('fio(Valiyev Ali Karim)');
   });
+  it('wave E: bir renderda ikki marta Qidirish - bitta POST', async () => {
+    mockPost.mockReturnValue(new Promise(() => {}));
+    const r = await ready({}, '123456AB');
+    await setId(r, '123456/AB');
+    const btn = searchBtn(r);
+    await act(async () => {
+      btn.props.onPress();
+      btn.props.onPress();
+    });
+    expect(mockPost).toHaveBeenCalledTimes(1);
+  });
   it('sana tanlanmasa: bugun yuboriladi', async () => {
     mockPost.mockResolvedValue({ data: FOUND, status: 200 });
     const r = await mount();

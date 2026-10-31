@@ -17,11 +17,12 @@ const mockNavigate = jest.fn();
 const mockSign = jest.fn();
 let mockUser: any = null;
 let mockParams: any = {};
+let mockUsd: any;
 const mockPicker: { current: any } = { current: null };
 
 jest.mock('react-redux', () => ({
   useDispatch: () => mockDispatch,
-  useSelector: (fn: (s: any) => any) => fn({ HomeReducer: { user: mockUser } }),
+  useSelector: (fn: (s: any) => any) => fn({ HomeReducer: { user: mockUser, usd: mockUsd } }),
 }));
 jest.mock('axios', () => ({
   __esModule: true,
@@ -180,6 +181,7 @@ const ready = async (type: 0 | 1, amount = '500000', userOver: any = {}, otherOv
 beforeEach(() => {
   jest.useFakeTimers({ now: NOW });
   jest.clearAllMocks();
+  mockUsd = undefined;
   mockGet.mockResolvedValue({ data: [{ Rate: '12000' }] });
   mockPost.mockReset();
   mockPost.mockResolvedValue({ data: { success: true } });
@@ -631,25 +633,202 @@ describe('GiveDebtUser — ishtirokchilar va sarlavha', () => {
   });
 });
 
-describe('GiveDebtUser — CBU kursi olinmadi (wave D)', () => {
+describe('GiveDebtUser — USD kursi: CBU -> HomeReducer.usd zaxira -> qayta soʻrov (wave E)', () => {
   const WARN = 'USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.';
+  const BLOCK = 'Dollar kursi olinmadi, shartnomani yuborib bo‘lmaydi. Internetni tekshirib, qayta urinib ko‘ring.';
   const warnToasts = () => toasts().filter(x => x.props?.desc === WARN);
-  it('so\'rov xato bersa: yiqilmaydi, UZS da ogohlantirish yo\'q, USD tanlansa bor', async () => {
+  const blockToasts = () => toasts().filter(x => x.props?.desc === BLOCK);
+  const fillUsd = async (type: 0 | 1) => {
+    const r = await mount(type);
+    await tap(byText(r, 'usd'));
+    await typeAmount(r, '655,77');
+    await check(r);
+    await pickDate(r, FUTURE);
+    return r;
+  };
+
+  it('CBU xato + zaxira kurs bor: USD tanlansa ogohlantirish BIR marta (takrorda qaytmaydi)', async () => {
+    mockUsd = 12500;
     mockGet.mockRejectedValue(new Error('net'));
     const r = await mount(0);
     expect(warnToasts()).toHaveLength(0);
     await tap(byText(r, 'usd'));
+    await tap(byText(r, 'uzs'));
+    await tap(byText(r, 'usd'));
     expect(warnToasts()).toHaveLength(1);
   });
-  it('bo\'sh javob ([]) bo\'lsa ham ogohlantiradi', async () => {
+  it('bosh javob ([]) + zaxira bor: ogohlantiradi', async () => {
+    mockUsd = '12500';
     mockGet.mockResolvedValue({ data: [] });
     const r = await mount(0);
     await tap(byText(r, 'usd'));
     expect(warnToasts()).toHaveLength(1);
   });
-  it('kurs bor bo\'lsa ogohlantirish yo\'q', async () => {
+  it('CBU xato + zaxira YOQ: "hisob aniq emas" matni chiqmaydi (yuborishdagi xabar bilan zid kelmasin)', async () => {
+    mockGet.mockRejectedValue(new Error('net'));
     const r = await mount(0);
     await tap(byText(r, 'usd'));
     expect(warnToasts()).toHaveLength(0);
+  });
+  it('zaxira boshlangich qiymat 1 kurs hisoblanmaydi', async () => {
+    mockUsd = 1;
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await mount(0);
+    await tap(byText(r, 'usd'));
+    expect(warnToasts()).toHaveLength(0);
+  });
+  it('kurs bor: ogohlantirish yoq', async () => {
+    const r = await mount(0);
+    await tap(byText(r, 'usd'));
+    expect(warnToasts()).toHaveLength(0);
+  });
+
+  it('CBU xato + HomeReducer.usd bor: type 0 USD yuboriladi', async () => {
+    mockUsd = 12500;
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await fillUsd(0);
+    await tap(buttonNode(r));
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(mockPost.mock.calls[0][1]).toMatchObject({ amount: 655.77, currency: 'USD' });
+    expect(blockToasts()).toHaveLength(0);
+  });
+  it('ikkalasi yoq, type 0: qayta soraladi (1 marta), baribir yoq -> TOSILADI + yangi toast', async () => {
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await fillUsd(0);
+    await tap(buttonNode(r));
+    expect(mockGet).toHaveBeenCalledTimes(2); // mount + bitta qayta urinish
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(blockToasts()).toHaveLength(1);
+    expect(lastToast()).toMatchObject({ type: 'error2', props: { desc: BLOCK } });
+    expect(hasLoading(r)).toBe(false);
+  });
+  it('ikkalasi yoq, type 1: HECH QACHON tosilmaydi (kurs soralmaydi ham)', async () => {
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await fillUsd(1);
+    await tap(buttonNode(r));
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(blockToasts()).toHaveLength(0);
+  });
+  it('submit paytida kurs PENDING: mavjud sorovni kutadi (yangisi yoq), xato toasti chiqmaydi, keyin yuboriladi', async () => {
+    let resolveRate!: (v: any) => void;
+    mockGet.mockReturnValue(new Promise(res => { resolveRate = res; }));
+    const r = await fillUsd(0);
+    let pressed!: Promise<void>;
+    await act(async () => {
+      pressed = Promise.resolve(buttonNode(r).props.onPress());
+    });
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(blockToasts()).toHaveLength(0);
+    expect(warnToasts()).toHaveLength(0);
+    await act(async () => {
+      resolveRate({ data: [{ Rate: '12000' }] });
+      await pressed;
+    });
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(blockToasts()).toHaveLength(0);
+  });
+  it('birinchi urinish xato, qayta urinish muvaffaqiyatli: yuboriladi', async () => {
+    mockGet.mockRejectedValueOnce(new Error('net')).mockResolvedValueOnce({ data: [{ Rate: '12000' }] });
+    const r = await fillUsd(0);
+    await tap(buttonNode(r));
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(blockToasts()).toHaveLength(0);
+  });
+  it('kurs sorovi osilib qolsa: 8 soniyadan keyin tosilaydi (cheksiz Loading emas)', async () => {
+    mockGet.mockReturnValue(new Promise(() => {}));
+    const r = await fillUsd(0);
+    let pressed!: Promise<void>;
+    await act(async () => {
+      pressed = Promise.resolve(buttonNode(r).props.onPress());
+    });
+    expect(mockPost).not.toHaveBeenCalled();
+    await act(async () => {
+      jest.advanceTimersByTime(8000);
+      await pressed;
+    });
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(blockToasts()).toHaveLength(1);
+  });
+  it('UZS: kurs soralmaydi ham, bloklanmaydi', async () => {
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await ready(0);
+    await tap(buttonNode(r));
+    expect(mockPost).toHaveBeenCalledTimes(1);
+  });
+  it('CBU sorovi timeout bilan yuboriladi (osilib qolmasin)', async () => {
+    await mount(0);
+    expect(mockGet.mock.calls[0][1]).toMatchObject({ timeout: 8000 });
+  });
+  it('osilib qolgan sorovdan keyin ikkinchi bosish YANGI mockGet chaqiradi; 8s testdan keyin loading false', async () => {
+    mockGet.mockReturnValueOnce(new Promise(() => {})).mockResolvedValueOnce({ data: [{ Rate: '12000' }] });
+    const r = await fillUsd(0);
+    let pressed!: Promise<void>;
+    await act(async () => {
+      pressed = Promise.resolve(buttonNode(r).props.onPress());
+    });
+    expect(hasLoading(r)).toBe(true);
+    await act(async () => {
+      jest.advanceTimersByTime(8000);
+      await pressed;
+    });
+    expect(hasLoading(r)).toBe(false);
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    await tap(buttonNode(r)); // yangi sorov
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(mockPost).toHaveBeenCalledTimes(1);
+  });
+  it('cnt > 0: kurs kerak emas — USD, kurs yoq bolsa ham tosilmaydi, kurs sorab kutilmaydi, ogohlantirish ham yoq', async () => {
+    mockUsd = 12500;
+    mockGet.mockRejectedValue(new Error('net'));
+    const r = await mount(0, { cnt: 3 });
+    await tap(byText(r, 'usd'));
+    await typeAmount(r, '655,77');
+    await check(r);
+    await pickDate(r, FUTURE);
+    expect(warnToasts()).toHaveLength(0);
+    mockUsd = undefined;
+    await tap(buttonNode(r));
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    expect(blockToasts()).toHaveLength(0);
+  });
+  it('kutish paytida ekran yopilsa (unmount) shartnoma YUBORILMAYDI', async () => {
+    let resolveRate!: (v: any) => void;
+    mockGet.mockReturnValue(new Promise(res => { resolveRate = res; }));
+    const r = await fillUsd(0);
+    let pressed!: Promise<void>;
+    await act(async () => {
+      pressed = Promise.resolve(buttonNode(r).props.onPress());
+    });
+    await act(async () => {
+      r.unmount();
+    });
+    await act(async () => {
+      resolveRate({ data: [{ Rate: '12000' }] });
+      await pressed;
+    });
+    expect(mockPost).not.toHaveBeenCalled();
+  });
+  it('kutish paytida ikki marta bosish — bitta sorov va bitta POST', async () => {
+    let resolveRate!: (v: any) => void;
+    mockGet.mockReturnValue(new Promise(res => { resolveRate = res; }));
+    const r = await fillUsd(0);
+    const btn = buttonNode(r);
+    let p1!: Promise<void>;
+    let p2!: Promise<void>;
+    await act(async () => {
+      p1 = Promise.resolve(btn.props.onPress());
+      p2 = Promise.resolve(btn.props.onPress());
+    });
+    await act(async () => {
+      resolveRate({ data: [{ Rate: '12000' }] });
+      await Promise.all([p1, p2]);
+    });
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockPost).toHaveBeenCalledTimes(1);
   });
 });

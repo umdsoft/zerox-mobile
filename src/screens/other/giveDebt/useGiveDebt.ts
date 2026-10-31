@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -15,6 +15,7 @@ import {
   buildContractPayload,
   buildFreeContractUrl,
   CBU_RATES_URL,
+  feeApplies,
   failMessage,
   GO_HOME_FADE_MS,
   GO_HOME_TOAST_MS,
@@ -22,6 +23,8 @@ import {
   minAmountError,
 } from './giveDebtLogic';
 
+/** Yuborishda CBU kursini kutishning yuqori chegarasi. */
+const RATE_WAIT_MS = 8000;
 const toastBase = { autoHide: true, position: 'bottom' as const };
 const showError = (desc: string, visibilityTime: number) =>
   Toast.show({ ...toastBase, visibilityTime, type: 'error2', props: { desc } });
@@ -42,29 +45,89 @@ export function useGiveDebt() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
-  const [usdRate, setUsdRate] = useState('');
+  const [cbuRate, setCbuRate] = useState('');
   const [rateFailed, setRateFailed] = useState(false);
+  // Zaxira kurs: `HomeReducer.usd` — u ham CBU kursi (ilova ochilganda olingan nusxa), boshlang'ich qiymat 1 — kurs EMAS,
+  // shuning uchun > 1 shart.
+  const homeUsd = useSelector((state: any) => state.HomeReducer.usd);
+  const fallbackRate = Number(homeUsd) > 1 ? String(homeUsd) : '';
+  // Kurs manbalari tartibi: CBU -> HomeReducer.usd (zaxira) -> yo'q.
+  const usdRate = cbuRate || fallbackRate;
+  // await'dan keyin eng so'nggi qiymatni o'qish uchun ref; mountedRef — ekran yopilgan bo'lsa yuborilmaydi.
+  const fallbackRef = useRef(fallbackRate);
+  fallbackRef.current = fallbackRate;
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  // Kurs (xizmat haqi/balans hisobi) FAQAT shunda kerak: qarz olish va cnt === 0. Aks holda backend hal qiladi.
+  const needsRate = feeApplies(type, user?.data?.cnt);
   // SS-DEV (2026-10-06): yagona double-submit himoyasi (bir kadrdagi ikki bosishni ham ushlaydi).
   // `loading` (Loading ekrani) tekshiruvdan keyin yoqiladi, shuning uchun hook'ning o'z loading'i ishlatilmaydi.
   const { run } = useApiAction();
   // API/hisob uchun son: USD — 2 xona (tsentlar), UZS — butun.
   const amountNum = parseAmount(amount, !isUzs);
 
-  useEffect(() => {
-    axios
-      .get(CBU_RATES_URL, { headers: {} })
+  // CBU kursini olish. Hozir bajarilayotgan so'rov bo'lsa — SHU promise qaytariladi (yangisi emas).
+  const ratePromise = useRef<Promise<string> | null>(null);
+  const fetchRate = (): Promise<string> => {
+    if (ratePromise.current) return ratePromise.current;
+    const p: Promise<string> = axios
+      .get(CBU_RATES_URL, { headers: {}, timeout: RATE_WAIT_MS })
       .then(({ data }) => {
         const rate = data?.[0]?.Rate;
-        if (rate) setUsdRate(rate);
-        else setRateFailed(true);
+        if (rate) {
+          setCbuRate(rate);
+          setRateFailed(false);
+          return String(rate);
+        }
+        setRateFailed(true);
+        return '';
       })
-      .catch(() => setRateFailed(true));
+      .catch(() => {
+        setRateFailed(true);
+        return '';
+      })
+      .then(rate => {
+        // Vaqti tugab almashtirilgan eski so'rov yangisini o'chirib yubormasin.
+        if (ratePromise.current === p) ratePromise.current = null;
+        return rate;
+      });
+    ratePromise.current = p;
+    return p;
+  };
+  // Yuborishda kursni kutish (osilib qolmasligi uchun RATE_WAIT_MS bilan cheklangan; vaqt tugasa — kurs yo'q).
+  const waitRate = (): Promise<string> =>
+    new Promise<string>(resolve => {
+      const timer = setTimeout(() => {
+        // Osilib qolgan so'rov tashlanadi: keyingi bosish YANGI so'rov yuboradi.
+        ratePromise.current = null;
+        resolve('');
+      }, RATE_WAIT_MS);
+      fetchRate().then(rate => {
+        clearTimeout(timer);
+        resolve(rate);
+      });
+    });
+  useEffect(() => {
+    fetchRate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Kurs olinmagan bo'lsa-yu USD tanlangan bo'lsa — ogohlantirish (xizmat haqi / balans tekshiruvi taxminiy bo'lmasin).
+  // CBU olinmadi, lekin zaxira kurs (HomeReducer.usd) bor: xizmat haqi taxminiy — ogohlantirish. Zaxira ham yo'q bo'lsa
+  // bu matn CHIQMAYDI (yuborishda alohida "yuborib bo'lmaydi" xabari bor, ikkalasi zid kelmasin).
+  // Ekran sessiyasida BIR marta (UZS<->USD almashtirganda takrorlanmaydi).
+  const rateWarned = useRef(false);
+  const rateMissingMsg = t('USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.');
   useEffect(() => {
-    if (!isUzs && rateFailed) showError(t('USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.'), 3500);
-  }, [isUzs, rateFailed]);
+    if (needsRate && !isUzs && rateFailed && !cbuRate && fallbackRate && !rateWarned.current) {
+      rateWarned.current = true;
+      showError(rateMissingMsg, 3500);
+    }
+  }, [needsRate, isUzs, rateFailed, cbuRate, fallbackRate, rateMissingMsg, t]);
 
   // Amaldan keyin Home'ga SILLIQ qaytish (navigate — remount yo'q) + HomeApi refresh.
   const goHomeSoon = () => {
@@ -79,7 +142,21 @@ export function useGiveDebt() {
     try {
       const tooSmall = minAmountError(isUzs, amountNum);
       if (tooSmall) return showError(tooSmall, 3000);
-      if (type === 0 && isBalanceInsufficient(user, amountNum, isUzs, usdRate)) {
+      // Faqat xizmat haqi/balans tekshiruvi qo'llanganda (type 0 va cnt === 0) USD kursi kerak. Kurs yo'q bo'lsa
+      // bir marta qayta so'raymiz (so'rov ketayotgan bo'lsa — uni kutamiz); baribir yo'q bo'lsa to'sib qo'yamiz.
+      // type 1 (qarz so'rash) hech qachon to'silmaydi.
+      let rate = usdRate;
+      if (needsRate && !isUzs && !rate) {
+        setLoading(true);
+        rate = (await waitRate()) || fallbackRef.current;
+        if (!mountedRef.current) return; // ekran yopildi — shartnoma yuborilmaydi
+        if (!rate) {
+          setLoading(false);
+          return showError(t('Dollar kursi olinmadi, shartnomani yuborib bo‘lmaydi. Internetni tekshirib, qayta urinib ko‘ring.'), 3500);
+        }
+        setLoading(false);
+      }
+      if (type === 0 && isBalanceInsufficient(user, amountNum, isUzs, rate)) {
         return showError(t('294'), 3000);
       }
       // Eski xulq: type 0 yoki 1 dan boshqasida hech narsa yuborilmaydi.

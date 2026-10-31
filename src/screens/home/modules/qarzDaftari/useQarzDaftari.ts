@@ -7,6 +7,7 @@ import { dashboardUrl, nearExpirationUrl } from '../../../../offline/prefetchPla
 import { exitXodimSession, isXodimSession, xodimFaoliyatNomi } from '../../../../store/api/token/xodimSession';
 import { effectiveShopId } from '../../../../store/api/token/qarzShop';
 import { URL } from '../../../constants';
+import { useApiAction } from '../../../../hooks/useApiAction';
 import { openCreationAmaliyot } from '../qarzAmaliyot';
 import { Nav, readDashboard, readNear, Row } from './qarzDaftariLogic';
 import { useQarzShops } from './useQarzShops';
@@ -58,13 +59,18 @@ export function useQarzDaftari() {
    * 08.10 (3-band): "Muddati yaqin" qatori MIJOZ sahifasini ochadi (QarzDaftariMijoz). mijoz_id bo'lmasa (eski javob) —
    * 30.10: qarzni yaratgan amaliyot tafsiloti.
    */
+  const { run: runNear } = useApiAction();
   const goNearRow = (row: Row) => {
     if (row?.mijozId) {
       return nav('QarzDaftariMijoz', { id: row.mijozId, turi: row.turi, fish: row.name });
     }
     if (row?.id) {
-      openCreationAmaliyot({ navigate: nav }, row.id).then(ok => {
-        if (!ok) Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+      // Ikki marta bosish: bitta navigatsiya (ref-himoya).
+      return runNear(() => openCreationAmaliyot({ navigate: nav }, row.id), {
+        key: row.id,
+        onSuccess: ok => {
+          if (!ok) Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+        },
       });
     }
   };

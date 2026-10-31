@@ -2,6 +2,7 @@ import React from 'react';
 import { Linking } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { safeOpenURL } from '@helper/safeOpenURL';
+import { useApiAction } from '../../../../hooks/useApiAction';
 import { financeApi } from '../financeApi';
 import { buildSmsTemplates, computeNearestDue, computeSmsNet, phoneTail9 } from './debtGroupLogic';
 import type { GroupData } from './useGroupData';
@@ -10,13 +11,13 @@ import type { GroupData } from './useGroupData';
 export function useGroupContact(g: GroupData) {
   const { t, navigation, title, phone, list, setList, ownItems, balance } = g;
   const [editOpen, setEditOpen] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
+  const { run, loading: saving } = useApiAction();
   const [showSms, setShowSms] = React.useState(false);
 
   const [name, setName] = React.useState(String(title || ''));
   const [phoneEdit, setPhoneEdit] = React.useState(() => phoneTail9(phone));
 
-  const saveEdit = async () => {
+  const saveEdit = () => {
     if (saving) return;
     const nm = name.trim();
     if (nm.length < 2) {
@@ -27,23 +28,20 @@ export function useGroupContact(g: GroupData) {
       Toast.show({ type: 'error2', props: { desc: t('Telefon raqamini to‘liq kiriting') } });
       return;
     }
-    setSaving(true);
-    try {
-      const body = { source_name: nm, phone: phoneEdit ? `+998${phoneEdit}` : null };
-      // SS-AUDIT (2026-09-25): allSettled — qisman muvaffaqiyat ham mahalliy ro'yxatda aks etadi.
-      const results = await Promise.allSettled(ownItems.map(d => financeApi.updateDebt(d.id, body)));
-      const okIds = new Set(ownItems.filter((_, i) => results[i].status === 'fulfilled').map(d => d.id));
-      setList(prev => prev.map(d => (okIds.has(d.id) ? { ...d, source_name: nm, phone: body.phone } : d)));
-      if (okIds.size !== ownItems.length) {
-        throw new Error('partial');
-      }
-      setEditOpen(false);
-      Toast.show({ type: 'omad', props: { desc: t('Saqlandi') } });
-    } catch (e) {
-      Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
-    } finally {
-      setSaving(false);
-    }
+    return run(
+      async () => {
+        const body = { source_name: nm, phone: phoneEdit ? `+998${phoneEdit}` : null };
+        // SS-AUDIT (2026-09-25): allSettled — qisman muvaffaqiyat ham mahalliy ro'yxatda aks etadi.
+        const results = await Promise.allSettled(ownItems.map(d => financeApi.updateDebt(d.id, body)));
+        const okIds = new Set(ownItems.filter((_, i) => results[i].status === 'fulfilled').map(d => d.id));
+        setList(prev => prev.map(d => (okIds.has(d.id) ? { ...d, source_name: nm, phone: body.phone } : d)));
+        if (okIds.size !== ownItems.length) {
+          throw new Error('partial');
+        }
+        setEditOpen(false);
+      },
+      { success: t('Saqlandi'), error: t('Xatolik yuz berdi') },
+    );
   };
 
   // SS-AUDIT (2026-09-25): .catch — dialer yo'q qurilmada unhandled rejection bo'lmasin.

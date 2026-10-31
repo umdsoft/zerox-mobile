@@ -1,3 +1,4 @@
+import type { NotifBaseProps } from './notificationProps';
 import { StyleSheet, Text } from 'react-native';
 import React, { memo, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +22,7 @@ import { useOfertaGuard } from '../../../../hooks/useOfertaGuard';
 const Qarzniqaytarishtalabqilinganligitogrisida = ({
   item,
   okay
-}) => {
+}: NotifBaseProps) => {
   const navigation = useNavigation<any>();
   // SS-DEV (2026-09-29): "Qarzni qaytarish" — shartnoma amali, ommaviy oferta shart.
   const guardOferta = useOfertaGuard();

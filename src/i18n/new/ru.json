@@ -1,5 +1,6 @@
 {
   "translation": {
+    "Dollar kursi olinmadi, shartnomani yuborib bo‘lmaydi. Internetni tekshirib, qayta urinib ko‘ring.": "Курс доллара не получен, отправить договор невозможно. Проверьте интернет и попробуйте снова.",
     "USD kursi olinmadi. Xizmat haqi hisobi aniq bo‘lmasligi mumkin.": "Курс USD не получен. Расчёт комиссии может быть неточным.",
     "Operator tomonidan xabar yetkazilmadi.": "Оператор не доставил сообщение.",
     "Operator tomonidan yetkazilmadi.": "Оператор не доставил.",

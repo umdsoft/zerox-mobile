@@ -17,6 +17,11 @@ export interface ActionOptions<T> {
   /** Muvaffaqiyat toast'idan KEYIN (try ichida: undan tashlangan xato xato-toast'ga tushadi). */
   onSuccess?: (data: T) => void;
   onError?: (err: unknown) => void;
+  /**
+   * Element kaliti (karta/qator id): qo'riqchi FAQAT shu kalit uchun ishlaydi — boshqa kalitli (yoki kalitsiz)
+   * chaqiruvlar bloklanmaydi. Berilmasa — eski xulq (butun hook bo'yicha bitta qo'riqchi).
+   */
+  key?: string | number;
 }
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: unknown };
@@ -28,11 +33,19 @@ export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: unknow
 export function useApiAction() {
   const [loading, setLoading] = useState(false);
   const inFlight = useRef(false);
+  const keysInFlight = useRef(new Set<string>());
 
   const run = useCallback(
     async <T>(fn: () => Promise<T>, opts: ActionOptions<T> = {}): Promise<ActionResult<T> | undefined> => {
-      if (inFlight.current) return undefined;
-      inFlight.current = true;
+      // Kalit satrga keltiriladi: 5 va '5' bir xil element.
+      const key = opts.key == null ? undefined : String(opts.key); // null/undefined = kalitsiz rejim
+      if (key !== undefined) {
+        if (keysInFlight.current.has(key)) return undefined;
+        keysInFlight.current.add(key);
+      } else {
+        if (inFlight.current) return undefined;
+        inFlight.current = true;
+      }
       setLoading(true);
       try {
         const data = await fn();
@@ -52,8 +65,10 @@ export function useApiAction() {
         opts.onError?.(error);
         return { ok: false, error };
       } finally {
-        inFlight.current = false;
-        setLoading(false);
+        if (key !== undefined) keysInFlight.current.delete(key);
+        else inFlight.current = false;
+        // loading: hech bir amal (kalitli ham, kalitsiz ham) bajarilmayotgan bo'lsa false.
+        setLoading(inFlight.current || keysInFlight.current.size > 0);
       }
     },
     [],
