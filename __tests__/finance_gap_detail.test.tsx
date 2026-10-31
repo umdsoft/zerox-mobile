@@ -399,6 +399,24 @@ describe('FinanceGapDetail — faol gap (davralar)', () => {
     expect(allText(r)).toContain('Kafe Navo');
   });
 
+  test('01.11: bir renderdagi ikki bosish ikkalasi hisobga olinadi (funksional yangilash)', async () => {
+    const r = await mount(activeGap());
+    expect(allText(r)).toContain('Kafe Navo');
+    const head = findPress(r, n => textOf(n).includes('1-davra'));
+    // Eski xato: ikkalasi ham render vaqtidagi isOpen=true ni ushlab, ikkisi "yop" qilardi -> yopiq qolardi.
+    await act(async () => {
+      head.props.onPress();
+      head.props.onPress();
+    });
+    expect(allText(r)).toContain('Kafe Navo'); // yopildi va qayta ochildi
+    await act(async () => {
+      head.props.onPress();
+      head.props.onPress();
+      head.props.onPress();
+    });
+    expect(allText(r)).not.toContain('Kafe Navo'); // 3 bosish = yopiq
+  });
+
   test('yakunlangan davra standart YOPIQ, birinchi yakunlanmagani OCHIQ', async () => {
     const g = activeGap();
     g.rounds[0] = { ...g.rounds[0], status: 'completed' };

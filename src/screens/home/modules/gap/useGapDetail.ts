@@ -88,7 +88,8 @@ export const useGapDetail = () => {
   const isOrganizer = !!g?.is_organizer;
   const isDraft = g?.status === 'draft';
 
-  const toggleRound = (k: string, isOpen: boolean) => setOpenRounds(s => toggleRoundOpen(s, k, isOpen));
+  // 01.11: FUNKSIONAL yangilash — bir renderdagi ikki bosish ikkalasi ham hisobga olinadi (isOpen render vaqtida qotib qolmaydi).
+  const toggleRound = (k: string, defaultOpen: boolean) => setOpenRounds(s => toggleRoundOpen(s, k, s[k] ?? defaultOpen));
   const moveMember = (idx: number, dir: -1 | 1) => {
     const next = moveInList(effectiveOrder, idx, dir);
     if (next) setManualOrder(next);

@@ -17,10 +17,12 @@ interface Props {
   r: Record<string, any>;
   roundKey: string;
   isOpen: boolean;
+  /** Foydalanuvchi tanlovi yo'q paytdagi standart holat (toggle funksional yangilanishi uchun). */
+  defaultOpen: boolean;
 }
 
 /** Bitta davra: sarlavha (ochib-yopiladi, N7), joy, karta, taklif/ogohlantirish tugmasi, davomat, to'lovlar. */
-const GapRoundItem = ({ d, r, roundKey, isOpen }: Props) => {
+const GapRoundItem = ({ d, r, roundKey, isOpen, defaultOpen }: Props) => {
   const { t } = useTranslation();
   const g = d.g!;
   const canSet = canSetVenue(r, g, d.isOrganizer);
@@ -31,7 +33,7 @@ const GapRoundItem = ({ d, r, roundKey, isOpen }: Props) => {
 
   return (
     <View style={styles.round}>
-      <TouchableOpacity activeOpacity={0.8} onPress={() => d.toggleRound(roundKey, isOpen)}>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => d.toggleRound(roundKey, defaultOpen)}>
         <View style={styles.roundHead}>
           <Text allowFontScaling={false} style={styles.roundNo}>{r.round_no}-{t('davra')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: rs(8) }}>

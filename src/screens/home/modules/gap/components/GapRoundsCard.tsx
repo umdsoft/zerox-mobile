@@ -19,7 +19,7 @@ const GapRoundsCard = ({ d }: { d: GapDetail }) => {
       <Text allowFontScaling={false} style={styles.cardTitle}>{t('Davralar')}</Text>
       {rounds.map((r, i) => {
         const rk = String(r.id ?? i);
-        return <GapRoundItem key={rk} d={d} r={r} roundKey={rk} isOpen={openRounds[rk] ?? isRoundDefaultOpen(rounds, i)} />;
+        return <GapRoundItem key={rk} d={d} r={r} roundKey={rk} isOpen={openRounds[rk] ?? isRoundDefaultOpen(rounds, i)} defaultOpen={isRoundDefaultOpen(rounds, i)} />;
       })}
     </View>
   );

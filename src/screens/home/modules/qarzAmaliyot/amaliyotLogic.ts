@@ -2,7 +2,7 @@
  * amaliyotLogic.ts — QarzDaftariAmaliyot SOF mantiqi (QarzDaftariAmaliyot.tsx dan ko'chirilgan, xulq o'zgarmagan:
  * __tests__/qarz_daftari_amaliyot.test.tsx). Amaliyot turlari, sana/summa matnlari, kvitansiya qatorlari va HTML'i.
  */
-import { fmtLocalDate, fmtLocalDateTime } from '../../../../helper/date';
+import { fmtLocalDate, fmtLocalDateTime, tkYmdFromMs } from '../../../../helper/date';
 import { rd } from '../../../../theme/rd';
 import { sortMoneyText } from '../../../components/StatisticCard';
 import { ArrowDownLeft, ArrowUpRight, ClockIcon } from '../../redesign/icons';
@@ -138,11 +138,20 @@ export const receiptHtml = (rows: { label: string; value: string }[], t: TFn): s
 </body></html>`;
 };
 
+/**
+ * To'lov sanasi (birinchi 10 belgi 'YYYY-MM-DD') BUGUNGI TOSHKENT kunidan oldinmi. 01.11: ilgari qurilma-lokal
+ * yarim tun bilan UTC yarim tun solishtirilardi (Toshkentdan boshqa TZ'da bir kun xato). Toshkentda natija ESKI bilan bir xil.
+ */
+export const isDueBeforeTodayTk = (raw: unknown, now: Date = new Date()): boolean => {
+  const ymd = String(raw).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd) || isNaN(Date.parse(ymd))) return false;
+  return ymd < tkYmdFromMs(now.getTime());
+};
+
 /** To'lov grafigi qatori holati: to'langan / muddati o'tgan (DARHOL, bazadagi status kechikishi mumkin) / kutilmoqda. */
 export const scheduleRowState = (g: Json, t: TFn) => {
   const paid = g?.status === 'tolandi';
-  const due = new Date(String(g?.tolov_sanasi).slice(0, 10)).getTime();
-  const overdue = !paid && !isNaN(due) && due < new Date(new Date().toDateString()).getTime();
+  const overdue = !paid && isDueBeforeTodayTk(g?.tolov_sanasi);
   const color = paid ? GREEN : overdue ? RED : rd.color.textTertiary;
   const label = paid ? t('To‘landi') : overdue ? t('Muddati o‘tgan') : t('Kutilmoqda');
   return { paid, color, label };
