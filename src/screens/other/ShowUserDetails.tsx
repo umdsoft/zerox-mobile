@@ -42,8 +42,19 @@ import {
   PhoneIcon,
   PhoneCallIcon,
   MessageIcon,
+  StarIcon,
 } from '../home/redesign/icons';
 import { useFio } from '../../helper/useFio';
+
+// Reyting trendi (rating_type): 1=▲, 2=▼, 3=▲▲ (3 ketma-ket oshish), 4=▼▼; 0/null — belgi yo'q.
+// Sayt (cabinet/user sahifasi) va UserDetails bilan bir xil mantiq.
+const RATING_TREND: Record<number, string> = { 1: ' ▲', 2: ' ▼', 3: ' ▲▲', 4: ' ▼▼' };
+const formatRating = (rating?: any, type?: any) => {
+  if (rating == null || rating === '') return '';
+  const r = Number(rating);
+  if (!Number.isFinite(r)) return '';
+  return `${r.toFixed(2)}${RATING_TREND[Number(type)] ?? ''}`;
+};
 
 const InfoRow = ({
   Icon,
@@ -311,6 +322,14 @@ const ShowUserDetails = () => {
           value={settingDate(data?.created_at)}
           divider
         />
+        {(data as any)?.rating != null ? (
+          <InfoRow
+            Icon={StarIcon}
+            label={t('Reyting')}
+            value={formatRating((data as any)?.rating, (data as any)?.rating_type)}
+            divider
+          />
+        ) : null}
       </View>
 
       {/* R5: shu foydalanuvchi bilan tuzilgan shartnomalar — bosilsa tafsilotga o'tadi.

@@ -122,7 +122,7 @@ const UserDetails = () => {
           </Text>
         ) : null}
         <View style={styles.ratingChip}>
-          <Text style={styles.ratingLabel}>Reyting</Text>
+          <Text style={styles.ratingLabel}>{t('Reyting')}</Text>
           <StarIcon size={rs(14)} color="#f5a623" />
           <Text style={styles.ratingScore}>{rating.toFixed(2)}</Text>
           {/* Trend strelkasi — SAYT bilan bir xil: o'sish yashil ↑ / kamayish qizil ↓;
