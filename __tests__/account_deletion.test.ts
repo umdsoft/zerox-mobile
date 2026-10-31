@@ -34,6 +34,8 @@ describe('mapDeletionErrorCode / mapDeletionErrorKey', () => {
     ['OTP_EXPIRED', 400, 'invalid_otp'],
     ['HAS_BLOCKERS', 409, 'blocked'],
     ['FORBIDDEN', 403, 'xodim_forbidden'],
+    ['ADMIN_FORBIDDEN', 403, 'admin_forbidden'],
+    ['NOT_READY', 503, 'not_ready'],
     ['OTP_COOLDOWN', 429, 'rate_limited'],
     ['TOO_MANY_ATTEMPTS', 429, 'rate_limited'],
     ['SMS_RATE_LIMIT', 429, 'rate_limited'],
@@ -76,14 +78,25 @@ describe('normalizeDeletionCheck', () => {
           requiresPassword: false,
         },
       }),
-    ).toEqual({canDelete: false, activeContracts: 2, pendingContracts: 1, qarzDaftariOpen: 3, balance: 1500, hasPassword: false});
+    ).toEqual({
+      canDelete: false, activeContracts: 2, pendingContracts: 1, qarzDaftariOpen: 3,
+      pendingPayments: 0, gapOrganizer: 0, balance: 1500, hasPassword: false,
+    });
   });
 
   test('yetishmagan maydonlar: canDelete hisoblanadi, hasPassword=true, balans 0', () => {
     expect(normalizeDeletionCheck({data: {}})).toEqual({
-      canDelete: true, activeContracts: 0, pendingContracts: 0, qarzDaftariOpen: 0, balance: 0, hasPassword: true,
+      canDelete: true, activeContracts: 0, pendingContracts: 0, qarzDaftariOpen: 0,
+      pendingPayments: 0, gapOrganizer: 0, balance: 0, hasPassword: true,
     });
     expect(normalizeDeletionCheck({data: {activeContracts: '3'}}).canDelete).toBe(false);
+  });
+
+  test('yangi to‘siqlar (to‘lov, Gap) canDelete ni yopadi', () => {
+    const r = normalizeDeletionCheck({data: {blockers: {pendingPayments: 1, gapOrganizer: 2}}});
+    expect(r.pendingPayments).toBe(1);
+    expect(r.gapOrganizer).toBe(2);
+    expect(r.canDelete).toBe(false);
   });
 
   test('bo‘sh / yaroqsiz kirish xavfsiz', () => {

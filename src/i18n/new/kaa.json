@@ -2305,6 +2305,10 @@
     "Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.": "Biometrikaliq kiriwdi janılaw kerek. Onu Qawipsizlik bóliminde qayta qosiń.",
     "Xodim seansi tugadi. Shaxsiy hisobingizga qaytdingiz.": "Xizmetker seansı tamamlandı. Siz jeke akkaunttińizga qayttuńiz.",
     "Qurilma xavfsizligi": "Qurilma qawipsizligi",
-    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Qurilmańiz root yamasa jailbreak etilgen kórinedi. Bunday qurilmada jeke ham finans magliwmatlarińiz qawip astinda bolwi mümkin. Qosimsha islewin dawam etedi."
+    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Qurilmańiz root yamasa jailbreak etilgen kórinedi. Bunday qurilmada jeke ham finans magliwmatlarińiz qawip astinda bolwi mümkin. Qosimsha islewin dawam etedi.",
+    "Yakunlanmagan to‘lovlar: {{n}} ta": "Juwmaqlanbaǵan tólemler: {{n}} dana",
+    "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Siz shólkemlestirgen aktiv Gap toparları: {{n}} dana",
+    "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "Admin esabın qosımsha arqalı óshirip bolmaydı",
+    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "Bul múmkinshilik házirshe iske túspegen. Keyinirek urınıp kóriń."
   }
 }

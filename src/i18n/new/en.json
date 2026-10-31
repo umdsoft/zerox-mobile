@@ -2306,6 +2306,10 @@
     "Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.": "Biometric login needs to be renewed. Enable it again in the Security section.",
     "Xodim seansi tugadi. Shaxsiy hisobingizga qaytdingiz.": "The employee session has ended. You are back in your personal account.",
     "Qurilma xavfsizligi": "Device security",
-    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Your device appears to be rooted or jailbroken. Your personal and financial data may be at risk on such a device. The app will keep working."
+    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Your device appears to be rooted or jailbroken. Your personal and financial data may be at risk on such a device. The app will keep working.",
+    "Yakunlanmagan to‘lovlar: {{n}} ta": "Unfinished payments: {{n}}",
+    "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Active Gap groups you organize: {{n}}",
+    "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "An admin account cannot be deleted from the app",
+    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "This feature is not available yet. Please try again later."
   }
 }

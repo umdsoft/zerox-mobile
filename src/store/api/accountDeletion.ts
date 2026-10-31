@@ -3,7 +3,8 @@
  *
  * Dizayn: docs/ACCOUNT_DELETION_DESIGN.md (4-5-6 bo'limlar). Backend endpointlari (backend 01.11):
  *   GET  /user/account/deletion-check -> { success, data:{ canDelete, blockers:{ activeContracts, pendingContracts,
- *                                          qarzDaftariOpen }, balance, balanceWarning, requiresPassword } }
+ *                                          qarzDaftariOpen, pendingPayments, gapOrganizer }, balance, balanceWarning,
+ *                                          requiresPassword } }
  *   POST /user/account/delete/send-otp { lang? } -> { success, data:{ ttl, cooldown } }
  *        | 429 OTP_COOLDOWN|TOO_MANY_ATTEMPTS|SMS_RATE_LIMIT (+retryAfter) | 502 SMS_FAILED | 403 FORBIDDEN
  *   POST /user/account/delete { password?, otp } -> { success, data:{ deleted:true } }
@@ -22,6 +23,8 @@ export interface DeletionCheck {
   activeContracts: number;
   pendingContracts: number;
   qarzDaftariOpen: number;
+  pendingPayments: number;
+  gapOrganizer: number;
   balance: number;
   hasPassword: boolean;
 }
@@ -31,6 +34,8 @@ export type DeletionErrorCode =
   | 'invalid_otp'
   | 'blocked'
   | 'xodim_forbidden'
+  | 'admin_forbidden'
+  | 'not_ready'
   | 'rate_limited'
   | 'network'
   | 'unknown';
@@ -41,6 +46,8 @@ export const DELETION_ERROR_KEYS: Record<DeletionErrorCode, string> = {
   invalid_otp: 'SMS kod noto‘g‘ri yoki muddati tugagan',
   blocked: 'Hisobni hozir o‘chirib bo‘lmaydi. Shartnoma va qarzlaringizni tekshiring.',
   xodim_forbidden: 'Xodim rejimida hisobni o‘chirib bo‘lmaydi',
+  admin_forbidden: 'Admin hisobini ilova orqali o‘chirib bo‘lmaydi',
+  not_ready: 'Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.',
   rate_limited: 'Juda ko‘p urinish. Birozdan so‘ng qayta urinib ko‘ring.',
   network: 'Serverga ulanishda xatolik yuz berdi',
   unknown: 'Xatolik yuz berdi. Qayta urinib ko‘ring.',
@@ -55,6 +62,8 @@ const SERVER_CODES: Readonly<Record<string, DeletionErrorCode>> = {
   OTP_REQUIRED: 'invalid_otp',
   HAS_BLOCKERS: 'blocked',
   FORBIDDEN: 'xodim_forbidden',
+  ADMIN_FORBIDDEN: 'admin_forbidden',
+  NOT_READY: 'not_ready',
   OTP_COOLDOWN: 'rate_limited',
   TOO_MANY_ATTEMPTS: 'rate_limited',
   SMS_RATE_LIMIT: 'rate_limited',
@@ -73,7 +82,9 @@ export function normalizeDeletionCheck(raw: any): DeletionCheck {
   const activeContracts = toCount(b.activeContracts);
   const pendingContracts = toCount(b.pendingContracts);
   const qarzDaftariOpen = toCount(b.qarzDaftariOpen);
-  const noBlockers = activeContracts === 0 && pendingContracts === 0 && qarzDaftariOpen === 0;
+  const pendingPayments = toCount(b.pendingPayments);
+  const gapOrganizer = toCount(b.gapOrganizer);
+  const noBlockers = activeContracts + pendingContracts + qarzDaftariOpen + pendingPayments + gapOrganizer === 0;
   const balance = Number(d.balance);
   return {
     // canDelete kelmasa — hisoblarga qarab; server baribir qayta tekshiradi.
@@ -81,6 +92,8 @@ export function normalizeDeletionCheck(raw: any): DeletionCheck {
     activeContracts,
     pendingContracts,
     qarzDaftariOpen,
+    pendingPayments,
+    gapOrganizer,
     balance: Number.isFinite(balance) ? balance : 0,
     // Kelmasa parol so'raymiz (xavfsiz default).
     hasPassword: typeof d.requiresPassword === 'boolean' ? d.requiresPassword

@@ -2305,6 +2305,10 @@
     "Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.": "Биометрик киришни янгилаш керак. Уни Хавфсизлик бўлимида қайта ёқинг.",
     "Xodim seansi tugadi. Shaxsiy hisobingizga qaytdingiz.": "Ходим сеанси тугади. Шахсий ҳисобингизга қайтдингиз.",
     "Qurilma xavfsizligi": "Қурилма хавфсизлиги",
-    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Қурилмангиз root ёки jailbreak қилинган кўринади. Бундай қурилмада шахсий ва молиявий маълумотларингиз хавф остида бўлиши мумкин. Илова ишлашда давом этади."
+    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Қурилмангиз root ёки jailbreak қилинган кўринади. Бундай қурилмада шахсий ва молиявий маълумотларингиз хавф остида бўлиши мумкин. Илова ишлашда давом этади.",
+    "Yakunlanmagan to‘lovlar: {{n}} ta": "Якунланмаган тўловлар: {{n}} та",
+    "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Сиз ташкил қилган фаол Гап гуруҳлари: {{n}} та",
+    "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "Админ ҳисобини илова орқали ўчириб бўлмайди",
+    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "Бу имконият ҳозирча ишга тушмаган. Кейинроқ уриниб кўринг."
   }
 }

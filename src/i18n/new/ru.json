@@ -2306,6 +2306,10 @@
     "Biometrik kirish yangilanishi kerak. Xavfsizlik bo‘limida uni qayta yoqing.": "Биометрический вход нужно обновить. Включите его заново в разделе «Безопасность».",
     "Xodim seansi tugadi. Shaxsiy hisobingizga qaytdingiz.": "Сеанс сотрудника завершён. Вы вернулись в личный аккаунт.",
     "Qurilma xavfsizligi": "Безопасность устройства",
-    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Похоже, ваше устройство взломано (root/jailbreak). На таком устройстве личные и финансовые данные могут быть под угрозой. Приложение продолжит работу."
+    "Qurilmangiz root yoki jailbreak qilingan ko‘rinadi. Bunday qurilmada shaxsiy va moliyaviy ma’lumotlaringiz xavf ostida bo‘lishi mumkin. Ilova ishlashda davom etadi.": "Похоже, ваше устройство взломано (root/jailbreak). На таком устройстве личные и финансовые данные могут быть под угрозой. Приложение продолжит работу.",
+    "Yakunlanmagan to‘lovlar: {{n}} ta": "Незавершённые платежи: {{n}}",
+    "Siz tashkil qilgan faol Gap guruhlari: {{n}} ta": "Активные группы Гап, которые вы организовали: {{n}}",
+    "Admin hisobini ilova orqali o‘chirib bo‘lmaydi": "Аккаунт администратора нельзя удалить через приложение",
+    "Bu imkoniyat hozircha ishga tushmagan. Keyinroq urinib ko‘ring.": "Эта функция пока недоступна. Попробуйте позже."
   }
 }

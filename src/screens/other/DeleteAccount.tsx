@@ -236,6 +236,18 @@ const DeleteAccount = () => {
             {t('Ochiq qarz daftari qoldiqlari: {{n}} ta', {n: c.qarzDaftariOpen})}
           </Text>
         ) : null}
+        {c.pendingPayments > 0 ? (
+          <Text style={styles.bannerErrorText}>
+            {'• '}
+            {t('Yakunlanmagan to‘lovlar: {{n}} ta', {n: c.pendingPayments})}
+          </Text>
+        ) : null}
+        {c.gapOrganizer > 0 ? (
+          <Text style={styles.bannerErrorText}>
+            {'• '}
+            {t('Siz tashkil qilgan faol Gap guruhlari: {{n}} ta', {n: c.gapOrganizer})}
+          </Text>
+        ) : null}
         <Text style={[styles.bannerErrorText, styles.mt8]}>
           {t('Avval shartnomalarni yakunlang yoki bekor qiling va qarz daftaridagi qoldiqlarni yoping, so‘ng qayta urinib ko‘ring.')}
         </Text>
