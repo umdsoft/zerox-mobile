@@ -7,7 +7,7 @@ import { financeApi } from '../../modules/financeApi';
 import { CheckCircleIcon, LedgerIcon, MessageIcon, WarningIcon } from '../../redesign/icons';
 import { fetchUndeliveredPage } from '../../modules/components/smsDeliveryApi';
 import { SMS_SCREEN, smsScreenParams } from '../../modules/components/smsDeliveryFormat';
-import { poolLine, PoolPair, toPair, toPools } from './smsPools';
+import { toPools } from './smsPools';
 
 /**
  * SmsStatsPanel — SMS kartalari (Jami SMS / Qoldiq SMS / Sarflangan / Yetkazilmagan)
@@ -15,8 +15,8 @@ import { poolLine, PoolPair, toPair, toPools } from './smsPools';
  *
  * 30.10: "Jami paket" -> "Jami SMS" (o'rni Qoldiq bilan almashdi), "Ishlatilgan" -> "Sarflangan",
  * "Shu oy" kartasi o'rniga "Yetkazilmagan" (bosilsa — to'liq ro'yxat ekrani).
- * Har bir son tagida (backend `sms.pools` bo'lsa) "Tarif N · Paket M" — joriy tarif va xarid
- * qilingan paket alohida. Eski backend: faqat umumiy sonlar.
+ * 31.10: kartalardagi "Tarif N · Paket M" / "Joriy davr" qo'shimcha qatorlari olib tashlandi
+ * (faqat asosiy sonlar). "Foydalanish darajasi" kartasidagi Tarif/Paket ajratmasi saqlangan.
  *
  * Manba:
  *   GET /finance/subscription           → sms {total, used, remaining, warning, pools?}
@@ -119,7 +119,6 @@ const SmsStatsPanel = ({
   const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<any>(null);
-  const [usedPair, setUsedPair] = useState<PoolPair | null>(null);
   const [undelivered, setUndelivered] = useState<number | null>(null);
   // Eng so'nggi callback'lar (effekt ularni dependency qilmasin — har renderda qayta so'rov bo'lmasin).
   const onSubRef = useRef(onSubscription);
@@ -145,7 +144,6 @@ const SmsStatsPanel = ({
       }
       if (statsR.status === 'fulfilled') {
         const stats = statsR.value?.data?.data || {};
-        setUsedPair(toPair(stats.pools_used));
         onStatsRef.current?.(stats);
       }
       setUndelivered(undR.status === 'fulfilled' ? undR.value.count : null);
@@ -167,15 +165,6 @@ const SmsStatsPanel = ({
   const sms = toBalance(sub);
   const pools = toPools(sub);
   const labels = { plan: t('Tarif'), package: t('Paket') };
-  const totalPair: PoolPair | null = pools.hasSplit
-    ? { plan: pools.plan.total, package: pools.package.total }
-    : null;
-  const remainPair: PoolPair | null = pools.hasSplit
-    ? { plan: pools.plan.remaining, package: pools.package.remaining }
-    : null;
-  const spentPair: PoolPair | null = pools.hasSplit
-    ? { plan: pools.plan.used, package: pools.package.used }
-    : usedPair;
 
   const usagePct = sms.total > 0 ? Math.min(100, Math.round((sms.used / sms.total) * 100)) : 0;
   const barColor =
@@ -197,7 +186,6 @@ const SmsStatsPanel = ({
           bg={rd.color.primaryTint}
           label={t('Jami SMS')}
           value={sms.total}
-          sub={poolLine(totalPair, labels)}
         />
         <StatCard
           Icon={MessageIcon}
@@ -207,7 +195,6 @@ const SmsStatsPanel = ({
           value={sms.remaining}
           valueColor={warnColor}
           note={warnText}
-          sub={poolLine(remainPair, labels)}
         />
         <StatCard
           Icon={CheckCircleIcon}
@@ -215,7 +202,6 @@ const SmsStatsPanel = ({
           bg={VIOLET_TINT}
           label={t('Sarflangan')}
           value={sms.used}
-          sub={poolLine(spentPair, labels)}
         />
         <StatCard
           Icon={WarningIcon}
@@ -223,7 +209,6 @@ const SmsStatsPanel = ({
           bg={rd.color.errorBg}
           label={t('Yetkazilmagan')}
           value={undelivered ?? '—'}
-          sub={t('Joriy davr')}
           onPress={() => navigation.navigate(SMS_SCREEN, smsScreenParams(null))}
         />
       </View>

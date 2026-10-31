@@ -20,7 +20,7 @@ import BlurModal from '../../../components/BlurModal';
 import SmsListRow from './SmsListRow';
 import axios from 'axios';
 import { storage } from '../../../../store/api/token/getToken';
-import { categoryCounts, categoryPools, poolLine, statsCategory } from './smsPools';
+import { categoryCounts, statsCategory } from './smsPools';
 import {
   BellIcon,
   CheckIcon,
@@ -65,7 +65,6 @@ const SmsHistory = () => {
   // 30.10: kategoriya shu sahifada ochilmaydi — orqa fon xira YANGI oynada.
   const [open, setOpen] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
-  const catPools = useMemo(() => categoryPools(stats?.by_type_pool), [stats]);
 
   // Backend endpoint (deploy qilingan) — SMS bo'lmasa bo'sh massiv (crash yo'q).
   const res = useFetch({ method: 'GET', url: URL + '/qarz-daftari/sms-history' });
@@ -162,7 +161,6 @@ const SmsHistory = () => {
         {CATEGORIES.map(cat => {
           // 'Boshqa' faqat server qoldiq bergan bo'lsa ko'rinadi.
           if (cat.key === 'other' && countOf('other') === 0) return null;
-          const line = poolLine(catPools?.[cat.key] ?? null, { plan: t('Tarif'), package: t('Paket') });
           return (
             <View key={cat.key} style={styles.catCard}>
               <TouchableOpacity
@@ -177,11 +175,6 @@ const SmsHistory = () => {
                   <Text allowFontScaling={false} numberOfLines={2} style={styles.catLabel}>
                     {t(cat.label)}
                   </Text>
-                  {line ? (
-                    <Text allowFontScaling={false} style={styles.catPool}>
-                      {line}
-                    </Text>
-                  ) : null}
                 </View>
                 <View style={styles.catCountWrap}>
                   <Text allowFontScaling={false} style={styles.catCount}>
@@ -307,7 +300,6 @@ const styles = StyleSheet.create({
     color: rd.color.text,
   },
   catTextWrap: { flex: 1 },
-  catPool: { fontFamily: rd.font.regular, fontSize: rs(11), color: rd.color.textTertiary, marginTop: rs(2) },
   catCountWrap: { flexDirection: 'row', alignItems: 'center', gap: rs(6) },
   catCount: {
     fontFamily: rd.font.bold,

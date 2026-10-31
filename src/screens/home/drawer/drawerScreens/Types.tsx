@@ -251,13 +251,18 @@ const Types = () => {
             <View style={[styles.smsBarFill, { width: `${smsBarPct}%` }]} />
           </View>
           <TouchableOpacity
-            activeOpacity={0.7}
+            activeOpacity={0.6}
             onPress={() => navigation.navigate('SmsHistory')}
+            accessibilityRole="button"
+            accessibilityLabel={t('SMS xabarlar tarixi')}
             style={styles.smsHistoryBtn}>
-            <MessageIcon size={rs(15)} color={rd.color.primary} />
-            <Text allowFontScaling={false} style={styles.smsHistoryText}>
-              {t('SMS xabarlar tarixi')}
-            </Text>
+            <View style={styles.smsHistoryLeft}>
+              <MessageIcon size={rs(16)} color={rd.color.primary} />
+              <Text allowFontScaling={false} style={styles.smsHistoryText}>
+                {t('SMS xabarlar tarixi')}
+              </Text>
+            </View>
+            <ChevronRight size={rs(18)} color={rd.color.primary} />
           </TouchableOpacity>
         </View>
 
@@ -720,13 +725,19 @@ const styles = StyleSheet.create({
   smsHistoryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: rs(6),
-    marginTop: rs(12),
-    alignSelf: 'flex-start',
+    justifyContent: 'space-between',
+    minHeight: 44,
+    marginTop: rs(14),
+    paddingHorizontal: rs(14),
+    borderRadius: rd.radius.md,
+    borderWidth: 1,
+    borderColor: rd.color.primary,
+    backgroundColor: rd.color.primaryTint,
   },
+  smsHistoryLeft: { flexDirection: 'row', alignItems: 'center', gap: rs(8) },
   smsHistoryText: {
     fontFamily: rd.font.semibold,
-    fontSize: rs(12.5),
+    fontSize: rs(14),
     color: rd.color.primary,
   },
 
