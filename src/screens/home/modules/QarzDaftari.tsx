@@ -32,7 +32,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 // 23.10: oflayn rejim — cache-first o'qish (navbatdagi amallar proyeksiyasi bilan) va holat banneri.
 import { useQarzFetch } from '../../../offline/useQarzFetch';
 import { dashboardUrl, nearExpirationUrl, shopsUrl } from '../../../offline/prefetchPlan';
@@ -75,6 +74,8 @@ import {
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 import { openCreationAmaliyot } from './qarzAmaliyot';
+import { Grad } from '../../../components/ui/Grad';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 type Nav = (route: string, params?: object) => void;
 
@@ -129,41 +130,6 @@ const titleCase = (s?: string) =>
     .join(' ') || 'Noma’lum';
 
 // ---------- Kichik komponentlar ----------
-const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor={colors[0]} />
-        <Stop offset="1" stopColor={colors[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
-  </Svg>
-);
-
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
-
 // B) Hero banner — ko'k gradient. O'lcham/shrift va IKKI amal tugmasi QARZ SHARTNOMASI
 // hero'si bilan BIR XIL (so'rov bo'yicha): "Qarz berish" (oq) + "Qarz olish" (yashil).
 // Alohida "Tezkor amallar" bo'limi olib tashlangani uchun bu amallar endi shu kartada.

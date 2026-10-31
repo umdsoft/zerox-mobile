@@ -34,6 +34,7 @@ import { font } from '../../theme/font';
 import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
+import { fmtYmdLocal } from '../../helper/date';
 import { AnimatedIconCircle, RequestExtendIcon } from '../../images/debtActionIcons';
 
 const DebtDateLengthAsk = () => {
@@ -392,16 +393,7 @@ const plus_day = date => {
   return today;
 };
 export function formatDate(date) {
-  const today = new Date(date);
-  const yyyy = today.getFullYear();
-  let mm = today.getMonth() + 1; // Months start at 0!
-  let dd = today.getDate();
-
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
-
-  const formattedToday = yyyy + '-' + mm + '-' + dd;
-  return formattedToday;
+  return fmtYmdLocal(new Date(date));
 }
 export function checkingDate(date) {
   let now = new Date();

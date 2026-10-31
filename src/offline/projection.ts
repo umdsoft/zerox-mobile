@@ -18,6 +18,8 @@
  * (applyRepayment / customerDebts) tayanadi — bo'lib tashlansa aylanma import paydo bo'ladi.
  */
 import { normalizeUrl } from './responseCache';
+import { tkYmdFromMs } from '../helper/date';
+import { toFiniteNum } from '../helper/num';
 import { OutboxOp, Turi, Valyuta } from './types';
 
 // Server JSON'i dinamik — bu modulda ataylab keng tur (faqat shu yerda).
@@ -55,12 +57,8 @@ const DAY_MS = 86400000;
 const NEAR_WINDOW_DAYS = 30;
 const NEAR_LIMIT = 20;
 const FULL_CLOSE = 1e12;
-const TK_OFFSET_MS = 5 * 3600 * 1000;
 const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
-const num = (v: unknown): number => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
+export const num = toFiniteNum;
 const curKey = (v: unknown): 'uzs' | 'usd' => (v === 'USD' ? 'usd' : 'uzs');
 /**
  * Summaga ta'sir qiluvchi amal. `done` — chaqiruvchi faqat asosiy ma'lumot (server/kesh) shu amal
@@ -100,7 +98,7 @@ export const tkYmdOf = (v: unknown): string | null => {
   const s = String(v);
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   const t = typeof v === 'number' ? v : new Date(s).getTime();
-  return Number.isFinite(t) ? new Date(t + TK_OFFSET_MS).toISOString().slice(0, 10) : null;
+  return Number.isFinite(t) ? tkYmdFromMs(t) : null;
 };
 const daysBetween = (fromYmd: string, toYmd: string): number =>
   Math.round((Date.parse(`${toYmd}T00:00:00Z`) - Date.parse(`${fromYmd}T00:00:00Z`)) / DAY_MS);

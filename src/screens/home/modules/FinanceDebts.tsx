@@ -37,7 +37,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useFetch } from '../../../hooks/useFetch';
 import { storage } from '../../../store/api/token/getToken';
 import { fmtUSD, fmtUZS } from '../../../helper/money';
@@ -72,6 +71,7 @@ import {
 } from './financeDebtGroups';
 import { useAllPersonalDebts } from './useAllPersonalDebts';
 import PersonalDebtReminderCard from './PersonalDebtReminderCard';
+import { Grad } from '../../../components/ui/Grad';
 
 const AMBER = '#f59e0b';
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
@@ -82,18 +82,6 @@ const todayKey = () => localDateKey(new Date());
 
 // UZS + USD qatorlari — Qarz shartnomasi kartalari bilan bir xil format ("0 UZS"/"0 USD" doim).
 const money = (s: CurSum) => [fmtUZS(s.uzs), fmtUSD(s.usd)];
-
-const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor={colors[0]} />
-        <Stop offset="1" stopColor={colors[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
-  </Svg>
-);
 
 /**
  * SS17: TEPADA ko'k gradient hero — ikki asosiy amal. SS-DEV (2026-09-29):

@@ -12,6 +12,7 @@ import { t } from 'i18next';
 import { rd, rs } from '../../theme/rd';
 import { sortText } from './StatisticCard';
 import { tashkentDayDiff } from '../../helper/dayDiff';
+import { tkYmdFromMs } from '../../helper/date';
 import { ClockIcon } from '../home/redesign/icons';
 
 // REDIZAYN: eski jadval (style.blue chiziq, MainText) o'rniga zamonaviy detail karta —
@@ -64,7 +65,7 @@ const ListCard = ({
     const ed = new Date(item.end_date);
     const day = isNaN(ed.getTime())
       ? item.end_date
-      : new Date(ed.getTime() + 5 * 3600 * 1000).toISOString().slice(0, 10);
+      : tkYmdFromMs(ed.getTime());
     navigation.navigate('SearchDebitor', {
       iconType: 1,
       title: title,

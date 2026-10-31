@@ -28,7 +28,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { useFetch } from '../../../hooks/useFetch';
 import { URL } from '../../constants';
@@ -62,6 +61,8 @@ import {
 } from './financeMoney';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
 import PersonalDebtReminderCard from './PersonalDebtReminderCard'; // 13.10: moliya kunlik eslatmasi kartasi
+import { Grad } from '../../../components/ui/Grad';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 // Dizayn tizimidan tashqari literal ranglar (gradient/bar/kategoriya).
 const GRAD_BRAND = ['#2f6fed', '#5a4fe4'] as const;
@@ -72,32 +73,6 @@ const PURPLE = '#7c3aed';
 const CAT_COLORS = ['#2f6fed', '#22c55e', '#f59e0b', '#e11d48', '#7c3aed', '#0ea5e9'];
 
 // ─────────── Kichik komponentlar ───────────
-const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor={colors[0]} />
-        <Stop offset="1" stopColor={colors[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
-  </Svg>
-);
-
-const CircleIcon = ({ size, bg, children }: any) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-    {children}
-  </View>
-);
-
 // Tezkor amal tugmasi (yuqori qatordagi 4 tadan biri).
 const QuickBtn = ({
   Icon,

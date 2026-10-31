@@ -7,6 +7,7 @@ import { rd, rs } from '../../../theme/rd';
 import { useTranslation } from 'react-i18next';
 import { PDF_ACT_URL } from '../../constants';
 import { signExistingUrl } from '../../../helper/pdfSign';
+import { tkYmdFromMs } from '../../../helper/date';
 
 const Dalol = () => {
   const route = useRoute();
@@ -70,7 +71,7 @@ const returnURL = (type, data, lang, date, sum) => {
     const tm = d.getTime();
     return isNaN(tm) || tm <= 0
       ? ''
-      : new Date(tm + 5 * 3600 * 1000).toISOString().slice(0, 10);
+      : tkYmdFromMs(tm);
   };
   switch (type) {
     case 2:

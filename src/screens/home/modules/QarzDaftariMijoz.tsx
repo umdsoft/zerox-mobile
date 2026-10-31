@@ -30,6 +30,7 @@ import PendingBadge from '../../../offline/ui/PendingBadge';
 import NotSavedOffline, { isDerivedBody, PartialDataNote } from '../../../offline/ui/NotSavedOffline';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
+import { fmtLocalDate } from '../../../helper/date';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
@@ -60,6 +61,7 @@ import AnimatedEmpty from '../../components/AnimatedEmpty';
 import DebtActionButton, { pastelFg } from './DebtActionButton';
 import { BanIcon } from './FinanceDebtActionModal';
 import QarzMijozTavsiyaCard from './QarzMijozTavsiyaCard'; // 21.10: Tavsiya kartasi (sayt bilan bir xil)
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish / berilgan
@@ -86,15 +88,7 @@ const titleCase = (s?: string) =>
     .join(' ') || 'Noma’lum';
 
 // ISO/sana → DD.MM.YYYY (pad).
-const fmtDate = (s?: string): string => {
-  if (!s) return '';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = d.getFullYear();
-  return `${dd}.${mm}.${yy}`;
-};
+export const fmtDate = (s?: string): string => fmtLocalDate(s);
 
 // Qaytarish muddati BUGUNDAN oldin qolganmi (faqat sana bo'yicha, vaqtsiz).
 const isOverdue = (s?: string): boolean => {
@@ -108,29 +102,6 @@ const isOverdue = (s?: string): boolean => {
 };
 
 // ---------- Kichik komponentlar ----------
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
-
 /**
  * 2026-09-28: "Aktiv qarzlar" ro'yxatining bitta qatori.
  * Berilgan sana · summa+valyuta · qoldiq · qaytarish muddati (+ bo'lib to'lash

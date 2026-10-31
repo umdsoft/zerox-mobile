@@ -30,6 +30,7 @@ import PendingBadge from '../../../offline/ui/PendingBadge';
 import NotSavedOffline, { isDerivedBody, PartialDataNote } from '../../../offline/ui/NotSavedOffline';
 import { URL } from '../../constants';
 import { rd, rs } from '../../../theme/rd';
+import { fmtLocalDateTime } from '../../../helper/date';
 import Loading from '../../components/Loading';
 import { sortMoneyText } from '../../components/StatisticCard';
 import RdHeader from '../redesign/RdHeader';
@@ -61,17 +62,7 @@ const titleCase = (s?: string): string =>
     .join(' ') || 'Noma’lum';
 
 // ISO/sana → DD.MM.YYYY HH:mm (pad).
-const fmtDateTime = (s?: string): string => {
-  if (!s) return '';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}.${mm}.${yy} ${hh}:${mi}`;
-};
+export const fmtDateTime = (s?: string): string => fmtLocalDateTime(s);
 
 // Tranzaksiya turi → sarlavha yorlig'i.
 const TITLE_BY_TURI: Record<Turi, string> = {

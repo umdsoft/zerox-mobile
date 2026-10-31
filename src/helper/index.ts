@@ -1,5 +1,6 @@
 import { t } from 'i18next';
 import type { User, CompanyUser, PersonUser } from '../types';
+import { fmtDateTimeUz, fmtDmyLocal } from './date';
 
 /**
  * Formats a number with space-separated thousands
@@ -62,7 +63,7 @@ export const checkningPeople = (item: User): string | undefined => {
 export const settingDate = (text: string | Date): string => {
   // SS-DEV (2026-09-24): noto'g'ri/bo'sh qiymatda "NaN.NaN.NaN" qaytmasin.
   const d = parseApiDate(text);
-  return d ? fmtDDMMYYYY(d) : '';
+  return d ? fmtDmyLocal(d) : '';
 };
 
 /**
@@ -119,33 +120,8 @@ export const parseApiDate = (
   return isNaN(d.getTime()) ? null : d;
 };
 
-const fmtDDMMYYYY = (d: Date): string => {
-  const yyyy = d.getFullYear();
-  let mm: string | number = d.getMonth() + 1; // Months start at 0!
-  let dd: string | number = d.getDate();
-
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
-
-  return dd + '.' + mm + '.' + yyyy;
-};
-
-/**
- * Sana + SOAT "DD.MM.YYYY HH:MM" — O'zbekiston vaqti (UTC+5), qurilma
- * mintaqasidan qat'i nazar. Noto'g'ri/bo'sh qiymatda ''.
- * 27.09: SmsHistory ichidagi lokal `dateTime` shu yerga ko'chirildi (SmsManager
- * ham ishlatadi — DRY). Xulq o'zgarmagan.
- */
-export const fmtDateTimeUz = (text: unknown): string => {
-  if (!text) return '';
-  const d = new Date(text as string);
-  if (isNaN(d.getTime())) return '';
-  const z = new Date(d.getTime() + 5 * 3600 * 1000);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${p(z.getUTCDate())}.${p(z.getUTCMonth() + 1)}.${z.getUTCFullYear()} ${p(
-    z.getUTCHours(),
-  )}:${p(z.getUTCMinutes())}`;
-};
+// fmtDateTimeUz / fmtDmyLocal -> helper/date.ts (yagona manba); eski import yo'li saqlanadi.
+export { fmtDateTimeUz };
 
 /**
  * Converts a date string from one format to DD.MM.YYYY format
@@ -157,7 +133,7 @@ export const fmtDateTimeUz = (text: unknown): string => {
 export const checkDate = (text?: string | null): string => {
   // SS-DEV (2026-09-24): ilgari `split('.').join('-')` ISO/ms-li sanani buzar edi.
   const d = parseApiDate(text);
-  return d ? fmtDDMMYYYY(d) : '';
+  return d ? fmtDmyLocal(d) : '';
 };
 
 // Import ReturnName for backward compatibility

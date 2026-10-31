@@ -34,7 +34,7 @@ import { rd, rs } from '../../../theme/rd';
 import Loading from '../../components/Loading';
 import RdHeader from '../redesign/RdHeader';
 import { CheckIcon, IdCardIcon, PencilIcon, StorefrontIcon } from '../redesign/icons';
-import { internationalScheme, isLocalCard, localBrand } from '../../../helper/cardBin';
+import { fmtCardInput, internationalScheme, isLocalCard, localBrand } from '../../../helper/cardBin';
 
 const BLUE = '#2f6fed';
 
@@ -47,10 +47,7 @@ const BLUE = '#2f6fed';
  */
 
 // 16 raqamni "0000 0000 0000 0000" ko'rinishida ko'rsatamiz.
-const fmtCard = (raw: string) => {
-  const d = String(raw || '').replace(/\D/g, '').slice(0, 16);
-  return d.replace(/(.{4})/g, '$1 ').trim();
-};
+export const fmtCard = fmtCardInput;
 // SS-AUDIT (2026-09-25): helper/phone.fmtPhoneUz (yagona manba).
 const fmtPhone = fmtPhoneUz;
 

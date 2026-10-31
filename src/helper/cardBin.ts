@@ -72,6 +72,14 @@ export const fmtCard4 = (raw: string | null | undefined): string => {
   return d.replace(/(.{4})(?=.)/g, '$1 ');
 };
 
+/**
+ * Karta INPUT/ko'rsatish: faqat raqamlar (<=16), 4 tadan guruh, oxirida probelsiz.
+ * Raqam bo'lmasa '' (fmtCard4 dan farqi: u raqamsiz kirishda ASL matnni qaytaradi —
+ * input'da harf yozilishiga yo'l qo'yardi). FinancePayoutCard/QarzDaftariKarta nusxalari shu yerga.
+ */
+export const fmtCardInput = (raw: string | null | undefined): string =>
+  cardDigits(raw).replace(/(.{4})/g, '$1 ').trim();
+
 export const internationalScheme = (raw: string): string | null => {
   const d = cardDigits(raw);
   if (d.length < 2) return null; // hali yozilmoqda — hukm chiqarmaymiz

@@ -57,6 +57,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop, Circle } from 'react-native-svg'
 import Person from '../../images/home/person';
 import Famale from '../../images/Famale';
 import { useFio } from '../../helper/useFio';
+import { fmtDmyLocal } from '../../helper/date';
 const { width } = Dimensions.get('window');
 
 const SearchUserScreen = () => {
@@ -707,18 +708,8 @@ const UserInfo = ({ user, navigation, type }) => {
   );
 };
 
-function formatDate(date) {
-  const today = new Date(date);
-  const yyyy = today.getFullYear();
-  let mm = today.getMonth() + 1; // Months start at 0!
-  let dd = today.getDate();
-
-  if (dd < 10) dd = '0' + dd;
-  if (mm < 10) mm = '0' + mm;
-
-  const formattedToday = dd + '.' + mm + '.' + yyyy;
-
-  return formattedToday;
+export function formatDate(date) {
+  return fmtDmyLocal(new Date(date));
 }
 export default SearchUserScreen;
 

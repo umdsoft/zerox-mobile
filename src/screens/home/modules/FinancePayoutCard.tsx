@@ -10,6 +10,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { fmtPhoneUz } from '../../../helper/phone';
+import { fmtCardInput } from '../../../helper/cardBin';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -31,8 +32,7 @@ import { IdCardIcon } from '../redesign/icons';
 
 const BLUE = '#2f6fed';
 
-const fmtCard = (raw: string) =>
-  String(raw || '').replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+export const fmtCard = fmtCardInput;
 
 // SS-AUDIT (2026-09-25): helper/phone.fmtPhoneUz (yagona manba).
 const fmtPhone = fmtPhoneUz;

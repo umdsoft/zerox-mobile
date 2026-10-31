@@ -1,5 +1,6 @@
+import { TASHKENT_OFFSET_MS } from './date'; // UTC+5, DST yo'q
+
 const DAY_MS = 86400000;
-const TASHKENT_OFFSET_MS = 5 * 3600000; // UTC+5, DST yo'q
 
 /** Instantning Toshkent taqvimidagi kun raqami (epoch'dan). */
 const tashkentDay = (ts: number): number =>

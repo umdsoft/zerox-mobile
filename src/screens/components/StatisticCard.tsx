@@ -9,6 +9,7 @@ import { ClockIcon, ManIcon, WomanIcon, CheckCircleIcon } from '../home/redesign
 import { parseApiDate } from '../../helper';
 import { groupMoney } from '../../helper/money';
 import { useFio } from '../../helper/useFio';
+import { tkYmdFromMs } from '../../helper/date';
 
 // O'zbek ismidan jinsni taxmin qilish (avatar tanlash uchun). Eng kuchli
 // signal — otasining ismi qo'shimchasi: "qizi" (ayol) / "o'g'li" (erkak).
@@ -65,8 +66,9 @@ export const getDueMeta = (endDate: any): DueMeta => {
       diff: 99999,
     };
   }
+  // NOTE(refactor): mixes local midnight (parseApiDate + setHours) with a +5h shift for the label — differs from helper/date Tashkent-only helpers; 
   // Sana matni — ilovaning mavjud +5s (UZS) siljishi bilan (kun chegarasida to'g'ri).
-  const iso = new Date(d.getTime() + 5 * 3600 * 1000).toISOString().slice(0, 10);
+  const iso = tkYmdFromMs(d.getTime());
   const [y, m, dd] = iso.split('-');
   const date = `${dd}.${m}.${y}`;
 
@@ -292,6 +294,7 @@ export const sortText = text => {
 // Summa MILLIONДАН oshsa "mln"/"mlrd" ko'rinishida (so'rov): 999 000 -> "999 000",
 // 1 000 000 -> "1 mln", 1 500 000 -> "1,5 mln", 8 690 000 -> "8,69 mln",
 // 1 000 000 000 -> "1 mlrd". 1M dan past -> oddiy mingliklar (bo'shliq).
+// NOTE(refactor): differs from helper/money.compactMoney — 2 decimals, t() units; 
 export const formatMln = (value: any): string => {
   const n = Number(value) || 0;
   const abs = Math.abs(n);

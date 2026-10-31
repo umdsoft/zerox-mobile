@@ -45,6 +45,7 @@ import { sortMoneyText } from '../../components/StatisticCard';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import { ClockIcon, ShieldIcon, UserIcon } from '../redesign/icons';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const RED = '#dc2626';
@@ -65,29 +66,6 @@ const titleCase = (s?: string) =>
 // Summa kiritish: helper/money (USD — tsentlar, UZS — butun; 2026-10-18).
 
 // ---------- Kichik komponentlar ----------
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
-
 // Hisob-kitob qatori.
 const SummaryRow = ({
   label,

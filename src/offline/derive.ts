@@ -13,6 +13,7 @@
 import { computeHistoryStats, yopishInfoFromHistory } from './projection';
 import { CacheHit, normalizeUrl, ScanHit } from './responseCache';
 import { Turi } from './types';
+import { toFiniteNum } from '../helper/num';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
@@ -28,10 +29,7 @@ const LIST_RE = /\/qarz-daftari\/qarzlar(?:\?|$)/;
 const MIJOZLAR_RE = /\/qarz-daftari\/savdo-faoliyat\/\d+\/mijozlar(?:\?|$)/;
 const HISTORY_RE = /\/qarz-daftari\/mijozlar\/\d+\/history$/;
 
-const num = (v: unknown): number => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
+export const num = toFiniteNum;
 const rowsOf = (hit: ScanHit<Json>): Json[] => (Array.isArray(hit.data?.data) ? hit.data.data : []);
 const isDebtRow = (r: Json): boolean => !!r && r.id !== undefined && r.turi !== undefined && r.qoldiq !== undefined;
 

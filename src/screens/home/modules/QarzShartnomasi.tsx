@@ -24,7 +24,6 @@ import {
   View,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useFetch } from '../../../hooks/useFetch';
 import { rd, rs } from '../../../theme/rd';
 import { compactUsd, compactUzs, fmtUZS, fmtUSD } from '../../../helper/money';
@@ -46,6 +45,7 @@ import {
 import DebtSummaryCard from '../redesign/DebtSummaryCard';
 import { debtNav, DebtRole, DebtTab } from '../redesign/debtNav';
 import { useOfertaGuard } from '../../../hooks/useOfertaGuard';
+import { Grad } from '../../../components/ui/Grad';
 
 // Pie/gradient ranglari (literal hex faqat shu yerda ruxsat etilgan).
 const C_JARAYON = '#2f6fed'; // jarayonda — ko'k
@@ -72,10 +72,12 @@ type MyData = {
 };
 
 // ---------- Yordamchi ----------
-const num = (v: any) => Number(v || 0);
+// NOTE(refactor): differs from helper/num.toFiniteNum — 'abc'/'1 234,50' -> NaN (looks like a latent bug: sumCur total becomes NaN), Infinity kept; 
+export const num = (v: any) => Number(v || 0);
 const isCur = (r: Row, cur: string) =>
   String(r?.currency || 'UZS').toUpperCase() === cur;
-const sumCur = (rows: Row[] | undefined, cur: string) =>
+// NOTE(refactor): differs from HomeRedesign.sumCur (no Math.round, NaN/throws on null row); 
+export const sumCur = (rows: Row[] | undefined, cur: string) =>
   (rows || []).reduce((s, r) => (isCur(r, cur) ? s + num(r.residual_amount) : s), 0);
 
 // UZS + USD matni — so'rov bo'yicha "UZS"/"USD" + K/M/B; qarz bo'lmasa ham
@@ -83,18 +85,6 @@ const sumCur = (rows: Row[] | undefined, cur: string) =>
 const money = (uzs: number, usd: number) => [fmtUZS(uzs), fmtUSD(usd)];
 
 // ---------- Gradient fon ----------
-const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor={colors[0]} />
-        <Stop offset="1" stopColor={colors[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
-  </Svg>
-);
-
 // ---------- Statistika kartasi (donut + legend) ----------
 const StatCard = ({ title, chart }: { title: string; chart?: MyData['chart'] }) => {
   const { t } = useTranslation();

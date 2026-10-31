@@ -50,6 +50,7 @@ import {
   CoinIcon,
   UserIcon,
 } from '../redesign/icons';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed'; // berish
@@ -77,29 +78,6 @@ const toDisplayDate = (d: Date) =>
 
 // Faqat raqamlarni qoldiramiz.
 const onlyDigits = (s: string) => s.replace(/[^\d]/g, '');
-
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
 
 // Sana maydoni — chiroyli karta: taqvim ikonasi (aksent doira) + yorliq + sana +
 // chevron. Ikkala sana (berilgan/qaytarish) uchun bir xil ko'rinish.

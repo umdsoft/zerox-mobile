@@ -32,6 +32,7 @@ import { isUnsyncedId, submitQarzOp } from '../../../offline/submit';
 import { outboxErrorText, showQueuedResult } from '../../../offline/ui/queuedToast';
 import { NewOp } from '../../../offline/types';
 import { rd, rs } from '../../../theme/rd';
+import { fmtLocalDate, fmtLocalDateTime } from '../../../helper/date';
 import { sortMoneyText } from '../../components/StatisticCard';
 import {
   amountToInput,
@@ -96,23 +97,11 @@ const metaOf = (turi: Turi) => {
   }
 };
 
-const fmtDateTime = (s?: string): string => {
-  if (!s) return '—';
-  const d = new Date(String(s).replace(' ', 'T'));
-  if (isNaN(d.getTime())) return '—';
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(
-    d.getMinutes(),
-  )}`;
-};
+export const fmtDateTime = (s?: string): string =>
+  fmtLocalDateTime(s, { fallback: '—', spaceToT: true });
 
-const fmtDate = (s?: string): string => {
-  if (!s) return '—';
-  const d = new Date(String(s).replace(' ', 'T'));
-  if (isNaN(d.getTime())) return '—';
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
-};
+export const fmtDate = (s?: string): string =>
+  fmtLocalDate(s, { fallback: '—', spaceToT: true });
 
 const money = (v: any, cur?: string) => `${sortMoneyText(v) || 0} ${cur || 'UZS'}`;
 

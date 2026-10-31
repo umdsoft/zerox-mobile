@@ -21,6 +21,8 @@
  */
 import i18n from '../i18n';
 
+export { toFiniteNum } from './num';
+
 /** Mingliklarni bo'shliq bilan ajratadi: 550000 -> "550 000". */
 export const groupDigits = (n: number) =>
   Math.round(n)

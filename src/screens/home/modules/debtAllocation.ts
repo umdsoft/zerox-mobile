@@ -12,6 +12,7 @@
  * Valyuta tekshiruvi chaqiruvchida. Parity: __tests__/debt_allocation_parity_31_10.test.ts (umumiy fixture).
  */
 import { num } from './financeMoney';
+import { tkYmdFromMs } from '../../../helper/date';
 
 export type AllocationReason = 'overdue' | 'due_now' | 'highest_rate' | 'zero_rate';
 export const ORDER_RULE = 'economic_v1';
@@ -36,7 +37,6 @@ export type AllocationOpts = { today?: string; devaluationPct?: number; tranches
 
 const DUE_SOON_DAYS = 30;
 const DEFAULT_DEVALUATION_PCT = 8;
-const TASHKENT_OFFSET_MS = 5 * 3600 * 1000;
 const DAY_MS = 86400000;
 const RATE_EPS = 1e-9;
 
@@ -59,18 +59,19 @@ export const compareByDue = (a: any, b: any): number => {
 };
 
 /** DB Date / ISO(Z) → Toshkent sanasi; 'YYYY-MM-DD[ HH:mm:ss]' → o'sha sana. */
+// NOTE(refactor): differs from helper/date.tkYmdFromMs/offline tkYmdOf — tz-less '2026-10-31T21:00:00' is sliced as-is here but shifted +5h (-> 2026-11-01) by tkYmdOf on non-UTC+5 devices; 
 export const ymdOf = (v: any): string | null => {
   if (v == null || v === '') return null;
   if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v) && !/(Z|[+-]\d{2}:?\d{2})$/.test(v.trim())) {
     return v.slice(0, 10);
   }
   const t = new Date(v).getTime();
-  return Number.isFinite(t) ? new Date(t + TASHKENT_OFFSET_MS).toISOString().slice(0, 10) : null;
+  return Number.isFinite(t) ? tkYmdFromMs(t) : null;
 };
 
 const dayNum = (ymd: string): number => Math.floor(Date.parse(`${ymd}T00:00:00Z`) / DAY_MS);
 export const todayTashkent = (nowMs: number = Date.now()): string =>
-  new Date(nowMs + TASHKENT_OFFSET_MS).toISOString().slice(0, 10);
+  tkYmdFromMs(nowMs);
 
 const prepayHorizon = (termMonths: number, mode: any): number => {
   const n = Math.max(Number(termMonths) || 12, 1);

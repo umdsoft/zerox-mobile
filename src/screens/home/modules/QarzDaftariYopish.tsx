@@ -52,6 +52,7 @@ import {
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
 import { ClockIcon, CoinIcon, UserIcon } from '../redesign/icons';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 // Web rang semantikasi (dizayn tizimidan tashqari — faqat shu joyda literal).
 const BLUE = '#2f6fed';
@@ -73,36 +74,14 @@ const titleCase = (s?: string) =>
 const onlyDigits = (s: string): string => String(s || '').replace(/[^0-9]/g, '');
 
 // Xom raqamlarni minglik ajratgichli ko'rinishga keltiramiz (1 000 000).
-const formatThousands = (raw: string): string => {
+// NOTE(refactor): differs from helper/money.groupDigits — string-based, no rounding ('0012' -> '0 012', '' -> ''); 
+export const formatThousands = (raw: string): string => {
   const d = onlyDigits(raw);
   if (!d) return '';
   return d.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 };
 
 // ---------- Kichik komponentlar ----------
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
-
 // Hisob-kitob qatori (label + qiymat).
 const CalcRow = ({
   label,

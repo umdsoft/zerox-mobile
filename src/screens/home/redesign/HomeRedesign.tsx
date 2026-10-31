@@ -63,11 +63,12 @@ import {
   MenuIcon,
   UserIcon,
 } from './icons';
+import { Grad } from '../../../components/ui/Grad';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 type Nav = (route: string, params?: object) => void;
 
 // ---------- Statik ma'lumot (Figma) ----------
-const user = { name: 'Umidbek', initials: 'UJ' };
 const balance = { total: '+25 700 000 so‘m', trend: 'Bu oy +12%', owedToMe: '68.2 mln', iOwe: '42.5 mln' };
 // Fintech gradient palitralari (jonli, zamonaviy).
 const GRAD = {
@@ -107,24 +108,6 @@ const GradientBg = () => (
 );
 
 // Umumiy gradient fon — ixtiyoriy rang juftligi bilan (fintech kartalar uchun).
-const Grad = ({ id, colors }: { id: string; colors: readonly string[] }) => (
-  <Svg style={StyleSheet.absoluteFill}>
-    <Defs>
-      <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor={colors[0]} />
-        <Stop offset="1" stopColor={colors[1]} />
-      </LinearGradient>
-    </Defs>
-    <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
-  </Svg>
-);
-
-const CircleIcon = ({ size, bg, children }: { size: number; bg: string; children: React.ReactNode }) => (
-  <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
-    {children}
-  </View>
-);
-
 /**
  * SS-DEV (2026-10-05): Shimmer — birinchi yuklashda (kesh yo'q) 0 o'rniga
  * kulrang miltillovchi blok. Faqat native-driver opacity animatsiyasi.
@@ -587,7 +570,8 @@ let dashboardCache: any = null;
 let dashboardCacheScope: string | null = null;
 
 // Bitta valyuta bo'yicha yig'indi (konvertatsiyasiz — USD'ni alohida ko'rsatish uchun).
-const sumCur = (rows: any[] | undefined, cur: string) =>
+// NOTE(refactor): differs from QarzShartnomasi.sumCur (rounds to integer); 
+export const sumCur = (rows: any[] | undefined, cur: string) =>
   Math.round(
     (rows || []).reduce((s, r) => {
       const isCur = String(r?.currency || 'UZS').toUpperCase() === cur;

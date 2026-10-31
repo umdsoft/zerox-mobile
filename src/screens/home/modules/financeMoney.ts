@@ -10,6 +10,7 @@
 import { t } from 'i18next';
 import { fmtAmountByCurrency } from '../../../helper/money';
 
+// NOTE(refactor): differs from helper/num.toFiniteNum — Infinity stays Infinity; 
 export const num = (v: any): number => {
   const n = Number(v);
   return isNaN(n) ? 0 : n;
@@ -114,6 +115,7 @@ const dateParts = (s?: string): { y: number; mo: number; d: number } | null => {
  * Shu bois formalar ham SHU yordamchidan foydalanadi — sanani o'qishning
  * yagona usuli qoladi.
  */
+// NOTE(refactor): LOCAL-TZ parse (not Tashkent) — differs from helper/date.tkYmdFromMs; 
 export const parseLocalDate = (s?: string | null): Date | null => {
   const p = dateParts(s || undefined);
   return p ? new Date(p.y, p.mo - 1, p.d) : null;

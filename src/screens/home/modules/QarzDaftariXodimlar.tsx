@@ -36,6 +36,7 @@ import Toast from 'react-native-toast-message';
 import { useFetch } from '../../../hooks/useFetch';
 import { storage } from '../../../store/api/token/getToken';
 import { rd, rs } from '../../../theme/rd';
+import { phoneDigits9 } from '../../../helper/phone';
 import Loading from '../../components/Loading';
 import { URL } from '../../constants';
 import RdHeader from '../redesign/RdHeader';
@@ -63,11 +64,7 @@ const titleCase = (s?: string) =>
 const isActive = (v: any) => v !== false && Number(v) !== 0;
 
 // Telefonni +998 dan keyingi 9 raqamga ajratamiz (tahrirlashda old to'ldirish uchun).
-const parsePhone9 = (tel?: string) => {
-  let d = String(tel || '').replace(/[^\d]/g, '');
-  if (d.startsWith('998')) d = d.slice(3);
-  return d.slice(0, 9);
-};
+export const parsePhone9 = phoneDigits9;
 
 const ListSeparator = () => <View style={{ height: rs(12) }} />;
 

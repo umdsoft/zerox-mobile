@@ -41,33 +41,11 @@ import {
   PlusIcon,
 } from '../redesign/icons';
 import AnimatedEmpty from '../../components/AnimatedEmpty';
+import { CircleIcon } from '../../../components/ui/CircleIcon';
 
 const BLUE = '#2f6fed';
 const GREEN = '#16a34a';
 const AMBER = '#f59e0b';
-
-const CircleIcon = ({
-  size,
-  bg,
-  children,
-}: {
-  size: number;
-  bg: string;
-  children: React.ReactNode;
-}) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: bg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    {children}
-  </View>
-);
 
 const QarzDaftariKiritish = () => {
   const navigation = useNavigation<any>();

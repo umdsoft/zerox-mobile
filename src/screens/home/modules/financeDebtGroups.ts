@@ -67,7 +67,8 @@ const isLent = (d: any) => d?.type !== 'borrowed';
 
 /** UZS/USD bo'yicha qoldiq yig'indisi. */
 export type CurSum = { uzs: number; usd: number };
-const sumByCur = (rows: any[]): CurSum =>
+// NOTE(refactor): different shape/field (remaining_amount, {uzs,usd}) than sumCur copies; 
+export const sumByCur = (rows: any[]): CurSum =>
   rows.reduce(
     (acc: CurSum, d: any) => {
       const v = num(d?.remaining_amount);
