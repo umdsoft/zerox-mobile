@@ -88,8 +88,8 @@ android {
         applicationId "com.zeroxuz"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 23
-        versionName "2.0.2"
+        versionCode 24
+        versionName "2.0.3"
         missingDimensionStrategy "react-native-capture-protection", "base"
         // ABI cheklovi endi splits.abi orqali (pastda) — ndk.abiFilters bilan splits
         // BIRGA bo'lolmaydi (Gradle "Conflicting configuration" xatosi beradi).
