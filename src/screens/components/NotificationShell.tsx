@@ -65,6 +65,9 @@ export const NotifButton = ({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       activeOpacity={0.85}
       style={[
         styles.btn,

@@ -9,6 +9,7 @@ import FamilyInviteTaklif from '../notifications/all/FamilyInviteTaklif';
 import Shikoyat from '../notifications/all/Shikoyat';
 import SmsUndelivered from '../notifications/all/SmsUndelivered';
 import NotifFallback from '../notifications/all/NotifFallback';
+import type { SmsResendOutcome } from './smsResendError';
 
 export interface NotificationHandlers {
   okay: (id: any, type?: any) => any;
@@ -17,6 +18,10 @@ export interface NotificationHandlers {
   onToliqQaytganG: (item: any, status: any) => any;
   onQismanQaytarilganG: (item: any, status: any) => any;
   onQarzMuddatUzaytirishG: (item: any, status: any) => any;
+  /** type 49: kartani ro'yxatdan olish + serverdan o'chirish (PUT /ok, fonda, xato jim). */
+  smsUndeliveredSeen?: (id: any) => any;
+  /** type 49: «Qayta yuborish» — ActionResult: `{ ok: true, data: SmsResendOutcome }` (takroriy bosishda undefined). */
+  smsResend?: (id: any) => Promise<{ ok: boolean; data?: SmsResendOutcome } | undefined>;
 }
 
 /** Moliya / eslatma / taklif turlari (35+) va noma'lum tur uchun umumiy karta. */
@@ -46,9 +51,9 @@ export function renderOtherNotification(item: any, h: NotificationHandlers) {
     // 23.10: Oila moliyasi taklifi — «Ruxsat berish» / «Rad etish».
     case 48:
       return <FamilyInviteTaklif item={item} okay={okay} />;
-    // 30.10: qarzdorga SMS yetkazilmadi — «Qarzga o'tish» (Amaliyot tafsiloti) / «Ok».
+    // 30.10: qarzdorga SMS yetkazilmadi — «Qarzga o'tish» (Amaliyot tafsiloti) / «Qayta yuborish».
     case 49:
-      return <SmsUndelivered item={item} okay={okay} />;
+      return <SmsUndelivered item={item} onSeen={h.smsUndeliveredSeen} onResend={h.smsResend} />;
     // SS-DEV (2026-09-26): qarz bo'yicha shikoyat — 42 do'kon (qarz daftari), 43 shaxsiy qarz.
     case 42:
     case 43:

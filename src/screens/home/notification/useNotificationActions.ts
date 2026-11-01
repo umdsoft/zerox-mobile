@@ -10,6 +10,7 @@ import socketService from '../../../helper/socketService';
 import { useApiAction } from '../../../hooks/useApiAction';
 import { useOfertaGuard } from '../../../hooks/useOfertaGuard';
 import { filter_notification } from '../../../store/reducers/HomeReducer';
+import { classifySmsResendError, SmsResendOutcome } from './smsResendError';
 import { getCreditorDataAndDebitorData, HomeApi } from '../../../store/api/home';
 
 type ObjType = {
@@ -415,5 +416,78 @@ export function useNotificationActions() {
   const onQarzMuddatUzaytirishG = (item: any, status: any) =>
     guardOferta(() => { onQarzMuddatUzaytirish(item, status); });
 
-  return { okay, onReject, onSuccessG, onToliqQaytganG, onQismanQaytarilganG, onQarzMuddatUzaytirishG };
+  // 01.11: type 49 (SMS yetkazilmadi) — kartani ro'yxatdan olish + serverdan o'chirish (PUT /ok). Xato JIM:
+  // navigatsiyani bloklamaydi, toast yo'q (server 15 kunda o'zi o'chiradi). runCard'siz — resend ichidan ham chaqiriladi.
+  const markSmsUndeliveredSeen = useCallback(
+    async (id: any) => {
+      dispatch(filter_notification(id));
+      try {
+        const token = storage.getString('token');
+        await axios.put(URL + `/notification/ok/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+        socketService.emit('notification', { userId: user?.data?.id });
+      } catch {
+        // jim
+      }
+    },
+    [user, dispatch],
+  );
+  // «Qarzga o'tish» / qarz topilmadi: karta kaliti = id (boshqa kartalar bloklanmaydi).
+  const smsUndeliveredSeen = useCallback(
+    (id: any) => runCard(() => markSmsUndeliveredSeen(id), { key: id }),
+    [runCard, markSmsUndeliveredSeen],
+  );
+
+  // 01.11: «Qayta yuborish» — POST /notification/sms-undelivered/:id/resend. Natija: 'done' (yuborildi yoki
+  // yana yetkazilmadi — eski bildirishnoma serverda o'chdi) | 'removed' (karta olib tashlandi, xato) | 'kept'.
+  const smsResend = useCallback(
+    (id: any) =>
+      runCard(async (): Promise<SmsResendOutcome> => {
+        const token = storage.getString('token');
+        try {
+          const { data } = await axios.post(
+            URL + `/notification/sms-undelivered/${id}/resend`,
+            undefined,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          dispatch(filter_notification(id));
+          Toast.show({
+            autoHide: true,
+            position: 'bottom',
+            props: {
+              desc: data?.renotified
+                ? t('SMS qayta yuborildi, lekin yana yetkazilmadi')
+                : t('SMS qayta yuborildi'),
+            },
+            type: 'omad',
+            visibilityTime: 2000,
+          });
+          socketService.emit('notification', { userId: user?.data?.id });
+          return 'done';
+        } catch (error) {
+          const failure = classifySmsResendError(error);
+          // Bildirishnoma ma'nosiz (qarz yo'q/yopilgan, allaqachon yuborilgan): qurilmadan ham, serverdan ham o'chadi.
+          if (failure.remove) void markSmsUndeliveredSeen(id);
+          Toast.show({
+            autoHide: true,
+            position: 'bottom',
+            props: { desc: failure.message },
+            type: 'error2',
+            visibilityTime: 2500,
+          });
+          return failure.remove ? 'removed' : 'kept';
+        }
+      }, { key: id }),
+    [user, dispatch, runCard, markSmsUndeliveredSeen],
+  );
+
+  return {
+    okay,
+    onReject,
+    onSuccessG,
+    onToliqQaytganG,
+    onQismanQaytarilganG,
+    onQarzMuddatUzaytirishG,
+    smsUndeliveredSeen,
+    smsResend,
+  };
 }

@@ -2,7 +2,8 @@
  * SmsUndelivered.tsx (bildirishnoma, type = 49) — 30.10: qarz berilganda qarzdorga
  * SMS yetkazilmadi (real-time, tepadagi qo'ng'iroqcha).
  *
- * Tugmalar: «Qarzga o'tish» — ro'yxatga olingan qarz AMALIYOT TAFSILOTI; «Ok» — yopish.
+ * Tugmalar: «Qarzga o'tish» — ro'yxatga olingan qarz AMALIYOT TAFSILOTI (o'tgach bildirishnoma o'chadi);
+ * «Qayta yuborish» (01.11, ilgari «Ok») — SMS qayta yuboriladi, bildirishnoma o'chadi va shu qarz sahifasiga o'tiladi.
  * Backend payload shakli o'zgarsa — faqat `parseSmsUndelivered` ni moslash kifoya.
  */
 import React, { memo } from 'react';
@@ -17,7 +18,7 @@ import { smsFailureText } from '../../modules/components/smsDeliveryFormat';
 import { openCreationAmaliyot } from '../../modules/qarzAmaliyot';
 
 export interface SmsUndeliveredInfo {
-  /** ud_qarz_id = qarz_daftari id (contract NULL bo'ladi — ishlatilmaydi) (bo'lmasa null — "Qarzga o'tish" yashirinadi). */
+  /** ud_qarz_id = qarz_daftari id (contract NULL bo'ladi — ishlatilmaydi). Bo'lmasa null: «Qarzga o'tish» kartani o'chirib "Qarz topilmadi" deydi. */
   qarzId: number | string | null;
   /** failure_reason kodi (yo'q bo'lsa null — umumiy sabab). */
   reason: string | null;
@@ -57,19 +58,60 @@ export const parseSmsUndelivered = (item: any): SmsUndeliveredInfo => {
   };
 };
 
-const SmsUndelivered = ({ item, okay }: any) => {
+const SmsUndelivered = ({ item, onSeen, onResend }: any) => {
   const navigation = useNavigation<any>();
   const info = parseSmsUndelivered(item);
   const [opening, setOpening] = React.useState(false);
+  const [resending, setResending] = React.useState(false);
+  // Ikkala tugma uchun yagona sinxron qo'riqchi: bir kadrdagi ikki bosish state yangilanishidan oldin ham to'xtatiladi.
+  const busyRef = React.useRef(false);
+  // Karta ro'yxatdan olinganda komponent unmount bo'ladi — setState faqat mounted bo'lsa.
+  const mountedRef = React.useRef(true);
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const showError = (desc: string) => Toast.show({ type: 'error2', props: { desc } });
 
   const goToDebt = async () => {
-    if (opening) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setOpening(true);
     try {
+      if (!info.qarzId) {
+        // Qarz id yo'q — ochadigan joy yo'q: kartani serverdan ham o'chiramiz va aytamiz.
+        onSeen?.(item?.id);
+        showError(t('Qarz topilmadi') as string);
+        return;
+      }
       const ok = await openCreationAmaliyot(navigation, info.qarzId);
-      if (!ok) Toast.show({ type: 'error2', props: { desc: t('Xatolik yuz berdi') } });
+      if (!ok) showError(t('Xatolik yuz berdi') as string);
+      // Keyingi sahifa ochildi — bildirishnomani ro'yxatdan olib tashlaymiz (PUT /ok fonda, navigatsiyani bloklamaydi).
+      else onSeen?.(item?.id);
     } finally {
-      setOpening(false);
+      busyRef.current = false;
+      if (mountedRef.current) setOpening(false);
+    }
+  };
+
+  const resend = async () => {
+    if (busyRef.current || !onResend) return;
+    busyRef.current = true;
+    setResending(true);
+    try {
+      const res = await onResend(item?.id);
+      // Yuborildi (yoki yana yetkazilmadi — eskisi serverda o'chdi): o'sha qarz sahifasiga o'tamiz,
+      // lekin foydalanuvchi ekrandan chiqib ketgan bo'lsa — majburlab olib kelmaymiz.
+      if (res?.ok && res.data === 'done' && info.qarzId && navigation.isFocused?.() !== false) {
+        const opened = await openCreationAmaliyot(navigation, info.qarzId);
+        if (!opened) showError(t('Xatolik yuz berdi') as string);
+      }
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setResending(false);
     }
   };
 
@@ -82,10 +124,8 @@ const SmsUndelivered = ({ item, okay }: any) => {
       time={item?.time}
       actions={
         <>
-          {info.qarzId ? (
-            <NotifButton label={t('Qarzga o‘tish') as string} onPress={goToDebt} loading={opening} />
-          ) : null}
-          <NotifButton label="Ok" variant="ghost" onPress={() => okay?.(item?.id, item?.type)} />
+          <NotifButton label={t('Qarzga o‘tish') as string} onPress={goToDebt} loading={opening} disabled={resending} />
+          <NotifButton label={t('Qayta yuborish') as string} variant="ghost" onPress={resend} loading={resending} disabled={opening} />
         </>
       }>
       <Text allowFontScaling={false} style={styles.body}>
