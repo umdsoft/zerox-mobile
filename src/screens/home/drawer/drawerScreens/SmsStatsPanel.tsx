@@ -1,10 +1,10 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { rd, rs } from '../../../../theme/rd';
 import { financeApi } from '../../modules/financeApi';
-import { CheckCircleIcon, LedgerIcon, MessageIcon, WarningIcon } from '../../redesign/icons';
+import { CheckCircleIcon, ChevronRight, LedgerIcon, MessageIcon, WarningIcon } from '../../redesign/icons';
 import { fetchUndeliveredPage } from '../../modules/components/smsDeliveryApi';
 import { SMS_SCREEN, smsScreenParams } from '../../modules/components/smsDeliveryFormat';
 import { toPools } from './smsPools';
@@ -72,9 +72,20 @@ const StatCard = ({
           {label}
         </Text>
       </View>
-      <Text allowFontScaling={false} style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
-        {value}
-      </Text>
+      {onPress ? (
+        <View style={styles.valueRow}>
+          <Text allowFontScaling={false} style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
+            {value}
+          </Text>
+          <View style={[styles.chevronWrap, { backgroundColor: bg }]}>
+            <ChevronRight size={rs(13)} color={color} />
+          </View>
+        </View>
+      ) : (
+        <Text allowFontScaling={false} style={[styles.statValue, valueColor ? { color: valueColor } : null]}>
+          {value}
+        </Text>
+      )}
       {sub ? (
         <Text allowFontScaling={false} numberOfLines={1} style={styles.statSub}>
           {sub}
@@ -88,14 +99,13 @@ const StatCard = ({
     </>
   );
   return onPress ? (
-    <TouchableOpacity
-      activeOpacity={0.75}
+    <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={styles.statCard}>
+      style={({ pressed }) => [styles.statCard, styles.statCardPressable, pressed && styles.statCardPressed]}>
       {body}
-    </TouchableOpacity>
+    </Pressable>
   ) : (
     <View style={styles.statCard}>{body}</View>
   );
@@ -254,6 +264,17 @@ const styles = StyleSheet.create({
     borderColor: rd.color.border,
     padding: rs(12),
     marginBottom: rs(10),
+  },
+  // Bosiladigan karta (Yetkazilmagan): ogohlantirish ikonkasiga mos qizil aksent chegara + bosilganda effekt.
+  statCardPressable: { borderColor: `${rd.color.error}55` },
+  statCardPressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
+  valueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  chevronWrap: {
+    width: rs(20),
+    height: rs(20),
+    borderRadius: rs(10),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statHead: { flexDirection: 'row', alignItems: 'center', gap: rs(8), marginBottom: rs(10) },
   statIcon: {
