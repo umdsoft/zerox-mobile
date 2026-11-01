@@ -113,7 +113,7 @@
     "patch-package": "^8.0.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "overrides": {
     "socket.io-parser": "^4.2.7",
