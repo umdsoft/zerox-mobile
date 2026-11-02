@@ -14,6 +14,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import i18next from 'i18next';
+import { withExternalActivity } from './externalFlow';
 
 type Cell = string | number | null | undefined;
 
@@ -109,7 +110,7 @@ export const exportCsv = async ({
       },
     });
     // Excel/Sheets ilovasida ochishga urinamiz (bo'lmasa — jimgina o'tkazamiz).
-    FileViewer.open(cachePath, { showOpenWithDialog: true }).catch(() => {});
+    withExternalActivity(() => FileViewer.open(cachePath, { showOpenWithDialog: true })).catch(() => {});
     return true;
   } catch (e) {
     console.error('csv export error', e);

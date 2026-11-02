@@ -25,6 +25,7 @@ import { rd, rs } from '../../../theme/rd';
 import RdHeader from '../redesign/RdHeader';
 import { PDF_INDEX_URL } from '../../constants';
 import { pdfCachePath } from '../../../helper/pdfCache';
+import { withExternalActivity } from '../../../helper/externalFlow';
 
 const DownloadStatistic = () => {
   // paramssiz ochilsa ham crash bermasin (guard).
@@ -44,10 +45,10 @@ const DownloadStatistic = () => {
         appendExt: 'pdf',
         path,
       }).fetch('GET', `${PDF_INDEX_URL}?id=${item?.uid}&download=0&lang=${lang}`);
-      await Share.open({
+      await withExternalActivity(() => Share.open({
         failOnCancel: false,
         url: Platform.OS === 'android' ? `file://${res.path()}` : res.path(),
-      });
+      }));
     } catch (err) {
       // Ulashish bekor qilindi yoki yuklab bo'lmadi — jim.
     }
@@ -78,7 +79,7 @@ const DownloadStatistic = () => {
         overwrite: true,
         path: filePath,
       }).fetch('GET', downloadUrl);
-      await FileViewer.open(resp.path(), { showOpenWithDialog: true });
+      await withExternalActivity(() => FileViewer.open(resp.path(), { showOpenWithDialog: true }));
     } catch (error) {
       console.error('Download or open file error:', error);
 

@@ -23,6 +23,7 @@ import { useSelector } from 'react-redux';
 import { rd, rs } from '../../theme/rd';
 import { downloadOfertaPdf, removeOfertaFile } from '../../helper/ofertaPdf';
 import RdHeader from '../home/redesign/RdHeader';
+import { withExternalActivity } from '../../helper/externalFlow';
 
 const Contract = () => {
   const [loading, setLoading] = useState(true);
@@ -102,7 +103,7 @@ const Contract = () => {
         overwrite: true,
         path: path,
       }).fetch('GET', url);
-      await FileViewer.open(resp.path(), { showOpenWithDialog: true });
+      await withExternalActivity(() => FileViewer.open(resp.path(), { showOpenWithDialog: true }));
     } catch (error) {
       Toast.show({
         autoHide: true,

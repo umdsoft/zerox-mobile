@@ -8,6 +8,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util';
 import { useApiAction } from '../../../hooks/useApiAction';
 import { renderHTMLS } from '../../constants';
 import { receiptBaseName } from './sendMoneyLogic';
+import { withExternalActivity } from '../../../helper/externalFlow';
 
 /** Tafsilotni PDF qilib saqlash (Android: Download/Zerox, MediaStore; iOS: writeFile) va ochish. Mavjud nom bo'lsa (1), (2)... qo'shiladi. */
 export function useReceiptDownload(data: any) {
@@ -71,7 +72,7 @@ export function useReceiptDownload(data: any) {
 
         // Open file: fayl allaqachon saqlangan — ochib bo'lmasa bu YUKLASH xatosi emas.
         try {
-          await FileViewer.open(`file://${filePath}`);
+          await withExternalActivity(() => FileViewer.open(`file://${filePath}`));
         } catch (openError) {
           console.error('Error opening saved PDF:', openError);
           if (Platform.OS === 'android') {

@@ -60,6 +60,8 @@ export function useSetLocalPassword() {
 
   /** PIN o'rnatildi -> biometrik OPT-IN so'raymiz, javobdan keyin davom etamiz. */
   const goAfterPinSet = (token: string | undefined) => () => {
+    // Biometrik opt-in paytida ilova qulflangan bo'lsa (fon > grace) Home'ga PIN'siz o'tilmaydi.
+    if (storage.getBoolean('appLocked') === true) return;
     if (openPendingNotification()) return;
     navigation.reset({ routes: [{ name: 'BottomTabNavigator', params: { token } }], index: 0 });
   };

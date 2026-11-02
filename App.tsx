@@ -24,6 +24,7 @@ import NoInternet from './src/screens/home/modal/NoInternet';
 import { checkingInternet } from './src/store/reducers/HomeReducer';
 import { getMe } from './src/store/api/home';
 import useAppStateListener from './src/hooks/useAppStateListener';
+import {deferDeepLink, isAppLocked} from './src/helper/appLockState';
 import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import ForceUpdateGate from './src/screens/components/ForceUpdateGate'; // SS-DEV (2026-10-04)
 import ClockSkewGate from './src/screens/components/ClockSkewGate'; // 08.10: vaqt tafovuti
@@ -208,6 +209,11 @@ const App: React.FC = () => {
       const { url } = event;
       if (url.includes(DEEP_LINK_PATHS.USER_MONEY_RESULT)) {
         dispatch(getMe());
+        // SEC (2026-11-02): qulf (PIN) ekranidan deep-link orqali kontentga o'tib bo'lmaydi.
+        if (isAppLocked()) {
+          deferDeepLink(url);
+          return;
+        }
         navigation.navigate(DEEP_LINK_PATHS.USER_MONEY_RESULT);
       }
     };

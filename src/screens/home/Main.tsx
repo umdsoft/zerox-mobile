@@ -22,6 +22,7 @@ import {
 } from '../../store/api/home';
 import { createFmtTokenAction } from '../../store/api/user';
 import { storage } from '../../store/api/token/getToken';
+import { isAppLocked } from '../../helper/appLockState';
 import { setUsd } from '../../store/reducers/HomeReducer';
 
 // Helpers
@@ -113,9 +114,10 @@ const Main = () => {
     const unsubscribeForeground = notifee.onForegroundEvent(
       ({ type }) => {
         if (type === EventType.PRESS) {
-          const isLocked = storage.getBoolean('appLocked');
+          const isLocked = isAppLocked();
 
           if (isLocked) {
+            storage.set('appLocked', true); // vaqt bo'yicha qulf: bayroqni ham yoqamiz
             // Save target navigation for after unlock
             storage.set(
               'pendingNavigation',
@@ -145,9 +147,10 @@ const Main = () => {
       .getInitialNotification()
       .then(remoteMessage => {
         if (remoteMessage) {
-          const isLocked = storage.getBoolean('appLocked');
+          const isLocked = isAppLocked();
 
           if (isLocked) {
+            storage.set('appLocked', true); // vaqt bo'yicha qulf: bayroqni ham yoqamiz
             // Save target navigation for after unlock
             storage.set(
               'pendingNavigation',
@@ -179,8 +182,9 @@ const Main = () => {
     // edi -> fonda bosilgan bildirishnoma ekranga o'tkazmasdi (faqat killed holat ishlardi).
     const unsubscribeOpenApp = messaging().onNotificationOpenedApp(remoteMessage => {
       if (remoteMessage) {
-        const isLocked = storage.getBoolean('appLocked');
+        const isLocked = isAppLocked();
         if (isLocked) {
+          storage.set('appLocked', true); // vaqt bo'yicha qulf: bayroqni ham yoqamiz
           storage.set(
             'pendingNavigation',
             JSON.stringify({ screen: 'NotificationScreen', data: {} }),

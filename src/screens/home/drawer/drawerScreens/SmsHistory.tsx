@@ -21,6 +21,7 @@ import SmsListRow from './SmsListRow';
 import axios from 'axios';
 import { storage } from '../../../../store/api/token/getToken';
 import { categoryCounts, statsCategory } from './smsPools';
+import { readSmsStatsCache } from './smsStatsCache';
 import {
   BellIcon,
   CheckIcon,
@@ -64,7 +65,9 @@ const SmsHistory = () => {
   const navigation = useNavigation<any>();
   // 30.10: kategoriya shu sahifada ochilmaydi — orqa fon xira YANGI oynada.
   const [open, setOpen] = useState<string | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  // 02.11: kategoriya sonlari va Premium belgisi ham keshdan SINXRON — sahifa darhol to'liq ochiladi.
+  const [cachedSnap] = useState(() => readSmsStatsCache());
+  const [stats, setStats] = useState<any>(cachedSnap?.stats ?? null);
 
   // Backend endpoint (deploy qilingan) — SMS bo'lmasa bo'sh massiv (crash yo'q).
   const res = useFetch({ method: 'GET', url: URL + '/qarz-daftari/sms-history' });
@@ -130,7 +133,9 @@ const SmsHistory = () => {
    * Noma'lum (javob kelmagan) bo'lsa — sahifa ochiladi, cheklovni u yerda backend
    * (403) va SmsManager ko'rsatadi.
    */
-  const [canList, setCanList] = useState<boolean | null>(null);
+  const [canList, setCanList] = useState<boolean | null>(
+    cachedSnap ? !!cachedSnap.subscription?.features?.sms_list : null,
+  );
   const [limitOpen, setLimitOpen] = useState(false);
   const onSubscription = useCallback((data: any) => {
     setCanList(!!data?.features?.sms_list);

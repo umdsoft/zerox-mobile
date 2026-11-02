@@ -24,6 +24,7 @@ import DownloadIcon from '../../../../images/home/download.svg';
 import { downloadOfertaPdf, removeOfertaFile } from '../../../../helper/ofertaPdf';
 import { GUIDE_PDF_URL } from '../../../constants';
 import { WarningIcon } from '../../redesign/icons';
+import { withExternalActivity } from '../../../../helper/externalFlow';
 
 const GUIDE_FILE_NAME = 'ZeroX-yoriqnoma.pdf';
 
@@ -93,7 +94,7 @@ const UseTerm = () => {
           props: { title: t('Yuklab olindi'), desc: t('Download/Zerox papkasiga saqlandi') },
         });
       }
-      await FileViewer.open(target, { showOpenWithDialog: true }).catch(() => {});
+      await withExternalActivity(() => FileViewer.open(target, { showOpenWithDialog: true })).catch(() => {});
     } catch (e) {
       Toast.show({
         autoHide: true,

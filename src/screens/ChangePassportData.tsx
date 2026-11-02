@@ -26,7 +26,7 @@ import {
   MyIdLocale,
   useMyId,
 } from 'react-native-nitro-myid';
-import { beginExternalFlow, endExternalFlow } from '../helper/externalFlow';
+import { beginExternalFlow, endExternalFlow, settleExternalFlow } from '../helper/externalFlow';
 
 const err2 = desc =>
   Toast.show({
@@ -147,10 +147,14 @@ const ChangePassportData = () => {
       beginExternalFlow();
       start(cfg, {
         onSuccess: async d => {
+          settleExternalFlow(); // MyID tugadi: 10 daqiqalik oyna qisqa "settle"ga tushadi
           await postData(d);
         },
-        onError: () => err2(t('Xatolik!')),
-        onUserExited: () => {},
+        onError: () => {
+          settleExternalFlow();
+          err2(t('Xatolik!'));
+        },
+        onUserExited: () => settleExternalFlow(),
       });
     } catch (e) {
       endExternalFlow();

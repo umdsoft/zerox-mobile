@@ -34,6 +34,7 @@ import {
   venueFormFor,
   VenueMode,
 } from './gapDetailLogic';
+import { withExternalActivity } from '../../../../helper/externalFlow';
 
 type Json = Record<string, any>;
 const errMsg = (e: unknown) => apiErrorMessage(e);
@@ -189,7 +190,7 @@ export const useGapDetail = () => {
         });
         const status = res.info().status;
         if (status !== 200) throw new Error('pdf ' + status);
-        await Share.open({ url: `file://${dest}`, type: 'application/pdf', title: 'Gap', failOnCancel: false });
+        await withExternalActivity(() => Share.open({ url: `file://${dest}`, type: 'application/pdf', title: 'Gap', failOnCancel: false }));
       } catch (e: any) {
         if (!/cancel/i.test(String(e && e.message))) {
           Toast.show({ type: 'error2', props: { desc: 'PDF tayyorlanmadi' } });

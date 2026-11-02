@@ -51,6 +51,7 @@ import {
   ShareIcon,
   WalletIcon,
 } from './icons';
+import { withExternalActivity } from '../../../helper/externalFlow';
 
 /**
  * Ijtimoiy tarmoqlar — havolalar eski ilovaning drawer ekranidan 1:1 olindi
@@ -141,7 +142,7 @@ const DrawerMenu = () => {
         Platform.OS === 'android'
           ? 'https://play.google.com/store/apps/details?id=com.zeroxuz'
           : 'https://apps.apple.com/uz/app/zerox/id6446497826';
-      await Share.share({ message: link, url: link, title: t('Ishonch kafolati') });
+      await withExternalActivity(() => Share.share({ message: link, url: link, title: t('Ishonch kafolati') }));
     } catch (e) {
       // ulashish bekor qilindi — jim o'tamiz.
     }

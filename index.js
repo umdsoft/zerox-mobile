@@ -25,6 +25,7 @@ import {setAnalyticsUser, trackScreen} from './src/helper/analytics';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import {logDebug, logError} from './src/log';
 import {isUpdateNotification, SCREENS} from './src/constants';
+import {applyColdStartLock, deferNotificationPress, isAppLocked} from './src/helper/appLockState';
 
 // SS-AUDIT (2026-09-25): ignoreAllLogs() barcha LogBox ogohlantirishlarini yopadi —
 // oldingi ignoreLogs([...]) qatori ortiqcha edi.
@@ -72,6 +73,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     );
   }
   
+  // Bu handler HAR kelgan xabarda ishlaydi (bosish emas): qulfda navigate() o'zi to'xtaydi,
+  // pendingNavigation faqat haqiqiy PRESS'da yoziladi (pastda).
   if (remoteMessage) {
     Store.dispatch(getNotificationWithPage({page: 1}));
     navigate(SCREENS.NOTIFICATION);
@@ -96,7 +99,8 @@ notifee.onBackgroundEvent(async ({type, detail}) => {
     if (isUpdateNotification(notificationBody)) {
       logDebug('Update notification clicked');
     } else {
-      navigate(SCREENS.NOTIFICATION);
+      if (isAppLocked()) deferNotificationPress();
+      else navigate(SCREENS.NOTIFICATION);
     }
   }
 });
@@ -111,6 +115,8 @@ const MainApp = () => {
   const [storageReady, setStorageReady] = useState(false);
   useEffect(() => {
     initSecureStorage().finally(() => {
+      // SEC (2026-11-02): yangi jarayon/UI — sessiya+PIN bo'lsa DOIM qulfda (sovuq start, deep-link, bildirishnoma).
+      applyColdStartLock();
       // 16.10: allaqachon kirgan foydalanuvchi — Analytics'ga ichki id (ilova ochilganda)
       // user_id login'da RAQAM sifatida saqlanadi (response.sad = user.id) — getString uni o'qimaydi
       setAnalyticsUser(storage.getString('user_id') || storage.getNumber('user_id') || null);

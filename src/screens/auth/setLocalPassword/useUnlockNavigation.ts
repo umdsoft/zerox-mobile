@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { storage } from '../../../store/api/token/getToken';
+import { consumePendingDeepLink } from '../../../helper/appLockState';
 
 /** Qulf ochilgach 500ms dan keyin navigatsiya (biometrik yo'l). */
 export const UNLOCK_NAV_DELAY_MS = 500;
@@ -11,6 +12,12 @@ export function useUnlockNavigation() {
 
   // J (so'rov): qulfdan chiqqach — foydalanuvchi qulf OLDIDA turgan ekranga qaytadi. useAppStateListener
   // qulflashdan oldin nav-holatni saqlaydi; shuni tiklaymiz. Saqlangan holat bo'lmasa — BottomTabNavigator.
+  // Qulf paytida kelgan deep-link (Click/Payme/UserMoneyResult) qulf ochilgach BIR MARTA ochiladi.
+  const replayDeepLink = useCallback(() => {
+    const link = consumePendingDeepLink();
+    if (link) navigation.navigate(link.route, link.params);
+  }, [navigation]);
+
   const restoreAfterUnlock = useCallback(() => {
     const saved = storage.getString('preLockNavState');
     if (saved) {
@@ -18,13 +25,15 @@ export function useUnlockNavigation() {
         const st = JSON.parse(saved);
         storage.delete('preLockNavState');
         navigation.reset(st);
+        replayDeepLink();
         return;
       } catch (e) {
         storage.delete('preLockNavState');
       }
     }
     navigation.reset({ routes: [{ name: 'BottomTabNavigator' }], index: 0 });
-  }, [navigation]);
+    replayDeepLink();
+  }, [navigation, replayDeepLink]);
 
   /** Bildirishnomadan ochilgan bo'lsa true (va `replace` qiladi). */
   const openPendingNotification = useCallback((): boolean => {

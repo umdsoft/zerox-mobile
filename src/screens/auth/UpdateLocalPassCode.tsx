@@ -1,7 +1,7 @@
 import {Platform, Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {normalize} from '../../theme/style';
-import {useNavigation} from '@react-navigation/native';
+import {useUnlockNavigation} from './setLocalPassword/useUnlockNavigation';
 import Toast from 'react-native-toast-message';
 // SS-SEC (2026-09-25): PIN hash (pin.ts); terilayotgan raqamlar MMKV'ga yozilmaydi.
 import {setPin, verifyPin} from '../../store/api/token/pin';
@@ -19,7 +19,7 @@ import {BackspaceIcon, LockIcon} from '../home/redesign/icons';
 const UpdateLocalPassCode = () => {
   const [password, setPassword] = useState('');
   const [step, setStep] = useState(2);
-  const navigation = useNavigation();
+  const {finishUnlock} = useUnlockNavigation();
   // Yangi PIN (2-qadam) — faqat xotirada (ilgari MMKV'ga `key1/key2` ochiq yozilardi).
   const newPinRef = useRef('');
 
@@ -87,11 +87,10 @@ const UpdateLocalPassCode = () => {
               autoHide: true,
               topOffset: Platform.OS === 'android' ? 5 : normalize(50),
             });
+            // Tiklash oqimi qulfdan boshlangan bo'lishi mumkin: qulfni YECHAMIZ va kutilayotgan
+            // bildirishnoma/deep-link/oldingi ekranni tiklaymiz (finishUnlock).
             setTimeout(() => {
-              navigation.reset({
-                routes: [{name: 'BottomTabNavigator'}],
-                index: 0,
-              });
+              finishUnlock();
             }, 1500);
           } else {
             setPassword('');

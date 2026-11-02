@@ -37,6 +37,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import ViewShot from 'react-native-view-shot';
 import { fontSize } from '../../../../theme';
 import { fioNow } from '../../../../helper/useFio';
+import { withExternalActivity } from '../../../../helper/externalFlow';
 
 // https://www.npmjs.com/package/node-html-to-image
 
@@ -88,7 +89,7 @@ const QrCode = () => {
           RNBlobUtil.fs.unlink(file.filePath).catch(() => {});
         }
 
-        await FileViewer.open(cached, { showOpenWithDialog: true });
+        await withExternalActivity(() => FileViewer.open(cached, { showOpenWithDialog: true }));
 
         // await Share.open({
         //   url: `file://${destPath}`,
@@ -226,11 +227,11 @@ const QrCode = () => {
             const destPath = `${RNBlobUtil.fs.dirs.CacheDir}/${user?.data?.uid}.pdf`;
             await RNBlobUtil.fs.cp(filePath!, destPath);
 
-            await Share.open({
+            await withExternalActivity(() => Share.open({
               url: `file://${destPath}`,
               title: 'Share QR Code',
               type: 'application/pdf',
-            })
+            }))
               .then(() => {})
               .catch(async error => {
                 await RNBlobUtil.fs.unlink(destPath);

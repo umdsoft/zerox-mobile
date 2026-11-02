@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { CheckCircleIcon, ChevronRight, LedgerIcon, MessageIcon, WarningIcon } f
 import { fetchUndeliveredPage } from '../../modules/components/smsDeliveryApi';
 import { SMS_SCREEN, smsScreenParams } from '../../modules/components/smsDeliveryFormat';
 import { toPools } from './smsPools';
+import { readSmsStatsCache, writeSmsStatsCache } from './smsStatsCache';
 
 /**
  * SmsStatsPanel — SMS kartalari (Jami SMS / Qoldiq SMS / Sarflangan / Yetkazilmagan)
@@ -127,9 +128,13 @@ const SmsStatsPanel = ({
 }) => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
-  const [loading, setLoading] = useState(true);
-  const [sub, setSub] = useState<any>(null);
-  const [undelivered, setUndelivered] = useState<number | null>(null);
+  // 02.11: oxirgi ma'lum ma'lumot keshdan SINXRON o'qiladi — sahifa spinnersiz darhol to'liq chiziladi,
+  // yangilash orqa fonda. Skeleton faqat kesh umuman yo'q (birinchi marta) bo'lganda.
+  const [cached] = useState(() => readSmsStatsCache());
+  const cacheRef = useRef(cached);
+  const [loading, setLoading] = useState(!cached);
+  const [sub, setSub] = useState<any>(cached ? cached.subscription?.sms || null : null);
+  const [undelivered, setUndelivered] = useState<number | null>(cached ? cached.undelivered : null);
   // Eng so'nggi callback'lar (effekt ularni dependency qilmasin — har renderda qayta so'rov bo'lmasin).
   const onSubRef = useRef(onSubscription);
   const onStatsRef = useRef(onStats);
@@ -147,16 +152,39 @@ const SmsStatsPanel = ({
         fetchUndeliveredPage(1, null, 1),
       ]);
       if (!alive) return;
+      const prev = cacheRef.current;
+      let subscription = prev?.subscription ?? null;
+      let stats = prev?.stats ?? null;
+      let undeliveredCount = prev?.undelivered ?? null;
       if (subR.status === 'fulfilled') {
         const data = subR.value?.data?.data || {};
+        subscription = data;
         setSub(data.sms || null);
         onSubRef.current?.(data);
       }
       if (statsR.status === 'fulfilled') {
-        const stats = statsR.value?.data?.data || {};
+        stats = statsR.value?.data?.data || {};
         onStatsRef.current?.(stats);
       }
-      setUndelivered(undR.status === 'fulfilled' ? undR.value.count : null);
+      if (undR.status === 'fulfilled') {
+        undeliveredCount = undR.value.count;
+        setUndelivered(undeliveredCount);
+      } else if (!prev) {
+        setUndelivered(null);
+      }
+      // Muvaffaqiyatsiz so'rovda eski qiymat (kesh) qoladi — jim, spinnersiz. Qisman
+      // yangilashda cachedAt O'ZGARMAYDI (eskirgan stats "yangi" bo'lib qolmasin).
+      if (subR.status === 'fulfilled') {
+        const full = statsR.status === 'fulfilled';
+        const snap = {
+          subscription,
+          stats,
+          undelivered: undeliveredCount,
+          cachedAt: full ? Date.now() : prev?.cachedAt ?? Date.now(),
+        };
+        cacheRef.current = snap;
+        writeSmsStatsCache(snap);
+      }
       setLoading(false);
     })();
     return () => {
@@ -165,9 +193,15 @@ const SmsStatsPanel = ({
   }, [reloadKey]);
 
   if (loading) {
+    // Faqat birinchi marta (kesh yo'q): spinner emas, tayyor sahifa shaklidagi skeleton.
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="small" color={rd.color.primary} />
+      <View testID="sms-stats-skeleton">
+        <View style={styles.grid}>
+          {[0, 1, 2, 3].map(i => (
+            <View key={i} style={[styles.statCard, styles.skeletonCard]} />
+          ))}
+        </View>
+        <View style={[styles.usageCard, styles.skeletonUsage]} />
       </View>
     );
   }
@@ -254,7 +288,8 @@ const SmsStatsPanel = ({
 export default SmsStatsPanel;
 
 const styles = StyleSheet.create({
-  loading: { paddingVertical: rs(28), alignItems: 'center' },
+  skeletonCard: { minHeight: rs(84), backgroundColor: rd.color.surfaceAlt },
+  skeletonUsage: { minHeight: rs(72), backgroundColor: rd.color.surfaceAlt },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   statCard: {
     width: '48.5%',

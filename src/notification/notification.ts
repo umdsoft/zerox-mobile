@@ -1,8 +1,9 @@
 import messaging from '@react-native-firebase/messaging';
 import {storage} from '../store/api/token/getToken';
+import { withExternalActivity } from '../helper/externalFlow';
 
 const requestUserPermission = async () => {
-  const authStatus = await messaging().requestPermission();
+  const authStatus = await withExternalActivity(() => messaging().requestPermission());
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;

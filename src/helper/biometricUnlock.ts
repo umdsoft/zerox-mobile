@@ -11,6 +11,7 @@
  * 'invalid' (PIN'ga qaytamiz, foydalanuvchidan qayta yoqish so'raladi).
  */
 import 'react-native-get-random-values';
+import { withExternalActivity } from './externalFlow';
 import * as Keychain from 'react-native-keychain';
 import { sha256 } from 'js-sha256';
 import { storage } from '../store/api/token/getToken';
@@ -61,12 +62,12 @@ export async function disableBiometricUnlock(): Promise<void> {
 export async function enrollBiometricUnlock(prompt: Prompt): Promise<boolean> {
   try {
     const secret = randomSecretHex();
-    const res = await Keychain.setGenericPassword(BIO_USERNAME, secret, {
+    const res = await withExternalActivity(() => Keychain.setGenericPassword(BIO_USERNAME, secret, {
       service: BIO_SERVICE,
       accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
       accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
       authenticationPrompt: { title: prompt.title, subtitle: prompt.subtitle, cancel: prompt.cancel },
-    });
+    }));
     if (!res) return false;
     storage.set(K_BIO_HASH, sha256(secret));
     return true;
@@ -90,11 +91,11 @@ export async function unlockWithBiometrics(prompt: Prompt): Promise<BioUnlockRes
   })();
   if (!expected) return 'unavailable';
   try {
-    const creds = await Keychain.getGenericPassword({
+    const creds = await withExternalActivity(() => Keychain.getGenericPassword({
       service: BIO_SERVICE,
       accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
       authenticationPrompt: { title: prompt.title, subtitle: prompt.subtitle, cancel: prompt.cancel },
-    });
+    }));
     if (!creds) {
       // Yozuv yo'q (masalan, kalit yaroqsiz bo'lib Keychain o'chirgan).
       await disableBiometricUnlock();

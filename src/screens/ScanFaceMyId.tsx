@@ -28,7 +28,7 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { useTranslation } from 'react-i18next';
 import { t } from 'i18next';
 import { URL, PDF_OFERTA_URL } from './constants';
-import { beginExternalFlow, endExternalFlow } from '../helper/externalFlow';
+import { beginExternalFlow, endExternalFlow, settleExternalFlow } from '../helper/externalFlow';
 import { ofertaDocLang, ofertaPdfUrl, prefetchOfertaPdf } from '../helper/ofertaPdf';
 import { useMyIdSession } from '../hooks/useMyIdSession';
 import { needsOferta } from '../helper/ofertaGate';
@@ -326,9 +326,11 @@ const ScanFaceMyId = () => {
         beginExternalFlow();
         start(prod, {
           onSuccess: async data => {
+            settleExternalFlow(); // MyID tugadi: 10 daqiqalik oyna qisqa "settle"ga tushadi
             await Indentificator(data);
           },
           onError: err => {
+            settleExternalFlow();
             console.error('myid error', err);
             Toast.show({
               autoHide: true,
@@ -342,6 +344,7 @@ const ScanFaceMyId = () => {
             });
           },
           onUserExited: () => {
+            settleExternalFlow();
             Toast.show({
               autoHide: true,
               visibilityTime: 3000,

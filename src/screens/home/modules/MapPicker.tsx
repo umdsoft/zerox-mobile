@@ -5,6 +5,7 @@
  * Foydalanuvchi xaritaga bosadi → marker qo'yiladi → "Tanlash" bosilsa onPick(lat,lng).
  */
 import React from 'react';
+import { withExternalActivity } from '../../../helper/externalFlow';
 import { t } from 'i18next';
 import { ActivityIndicator, Modal, PermissionsAndroid, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -169,10 +170,10 @@ const MapPicker = ({
         // SS2: TAQRIBIY (COARSE) ruxsatni ham so'raymiz — Android 12+ da
         // foydalanuvchi "Taxminiy" ni tanlashi mumkin; faqat FINE so'ralsa
         // bunday holatda natija RAD bo'lib ko'rinardi.
-        const res = await PermissionsAndroid.requestMultiple([
+        const res = await withExternalActivity(() => PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-        ]);
+        ]));
         const ok =
           res[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED ||
           res[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;

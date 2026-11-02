@@ -20,6 +20,7 @@ import { outboxErrorText, showQueuedResult } from '../../../../offline/ui/queued
 import { getQarzShop } from '../../../../store/api/token/qarzShop';
 import { URL } from '../../../constants';
 import { buildAmaliyotView, buildReceiptRows, receiptHtml, shopNameOf, sortSchedule } from './amaliyotLogic';
+import { withExternalActivity } from '../../../../helper/externalFlow';
 
 /**
  * 03.10 (3-band): "Do'kon" qatori uchun nom. Tartib: 1) route params ichidagi do'kon nomi; 2) tanlangan do'kon
@@ -175,7 +176,7 @@ export const useQarzAmaliyot = () => {
         if (await RNBlobUtil.fs.exists(dest)) await RNBlobUtil.fs.unlink(dest);
         await RNBlobUtil.fs.cp(src, dest);
         try {
-          await Share.open({ url: `file://${dest}`, type: 'application/pdf', title: t('Kvitansiya'), failOnCancel: false });
+          await withExternalActivity(() => Share.open({ url: `file://${dest}`, type: 'application/pdf', title: t('Kvitansiya'), failOnCancel: false }));
         } finally {
           if (await RNBlobUtil.fs.exists(dest)) await RNBlobUtil.fs.unlink(dest);
         }

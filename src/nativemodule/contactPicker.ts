@@ -1,4 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
+import { withExternalActivity } from '../helper/externalFlow';
 
 /**
  * Tizim kontakt-tanlagichi (Android: Intent.ACTION_PICK, iOS: CNContactPickerViewController).
@@ -66,7 +67,7 @@ export const isContactPickerAvailable = (): boolean =>
 export const pickContactResult = async (): Promise<PickContactResult> => {
   if (!isContactPickerAvailable()) return { status: 'unavailable' };
   try {
-    const res = await ContactPicker.pickContact();
+    const res = await withExternalActivity(() => ContactPicker.pickContact());
     const contact = toContact(res);
     return contact ? { status: 'ok', contact } : { status: 'cancel' };
   } catch (e: any) {

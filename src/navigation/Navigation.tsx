@@ -73,6 +73,7 @@ import { lazyScreen } from './lazyScreen';
 
 // SS-SEC (2026-09-25): PIN mavjudligi hash orqali (ochiq `k2` o'qilmaydi).
 import { hasPin } from '../store/api/token/pin';
+import { getInitialURLGuarded, subscribeGuarded } from './linkingLock';
 import EnterJsh from '../screens/auth/RecoveryPassword/EnterJsh';
 import UpdatePassword from '../screens/auth/RecoveryPassword/UpdatePassword';
 import Types from '../screens/home/drawer/drawerScreens/Types';
@@ -149,6 +150,10 @@ const allowSomeScreen = ['BottomTabNavigator'];
 
 export const linking = {
   prefixes: ['zeroxuz://', 'https://zerox.uz'],
+  // SEC (2026-11-02): deep-link boshlang'ich holatni PIN ekranidan CHETLAB o'tmasin —
+  // qulfda (sovuq start yoki fon) URL e'tiborsiz qoldiriladi.
+  getInitialURL: getInitialURLGuarded,
+  subscribe: subscribeGuarded,
   config: {
     screens: {
       Click: 'Click',
