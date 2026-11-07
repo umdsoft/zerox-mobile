@@ -189,6 +189,12 @@
 	<string>Kamera QR-kodlarni (chek va mijoz kodi) skanerlash hamda MyID orqali shaxsni tasdiqlash uchun ishlatiladi.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Gap uchrashuv joyini xaritada tanlash uchun joriy joylashuvingiz ishlatiladi.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ZeroX profil rasmi va hujjatlarni yuklash uchun galereyadagi rasmlarni tanlashga ruxsat so‘raydi.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>ZeroX chek, shartnoma va QR-kod rasmlarini galereyangizga saqlash uchun ruxsat so‘raydi.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Kamera orqali shaxsni tasdiqlashda (MyID) mikrofon talab qilinishi mumkin; ovozingiz yozib olinmaydi va saqlanmaydi.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
