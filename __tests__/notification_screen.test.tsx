@@ -53,18 +53,6 @@ jest.mock('../src/store/api/home', () => ({
   HomeApi: (p: any) => ({ type: 'HomeApi', p }),
 }));
 jest.mock('../src/helper', () => ({ toastMessage: (t: any) => `toast:${t}` }));
-// 07.11: elektron imzo — test uchun darhol "imzolangan" (send SIGN bilan); mockSignCancel -> oyna yopildi.
-const mockSignReqs: any[] = [];
-let mockSignCancel = false;
-jest.mock('../src/helper/sign/signFlow', () => ({
-  signAndSend: (req: any) => {
-    mockSignReqs.push(req);
-    return mockSignCancel ? Promise.resolve(null) : req.send({ challenge_id: 'ch1', code: '123456' });
-  },
-  signMoney: (v: any) => (v == null ? undefined : `m${v}`),
-  signDate: (v: any) => (v == null ? undefined : `d${v}`),
-}));
-const SIGN = { challenge_id: 'ch1', code: '123456' };
 jest.mock('../src/helper/listPerf', () => ({ LIST_PERF_PROPS: {} }));
 jest.mock('../src/helper/socketService', () => ({
   __esModule: true,
@@ -168,8 +156,6 @@ beforeEach(() => {
   mockPut.mockReset().mockResolvedValue({ status: 200, data: { success: true } });
   mockPost.mockReset().mockResolvedValue({ data: { success: true } });
   mockApiPost.mockReset().mockResolvedValue({});
-  mockSignReqs.length = 0;
-  mockSignCancel = false;
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 afterEach(() => {
@@ -363,7 +349,7 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     });
     expect(mockPut).toHaveBeenCalledWith(
       'http://x/notification/success/55',
-      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 1, stype: 1, sender: 2, res: 7, sign: SIGN },
+      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 1, stype: 1, sender: 2, res: 7 },
       headers,
     );
     expect(mockToast).toHaveBeenCalledWith({ autoHide: true, position: 'bottom', props: { desc: '264' }, type: 'omad', visibilityTime: 3000 });
@@ -443,11 +429,9 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     });
     expect(mockPost).toHaveBeenCalledWith(
       'http://x/notification/toliq-qaytarish/55',
-      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 2, stype: 1, sign: SIGN },
+      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 2, stype: 1 },
       headers,
     );
-    expect(mockSignReqs[0].purpose).toBe('repayment_confirm');
-    expect(mockSignReqs[0].target).toEqual({ contract: 'C1', act: 'A1', notification: 55 });
     expect(mockToast).toHaveBeenLastCalledWith({ autoHide: true, position: 'bottom', props: { desc: '264' }, type: 'omad', visibilityTime: 3000 });
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'HomeApi', p: { page: 1 } });
   });
@@ -466,7 +450,7 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     });
     expect(mockPost).toHaveBeenCalledWith(
       'http://x/notification/qisman-qaytarish/55',
-      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 2, stype: 1, sign: SIGN },
+      { act: 'A1', contract: 'C1', creditor: 1, debitor: 2, reciver: 2, stype: 1 },
       headers,
     );
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'filter', id: 55 });
@@ -479,7 +463,7 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     });
     expect(mockPost).toHaveBeenLastCalledWith(
       'http://x/notification/time/55',
-      { debitor: 2, creditor: 1, contract: 'C1', stype: 1, act: 'A1', reciver: 2, sign: SIGN },
+      { debitor: 2, creditor: 1, contract: 'C1', stype: 1, act: 'A1', reciver: 2 },
       headers,
     );
     expect(mockToast).toHaveBeenLastCalledWith({ autoHide: true, position: 'bottom', props: { desc: '264' }, type: 'omad', visibilityTime: 3000 });
@@ -490,53 +474,6 @@ describe('Notification — handlerlar (bola proplari orqali)', () => {
     });
     expect(mockPost.mock.calls.pop()[1].reciver).toBe(1);
     expect(mockToast).toHaveBeenLastCalledWith({ autoHide: true, position: 'bottom', props: { desc: '261' }, type: 'error2', visibilityTime: 3000 });
-  });
-  it('07.11 imzo: tasdiq (stype 1) — imzo bilan, rad (stype 2) — kodsiz; purpose/target to\'g\'ri', async () => {
-    await mount([mk(3, 1)]);
-    await act(async () => {
-      await H('Qarzmuddatiniuzaytirishsoralganligitogrisida').onQarzMuddatUzaytirish(itm, 2);
-    });
-    expect(mockSignReqs).toHaveLength(0);
-    expect('sign' in mockPost.mock.calls[0][1]).toBe(false);
-    await act(async () => {
-      await H('Qarzmuddatiniuzaytirishsoralganligitogrisida').onQarzMuddatUzaytirish({ ...itm, end_date: '2027-01-01', number: 'N1' }, 1);
-    });
-    expect(mockSignReqs[0].purpose).toBe('time_confirm');
-    expect(mockSignReqs[0].target).toEqual({ contract: 'C1', act: 'A1', notification: 55 });
-    expect(mockSignReqs[0].summary).toMatchObject({ docType: 'Qarz muddatini uzaytirishni tasdiqlash', number: 'N1', dueDate: 'd2027-01-01' });
-  });
-  it('07.11 imzo: shartnoma tasdig\'i — contract_approve (akt yo\'q); rad — kodsiz', async () => {
-    await mount([mk(0, 1)]);
-    await act(async () => {
-      await H('QarzShartnomasiniRasmiylashtirishTogrisida').onSuccess(itm, 1, 'creditor');
-    });
-    expect(mockSignReqs[0].purpose).toBe('contract_approve');
-    expect(mockSignReqs[0].target).toEqual({ contract: 'C1', act: undefined, notification: 55 });
-    await act(async () => {
-      await H('QarzShartnomasiniRasmiylashtirishTogrisida').onReject(itm, 2, 2);
-    });
-    expect(mockSignReqs).toHaveLength(1);
-  });
-  it('07.11 imzo: oyna yopilsa — so\'rov yo\'q, toast yo\'q, karta qoladi', async () => {
-    mockSignCancel = true;
-    await mount([mk(1, 1)]);
-    await act(async () => {
-      await H('QarzToliqQaytarilganli').onToliqQaytgan(itm, 1);
-    });
-    expect(mockSignReqs).toHaveLength(1);
-    expect(mockPost).not.toHaveBeenCalled();
-    expect(mockToast).not.toHaveBeenCalled();
-    expect(mockDispatch).not.toHaveBeenCalledWith({ type: 'filter', id: 55 });
-  });
-  it('07.11 imzo: 409 already-processed — aniq toast, karta olinadi, ro\'yxat yangilanadi', async () => {
-    mockPost.mockRejectedValue({ response: { status: 409, data: { success: false, message: 'already-processed' } } });
-    await mount([mk(1, 1)]);
-    await act(async () => {
-      await H('QarzToliqQaytarilganli').onQismanQaytarilgan(itm, 1);
-    });
-    expect(mockToast.mock.calls.pop()[0].props.desc).toBe('Bu so‘rov allaqachon ko‘rib chiqilgan');
-    expect(mockDispatch).toHaveBeenCalledWith({ type: 'filter', id: 55 });
-    expect(mockDispatch).toHaveBeenCalledWith({ type: 'gnp', p: { page: 1 } });
   });
   it('onQarzMuddatUzaytirish: oferta bloklasa so\'rov ketmaydi; reject prop berilgan', async () => {
     mockGuardBlocks = true;

@@ -40,9 +40,6 @@ import DateModal from '../home/modal/DateModal';
 import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { AnimatedIconCircle, ExtendTermIcon } from '../../images/debtActionIcons';
-import { signAndSend } from '../../helper/sign/signFlow';
-import { groupMoney } from '../../helper/money';
-import { titleCase } from '../../helper/returnName';
 
 const DebtDateLength = () => {
   const { item } = useRoute().params;
@@ -100,42 +97,25 @@ const DebtDateLength = () => {
     try {
       setLoading1(true);
 
-      const body = {
-        contract: info.id,
-        creditor: info.creditor,
-        debitor: info.debitor,
-        end_date: formatDate(date),
-        inc: info.inc,
-        old_amount: info.residual_amount,
-        reciver: info.creditor,
-        refundable_amount: info.refundable_amount,
-        residual_amount: info.residual_amount,
-        sender: info.debitor,
-        res: info.debitor,
-      };
-      // 07.11: muddatni uzaytirish (qarz beruvchi) — elektron imzo (bir martalik kod) bilan.
-      const res = await signAndSend({
-        purpose: 'debt_extend',
-        target: { contract: info.id, payload: { contract: info.id, end_date: body.end_date } },
-        summary: {
-          docType: t('Qarz muddatini uzaytirish'),
-          number: info?.number,
-          lender: titleCase(info?.debitor_name) || undefined,
-          borrower: titleCase(info?.creditor_name) || undefined,
-          amount: info?.residual_amount != null ? groupMoney(info.residual_amount) : undefined,
-          currency: info?.currency,
-          dueDate: settingDate(body.end_date),
+      const { data, status } = await axios.post(
+        URL + '/contract/deb-uzay',
+        {
+          contract: info.id,
+          creditor: info.creditor,
+          debitor: info.debitor,
+          end_date: formatDate(date),
+          inc: info.inc,
+          old_amount: info.residual_amount,
+          reciver: info.creditor,
+          refundable_amount: info.refundable_amount,
+          residual_amount: info.residual_amount,
+          sender: info.debitor,
+          res: info.debitor,
         },
-        send: sign =>
-          axios.post(URL + '/contract/deb-uzay', { ...body, sign }, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-      });
-      if (!res) {
-        setLoading1(false);
-        return;
-      }
-      const { data, status } = res;
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (status === 200 && data.msg === 'ex') {
         Toast.show({

@@ -29,7 +29,6 @@ import ExpirePassportModal from './src/screens/home/modal/ExpirePassport';
 import ForceUpdateGate from './src/screens/components/ForceUpdateGate'; // SS-DEV (2026-10-04)
 import ClockSkewGate from './src/screens/components/ClockSkewGate'; // 08.10: vaqt tafovuti
 import DeviceIntegrityModal from './src/screens/components/DeviceIntegrityModal'; // SEC 31.10: root/jailbreak ogohlantirishi
-import SignSheet from './src/screens/components/SignSheet'; // 07.11: elektron imzo (bir martalik kod)
 import DeviceInfo from 'react-native-device-info';
 import { storage } from './src/store/api/token/getToken';
 import { URL } from './src/screens/constants';
@@ -278,8 +277,6 @@ const App: React.FC = () => {
         {/* 08.10: server/qurilma vaqti tafovuti — bloklovchi oyna (login ekranlari ham). */}
         <ClockSkewGate />
         <DeviceIntegrityModal />
-        {/* 07.11: yuridik amallar uchun elektron imzo oynasi (helper/sign/signFlow.signAndSend). */}
-        <SignSheet />
         {/* SS-DEV (2026-10-04): majburiy yangilanish — eng OXIRIDA (boshqa oynalar ustida). */}
         <ForceUpdateGate />
       </I18nextProvider>

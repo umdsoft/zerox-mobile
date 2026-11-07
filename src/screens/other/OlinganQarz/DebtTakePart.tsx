@@ -47,7 +47,6 @@ import {
   PartReturnIcon,
 } from '../../../images/debtActionIcons';
 import { useFio } from '../../../helper/useFio';
-import { signAndSend } from '../../../helper/sign/signFlow';
 import {
   classifyContractActionError,
   contractActionErrorToast,
@@ -93,40 +92,9 @@ const DebtTakePart = () => {
         res: contractInfo.debitor,
       };
 
-      // 07.11: akt yaratish — elektron imzo (bir martalik kod) bilan; bekor qilinsa hech narsa yuborilmaydi.
-      const res = await signAndSend({
-        purpose: 'act_create',
-        target: {
-          contract: dd.contract,
-          payload: {
-            contract: dd.contract,
-            type: dd.type,
-            refundable_amount: dd.refundable_amount,
-            end_date: dd.end_date,
-          },
-        },
-        summary: {
-          docType:
-            dd.type === 2
-              ? t('Qarzni to‘liq qaytarish dalolatnomasi')
-              : t('Qarzni qisman qaytarish dalolatnomasi'),
-          number: contractInfo?.number,
-          lender: fio(titleCase(contractInfo?.debitor_name)),
-          borrower: fio(titleCase(contractInfo?.creditor_name)) || undefined,
-          amount: groupMoney(sumNum),
-          currency: contractInfo?.currency,
-          dueDate: settingDate(contractInfo?.end_date),
-        },
-        send: sign =>
-          axios.post(URL + '/contract/act', { ...dd, sign }, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+      const { data, status } = await axios.post(URL + '/contract/act', dd, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res) {
-        setLoading(false);
-        return;
-      }
-      const { data, status } = res;
 
 
       if (data.msg === 'end' && status === 200) {

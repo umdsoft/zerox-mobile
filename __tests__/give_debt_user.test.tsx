@@ -50,16 +50,6 @@ jest.mock('../src/store/api/home', () => ({
   HomeApi: (p: unknown) => ({ type: 'HomeApi', p }),
 }));
 jest.mock('../src/helper/useFio', () => ({ useFio: () => ({ fio: (s: string) => `fio(${s})` }) }));
-// 07.11: elektron imzo oynasi — test uchun darhol "imzolangan" (send SIGN bilan); mockSignCancel -> bekor.
-const SIGN = { challenge_id: 'ch1', code: '123456' };
-const mockSignReqs: any[] = [];
-let mockSignCancel = false;
-jest.mock('../src/helper/sign/signFlow', () => ({
-  signAndSend: (req: any) => {
-    mockSignReqs.push(req);
-    return mockSignCancel ? Promise.resolve(null) : req.send({ challenge_id: 'ch1', code: '123456' });
-  },
-}));
 jest.mock('../src/helper/pdfSign', () => ({ signExistingUrl: (...a: unknown[]) => mockSign(...a) }));
 jest.mock('react-native-date-picker', () => ({
   __esModule: true,
@@ -195,8 +185,6 @@ beforeEach(() => {
   mockGet.mockResolvedValue({ data: [{ Rate: '12000' }] });
   mockPost.mockReset();
   mockPost.mockResolvedValue({ data: { success: true } });
-  mockSignReqs.length = 0;
-  mockSignCancel = false;
   mockSign.mockImplementation((_k: string, u: string) => Promise.resolve(u + '&sig=1'));
 });
 afterEach(() => {
@@ -378,13 +366,8 @@ describe('GiveDebtUser — yuborish: type 0 (qarz olish)', () => {
     expect(url).toBe('http://x/contract/create');
     expect(body).toEqual({
       amount: 500000, creditor: 7, debitor: 9, currency: 'UZS', end_date: '2026-12-15',
-      reciver: 9, con: 1, type: 0, sender: 7, res: 9, sign: SIGN,
+      reciver: 9, con: 1, type: 0, sender: 7, res: 9,
     });
-    expect(mockSignReqs[0].purpose).toBe('contract_create');
-    expect(mockSignReqs[0].target).toEqual({
-      payload: { debitor: 9, creditor: 7, amount: 500000, currency: 'UZS', end_date: '2026-12-15' },
-    });
-    expect(mockSignReqs[0].summary).toMatchObject({ docType: 'Qarz shartnomasi', currency: 'UZS', dueDate: '15.12.2026' });
     expect(cfg).toEqual({ headers: { Authorization: 'Bearer tok' } });
     expect(lastToast()).toEqual({ autoHide: true, visibilityTime: 2000, position: 'bottom', type: 'omad', props: { desc: '285' } });
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'getMe' });
@@ -478,7 +461,7 @@ describe('GiveDebtUser — yuborish: type 1 (qarz berish)', () => {
     expect(url).toBe('http://x/contract/create');
     expect(body).toEqual({
       amount: 500000, creditor: 9, debitor: 7, currency: 'UZS', end_date: '2026-12-15',
-      reciver: 9, type: 0, sender: 7, res: 9, sign: SIGN,
+      reciver: 9, type: 0, sender: 7, res: 9,
     });
     expect('con' in body).toBe(false);
     expect(cfg).toEqual({ headers: { Authorization: 'Bearer tok' } });
@@ -567,25 +550,6 @@ describe('GiveDebtUser — minimal summa va xatolar', () => {
     expect(hasLoading(r)).toBe(false);
     await tap(buttonNode(r));
     expect(mockPost).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe('GiveDebtUser — elektron imzo (07.11)', () => {
-  it('imzo oynasi yopilsa: so\'rov yuborilmaydi, loading o\'chadi, toast yo\'q', async () => {
-    mockSignCancel = true;
-    const r = await ready(1);
-    await tap(buttonNode(r));
-    expect(mockSignReqs).toHaveLength(1);
-    expect(mockPost).not.toHaveBeenCalled();
-    expect(mockToast).not.toHaveBeenCalled();
-    expect(hasLoading(r)).toBe(false);
-  });
-  it('kod so\'rovi rad etildi (403 only-lender): aniq toast', async () => {
-    mockPost.mockRejectedValueOnce({ response: { status: 403, data: { code: 'FORBIDDEN', msg: 'only-lender' } } });
-    const r = await ready(1);
-    await tap(buttonNode(r));
-    expect(lastToast().props.desc).toBe('Bu amalni faqat qarz beruvchi bajara oladi');
-    expect(hasLoading(r)).toBe(false);
   });
 });
 
