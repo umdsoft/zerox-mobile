@@ -9,7 +9,13 @@ import { URL } from '../../constants';
 import { getMe, HomeApi } from '../../../store/api/home';
 import { signExistingUrl } from '../../../helper/pdfSign';
 import { settingDate } from '../../../helper';
-import { adaptAmountInputToCurrency, contractFee, parseAmount } from '../../../helper/money';
+import { adaptAmountInputToCurrency, contractFee, groupMoney, parseAmount } from '../../../helper/money';
+import { signAndSend } from '../../../helper/sign/signFlow';
+import { titleCase } from '../../../helper/returnName';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../../helper/contractActionError';
 import { useApiAction } from '../../../hooks/useApiAction';
 import {
   buildContractPayload,
@@ -163,10 +169,39 @@ export function useGiveDebt() {
       if (type !== 0 && type !== 1) return;
       setLoading(true);
       const body = buildContractPayload(type, { amountNum, isUzs, date, user, qarzoluvchi });
-      const { data } = await axios.post(URL + '/contract/create', body, {
-        headers: { Authorization: 'Bearer ' + storage.getString('token') },
+      // 07.11: shartnoma yaratish — elektron imzo (bir martalik kod) bilan; bekor qilinsa hech narsa yuborilmaydi.
+      const me = user?.data;
+      const isLender = Number(body.debitor) === Number(me?.id);
+      const nameOf = (p: any) => titleCase([p?.last_name, p?.first_name, p?.middle_name].filter(Boolean).join(' '));
+      const myName = nameOf(me);
+      const otherName = nameOf(qarzoluvchi);
+      const res = await signAndSend({
+        purpose: 'contract_create',
+        target: {
+          payload: {
+            debitor: body.debitor,
+            creditor: body.creditor,
+            amount: body.amount,
+            currency: body.currency,
+            end_date: body.end_date,
+          },
+        },
+        summary: {
+          docType: t('Qarz shartnomasi'),
+          lender: (isLender ? myName : otherName) || undefined,
+          borrower: (isLender ? otherName : myName) || undefined,
+          amount: groupMoney(body.amount),
+          currency: body.currency,
+          dueDate: settingDate(body.end_date),
+        },
+        send: sign =>
+          axios.post(URL + '/contract/create', { ...body, sign }, {
+            headers: { Authorization: 'Bearer ' + storage.getString('token') },
+          }),
       });
       setLoading(false);
+      if (!res) return;
+      const { data } = res;
       if (type === 1 && data.msg === 'deb_expiry_date' && data.success === false) {
         return showError(t('expire_passport'), 2000);
       }
@@ -181,6 +216,11 @@ export function useGiveDebt() {
       // 503 rate-unavailable — aniq xabar; qolgan holatlar avvalgidek (jim).
       const msg = (error as any)?.response?.data?.msg;
       if (msg === 'rate-unavailable') showFail(msg);
+      // 07.11: imzo kodi so'rovi rad etildi (rol, rate-limit, oferta ...) — aniq sabab (oferta oynasi bo'lsa jim).
+      else if ((error as any)?.response) {
+        const toast = contractActionErrorToast(classifyContractActionError(error, 'Xatolik yuz berdi'), 2500);
+        if (toast) Toast.show(toast);
+      }
     }
   };
 

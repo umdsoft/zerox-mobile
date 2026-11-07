@@ -18,6 +18,8 @@ import ScreenLayout from '../../components/ScreenLayout';
 import {rd, rs} from '../../../theme/rd';
 import { AnimatedIconCircle } from '../../../images/debtActionIcons';
 import CharityDollar from '../../../images/CharityDollar';
+import {signAndSend} from '../../../helper/sign/signFlow';
+import {titleCase} from '../../../helper/returnName';
 import {
   classifyContractActionError,
   contractActionErrorToast,
@@ -68,26 +70,41 @@ const CharityDebt = () => {
     const token = storage.getString('token');
     try {
       setSubmitting(true);
-      const {data, status} = await axios.post(
-        URL + '/contract/vos-kechish',
-        {
-          contract: info?.id,
-          creditor: info?.creditor,
-          end_date: info?.end_date,
-          debitor: info?.debitor,
-          inc: info?.inc,
-          reciver: info?.creditor,
-          refundable_amount: 0,
-          residual_amount: info?.residual_amount,
-          vos_summa: info?.residual_amount,
-          sender: info.debitor,
-          res: info.debitor,
-          old_amount: Number(info.residual_amount),
+      const body = {
+        contract: info?.id,
+        creditor: info?.creditor,
+        end_date: info?.end_date,
+        debitor: info?.debitor,
+        inc: info?.inc,
+        reciver: info?.creditor,
+        refundable_amount: 0,
+        residual_amount: info?.residual_amount,
+        vos_summa: info?.residual_amount,
+        sender: info.debitor,
+        res: info.debitor,
+        old_amount: Number(info.residual_amount),
+      };
+      // 07.11: qarzdan voz kechish (qarz beruvchi) — elektron imzo (bir martalik kod) bilan.
+      const ci: any = info;
+      const res = await signAndSend({
+        purpose: 'debt_forgive',
+        target: {contract: ci?.id},
+        summary: {
+          docType: t('Qarzdan voz kechish'),
+          number: ci?.number,
+          lender: titleCase(ci?.debitor_name) || undefined,
+          borrower: titleCase(ci?.creditor_name) || undefined,
+          amount: ci?.residual_amount != null ? groupMoney(ci.residual_amount) : undefined,
+          currency: ci?.currency,
+          dueDate: ci?.end_date ? settingDate(ci.end_date) : undefined,
         },
-        {
-          headers: {Authorization: `Bearer ${token}`},
-        },
-      );
+        send: sign =>
+          axios.post(URL + '/contract/vos-kechish', {...body, sign}, {
+            headers: {Authorization: `Bearer ${token}`},
+          }),
+      });
+      if (!res) return; // bekor qilindi (finally submitting'ni tiklaydi)
+      const {data, status} = res;
 
       if (status === 200 && data.msg === 'ex') {
         Toast.show({

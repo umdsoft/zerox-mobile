@@ -16,6 +16,41 @@ import {
   classifyContractActionError,
   contractActionErrorToast,
 } from '../../../helper/contractActionError';
+import {
+  signAndSend,
+  signDate,
+  signMoney,
+  SignPayload,
+  SignPurpose,
+  SignSummary,
+} from '../../../helper/sign/signFlow';
+import ReturnName from '../../../helper/returnName';
+
+/**
+ * 07.11: tasdiqlash (stype 1) — elektron imzo (bir martalik kod) bilan; rad etish (stype 2) — kodsiz, avvalgidek.
+ * `null` — foydalanuvchi imzo oynasini yopdi (yoki imzo yakuniy rad etildi): hech narsa qilinmaydi.
+ */
+const sendMaybeSigned = <T,>(
+  signed: boolean,
+  purpose: SignPurpose,
+  item: any,
+  summary: Omit<SignSummary, 'lender' | 'borrower' | 'number'>,
+  send: (sign?: SignPayload) => Promise<T>,
+): Promise<T | null> =>
+  signed
+    ? signAndSend({
+        purpose,
+        target: { contract: item?.contract, act: item?.act ?? undefined, notification: item?.id },
+        summary: {
+          number: item?.number,
+          lender: ReturnName.returnDebitorName(item) || undefined,
+          borrower: ReturnName.returnCreditorName(item) || undefined,
+          ...summary,
+        },
+        send: sign => send(sign),
+      })
+    : send(undefined);
+const withSign = (obj: any, sign?: SignPayload) => (sign ? { ...obj, sign } : obj);
 
 type ObjType = {
   act: string;
@@ -128,13 +163,23 @@ export function useNotificationActions() {
         }
 
         try {
-          const { data } = await axios.put(
-            URL + `/notification/success/${item.id}`,
-            obj,
+          const res = await sendMaybeSigned(
+            Number(status) === 1,
+            'contract_approve',
+            { ...item, act: undefined },
             {
-              headers: { Authorization: `Bearer ${token}` },
+              docType: t('Qarz shartnomasi'),
+              amount: signMoney(item.amount),
+              currency: item.currency,
+              dueDate: signDate(item.end_date),
             },
+            sign =>
+              axios.put(URL + `/notification/success/${item.id}`, withSign(obj, sign), {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
           );
+          if (!res) return; // imzo oynasi yopildi
+          const { data } = res;
 
           if (data.success) {
             Toast.show({
@@ -258,20 +303,30 @@ export function useNotificationActions() {
       const token = storage.getString('token');
 
       try {
-        const { data } = await axios.post(
-          URL + `/notification/qisman-qaytarish/${item.id}`,
+        const body = {
+          act: item.act,
+          contract: item.contract,
+          creditor: item.creditor,
+          debitor: item.debitor,
+          reciver: item.reciver === item.debitor ? item.creditor : item.debitor,
+          stype: status,
+        };
+        const res = await sendMaybeSigned(
+          Number(status) === 1,
+          'repayment_confirm',
+          item,
           {
-            act: item.act,
-            contract: item.contract,
-            creditor: item.creditor,
-            debitor: item.debitor,
-            reciver: item.reciver === item.debitor ? item.creditor : item.debitor,
-            stype: status,
+            docType: t('Qarzni qisman qaytarishni tasdiqlash'),
+            amount: signMoney(item.refundable_amount),
+            currency: item.currency,
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          sign =>
+            axios.post(URL + `/notification/qisman-qaytarish/${item.id}`, withSign(body, sign), {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
         );
+        if (!res) return; // imzo oynasi yopildi
+        const { data } = res;
         if (data.success) {
           Toast.show({
             autoHide: true,
@@ -297,20 +352,30 @@ export function useNotificationActions() {
       const token = storage.getString('token');
 
       try {
-        const { data } = await axios.post(
-          URL + `/notification/toliq-qaytarish/${item.id}`,
+        const body = {
+          act: item.act,
+          contract: item.contract,
+          creditor: item.creditor,
+          debitor: item.debitor,
+          reciver: item.reciver === item.debitor ? item.creditor : item.debitor,
+          stype: status,
+        };
+        const res = await sendMaybeSigned(
+          Number(status) === 1,
+          'repayment_confirm',
+          item,
           {
-            act: item.act,
-            contract: item.contract,
-            creditor: item.creditor,
-            debitor: item.debitor,
-            reciver: item.reciver === item.debitor ? item.creditor : item.debitor,
-            stype: status,
+            docType: t('Qarzni to‘liq qaytarishni tasdiqlash'),
+            amount: signMoney(item.refundable_amount),
+            currency: item.currency,
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          sign =>
+            axios.post(URL + `/notification/toliq-qaytarish/${item.id}`, withSign(body, sign), {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
         );
+        if (!res) return; // imzo oynasi yopildi
+        const { data } = res;
 
         if (data.success) {
           Toast.show({
@@ -338,20 +403,30 @@ export function useNotificationActions() {
       const token = storage.getString('token');
 
       try {
-        const info = await axios.post(
-          URL + `/notification/time/${item.id}`,
+        const body = {
+          debitor: item.debitor,
+          creditor: item.creditor,
+          contract: item.contract,
+          stype: status,
+          act: item.act,
+          reciver: item.reciver !== item.debitor ? item.debitor : item.creditor,
+        };
+        const info = await sendMaybeSigned(
+          Number(status) === 1,
+          'time_confirm',
+          item,
           {
-            debitor: item.debitor,
-            creditor: item.creditor,
-            contract: item.contract,
-            stype: status,
-            act: item.act,
-            reciver: item.reciver !== item.debitor ? item.debitor : item.creditor,
+            docType: t('Qarz muddatini uzaytirishni tasdiqlash'),
+            amount: signMoney(item.residual_amount),
+            currency: item.currency,
+            dueDate: signDate(item.end_date),
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          sign =>
+            axios.post(URL + `/notification/time/${item.id}`, withSign(body, sign), {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
         );
+        if (!info) return; // imzo oynasi yopildi
 
         if (info.data.success) {
           if (status == 1) {
