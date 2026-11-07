@@ -36,6 +36,10 @@ import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { fmtYmdTk } from '../../helper/date';
 import { AnimatedIconCircle, RequestExtendIcon } from '../../images/debtActionIcons';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../helper/contractActionError';
 
 const DebtDateLengthAsk = () => {
   const { item } = useRoute().params;
@@ -106,6 +110,17 @@ const DebtDateLengthAsk = () => {
 
   const onPress = async () => {
     const token = storage.getString('token');
+    // 07.11: server yangi muddat KELAJAKDA bo'lishini talab qiladi (400 invalid-end-date) — oldindan tekshiramiz.
+    if (!isFutureDay(plus_day(date))) {
+      Toast.show({
+        autoHide: true,
+        props: { desc: t('Muddat kelajakdagi sana bo‘lishi kerak') },
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+      });
+      return;
+    }
 
     try {
       setLoading1(true);
@@ -169,15 +184,12 @@ const DebtDateLengthAsk = () => {
       // Kutilmagan javob (201 ham, 'ex' ham emas) — spinner abadiy qolib ketmasin.
       setLoading1(false);
     } catch (err) {
-      console.error(err, 'err');
+      // SS-AUDIT: to'liq axios xatosi (config.headers.Authorization — token) logga yozilmasin.
+      console.error('extension ask error:', (err as any)?.message);
       setLoading1(false);
-      Toast.show({
-        autoHide: true,
-        props: { desc: t('Xatolik sodir bo‘ldi') },
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-      });
+      // 07.11: only-borrower / invalid-end-date / invalid-act-type — aniq matn.
+      const toast = contractActionErrorToast(classifyContractActionError(err));
+      if (toast) Toast.show(toast);
     }
   };
 
@@ -395,6 +407,12 @@ const plus_day = date => {
 export function formatDate(date) {
   // Date (DatePicker) -> lokal kun; server satr/son -> Toshkent kuni (helper/date.fmtYmdTk).
   return fmtYmdTk(date);
+}
+/** Sana (lokal kun) bugundan KEYIN bo'lsa true — server `end_date > now` talabi (invalid-end-date) bilan mos. */
+export function isFutureDay(date: any) {
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+  return formatDate(d) > formatDate(new Date());
 }
 export function checkingDate(date) {
   let now = new Date();

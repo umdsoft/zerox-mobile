@@ -28,6 +28,10 @@ import {
   FullReturnIcon,
 } from '../../../images/debtActionIcons';
 import { useFio } from '../../../helper/useFio';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../../helper/contractActionError';
 
 // To'liq qaytarish — YASHIL (DebtTakeSelect bilan mos).
 const FULL = '#16a34a';
@@ -125,15 +129,9 @@ const DebtTakeFull = () => {
       // });
     } catch (error) {
       setLoading(false);
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {
-          desc: t('Xatolik sodir bo‘ldi'),
-        },
-      });
+      // 07.11: server rol/tur xatolari (only-borrower, invalid-act-type ...) — aniq matn.
+      const toast = contractActionErrorToast(classifyContractActionError(error));
+      if (toast) Toast.show(toast);
     }
   };
 

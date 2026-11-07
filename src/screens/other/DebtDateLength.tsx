@@ -18,7 +18,11 @@ import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { toastConfig } from '../components/ToastConfig';
 import Loading from '../components/Loading';
 import CheckBox from '@react-native-community/checkbox';
-import { formatDate } from './DebtDateLengthAsk';
+import { formatDate, isFutureDay } from './DebtDateLengthAsk';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../helper/contractActionError';
 import DatePicker from 'react-native-date-picker';
 import TextBold from '../components/TextBold';
 import axios from 'axios';
@@ -77,6 +81,18 @@ const DebtDateLength = () => {
 
   const onPress = async () => {
     const token = storage.getString('token');
+    // 07.11: server yangi muddat KELAJAKDA bo'lishini talab qiladi (400 invalid-end-date). Sana tanlanmasa
+    // (default — bugun) so'rov yubormasdan aniq sabab ko'rsatamiz.
+    if (!isFutureDay(date)) {
+      Toast.show({
+        autoHide: true,
+        visibilityTime: 3000,
+        position: 'bottom',
+        type: 'error2',
+        props: { desc: t('Muddat kelajakdagi sana bo‘lishi kerak') },
+      });
+      return;
+    }
 
     try {
       setLoading1(true);
@@ -150,15 +166,12 @@ const DebtDateLength = () => {
         props: { desc: t('Xatolik!') },
       });
     } catch (error) {
-      console.error(error);
+      // SS-AUDIT: to'liq axios xatosi (config.headers.Authorization — token) logga yozilmasin.
+      console.error('deb-uzay error:', (error as any)?.message);
       setLoading1(false);
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: { desc: t('Xatolik sodir bo‘ldi') },
-      });
+      // 07.11: only-lender / invalid-end-date — aniq matn.
+      const toast = contractActionErrorToast(classifyContractActionError(error));
+      if (toast) Toast.show(toast);
     }
   };
 

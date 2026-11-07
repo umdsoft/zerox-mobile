@@ -2327,6 +2327,13 @@
     "Hisobingizga kirish butunlay yopiladi: ilova, sayt va Telegram bot orqali kira olmaysiz": "Access to your account will be closed permanently: you will not be able to sign in via the app, website or Telegram bot",
     "Hisobni ilova orqali qayta tiklab bo‘lmaydi": "The account cannot be restored from the app",
     "Boshqalar bilan tuzilgan shartnomalaringiz va ulardagi ma‘lumotlaringiz qonuniy talab bo‘yicha saqlanib qoladi": "Your contracts with other users and the data in them are retained as required by law",
-    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "The account linked to this phone number has been deleted. Please contact support for help."
+    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "The account linked to this phone number has been deleted. Please contact support for help.",
+    "Bu amalni faqat qarz beruvchi bajara oladi": "Only the lender can perform this action",
+    "Bu amalni faqat qarz oluvchi bajara oladi": "Only the borrower can perform this action",
+    "Muddat kelajakdagi sana bo‘lishi kerak": "The due date must be a future date",
+    "Bu so‘rov allaqachon ko‘rib chiqilgan": "This request has already been processed",
+    "O‘zingiz yaratgan shartnomani tasdiqlay olmaysiz": "You cannot approve a contract you created yourself",
+    "Bu bildirishnoma ushbu amal uchun yaroqsiz": "This notification is not valid for this action",
+    "So‘rov noto‘g‘ri yuborildi. Ilovani yangilang.": "Invalid request. Please update the app."
   }
 }

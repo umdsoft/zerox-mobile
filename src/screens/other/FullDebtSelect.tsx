@@ -15,6 +15,10 @@ import { rd, rs } from '../../theme/rd';
 import { Trans, useTranslation } from 'react-i18next';
 import { AnimatedIconCircle, DemandReturnIcon } from '../../images/debtActionIcons';
 import { useFio } from '../../helper/useFio';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../helper/contractActionError';
 
 // ALL CAPS ismni "O'tamuratov Nurbek" ko'rinishiga keltiradi (SS1: FISH baqiruvchi
 // CAPS o'rniga tabiiy holatда; kichik harflar ham qabul qilinadi).
@@ -143,22 +147,9 @@ const FullDebtSelect = () => {
     } catch (error: any) {
       // SS3: serverning sababi bo'lsa AYNAN SHUNI ko'rsatamiz — "Xatolik
       // sodir bo'ldi" hech narsa tushuntirmasdi.
-      const code = error?.response?.data?.msg;
-      const desc =
-        code === 'contract-not-found'
-          ? t('Shartnoma topilmadi.')
-          : code === 'forbidden' || error?.response?.status === 403
-          ? t('Ruxsat yo‘q')
-          : error?.response?.status === 500
-          ? t('Server xatosi. Birozdan so‘ng qayta urinib ko‘ring.')
-          : t('Xatolik sodir bo‘ldi');
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 4000,
-        position: 'bottom',
-        type: 'error2',
-        props: { desc },
-      });
+      // 07.11: faqat qarz beruvchi talab qila oladi (403 only-lender); oferta talabi — oyna ochiladi, toast yo'q.
+      const toast = contractActionErrorToast(classifyContractActionError(error), 4000);
+      if (toast) Toast.show(toast);
     } finally {
       setSubmitting(false);
     }

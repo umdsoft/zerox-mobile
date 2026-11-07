@@ -9,6 +9,8 @@ import AskTime from '../../../images/AskTime';
 import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
 import {useOfertaGuard} from '../../../hooks/useOfertaGuard';
+import {useSelector} from 'react-redux';
+import {contractRole} from '../../../helper/contractActionError';
 
 const CreditorDebitor = () => {
   const navigation = useNavigation();
@@ -21,6 +23,11 @@ const CreditorDebitor = () => {
   // amal tugmalari (muddat uzaytirishni so'rash / qaytarish) YASHIRILADI — yakunlangan
   // shartnoma. Faol ro'yxatда avvalgidek ko'rinadi.
   const hideActions = !!report && [2, 3, 4].includes(Number(item?.status));
+  // 07.11: qaytarish va muddat uzaytirishni so'rash — FAQAT qarz oluvchi (creditor). Server 403 only-borrower qaytaradi;
+  // aniq rol ma'lum bo'lib, u qarz oluvchi bo'lmasa tugmalar yashiriladi.
+  const userId = useSelector((state: any) => state?.HomeReducer?.user?.data?.id);
+  const role = contractRole(userId, item);
+  const notBorrower = role !== undefined && role !== 'borrower';
 
   return (
     <ScreenLayout title={t('156')}>
@@ -36,7 +43,7 @@ const CreditorDebitor = () => {
           so'rash", "Qarzni qaytarish". Ilgari FAQAT `type===2` da ko'rinardi — OLINGAN
           qarz (type=3) da yashirin edi; endi olingan qarz kontrakt-detalида ham
           ko'rinadi. Amal ekranlari (DebtDateLengthAsk/DebtTakeSelect) mavjud va ro'yxatda. */}
-      {!hideActions && (
+      {!hideActions && !notBorrower && (
         <View style={styles.buttonContainer}>
           <View style={styles.buttonInsideContainer}>
             <TouchableOpacity

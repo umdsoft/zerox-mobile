@@ -12,6 +12,8 @@ import {rd, rs} from '../../../theme/rd';
 import {t} from 'i18next';
 import {useOfertaGuard} from '../../../hooks/useOfertaGuard';
 import { withRequiredParams } from '../../../helper/withRequiredParams';
+import {useSelector} from 'react-redux';
+import {contractRole} from '../../../helper/contractActionError';
 
 const DebitorInner = () => {
   const navigation = useNavigation();
@@ -25,6 +27,11 @@ const DebitorInner = () => {
   // YASHIRILADI — bu shartnomalar yakunlangan, ular ustidan amal bajarib bo'lmaydi.
   // Faol ro'yxatда (report yo'q) esa tugmalar avvalgidek ko'rinadi.
   const hideActions = !!report && [2, 3, 4].includes(Number(item?.status));
+  // 07.11: talab / muddat uzaytirish / voz kechish — FAQAT qarz beruvchi (debitor). Server 403 only-lender qaytaradi;
+  // ro'yxat odatda shunchaki "berilgan" qarzlar, lekin aniq rol ma'lum bo'lib, u qarz beruvchi bo'lmasa tugmalar yashiriladi.
+  const userId = useSelector((state: any) => state?.HomeReducer?.user?.data?.id);
+  const role = contractRole(userId, item);
+  const notLender = role !== undefined && role !== 'lender';
 
   return (
     <ScreenLayout title={t('153').replace('\n', ' ')}>
@@ -57,7 +64,7 @@ const DebitorInner = () => {
           DebtDateLength/CharityDebt) allaqachon mavjud va ro'yxatdan o'tgan. */}
       {/* SS18: KREATIV joylashuv — asosiy amal (talab qilish) to'liq kenglikda,
           ikkilamchi 2 amal (uzaytirish/voz kechish) yonma-yon, rang bilan ajratilган. */}
-      {!hideActions && (
+      {!hideActions && !notLender && (
         <View style={styles.actions}>
           <TouchableOpacity
             onPress={() => guardOferta(() => navigation.navigate('FullDebtSelect', {item: item}))}

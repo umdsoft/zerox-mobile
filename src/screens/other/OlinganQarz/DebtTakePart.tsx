@@ -47,6 +47,10 @@ import {
   PartReturnIcon,
 } from '../../../images/debtActionIcons';
 import { useFio } from '../../../helper/useFio';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../../helper/contractActionError';
 
 // Qisman qaytarish — KO'K (DebtTakeSelect bilan mos).
 const PART = '#2f6fed';
@@ -149,16 +153,9 @@ const DebtTakePart = () => {
       // });
     } catch (err) {
       setLoading(false);
-      Toast.show({
-        autoHide: true,
-        props: {
-          desc: t('Xatolik sodir bo‘ldi'),
-        },
-        text1: '',
-        visibilityTime: 2000,
-        position: 'bottom',
-        type: 'error2',
-      });
+      // 07.11: server rol/tur xatolari (only-borrower, invalid-act-type ...) — aniq matn.
+      const toast = contractActionErrorToast(classifyContractActionError(err));
+      if (toast) Toast.show(toast);
     }
   };
 

@@ -18,6 +18,10 @@ import ScreenLayout from '../../components/ScreenLayout';
 import {rd, rs} from '../../../theme/rd';
 import { AnimatedIconCircle } from '../../../images/debtActionIcons';
 import CharityDollar from '../../../images/CharityDollar';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../../helper/contractActionError';
 
 import {useDispatch, useSelector} from 'react-redux';
 import {setNotification} from '../../../store/reducers/HomeReducer';
@@ -121,13 +125,9 @@ const CharityDebt = () => {
       //   dispatch(setNotification({notification: data.not}));
       // });
     } catch (error) {
-      Toast.show({
-        autoHide: true,
-        visibilityTime: 3000,
-        position: 'bottom',
-        type: 'error2',
-        props: {desc: t('Xatolik sodir bo‘ldi')},
-      });
+      // 07.11: faqat qarz beruvchi voz kecha oladi (403 only-lender) — aniq matn.
+      const toast = contractActionErrorToast(classifyContractActionError(error));
+      if (toast) Toast.show(toast);
     } finally {
       setSubmitting(false);
     }

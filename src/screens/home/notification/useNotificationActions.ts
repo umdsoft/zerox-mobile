@@ -11,7 +11,11 @@ import { useApiAction } from '../../../hooks/useApiAction';
 import { useOfertaGuard } from '../../../hooks/useOfertaGuard';
 import { filter_notification } from '../../../store/reducers/HomeReducer';
 import { classifySmsResendError, SmsResendOutcome } from './smsResendError';
-import { getCreditorDataAndDebitorData, HomeApi } from '../../../store/api/home';
+import { getCreditorDataAndDebitorData, getNotificationWithPage, HomeApi } from '../../../store/api/home';
+import {
+  classifyContractActionError,
+  contractActionErrorToast,
+} from '../../../helper/contractActionError';
 
 type ObjType = {
   act: string;
@@ -32,6 +36,22 @@ export function useNotificationActions() {
   // BITTA umumiy runner, kalit = karta id: bir kartadagi barcha qarorlar (okay/tasdiq/rad/qaytarish/uzaytirish)
   // bir-birini istisno qiladi; boshqa karta bloklanmaydi.
   const { run: runCard } = useApiAction();
+
+  /**
+   * 07.11: shartnoma amali xatosi (rol: only-lender / creator-cannot-approve, 409 already-processed, akt/tur mos
+   * emas ...) — aniq, tarjima qilingan toast. Bildirishnoma eskirgan bo'lsa karta olinadi va ro'yxat serverdan
+   * yangilanadi; `resync` — karta optimistik olingan (rad etish) bo'lsa ham ro'yxat qayta tortiladi (karta qaytadi).
+   */
+  const failAction = useCallback(
+    (item: any, error: unknown, fallbackKey: string, resync = false) => {
+      const failure = classifyContractActionError(error, fallbackKey);
+      const toast = contractActionErrorToast(failure, 3000);
+      if (toast) Toast.show(toast);
+      if (failure.stale) dispatch(filter_notification(item?.id));
+      if (failure.stale || resync) dispatch((getNotificationWithPage as any)({ page: 1 }));
+    },
+    [dispatch],
+  );
 
   // Notoficationni o'chirish
   const okay = useCallback(
@@ -139,18 +159,11 @@ export function useNotificationActions() {
             dispatch(filter_notification(item.id));
           }
         } catch (error) {
-          Toast.show({
-            autoHide: true,
-            position: 'bottom',
-            props: {
-              desc: t('294'),
-            },
-            type: 'error2',
-            visibilityTime: 3000,
-          });
+          // 07.11: creator-cannot-approve / notification-type-mismatch / already-processed — aniq matn.
+          failAction(item, error, '294');
           // SS-AUDIT (2026-09-25): to'liq axios xatosi (config.headers.Authorization —
           // token!) logga yozilmasin, faqat xabar.
-          console.error('notification ask error:', error?.message);
+          console.error('notification ask error:', (error as any)?.message);
         }
       };
 
@@ -170,7 +183,7 @@ export function useNotificationActions() {
       }
       // C-020: `user` qo'shildi — oldin `[]` edi, lekin onAsk ichida user?.data?.id
       // `sender`/`res` (moliyaviy) uchun o'qiladi. Stale user → noto'g'ri qarz amali.
-  }, { key: item.id }), [user, dispatch, runCard]);
+  }, { key: item.id }), [user, dispatch, runCard, failAction]);
   const onReject = useCallback(
     (item, status, type) =>
       runCard(async () => {
@@ -234,16 +247,11 @@ export function useNotificationActions() {
           //   id: type === 'creditor' ? item.creditor : item.debitor,
           // });
         } catch (error) {
-          Toast.show({
-            autoHide: true,
-            position: 'bottom',
-            props: { desc: t('Xatolik sodir bo‘ldi') },
-            type: 'error2',
-            visibilityTime: 3000,
-          });
+          // Karta yuqorida optimistik olingan — rad muvaffaqiyatsiz bo'lsa ro'yxat serverdan qayta tortiladi.
+          failAction(item, error, 'Xatolik sodir bo‘ldi', true);
         }
       }, { key: item.id }),
-    [user, dispatch, runCard],
+    [user, dispatch, runCard, failAction],
   );
   const onQismanQaytarilgan = (item, status) =>
     runCard(async () => {
@@ -280,13 +288,8 @@ export function useNotificationActions() {
         //   id: item.reciver === item.debitor ? item.creditor : item.debitor,
         // });
       } catch (error) {
-        Toast.show({
-          autoHide: true,
-          position: 'bottom',
-          props: { desc: t('Xatolik sodir bo‘ldi') },
-          type: 'error2',
-          visibilityTime: 3000,
-        });
+        // 07.11: only-lender / already-processed (409) / act-type-mismatch ... — aniq matn; eskirgan karta olinadi.
+        failAction(item, error, 'Xatolik sodir bo‘ldi');
       }
     }, { key: item.id });
   const onToliqQaytgan = (item, status) =>
@@ -326,13 +329,8 @@ export function useNotificationActions() {
         //   id: item.reciver === item.debitor ? item.creditor : item.debitor,
         // });
       } catch (error) {
-        Toast.show({
-          autoHide: true,
-          position: 'bottom',
-          props: { desc: t('Xatolik sodir bo‘ldi') },
-          type: 'error2',
-          visibilityTime: 3000,
-        });
+        // 07.11: only-lender / already-processed (409) / act-type-mismatch ... — aniq matn; eskirgan karta olinadi.
+        failAction(item, error, 'Xatolik sodir bo‘ldi');
       }
     }, { key: item.id });
   const onQarzMuddatUzaytirish = (item, status) =>
@@ -387,13 +385,8 @@ export function useNotificationActions() {
           // });
         }
       } catch (error) {
-        Toast.show({
-          autoHide: true,
-          position: 'bottom',
-          props: { desc: t('Xatolik sodir bo‘ldi') },
-          type: 'error2',
-          visibilityTime: 3000,
-        });
+        // 07.11: only-lender / already-processed (409) / act-type-mismatch ... — aniq matn; eskirgan karta olinadi.
+        failAction(item, error, 'Xatolik sodir bo‘ldi');
       }
     }, { key: item.id });
 

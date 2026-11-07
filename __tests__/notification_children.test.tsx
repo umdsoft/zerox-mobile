@@ -266,6 +266,10 @@ const fingerprint = async (mod: string, item: any, extraProps: any = {}) => {
   return { tree, actions };
 };
 
+// 07.11: qaytarish / muddat so'rovini FAQAT qarz beruvchi (debitor = id 2) tasdiqlaydi — golden (accept/reject)
+// qarz beruvchi nomidan; qarz oluvchi (id 1) uchun "Ok" alohida test qilinadi (pastda).
+const LENDER_ONLY = new Set(['QarzToliqQaytarilganli', 'Qarzqismanqaytarilganli', 'Qarzmuddatiniuzaytirishsoralganligitogrisida']);
+
 describe.each(CHILDREN.map(c => c[0]))('%s', mod => {
   const [, type, extra] = CHILDREN.find(c => c[0] === mod)!;
   const variants: [string, any, any][] = [
@@ -278,6 +282,7 @@ describe.each(CHILDREN.map(c => c[0]))('%s', mod => {
   it.each(variants.map(v => v[0]))('%s', async name => {
     const v = variants.find(x => x[0] === name)!;
     const key = `${mod} | ${name}`;
+    if (LENDER_ONLY.has(mod)) mockState.HomeReducer.user.data.id = 2;
     const fp = await fingerprint(mod, v[1], v[2]);
     if (GEN) rec[key] = fp;
     else expect(fp).toEqual(golden[key]);
@@ -288,4 +293,20 @@ it('barcha bolalar goldenda bor', () => {
   if (GEN) return;
   const expected = CHILDREN.flatMap(([m]) => ['creditor side', 'debitor side', ...(m === 'MoliyaEslatma' ? ['daily'] : []), ...(m === 'FamilyInviteTaklif' ? ['accepted'] : []), ...(m === 'Shikoyat' ? ['shop 42'] : [])].map(v => `${m} | ${v}`));
   expect(Object.keys(golden).sort()).toEqual(expected.sort());
+});
+
+describe.each([...LENDER_ONLY])('%s — qarz oluvchi (07.11)', mod => {
+  const [, type] = CHILDREN.find(c => c[0] === mod)!;
+  it.each(['creditor', 'debitor'] as const)('%s side: tasdiq/rad yo‘q, faqat Ok -> okay(id, type)', async side => {
+    const item = baseItem(type, side);
+    const { r, log } = await render(mod, item);
+    const nodes = outer(r.root.findAll(n => typeof n.props.onPress === 'function'));
+    const ok = nodes.find(n => textOf(n).trim() === 'Ok');
+    expect(ok).toBeDefined();
+    expect(nodes.some(n => ['93', '96'].includes(textOf(n).trim()))).toBe(false);
+    await act(async () => {
+      await ok!.props.onPress({ nativeEvent: {} });
+    });
+    expect(log).toEqual([`okay(${ser([item.id, type])})`]);
+  });
 });

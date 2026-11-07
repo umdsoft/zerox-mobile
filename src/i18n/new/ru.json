@@ -2327,6 +2327,13 @@
     "Hisobingizga kirish butunlay yopiladi: ilova, sayt va Telegram bot orqali kira olmaysiz": "Доступ к аккаунту будет закрыт навсегда: вы не сможете войти через приложение, сайт и Telegram-бот",
     "Hisobni ilova orqali qayta tiklab bo‘lmaydi": "Восстановить аккаунт через приложение будет невозможно",
     "Boshqalar bilan tuzilgan shartnomalaringiz va ulardagi ma‘lumotlaringiz qonuniy talab bo‘yicha saqlanib qoladi": "Ваши договоры с другими пользователями и данные в них сохраняются согласно требованиям закона",
-    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "Аккаунт, привязанный к этому номеру, удалён. Для помощи обратитесь в службу поддержки."
+    "Bu telefon raqamiga bog‘langan hisob o‘chirilgan. Yordam uchun qo‘llab-quvvatlash xizmatiga murojaat qiling.": "Аккаунт, привязанный к этому номеру, удалён. Для помощи обратитесь в службу поддержки.",
+    "Bu amalni faqat qarz beruvchi bajara oladi": "Это действие может выполнить только заимодавец",
+    "Bu amalni faqat qarz oluvchi bajara oladi": "Это действие может выполнить только заёмщик",
+    "Muddat kelajakdagi sana bo‘lishi kerak": "Срок должен быть датой в будущем",
+    "Bu so‘rov allaqachon ko‘rib chiqilgan": "Этот запрос уже рассмотрен",
+    "O‘zingiz yaratgan shartnomani tasdiqlay olmaysiz": "Нельзя подтвердить договор, который вы создали сами",
+    "Bu bildirishnoma ushbu amal uchun yaroqsiz": "Это уведомление недействительно для данного действия",
+    "So‘rov noto‘g‘ri yuborildi. Ilovani yangilang.": "Запрос отправлен некорректно. Обновите приложение."
   }
 }
