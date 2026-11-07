@@ -89,7 +89,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 26
-        versionName "2.1"
+        // feature/sign-otp: imzo TEST build — Play'ga yuklanmaydi.
+        versionName "2.1-sign"
+        resValue "string", "app_name", "ZeroX"
         missingDimensionStrategy "react-native-capture-protection", "base"
         // ABI cheklovi endi splits.abi orqali (pastda) — ndk.abiFilters bilan splits
         // BIRGA bo'lolmaydi (Gradle "Conflicting configuration" xatosi beradi).
@@ -155,6 +157,15 @@ android {
             // Bu MyID PRODUCTION (clientHashId 7b4507ca) ro'yxatidan o'tgan sertifikat — Play
             // Integrity/liveness aynan shu imzo bilan o'tadi.
             signingConfig signingConfigs.release
+            // feature/sign-otp: imzo TEST APK nomi (launcher'da prod ZeroX'dan ajralib tursin).
+            resValue "string", "app_name", "ZeroX Imzo (test)"
+            // Prod ilova yonida o'rnatish uchun: -PzeroxAppIdSuffix=.sign -> com.zeroxuz.sign.
+            // DIQQAT: google-services.json da faqat com.zeroxuz client bor — suffix bilan
+            // processReleaseGoogleServices yiqiladi, Firebase'da com.zeroxuz.sign ilovasi
+            // ro'yxatdan o'tkazilib json yangilanmaguncha suffix'siz (prod o'rniga) build qilinadi.
+            if (project.hasProperty('zeroxAppIdSuffix')) {
+                applicationIdSuffix project.zeroxAppIdSuffix
+            }
             minifyEnabled enableProguardInReleaseBuilds
             // SS-PERF (2026-09-25): ishlatilmagan resurslarni olib tashlash (APK kichrayadi).
             // Nomi bo'yicha (reflection) ishlatiladigan resurslar res/raw/keep.xml da saqlanadi.

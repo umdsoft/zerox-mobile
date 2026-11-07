@@ -1,3 +1,3 @@
 <resources>
-    <string name="app_name" translatable="false">ZeroX</string>
+    <!-- app_name build.gradle resValue orqali (feature/sign-otp: release = "ZeroX Imzo (test)") -->
 </resources>

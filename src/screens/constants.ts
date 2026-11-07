@@ -10,7 +10,8 @@ import { USE_TEST_HOST_IN_RELEASE } from '../config/buildHost';
 // Ichki TEST release build kerak bo'lsa: `npm run deploy:test` (src/config/buildHost.ts).
 // Hamma hosting-bog'liq konstantalar (HOST, WEB_URL, PDF_*) BIR booleandan — IS_TEST_ENV — hosil bo'ladi.
 const PROD_HOST = 'https://app.zerox.uz';
-const TEST_HOST = 'https://tb.zerox.uz';
+// feature/sign-otp: imzo (OTP) test backend — ikkinchi test server. Faqat shu branch'da.
+const TEST_HOST = 'https://tb-sign.zerox.uz';
 const IS_TEST_ENV = __DEV__ || USE_TEST_HOST_IN_RELEASE;
 const HOST = IS_TEST_ENV ? TEST_HOST : PROD_HOST;
 
