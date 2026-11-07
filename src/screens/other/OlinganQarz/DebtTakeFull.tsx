@@ -28,6 +28,7 @@ import {
   FullReturnIcon,
 } from '../../../images/debtActionIcons';
 import { useFio } from '../../../helper/useFio';
+import { signAndSend } from '../../../helper/sign/signFlow';
 import {
   classifyContractActionError,
   contractActionErrorToast,
@@ -53,28 +54,53 @@ const DebtTakeFull = () => {
     const token = storage.getString('token');
     try {
       setLoading(true);
-      const { data, status } = await axios.post(
-        URL + '/contract/act',
-        {
+      const body = {
+        contract: item.id,
+        creditor: item.creditor,
+        debitor: item.debitor,
+        reciver: item.debitor,
+        end_date: item.end_date,
+        old_amount: Number(item.residual_amount),
+        inc: round2(Number(item.residual_amount) + Number(item.inc)),
+        ntype: 2,
+        refundable_amount: item.residual_amount,
+        residual_amount: 0,
+        status: 0,
+        type: 2,
+        sender: item.creditor,
+        res: item.debitor,
+      };
+      // 07.11: akt yaratish — elektron imzo (bir martalik kod) bilan; bekor qilinsa hech narsa yuborilmaydi.
+      const res = await signAndSend({
+        purpose: 'act_create',
+        target: {
           contract: item.id,
-          creditor: item.creditor,
-          debitor: item.debitor,
-          reciver: item.debitor,
-          end_date: item.end_date,
-          old_amount: Number(item.residual_amount),
-          inc: round2(Number(item.residual_amount) + Number(item.inc)),
-          ntype: 2,
-          refundable_amount: item.residual_amount,
-          residual_amount: 0,
-          status: 0,
-          type: 2,
-          sender: item.creditor,
-          res: item.debitor,
+          payload: {
+            contract: item.id,
+            type: body.type,
+            refundable_amount: body.refundable_amount,
+            end_date: body.end_date,
+          },
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+        summary: {
+          docType: t('Qarzni to‘liq qaytarish dalolatnomasi'),
+          number: item.number,
+          lender: fio(titleCase(item?.debitor_name)),
+          borrower: fio(titleCase(item?.creditor_name)) || undefined,
+          amount: groupMoney(item.residual_amount),
+          currency: item.currency,
+          dueDate: settingDate(item.end_date),
         },
-      );
+        send: sign =>
+          axios.post(URL + '/contract/act', { ...body, sign }, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+      });
+      if (!res) {
+        setLoading(false);
+        return;
+      }
+      const { data, status } = res;
 
 
       if (data.msg === 'end' && status === 200) {

@@ -18,6 +18,7 @@ export interface ContractActionFailure {
 /** Server xato kodi: `msg` (contract endpointlari) yoki `message` (notification endpointlari), so'ng `code`. */
 export const contractActionErrorCode = (err: unknown): string => {
   const d = (err as any)?.response?.data;
+  if (/^SIGN_/.test(String(d?.code || ''))) return String(d.code);
   return String(d?.msg || d?.message || d?.code || '');
 };
 
@@ -65,6 +66,17 @@ export const classifyContractActionError = (
     case 'invalid-stype':
     case 'act-required':
       return { message: (t('So‘rov noto‘g‘ri yuborildi. Ilovani yangilang.') as string), stale, code };
+    // 07.11: elektron imzo (odatda SignSheet o'zi ko'rsatadi; bu yerga faqat oynadan tashqari yo'l tushadi).
+    case 'SIGN_REQUIRED':
+      return { message: (t('Bu amal elektron imzo talab qiladi') as string), stale, code };
+    case 'SIGN_INVALID':
+      return { message: (t('Kod noto‘g‘ri') as string), stale, code };
+    case 'SIGN_EXPIRED':
+      return { message: (t('Kod muddati o‘tdi, qaytadan oling') as string), stale, code };
+    case 'SIGN_LOCKED':
+      return { message: (t('Urinishlar tugadi, keyinroq urinib ko‘ring') as string), stale, code };
+    case 'SIGN_DOC_CHANGED':
+      return { message: (t('Hujjat o‘zgargan, qaytadan oching') as string), stale, code };
     case 'contract-not-found':
       return { message: (t('Shartnoma topilmadi.') as string), stale, code };
     default:

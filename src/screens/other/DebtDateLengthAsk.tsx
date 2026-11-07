@@ -36,6 +36,9 @@ import { rd, rs } from '../../theme/rd';
 import RdHeader from '../home/redesign/RdHeader';
 import { fmtYmdTk } from '../../helper/date';
 import { AnimatedIconCircle, RequestExtendIcon } from '../../images/debtActionIcons';
+import { signAndSend } from '../../helper/sign/signFlow';
+import { groupMoney } from '../../helper/money';
+import { titleCase } from '../../helper/returnName';
 import {
   classifyContractActionError,
   contractActionErrorToast,
@@ -124,28 +127,53 @@ const DebtDateLengthAsk = () => {
 
     try {
       setLoading1(true);
-      const { data, status } = await axios.post(
-        URL + '/contract/act',
-        {
+      const body = {
+        contract: info.id,
+        creditor: info.creditor,
+        debitor: info.debitor,
+        end_date: formatDate(plus_day(date)),
+        inc: info.inc,
+        ntype: 3,
+        reciver: info.debitor,
+        old_amount: Number(info.residual_amount),
+        refundable_amount: info.refundable_amount,
+        residual_amount: info.residual_amount,
+        status: 0,
+        type: 3,
+        sender: info.creditor,
+        res: info.debitor,
+      };
+      // 07.11: muddat uzaytirish so'rovi (akt type 3) — elektron imzo (bir martalik kod) bilan.
+      const res = await signAndSend({
+        purpose: 'act_create',
+        target: {
           contract: info.id,
-          creditor: info.creditor,
-          debitor: info.debitor,
-          end_date: formatDate(plus_day(date)),
-          inc: info.inc,
-          ntype: 3,
-          reciver: info.debitor,
-          old_amount: Number(info.residual_amount),
-          refundable_amount: info.refundable_amount,
-          residual_amount: info.residual_amount,
-          status: 0,
-          type: 3,
-          sender: info.creditor,
-          res: info.debitor,
+          payload: {
+            contract: info.id,
+            type: body.type,
+            refundable_amount: body.refundable_amount,
+            end_date: body.end_date,
+          },
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+        summary: {
+          docType: t('Qarz muddatini uzaytirish so‘rovi'),
+          number: info?.number,
+          lender: titleCase(info?.debitor_name) || undefined,
+          borrower: titleCase(info?.creditor_name) || undefined,
+          amount: info?.residual_amount != null ? groupMoney(info.residual_amount) : undefined,
+          currency: info?.currency,
+          dueDate: settingDate(body.end_date),
         },
-      );
+        send: sign =>
+          axios.post(URL + '/contract/act', { ...body, sign }, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+      });
+      if (!res) {
+        setLoading1(false);
+        return;
+      }
+      const { data, status } = res;
 
       if (status === 201) {
         // SS5: "Muvaffaqiyatli" sarlavhasi olib tashlandi -> matn bold (descStrong).
